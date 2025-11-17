@@ -33,6 +33,20 @@ export default function WordCard({ word, onCorrect, onSkip }) {
               <span className="text-sm font-medium text-violet-700">{word.category}</span>
             </div>
 
+            {word.image_url && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="mx-auto w-48 h-48 rounded-2xl overflow-hidden shadow-lg"
+              >
+                <img 
+                  src={word.image_url} 
+                  alt={word.word}
+                  className="w-full h-full object-cover"
+                />
+              </motion.div>
+            )}
+
             <motion.h2 
               className="text-5xl md:text-7xl font-bold bg-gradient-to-br from-violet-600 via-purple-600 to-blue-600 bg-clip-text text-transparent"
               style={{ direction: "rtl" }}
