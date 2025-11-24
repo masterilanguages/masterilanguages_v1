@@ -55,11 +55,11 @@ export default function Layout({ children, currentPageName }) {
           <SidebarHeader className="border-b border-violet-100/50 p-6">
             <div className="flex items-center gap-3">
               <div className="relative">
-                <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-blue-500 rounded-2xl flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-white" />
-                </div>
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-violet-400 rounded-full animate-pulse" />
-              </div>
+                                    <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-blue-500 rounded-2xl flex items-center justify-center">
+                                      <span className="text-white font-bold text-xl">M</span>
+                                    </div>
+                                    <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-white rounded-full" />
+                                  </div>
               <div>
                 <h2 className="font-bold text-xl bg-gradient-to-r from-violet-600 to-blue-600 bg-clip-text text-transparent">Masteri Languages</h2>
                                       <p className="text-xs text-gray-500">Master any language</p>
