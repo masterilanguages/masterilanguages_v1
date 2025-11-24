@@ -1,14 +1,15 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Eye, EyeOff } from "lucide-react";
+import { ChevronLeft, ChevronRight, Eye, EyeOff, Check, RotateCcw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-export default function ClozeFlashcard({ flashcard, onNext, onPrev }) {
+export default function ClozeFlashcard({ flashcard, onNext, onPrev, onRate }) {
   const [showAnswer, setShowAnswer] = useState(false);
 
-  const handleNext = () => {
+  const handleRate = (rating) => {
     setShowAnswer(false);
+    if (onRate) onRate(rating);
     onNext();
   };
 
@@ -81,8 +82,32 @@ export default function ClozeFlashcard({ flashcard, onNext, onPrev }) {
         )}
       </AnimatePresence>
 
+      {/* Rating Buttons */}
+      {showAnswer && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="flex justify-center gap-4 mt-6"
+        >
+          <Button
+            onClick={() => handleRate("repeat")}
+            className="flex-1 bg-red-500 hover:bg-red-600 text-white rounded-xl py-3"
+          >
+            <RotateCcw className="w-4 h-4 mr-2" />
+            Repeat Later
+          </Button>
+          <Button
+            onClick={() => handleRate("know")}
+            className="flex-1 bg-green-500 hover:bg-green-600 text-white rounded-xl py-3"
+          >
+            <Check className="w-4 h-4 mr-2" />
+            I Know It
+          </Button>
+        </motion.div>
+      )}
+
       {/* Navigation */}
-      <div className="flex justify-between mt-6">
+      <div className="flex justify-between mt-4">
         <Button
           variant="outline"
           onClick={handlePrev}
@@ -93,10 +118,10 @@ export default function ClozeFlashcard({ flashcard, onNext, onPrev }) {
         </Button>
         <Button
           variant="outline"
-          onClick={handleNext}
+          onClick={() => { setShowAnswer(false); onNext(); }}
           className="border-2 border-gray-200 hover:border-gray-300 rounded-xl"
         >
-          Next
+          Skip
           <ChevronRight className="w-4 h-4 ml-2" />
         </Button>
       </div>
