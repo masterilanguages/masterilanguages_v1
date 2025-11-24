@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Volume2, LayoutDashboard, Library, Sparkles } from "lucide-react";
+import { Volume2, LayoutDashboard, Library, Sparkles, PlayCircle } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -21,6 +21,11 @@ const navigationItems = [
     title: "Practice",
     url: createPageUrl("Practice"),
     icon: Volume2,
+  },
+  {
+    title: "Videos",
+    url: createPageUrl("Videos"),
+    icon: PlayCircle,
   },
   {
     title: "Progress",
