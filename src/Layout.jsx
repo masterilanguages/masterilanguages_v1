@@ -16,7 +16,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 
-const navigationItems = [
+const hebrewItems = [
   {
     title: "Practice",
     url: createPageUrl("Practice"),
@@ -35,6 +35,29 @@ const navigationItems = [
   {
     title: "Library",
     url: createPageUrl("Library"),
+    icon: Library,
+  },
+];
+
+const spanishItems = [
+  {
+    title: "Practice",
+    url: createPageUrl("SpanishPractice"),
+    icon: Volume2,
+  },
+  {
+    title: "Videos",
+    url: createPageUrl("SpanishVideos"),
+    icon: PlayCircle,
+  },
+  {
+    title: "Progress",
+    url: createPageUrl("SpanishProgress"),
+    icon: LayoutDashboard,
+  },
+  {
+    title: "Library",
+    url: createPageUrl("SpanishLibrary"),
     icon: Library,
   },
 ];
