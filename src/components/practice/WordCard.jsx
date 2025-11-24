@@ -1,13 +1,18 @@
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Volume2, Check, X } from "lucide-react";
+import { Volume2, Check, X, Play } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import YouTubePlayer from "./YouTubePlayer";
+import ExerciseCard from "./ExerciseCard";
 
 export default function WordCard({ word, onCorrect, onSkip }) {
   const [showTranslation, setShowTranslation] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [showVideo, setShowVideo] = useState(false);
+  const [currentExercise, setCurrentExercise] = useState(0);
+  const [showExercises, setShowExercises] = useState(false);
 
   const playAudio = () => {
     if (word.audio_url) {
@@ -75,10 +80,63 @@ export default function WordCard({ word, onCorrect, onSkip }) {
             </Button>
 
             {word.example_sentence && (
-              <div className="pt-4" dir="rtl">
-                <p className="text-sm text-gray-400 italic">"{word.example_sentence}"</p>
-              </div>
-            )}
+                              <div className="pt-4" dir="rtl">
+                                <p className="text-sm text-gray-400 italic">"{word.example_sentence}"</p>
+                              </div>
+                            )}
+
+                            {word.youtube_url && (
+                              <div className="pt-4">
+                                <Button
+                                  variant="outline"
+                                  onClick={() => setShowVideo(!showVideo)}
+                                  className="border-2 border-red-200 hover:border-red-300 hover:bg-red-50 rounded-xl text-red-600"
+                                >
+                                  <Play className="w-4 h-4 mr-2" />
+                                  {showVideo ? "Hide Video" : "Watch Video"}
+                                </Button>
+                                {showVideo && (
+                                  <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: "auto" }}
+                                    className="mt-4"
+                                  >
+                                    <YouTubePlayer url={word.youtube_url} />
+                                  </motion.div>
+                                )}
+                              </div>
+                            )}
+
+                            {word.exercises?.length > 0 && (
+                              <div className="pt-4">
+                                <Button
+                                  variant="outline"
+                                  onClick={() => setShowExercises(!showExercises)}
+                                  className="border-2 border-amber-200 hover:border-amber-300 hover:bg-amber-50 rounded-xl text-amber-600"
+                                >
+                                  {showExercises ? "Hide Exercises" : `Practice (${word.exercises.length} exercises)`}
+                                </Button>
+                                {showExercises && currentExercise < word.exercises.length && (
+                                  <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="mt-4"
+                                  >
+                                    <ExerciseCard
+                                      exercise={word.exercises[currentExercise]}
+                                      onComplete={(correct) => {
+                                        if (currentExercise < word.exercises.length - 1) {
+                                          setCurrentExercise(prev => prev + 1);
+                                        } else {
+                                          setCurrentExercise(0);
+                                          setShowExercises(false);
+                                        }
+                                      }}
+                                    />
+                                  </motion.div>
+                                )}
+                              </div>
+                            )}
 
             <motion.div
               initial={false}
