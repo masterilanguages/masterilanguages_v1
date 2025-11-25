@@ -8,6 +8,9 @@ import { AnimatePresence, motion } from "framer-motion";
 import WordCard from "../components/practice/WordCard";
 import SoundWave from "../components/practice/SoundWave";
 import ParrotMascot from "../components/mascot/ParrotMascot";
+import PictureCard from "../components/practice/PictureCard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Image, Volume2 as AudioIcon } from "lucide-react";
 
 export default function Practice() {
   const [selectedCategory, setSelectedCategory] = useState("all");
