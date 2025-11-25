@@ -55,23 +55,22 @@ export default function Practice() {
 
   const currentWord = sessionWords[currentWordIndex];
 
-  const handleCorrect = async () => {
-    if (currentWord) {
-      await updateWordMutation.mutateAsync({
-        id: currentWord.id,
-        data: {
-          times_practiced: (currentWord.times_practiced || 0) + 1,
-          mastered: (currentWord.times_practiced || 0) + 1 >= 5,
-        },
-      });
-      
-      setSessionStats(prev => ({ correct: prev.correct + 1, total: prev.total + 1 }));
-      moveToNext();
-    }
+  const handleRate = async (wordId, rating) => {
+    await updateWordMutation.mutateAsync({
+      id: wordId,
+      data: {
+        times_practiced: rating,
+        mastered: rating >= 5,
+      },
+    });
+    setSessionStats(prev => ({ 
+      correct: rating >= 4 ? prev.correct + 1 : prev.correct, 
+      total: prev.total + 1 
+    }));
+    moveToNext();
   };
 
   const handleSkip = () => {
-    setSessionStats(prev => ({ ...prev, total: prev.total + 1 }));
     moveToNext();
   };
 
