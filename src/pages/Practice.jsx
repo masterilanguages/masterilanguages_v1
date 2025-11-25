@@ -17,6 +17,18 @@ export default function Practice() {
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [sessionWords, setSessionWords] = useState([]);
   const [sessionStats, setSessionStats] = useState({ correct: 0, total: 0 });
+  const [pictureCardIndex, setPictureCardIndex] = useState(0);
+
+  const pictureCards = [
+    {
+      image: "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b9324b0c0f25014c5938d/d31b8c35f_Screenshot2025-11-24at70051PM.png",
+      hint: "The light is helping like a _____",
+      hebrewWord: "לעזור",
+      transliteration: "La'azor",
+      meaning: "To help",
+      mnemonic: "Sounds like 'laser' - imagine a laser beam helping someone!"
+    }
+  ];
   
   const queryClient = useQueryClient();
 
@@ -85,84 +97,97 @@ export default function Practice() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <SoundWave isPlaying={true} />
-      </div>
-    );
-  }
+              <div className="flex items-center justify-center min-h-screen">
+                <SoundWave isPlaying={true} />
+              </div>
+            );
+          }
 
-  return (
-    <div className="min-h-screen p-4 md:p-8">
-      <div className="max-w-4xl mx-auto">
-        <motion.div 
-          initial={{ y: -20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="mb-8"
-        >
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-            <div>
-              <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-violet-600 via-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">
-                Practice Session
-              </h1>
-              <p className="text-gray-500">Listen, learn, and master pronunciation</p>
-            </div>
-            <Button
-              onClick={resetSession}
-              variant="outline"
-              className="border-2 border-violet-200 hover:border-violet-300 hover:bg-violet-50 rounded-xl"
-            >
-              <RotateCcw className="w-4 h-4 mr-2" />
-              Reset
-            </Button>
-          </div>
+          return (
+            <div className="min-h-screen p-4 md:p-8">
+              <div className="max-w-4xl mx-auto">
+                <motion.div 
+                  initial={{ y: -20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  className="mb-8"
+                >
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                    <div>
+                      <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-violet-600 via-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">
+                        Practice Session
+                      </h1>
+                      <p className="text-gray-500">Listen, learn, and master pronunciation</p>
+                    </div>
+                    <Button
+                      onClick={resetSession}
+                      variant="outline"
+                      className="border-2 border-violet-200 hover:border-violet-300 hover:bg-violet-50 rounded-xl"
+                    >
+                      <RotateCcw className="w-4 h-4 mr-2" />
+                      Reset
+                    </Button>
+                  </div>
+                </motion.div>
 
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="w-full md:w-64 border-2 border-violet-100 rounded-xl">
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                <SelectItem value="basics">Basics</SelectItem>
-                <SelectItem value="numbers">Numbers</SelectItem>
-                <SelectItem value="colors">Colors</SelectItem>
-                <SelectItem value="food">Food</SelectItem>
-                <SelectItem value="animals">Animals</SelectItem>
-                <SelectItem value="travel">Travel</SelectItem>
-                <SelectItem value="nature">Nature</SelectItem>
-                <SelectItem value="business">Business</SelectItem>
-                <SelectItem value="emotions">Emotions</SelectItem>
-                <SelectItem value="actions">Actions</SelectItem>
-              </SelectContent>
-            </Select>
+                <Tabs defaultValue="audio" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2 mb-6 bg-violet-50 rounded-xl p-1">
+                    <TabsTrigger value="audio" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                      <AudioIcon className="w-4 h-4 mr-2" />
+                      Audio Practice
+                    </TabsTrigger>
+                    <TabsTrigger value="pictures" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                      <Image className="w-4 h-4 mr-2" />
+                      Pictures
+                    </TabsTrigger>
+                  </TabsList>
 
-            <div className="flex gap-4 items-center flex-1">
-                                <ParrotMascot 
-                                  size="sm" 
-                                  message={
-                                    sessionStats.total === 0 ? "Let's learn!" :
-                                    sessionStats.correct / sessionStats.total >= 0.8 ? "Amazing work! 🎉" :
-                                    sessionStats.correct / sessionStats.total >= 0.5 ? "Keep going! 💪" :
-                                    "You can do it! 🌟"
-                                  }
-                                />
-                                <div className="bg-white/80 backdrop-blur-sm rounded-xl px-6 py-3 border border-violet-100 shadow-sm">
-                                  <p className="text-sm text-gray-500">Progress</p>
-                                  <p className="text-xl font-bold text-violet-600">
-                                    {currentWordIndex + 1} / {sessionWords.length}
-                                  </p>
-                                </div>
-                                <div className="bg-white/80 backdrop-blur-sm rounded-xl px-6 py-3 border border-violet-100 shadow-sm">
-                                  <p className="text-sm text-gray-500">Score</p>
-                                  <p className="text-xl font-bold text-violet-600">
-                                    {sessionStats.total > 0 ? Math.round((sessionStats.correct / sessionStats.total) * 100) : 0}%
-                                  </p>
-                                </div>
-                              </div>
-          </div>
-        </motion.div>
+                  <TabsContent value="audio">
+                    <div className="flex flex-col md:flex-row gap-4 mb-6">
+                      <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                        <SelectTrigger className="w-full md:w-64 border-2 border-violet-100 rounded-xl">
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Categories</SelectItem>
+                          <SelectItem value="basics">Basics</SelectItem>
+                          <SelectItem value="numbers">Numbers</SelectItem>
+                          <SelectItem value="colors">Colors</SelectItem>
+                          <SelectItem value="food">Food</SelectItem>
+                          <SelectItem value="animals">Animals</SelectItem>
+                          <SelectItem value="travel">Travel</SelectItem>
+                          <SelectItem value="nature">Nature</SelectItem>
+                          <SelectItem value="business">Business</SelectItem>
+                          <SelectItem value="emotions">Emotions</SelectItem>
+                          <SelectItem value="actions">Actions</SelectItem>
+                        </SelectContent>
+                      </Select>
 
-        {sessionWords.length === 0 ? (
+                      <div className="flex gap-4 items-center flex-1">
+                          <ParrotMascot 
+                            size="sm" 
+                            message={
+                              sessionStats.total === 0 ? "Let's learn!" :
+                              sessionStats.correct / sessionStats.total >= 0.8 ? "Amazing work! 🎉" :
+                              sessionStats.correct / sessionStats.total >= 0.5 ? "Keep going! 💪" :
+                              "You can do it! 🌟"
+                            }
+                          />
+                          <div className="bg-white/80 backdrop-blur-sm rounded-xl px-6 py-3 border border-violet-100 shadow-sm">
+                            <p className="text-sm text-gray-500">Progress</p>
+                            <p className="text-xl font-bold text-violet-600">
+                              {currentWordIndex + 1} / {sessionWords.length}
+                            </p>
+                          </div>
+                          <div className="bg-white/80 backdrop-blur-sm rounded-xl px-6 py-3 border border-violet-100 shadow-sm">
+                            <p className="text-sm text-gray-500">Score</p>
+                            <p className="text-xl font-bold text-violet-600">
+                              {sessionStats.total > 0 ? Math.round((sessionStats.correct / sessionStats.total) * 100) : 0}%
+                            </p>
+                          </div>
+                        </div>
+                    </div>
+
+                    {sessionWords.length === 0 ? (
                         <motion.div
                           initial={{ scale: 0.9, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
@@ -171,16 +196,33 @@ export default function Practice() {
                           <ParrotMascot size="lg" message="Add some words to start learning!" className="mb-4" />
                         </motion.div>
                       ) : (
-          <AnimatePresence mode="wait">
-            <WordCard
-              key={currentWord?.id}
-              word={currentWord}
-              onCorrect={handleCorrect}
-              onSkip={handleSkip}
-            />
-          </AnimatePresence>
-        )}
-      </div>
-    </div>
-  );
-}
+                      <AnimatePresence mode="wait">
+                        <WordCard
+                          key={currentWord?.id}
+                          word={currentWord}
+                          onCorrect={handleCorrect}
+                          onSkip={handleSkip}
+                        />
+                      </AnimatePresence>
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="pictures">
+                    <div className="mb-6">
+                      <p className="text-center text-gray-600 mb-4">
+                        Learn Hebrew words through visual mnemonics - pictures that help you remember!
+                      </p>
+                      <PictureCard
+                        card={pictureCards[pictureCardIndex]}
+                        currentIndex={pictureCardIndex}
+                        total={pictureCards.length}
+                        onNext={() => setPictureCardIndex((prev) => (prev + 1) % pictureCards.length)}
+                        onPrev={() => setPictureCardIndex((prev) => (prev - 1 + pictureCards.length) % pictureCards.length)}
+                      />
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </div>
+            </div>
+          );
+        }
