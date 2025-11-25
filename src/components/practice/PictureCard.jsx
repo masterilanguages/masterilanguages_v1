@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
-export default function PictureCard({ card, onNext, onPrev, currentIndex, total }) {
+export default function PictureCard({ card, onNext, onPrev, currentIndex, total, onRate, currentRating }) {
   const [showAnswer, setShowAnswer] = useState(false);
 
   const handleNext = () => {
@@ -49,14 +49,26 @@ export default function PictureCard({ card, onNext, onPrev, currentIndex, total 
           </div>
         </div>
 
-        <Button
-          onClick={() => setShowAnswer(!showAnswer)}
-          variant="outline"
-          className="w-full mb-4 border-2 border-violet-200 hover:border-violet-300"
-        >
-          {showAnswer ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
-          {showAnswer ? "Hide" : "Reveal"}
-        </Button>
+        <div className="flex justify-center gap-2 mb-4">
+          {[1, 2, 3, 4, 5].map((num) => (
+            <Button
+              key={num}
+              onClick={() => {
+                setShowAnswer(true);
+                onRate(card.hebrewWord, num);
+              }}
+              variant={currentRating === num ? "default" : "outline"}
+              className={`w-10 h-10 p-0 text-lg font-bold ${
+                currentRating === num 
+                  ? "bg-gradient-to-r from-violet-500 to-blue-500 text-white" 
+                  : "border-2 border-violet-200 hover:border-violet-300"
+              }`}
+            >
+              {num}
+            </Button>
+          ))}
+        </div>
+        <p className="text-xs text-center text-gray-400 mb-4">1 = don't know → 5 = know it well</p>
 
         {showAnswer && (
           <motion.div
