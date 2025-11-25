@@ -57,10 +57,9 @@ export default function WordBank() {
                   exit={{ opacity: 0, x: -100 }}
                   className="bg-white/80 backdrop-blur-sm rounded-xl border border-violet-100 p-4 flex items-center justify-between"
                 >
-                  <div className="flex items-center gap-4">
+                  <div className="flex flex-col">
                     <span className="text-xl font-bold text-violet-600">{word.phonetic}</span>
-                    <span className="text-gray-400">•</span>
-                    <span className="text-gray-700">{word.translation}</span>
+                    <span className="text-gray-600 text-sm">{word.translation}</span>
                   </div>
                   <Button
                     variant="ghost"
