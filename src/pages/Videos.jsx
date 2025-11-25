@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Play, ChevronDown, ChevronUp, Plus, Check } from "lucide-react";
+import { Play, ChevronDown, ChevronUp, Plus, Check, FileText } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -76,9 +77,167 @@ const videoData = [
   }
 ];
 
+const israeliMusicTranscript = `**Shalom lekulam, kor'im li Doron me'aruts Piece of Hebrew.**
+Hello everyone, my name is Doron from the channel Piece of Hebrew.
+
+**Hayom anachnu holkhim ledaber al muzikah Yisra'elit.**
+Today we are going to talk about Israeli music.
+
+**Ani holekh lehakir lakhem kama z'marim Yisra'elim she'ani be'ofen ishi ohev.**
+I'm going to introduce you to several Israeli singers that I personally love.
+
+**UMekaveh she'ze ya'azor lakhem belimadat ha'ivrit uvekniyat otzar milim chadash.**
+And I hope this will help you learn Hebrew and acquire new vocabulary.
+
+**Az yalla, bo'u natchil.**
+So let's begin.
+
+---
+
+⭐ **ZMAR 1 — Ehud Banai**
+
+**Ha'zamar ha'rishon she'ani rotze ledaber alav nikra Ehud Banai.**
+The first singer I want to talk about is named Ehud Banai.
+
+**Ze be'ofen ishi ha'zamar ha'ahuv alai be'Yisra'el.**
+He is personally my favorite singer in Israel.
+
+**Ve'hu magi'a mi'mishpachat Banai, mishpacha sheyesh bah harbeh omaním.**
+And he comes from the Banai family, a family with many artists.
+
+**Z'marim, sakhkhanim, meshorerim — ha'resima me'od aruka.**
+Singers, actors, poets — the list is very long.
+
+**Aval ani agid kama:**
+But I'll name a few:
+
+**Yovel Banai, Yossi Banai, Me'ir Banai, Evyatar Banai, Orna Banai, Elisha Banai, Bo'az Banai…**
+Yovel Banai, Yossi Banai, Meir Banai, Evyatar Banai, Orna Banai, Elisha Banai, Boaz Banai…
+
+**Ve'yesh od ve'od harbeh.**
+And there are many more.
+
+---
+
+**Ehud Banai hu zamar she'paratz be'gil me'ukhar.**
+Ehud Banai is a singer who broke out at a relatively late age.
+
+**Ha'single ha'rishon shelo be'radio hushma k'she'haya ben 34.**
+His first single was played on the radio when he was 34.
+
+**Ze gil me'od me'ukhar le'zamar lifrots bo.**
+This is quite a late age for a singer to break out.
+
+**Ve'ze zamar she'ani me'od ohev ve'me'od mitkhaber le'signon shelo.**
+And he is a singer I really love and connect to his style.
+
+---
+
+**Ha'signon shel Ehud Banai meshalev harbeh devarim.**
+His style combines many elements.
+
+**Ktzat folk, rok Yisra'eli, yehadut.**
+A bit of folk, Israeli rock, Judaism.
+
+**Ma she'yafe be'Ehud Banai hu ha'sipurim me'ahorei ha'shirim.**
+What's beautiful about him is the stories behind the songs.
+
+**Margishim she'ze adam she'ra'ah harbeh olam.**
+You can feel he's someone who saw a lot of the world.
+
+**Harbeh histovev — ish shel anashim.**
+Traveled a lot — a people's person.
+
+---
+
+**Chutz mi'muzikah, le'Ehud Banai yesh gam tokhnit radio.**
+Besides music, Ehud Banai also has a radio show.
+
+**Meshuderet kol yom shishi, ve'efshar leha'azin bekhol ha'prakim be'podcast.**
+It's broadcast every Friday and you can listen to all the episodes as a podcast.
+
+**Tokhnit me'od me'anyenet — kol tokhnit be'nose acher.**
+A very interesting show — each episode on a different topic.
+
+**Mamlich lakhem leha'azin.**
+I recommend you listen.
+
+---
+
+⭐ **ZMAR 2 — Eyal Golan**
+
+**Ha'zamar ha'sheini nikra Eyal Golan.**
+The second singer is called Eyal Golan.
+
+**Eyal Golan shar be'signon ha'mizrachi o ha'yam tikhoni.**
+Eyal Golan sings in the Mizrahi / Mediterranean style.
+
+**Echad ha'zmarim ha'chi popyulariyim be'Yisra'el.**
+He's one of the most popular singers in Israel.
+
+**Memaleh hof'ot be'kalut.**
+He fills entire concerts easily.
+
+**Yesh lo kol yafe me'od — ani ohev et ha'shirim shelo.**
+He has a very beautiful voice — I love his songs.
+
+**Yoter et ha'chomer ha'mukdam aval gam ha'chadash yafe.**
+More his early material, but the new songs are also beautiful.
+
+---
+
+⭐ **ZMAR 3 — Berry Sakharof**
+
+**Ha'zamar ha'ba nikra Berry Sakharof.**
+The next singer is called Berry Sakharof.
+
+**K'she'ani shome'a et ha'gitara shelo, ani yode'a she'ze hu.**
+When I hear his guitar, I know it's him.
+
+**Yesh lo sound yechudi me'od.**
+He has a very unique sound.
+
+**Hu yalid Turkiya ve'ala le'Yisra'el k'she'haya tza'ir.**
+He was born in Turkey and immigrated young.
+
+**Ha'muzikah shelo hi shiluv shel mizrach u'ma'arav.**
+His music blends east and west.
+
+**Orienta-li im elektronni — tzelil yechudi rak lo.**
+Oriental with electronic — a unique sound only he has.
+
+**Be'shnot ha-90, nikra "nasich ha'rok ha'Yisra'eli."**
+In the '90s he was called "the prince of Israeli rock."
+
+---
+
+⭐ **ZMAR 4 — Arik Einstein**
+
+**Ha'zamar ha'ba nikra Arik Einstein she'kvar lo itanu.**
+The next singer is Arik Einstein, who is no longer with us.
+
+**Niftar lifnei kama shanim, aval ha'muzikah shelo mamshicha.**
+He passed away a few years ago, but the music lives on.
+
+**Hu natan le'Yisra'el harbeh shirim ahuvim.**
+He gave Israel many beloved songs.
+
+**Ani choshev she'hu haya ha'zamar mispar 1 ba'konstnzuz ha'Yisra'eli.**
+I think he was the number-one consensus singer in Israel.
+
+**Anashim mikol ha'sugim ahavu oto.**
+People of all types loved him.
+
+**Ve'hayu atzuvim me'od k'she'niftar.**
+And were very sad when he died.
+
+**Hu gam sikhak be'harbeh sratim Yisra'elim.**
+He also acted in many Israeli films.`;
+
 export default function Videos() {
   const [expandedVideo, setExpandedVideo] = useState(null);
   const [currentCardIndex, setCurrentCardIndex] = useState({});
+  const [showTranscript, setShowTranscript] = useState({});
   const queryClient = useQueryClient();
 
   const { data: words = [] } = useQuery({
