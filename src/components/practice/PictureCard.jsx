@@ -35,14 +35,16 @@ export default function PictureCard({ card, onNext, onPrev, currentIndex, total,
 
       <div className="p-6">
         <div className="text-center mb-4">
-          <p className="text-lg text-gray-700 mb-2">
-            {card.hint}
-          </p>
+          <p className="text-lg text-gray-700 mb-2" dangerouslySetInnerHTML={{ __html: card.hint }} />
           <div className="flex items-center justify-center gap-3">
-            <span className="text-3xl font-bold text-violet-600" dir="rtl">
-              {card.hebrewWord}
-            </span>
-            <span className="text-2xl text-gray-400">=</span>
+            {showAnswer && (
+              <>
+                <span className="text-3xl font-bold text-violet-600" dir="rtl">
+                  {card.hebrewWord}
+                </span>
+                <span className="text-2xl text-gray-400">=</span>
+              </>
+            )}
             <span className="text-2xl font-bold text-violet-600">
               {showAnswer ? card.meaning : "_____"}
             </span>

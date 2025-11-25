@@ -9,7 +9,7 @@ import ParrotMascot from "../components/mascot/ParrotMascot";
 const pictureCards = [
   {
     image: "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b9324b0c0f25014c5938d/d31b8c35f_Screenshot2025-11-24at70051PM.png",
-    hint: "This laser is here <u>to help</u>",
+    hint: "",
     hebrewWord: "לעזור",
     transliteration: "La'azor",
     meaning: "To help",
@@ -17,7 +17,7 @@ const pictureCards = [
   },
   {
     image: "https://images.unsplash.com/photo-1589656966895-2f33e7653819?w=500",
-    hint: "A polar bear is saying 'Dov!' while giving a _____",
+    hint: "",
     hebrewWord: "דוב",
     transliteration: "Dov",
     meaning: "Bear",
@@ -25,7 +25,7 @@ const pictureCards = [
   },
   {
     image: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=500",
-    hint: "The dog is running around like a crazy _____",
+    hint: "",
     hebrewWord: "כלב",
     transliteration: "Kelev",
     meaning: "Dog",
@@ -33,7 +33,7 @@ const pictureCards = [
   },
   {
     image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=500",
-    hint: "Coffee keeps you alert and _____",
+    hint: "",
     hebrewWord: "קפה",
     transliteration: "Kafeh",
     meaning: "Coffee",
@@ -41,7 +41,7 @@ const pictureCards = [
   },
   {
     image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500",
-    hint: "A man is getting his picture taken, say _____!",
+    hint: "",
     hebrewWord: "גבר",
     transliteration: "Gever",
     meaning: "Man",
@@ -49,7 +49,7 @@ const pictureCards = [
   },
   {
     image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=500",
-    hint: "A woman holds a delicate _____",
+    hint: "",
     hebrewWord: "אישה",
     transliteration: "Isha",
     meaning: "Woman",
@@ -57,7 +57,7 @@ const pictureCards = [
   },
   {
     image: "https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=500",
-    hint: "Water is essential for _____",
+    hint: "",
     hebrewWord: "מים",
     transliteration: "Mayim",
     meaning: "Water",
@@ -65,7 +65,7 @@ const pictureCards = [
   },
   {
     image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500",
-    hint: "Bread fresh from the oven, what a _____!",
+    hint: "",
     hebrewWord: "לחם",
     transliteration: "Lechem",
     meaning: "Bread",
@@ -73,7 +73,7 @@ const pictureCards = [
   },
   {
     image: "https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=500",
-    hint: "A beautiful flower blooming in the _____",
+    hint: "",
     hebrewWord: "פרח",
     transliteration: "Perach",
     meaning: "Flower",
@@ -81,7 +81,7 @@ const pictureCards = [
   },
   {
     image: "https://images.unsplash.com/photo-1532274402911-5a369e4c4bb5?w=500",
-    hint: "The sun shines bright, bringing _____",
+    hint: "",
     hebrewWord: "שמש",
     transliteration: "Shemesh",
     meaning: "Sun",
@@ -89,7 +89,7 @@ const pictureCards = [
   },
   {
     image: "https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?w=500",
-    hint: "A tall tree stands in the _____",
+    hint: "",
     hebrewWord: "עץ",
     transliteration: "Etz",
     meaning: "Tree",
@@ -97,7 +97,7 @@ const pictureCards = [
   },
   {
     image: "https://images.unsplash.com/photo-1516483638261-f4dbaf036963?w=500",
-    hint: "Home is where the _____ is",
+    hint: "",
     hebrewWord: "בית",
     transliteration: "Bayit",
     meaning: "House/Home",
@@ -105,7 +105,7 @@ const pictureCards = [
   }
 ];
 
-export default function Pictures() {
+export default function PicturesLesson2() {
   const [pictureCardIndex, setPictureCardIndex] = useState(0);
   const [selectedLevel, setSelectedLevel] = useState("all");
   const queryClient = useQueryClient();
@@ -168,12 +168,12 @@ export default function Pictures() {
           className="mb-8"
         >
           <div className="flex items-center gap-4 mb-6">
-            <ParrotMascot size="sm" message="Learn with pictures!" />
+            <ParrotMascot size="sm" message="Image only - no hints!" />
             <div>
               <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-violet-600 via-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">
-                Picture Mnemonics
+                Pictures Lesson 2
               </h1>
-              <p className="text-gray-500">Learn Hebrew words through visual associations</p>
+              <p className="text-gray-500">Test yourself with images only - no word hints</p>
             </div>
           </div>
 
