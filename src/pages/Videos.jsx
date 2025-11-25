@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Play, ChevronDown, ChevronUp, Plus, Check, FileText } from "lucide-react";
+import { Play, ChevronDown, ChevronUp, Plus, Check, FileText, Pencil, X, Save } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -345,6 +345,8 @@ export default function Videos() {
   const [expandedVideo, setExpandedVideo] = useState(null);
   const [currentCardIndex, setCurrentCardIndex] = useState({});
   const [showTranscript, setShowTranscript] = useState({});
+  const [editMode, setEditMode] = useState({});
+  const [editedFlashcards, setEditedFlashcards] = useState({});
   const queryClient = useQueryClient();
 
   const { data: words = [] } = useQuery({
@@ -471,32 +473,115 @@ export default function Videos() {
                                       )}
 
                                       <div className="mt-4 p-4 bg-gradient-to-r from-violet-50 to-blue-50 rounded-xl border border-violet-100">
-                                                                <h3 className="font-semibold text-violet-700 mb-3">📖 Vocabulary from this video:</h3>
+                                                              <div className="flex items-center justify-between mb-3">
+                                                                <h3 className="font-semibold text-violet-700">📖 Vocabulary from this video:</h3>
+                                                                <Button
+                                                                  variant="ghost"
+                                                                  size="sm"
+                                                                  onClick={() => {
+                                                                    if (editMode[idx]) {
+                                                                      setEditMode(prev => ({ ...prev, [idx]: false }));
+                                                                    } else {
+                                                                      setEditedFlashcards(prev => ({ ...prev, [idx]: [...video.flashcards] }));
+                                                                      setEditMode(prev => ({ ...prev, [idx]: true }));
+                                                                    }
+                                                                  }}
+                                                                  className="text-violet-600 hover:text-violet-700"
+                                                                >
+                                                                  {editMode[idx] ? <X className="w-4 h-4 mr-1" /> : <Pencil className="w-4 h-4 mr-1" />}
+                                                                  {editMode[idx] ? "Cancel" : "Edit"}
+                                                                </Button>
+                                                              </div>
+
+                                                              {editMode[idx] ? (
+                                                                <div className="space-y-2">
+                                                                  {(editedFlashcards[idx] || video.flashcards).map((card, i) => (
+                                                                    <div key={i} className="flex items-center gap-2 bg-white p-2 rounded-lg border border-violet-200">
+                                                                      <input
+                                                                        type="text"
+                                                                        value={card.answer}
+                                                                        onChange={(e) => {
+                                                                          const updated = [...(editedFlashcards[idx] || video.flashcards)];
+                                                                          updated[i] = { ...updated[i], answer: e.target.value };
+                                                                          setEditedFlashcards(prev => ({ ...prev, [idx]: updated }));
+                                                                        }}
+                                                                        className="w-20 px-2 py-1 border rounded text-violet-600 font-medium text-sm"
+                                                                        placeholder="Hebrew"
+                                                                      />
+                                                                      <input
+                                                                        type="text"
+                                                                        value={card.transliteration}
+                                                                        onChange={(e) => {
+                                                                          const updated = [...(editedFlashcards[idx] || video.flashcards)];
+                                                                          updated[i] = { ...updated[i], transliteration: e.target.value };
+                                                                          setEditedFlashcards(prev => ({ ...prev, [idx]: updated }));
+                                                                        }}
+                                                                        className="w-24 px-2 py-1 border rounded text-sm"
+                                                                        placeholder="Transliteration"
+                                                                      />
+                                                                      <input
+                                                                        type="text"
+                                                                        value={card.meaning}
+                                                                        onChange={(e) => {
+                                                                          const updated = [...(editedFlashcards[idx] || video.flashcards)];
+                                                                          updated[i] = { ...updated[i], meaning: e.target.value };
+                                                                          setEditedFlashcards(prev => ({ ...prev, [idx]: updated }));
+                                                                        }}
+                                                                        className="flex-1 px-2 py-1 border rounded text-sm"
+                                                                        placeholder="Meaning"
+                                                                      />
+                                                                      <Button
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        onClick={() => {
+                                                                          const updated = (editedFlashcards[idx] || video.flashcards).filter((_, index) => index !== i);
+                                                                          setEditedFlashcards(prev => ({ ...prev, [idx]: updated }));
+                                                                        }}
+                                                                        className="text-red-400 hover:text-red-600 h-8 w-8"
+                                                                      >
+                                                                        <X className="w-4 h-4" />
+                                                                      </Button>
+                                                                    </div>
+                                                                  ))}
+                                                                  <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={() => {
+                                                                      const updated = [...(editedFlashcards[idx] || video.flashcards), { answer: "", transliteration: "", meaning: "", sentence: "", blank: "", fullTranslation: "" }];
+                                                                      setEditedFlashcards(prev => ({ ...prev, [idx]: updated }));
+                                                                    }}
+                                                                    className="w-full border-dashed border-violet-300 text-violet-600"
+                                                                  >
+                                                                    <Plus className="w-4 h-4 mr-1" /> Add Word
+                                                                  </Button>
+                                                                </div>
+                                                              ) : (
                                                                 <div className="flex flex-wrap gap-2 text-sm">
                                                                   {video.flashcards.map((card, i) => (
-                                                                                                <button 
-                                                                                                  key={i} 
-                                                                                                  onClick={() => handleAddWord(card)}
-                                                                                                  className={`flex items-center gap-1 px-3 py-1 rounded-full border transition-all ${
-                                                                                                    isWordSaved(card.answer) 
-                                                                                                      ? "bg-green-50 border-green-300 text-green-700" 
-                                                                                                      : "bg-white border-violet-200 text-gray-700 hover:bg-violet-100 hover:border-violet-300"
-                                                                                                  }`}
-                                                                                                >
-                                                                                                  {isWordSaved(card.answer) ? (
-                                                                                                    <Check className="w-3 h-3 text-green-600" />
-                                                                                                  ) : (
-                                                                                                    <Plus className="w-3 h-3 text-violet-500" />
-                                                                                                  )}
-                                                                                                  <span className="font-medium text-violet-600">{card.answer}</span>
-                                                                                                  <span className="text-gray-400 mx-1">•</span>
-                                                                                                  <span>{card.transliteration}</span>
-                                                                                                  <span className="text-gray-400 mx-1">•</span>
-                                                                                                  <span className="text-gray-500">{card.meaning}</span>
-                                                                                                </button>
-                                                                                              ))}
+                                                                    <button 
+                                                                      key={i} 
+                                                                      onClick={() => handleAddWord(card)}
+                                                                      className={`flex items-center gap-1 px-3 py-1 rounded-full border transition-all ${
+                                                                        isWordSaved(card.answer) 
+                                                                          ? "bg-green-50 border-green-300 text-green-700" 
+                                                                          : "bg-white border-violet-200 text-gray-700 hover:bg-violet-100 hover:border-violet-300"
+                                                                      }`}
+                                                                    >
+                                                                      {isWordSaved(card.answer) ? (
+                                                                        <Check className="w-3 h-3 text-green-600" />
+                                                                      ) : (
+                                                                        <Plus className="w-3 h-3 text-violet-500" />
+                                                                      )}
+                                                                      <span className="font-medium text-violet-600">{card.answer}</span>
+                                                                      <span className="text-gray-400 mx-1">•</span>
+                                                                      <span>{card.transliteration}</span>
+                                                                      <span className="text-gray-400 mx-1">•</span>
+                                                                      <span className="text-gray-500">{card.meaning}</span>
+                                                                    </button>
+                                                                  ))}
                                                                 </div>
-                                                              </div>
+                                                              )}
+                                                            </div>
                 
                 <div className="mt-6">
                   <Button
