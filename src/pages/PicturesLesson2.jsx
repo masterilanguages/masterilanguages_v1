@@ -16,7 +16,7 @@ const pictureCards = [
     mnemonic: "Sounds like 'laser' - imagine a laser beam helping someone!"
   },
   {
-    image: "https://images.unsplash.com/photo-1589656966895-2f33e7653819?w=500",
+    image: "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b9324b0c0f25014c5938d/a8bc7068f_image.png",
     hint: "",
     hebrewWord: "דוב",
     transliteration: "Dov",

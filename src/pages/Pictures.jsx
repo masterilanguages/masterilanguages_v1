@@ -16,8 +16,8 @@ const pictureCards = [
     mnemonic: "Sounds like 'laser' - imagine a laser beam helping someone!"
   },
   {
-    image: "https://images.unsplash.com/photo-1589656966895-2f33e7653819?w=500",
-    hint: "A polar bear is saying 'Dov!' while giving a _____",
+    image: "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b9324b0c0f25014c5938d/a8bc7068f_image.png",
+    hint: "A bear in a dove costume is saying 'Dov!' - a _____",
     hebrewWord: "דוב",
     transliteration: "Dov",
     meaning: "Bear",
