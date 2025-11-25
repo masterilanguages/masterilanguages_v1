@@ -10,6 +10,60 @@ import YouTubePlayer from "../components/practice/YouTubePlayer";
 import ClozeFlashcard from "../components/videos/ClozeFlashcard";
 import ParrotMascot from "../components/mascot/ParrotMascot";
 
+function TranscriptWithClickableWords({ transcript, onWordClick, savedWords }) {
+  const lines = transcript.split('\n');
+  
+  return (
+    <div className="space-y-2">
+      {lines.map((line, idx) => {
+        if (line.trim() === '---') {
+          return <hr key={idx} className="my-4 border-blue-200" />;
+        }
+        
+        if (line.startsWith('⭐')) {
+          return <p key={idx} className="font-bold text-violet-700 mt-4">{line}</p>;
+        }
+        
+        const isBold = line.startsWith('**') && line.endsWith('**');
+        
+        if (isBold) {
+          const content = line.slice(2, -2);
+          const nextLine = lines[idx + 1];
+          const englishTranslation = nextLine && !nextLine.startsWith('**') && !nextLine.startsWith('⭐') && nextLine.trim() !== '---' ? nextLine.trim() : '';
+          
+          const words = content.split(/(\s+)/);
+          const isSaved = savedWords?.some(w => w.phonetic === content);
+          
+          return (
+            <p key={idx} className="mb-1">
+              <button
+                onClick={() => onWordClick(content, englishTranslation)}
+                className={`text-left font-semibold transition-all hover:bg-violet-100 rounded px-1 -mx-1 ${
+                  isSaved ? 'text-green-600' : 'text-gray-800 hover:text-violet-600'
+                }`}
+                title={isSaved ? "Already saved" : "Click to add to Word Bank"}
+              >
+                {content}
+                {isSaved && <span className="ml-1 text-green-500">✓</span>}
+              </button>
+            </p>
+          );
+        }
+        
+        if (line.trim() && !lines[idx - 1]?.startsWith('**')) {
+          return <p key={idx} className="text-gray-600 text-sm mb-3 pl-1">{line}</p>;
+        }
+        
+        if (line.trim()) {
+          return <p key={idx} className="text-gray-600 text-sm mb-3 pl-1">{line}</p>;
+        }
+        
+        return null;
+      })}
+    </div>
+  );
+}
+
 const videoData = [
   {
     title: "בן העשיר והעבד החמדן - The Rich Man's Son & The Greedy Servant",
@@ -290,6 +344,34 @@ export default function Videos() {
     queryFn: () => base44.entities.Word.list(),
   });
 
+  const { data: wordBankWords = [] } = useQuery({
+    queryKey: ['wordbank'],
+    queryFn: () => base44.entities.Word.filter({ category: "wordbank" }),
+  });
+
+  const addToWordBankMutation = useMutation({
+    mutationFn: (wordData) => base44.entities.Word.create(wordData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['wordbank'] });
+      toast.success("Word added to Word Bank!");
+    },
+  });
+
+  const handleAddToWordBank = (transliteration, english) => {
+    const alreadySaved = wordBankWords.some(w => w.phonetic === transliteration);
+    if (alreadySaved) {
+      toast.info("This word is already in your Word Bank");
+      return;
+    }
+    addToWordBankMutation.mutate({
+      word: transliteration,
+      translation: english,
+      phonetic: transliteration,
+      category: "wordbank",
+      difficulty: "beginner",
+    });
+  };
+
   const addWordMutation = useMutation({
     mutationFn: (wordData) => base44.entities.Word.create(wordData),
     onSuccess: () => {
@@ -369,9 +451,11 @@ export default function Videos() {
                                                 exit={{ opacity: 0, height: 0 }}
                                                 className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-200 max-h-96 overflow-y-auto"
                                               >
-                                                <ReactMarkdown className="prose prose-sm max-w-none text-gray-700 [&>p]:mb-3 [&>hr]:my-4 [&>hr]:border-blue-200">
-                                                  {israeliMusicTranscript}
-                                                </ReactMarkdown>
+                                                <TranscriptWithClickableWords 
+                                                  transcript={israeliMusicTranscript} 
+                                                  onWordClick={handleAddToWordBank}
+                                                  savedWords={wordBankWords}
+                                                />
                                               </motion.div>
                                             )}
                                           </AnimatePresence>

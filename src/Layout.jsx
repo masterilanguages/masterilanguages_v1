@@ -20,14 +20,19 @@ import { ChevronDown } from "lucide-react";
 
 const hebrewItems = [
   {
-    title: "Pictures 1",
+    title: "Pictures - Level 1",
     url: createPageUrl("Pictures"),
     icon: Image,
   },
   {
-    title: "Pictures 2",
+    title: "Pictures - Level 2",
     url: createPageUrl("PicturesLesson2"),
     icon: Image,
+  },
+  {
+    title: "Word Bank",
+    url: createPageUrl("WordBank"),
+    icon: Library,
   },
   {
     title: "Words",
