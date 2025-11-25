@@ -1,5 +1,8 @@
 import React, { useState } from "react";
-import { Play, ChevronDown, ChevronUp } from "lucide-react";
+import { Play, ChevronDown, ChevronUp, Plus, Check } from "lucide-react";
+import { base44 } from "@/api/base44Client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import YouTubePlayer from "../components/practice/YouTubePlayer";
@@ -76,6 +79,38 @@ const videoData = [
 export default function Videos() {
   const [expandedVideo, setExpandedVideo] = useState(null);
   const [currentCardIndex, setCurrentCardIndex] = useState({});
+  const queryClient = useQueryClient();
+
+  const { data: words = [] } = useQuery({
+    queryKey: ['words'],
+    queryFn: () => base44.entities.Word.list(),
+  });
+
+  const addWordMutation = useMutation({
+    mutationFn: (wordData) => base44.entities.Word.create(wordData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['words'] });
+      toast.success("Word added to your Library!");
+    },
+  });
+
+  const isWordSaved = (hebrewWord) => {
+    return words.some(w => w.word === hebrewWord);
+  };
+
+  const handleAddWord = (card) => {
+    if (isWordSaved(card.answer)) {
+      toast.info("This word is already in your Library");
+      return;
+    }
+    addWordMutation.mutate({
+      word: card.answer,
+      translation: card.meaning,
+      phonetic: card.transliteration,
+      category: "basics",
+      difficulty: "beginner",
+    });
+  };
 
   const handleNextCard = (videoIdx) => {
     setCurrentCardIndex(prev => ({
@@ -116,14 +151,27 @@ export default function Videos() {
                                                                 <h3 className="font-semibold text-violet-700 mb-3">📖 Vocabulary from this video:</h3>
                                                                 <div className="flex flex-wrap gap-2 text-sm">
                                                                   {video.flashcards.map((card, i) => (
-                                                                    <span key={i} className="bg-white px-3 py-1 rounded-full border border-violet-200 text-gray-700">
-                                                                      <span className="font-medium text-violet-600">{card.answer}</span>
-                                                                      <span className="text-gray-400 mx-1">•</span>
-                                                                      <span>{card.transliteration}</span>
-                                                                      <span className="text-gray-400 mx-1">•</span>
-                                                                      <span className="text-gray-500">{card.meaning}</span>
-                                                                    </span>
-                                                                  ))}
+                                                                                                <button 
+                                                                                                  key={i} 
+                                                                                                  onClick={() => handleAddWord(card)}
+                                                                                                  className={`flex items-center gap-1 px-3 py-1 rounded-full border transition-all ${
+                                                                                                    isWordSaved(card.answer) 
+                                                                                                      ? "bg-green-50 border-green-300 text-green-700" 
+                                                                                                      : "bg-white border-violet-200 text-gray-700 hover:bg-violet-100 hover:border-violet-300"
+                                                                                                  }`}
+                                                                                                >
+                                                                                                  {isWordSaved(card.answer) ? (
+                                                                                                    <Check className="w-3 h-3 text-green-600" />
+                                                                                                  ) : (
+                                                                                                    <Plus className="w-3 h-3 text-violet-500" />
+                                                                                                  )}
+                                                                                                  <span className="font-medium text-violet-600">{card.answer}</span>
+                                                                                                  <span className="text-gray-400 mx-1">•</span>
+                                                                                                  <span>{card.transliteration}</span>
+                                                                                                  <span className="text-gray-400 mx-1">•</span>
+                                                                                                  <span className="text-gray-500">{card.meaning}</span>
+                                                                                                </button>
+                                                                                              ))}
                                                                 </div>
                                                               </div>
                 
