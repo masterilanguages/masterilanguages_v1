@@ -463,40 +463,18 @@ export default function Videos() {
                                                                                                 exit={{ opacity: 0, height: 0 }}
                                                                                                 className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-200"
                                                                                               >
-                                                                                                <div className="flex items-center justify-between mb-3">
-                                                                                                  <span className="text-sm text-blue-600 font-medium">Transcript</span>
-                                                                                                  <Button
-                                                                                                    variant="ghost"
-                                                                                                    size="sm"
-                                                                                                    onClick={() => {
-                                                                                                      if (transcriptEditMode[idx]) {
-                                                                                                        setTranscriptEditMode(prev => ({ ...prev, [idx]: false }));
-                                                                                                      } else {
-                                                                                                        setEditedTranscript(prev => ({ ...prev, [idx]: israeliMusicTranscript }));
-                                                                                                        setTranscriptEditMode(prev => ({ ...prev, [idx]: true }));
-                                                                                                      }
-                                                                                                    }}
-                                                                                                    className="text-blue-600 hover:text-blue-700"
-                                                                                                  >
-                                                                                                    {transcriptEditMode[idx] ? <X className="w-4 h-4 mr-1" /> : <Pencil className="w-4 h-4 mr-1" />}
-                                                                                                    {transcriptEditMode[idx] ? "Cancel" : "Edit"}
-                                                                                                  </Button>
-                                                                                                </div>
-                                                                                                <div className="max-h-96 overflow-y-auto">
-                                                                                                  {transcriptEditMode[idx] ? (
-                                                                                                    <textarea
-                                                                                                      value={editedTranscript[idx] || israeliMusicTranscript}
-                                                                                                      onChange={(e) => setEditedTranscript(prev => ({ ...prev, [idx]: e.target.value }))}
-                                                                                                      className="w-full h-96 p-3 border border-blue-200 rounded-lg text-sm font-mono resize-none focus:outline-none focus:ring-2 focus:ring-blue-300"
-                                                                                                    />
-                                                                                                  ) : (
-                                                                                                    <TranscriptWithClickableWords 
-                                                                                                      transcript={editedTranscript[idx] || israeliMusicTranscript} 
-                                                                                                      onWordClick={handleAddToWordBank}
-                                                                                                      savedWords={wordBankWords}
-                                                                                                    />
-                                                                                                  )}
-                                                                                                </div>
+                                                                                                <div 
+                                                                                                                                                        contentEditable
+                                                                                                                                                        suppressContentEditableWarning
+                                                                                                                                                        onBlur={(e) => setEditedTranscript(prev => ({ ...prev, [idx]: e.currentTarget.innerText }))}
+                                                                                                                                                        className="max-h-96 overflow-y-auto whitespace-pre-wrap focus:outline-none focus:ring-2 focus:ring-blue-300 rounded-lg p-2"
+                                                                                                                                                      >
+                                                                                                                                                        <TranscriptWithClickableWords 
+                                                                                                                                                          transcript={editedTranscript[idx] || israeliMusicTranscript} 
+                                                                                                                                                          onWordClick={handleAddToWordBank}
+                                                                                                                                                          savedWords={wordBankWords}
+                                                                                                                                                        />
+                                                                                                                                                      </div>
                                                                                               </motion.div>
                                                                                             )}
                                                                                           </AnimatePresence>
