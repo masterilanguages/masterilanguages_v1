@@ -1,5 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { base44 } from "@/api/base44Client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import PictureCard from "../components/practice/PictureCard";
 import ParrotMascot from "../components/mascot/ParrotMascot";
 
@@ -104,6 +107,57 @@ const pictureCards = [
 
 export default function Pictures() {
   const [pictureCardIndex, setPictureCardIndex] = useState(0);
+  const [selectedLevel, setSelectedLevel] = useState("all");
+  const queryClient = useQueryClient();
+
+  const { data: ratings = [] } = useQuery({
+    queryKey: ['pictureWordRatings'],
+    queryFn: () => base44.entities.PictureWord.list(),
+  });
+
+  const rateMutation = useMutation({
+    mutationFn: async ({ wordId, confidence }) => {
+      const existing = ratings.find(r => r.word_id === wordId);
+      if (existing) {
+        return base44.entities.PictureWord.update(existing.id, { confidence });
+      } else {
+        return base44.entities.PictureWord.create({ 
+          word_id: wordId, 
+          hebrew_word: wordId,
+          confidence 
+        });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pictureWordRatings'] });
+    },
+  });
+
+  const getRating = (hebrewWord) => {
+    const rating = ratings.find(r => r.word_id === hebrewWord);
+    return rating?.confidence || 0;
+  };
+
+  const filteredCards = selectedLevel === "all" 
+    ? pictureCards 
+    : pictureCards.filter(card => {
+        const rating = getRating(card.hebrewWord);
+        return rating === parseInt(selectedLevel) || (selectedLevel === "0" && rating === 0);
+      });
+
+  const currentCard = filteredCards[pictureCardIndex] || filteredCards[0];
+
+  const handleNext = () => {
+    setPictureCardIndex((prev) => (prev + 1) % filteredCards.length);
+  };
+
+  const handlePrev = () => {
+    setPictureCardIndex((prev) => (prev - 1 + filteredCards.length) % filteredCards.length);
+  };
+
+  useEffect(() => {
+    setPictureCardIndex(0);
+  }, [selectedLevel]);
 
   return (
     <div className="min-h-screen p-4 md:p-8">
@@ -122,15 +176,40 @@ export default function Pictures() {
               <p className="text-gray-500">Learn Hebrew words through visual associations</p>
             </div>
           </div>
+
+          <div className="flex items-center gap-4">
+            <Select value={selectedLevel} onValueChange={setSelectedLevel}>
+              <SelectTrigger className="w-48 border-2 border-violet-100 rounded-xl">
+                <SelectValue placeholder="Filter by level" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Cards ({pictureCards.length})</SelectItem>
+                <SelectItem value="0">Not rated ({pictureCards.filter(c => getRating(c.hebrewWord) === 0).length})</SelectItem>
+                <SelectItem value="1">Level 1 ({pictureCards.filter(c => getRating(c.hebrewWord) === 1).length})</SelectItem>
+                <SelectItem value="2">Level 2 ({pictureCards.filter(c => getRating(c.hebrewWord) === 2).length})</SelectItem>
+                <SelectItem value="3">Level 3 ({pictureCards.filter(c => getRating(c.hebrewWord) === 3).length})</SelectItem>
+                <SelectItem value="4">Level 4 ({pictureCards.filter(c => getRating(c.hebrewWord) === 4).length})</SelectItem>
+                <SelectItem value="5">Level 5 - Mastered ({pictureCards.filter(c => getRating(c.hebrewWord) === 5).length})</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </motion.div>
 
-        <PictureCard
-          card={pictureCards[pictureCardIndex]}
-          currentIndex={pictureCardIndex}
-          total={pictureCards.length}
-          onNext={() => setPictureCardIndex((prev) => (prev + 1) % pictureCards.length)}
-          onPrev={() => setPictureCardIndex((prev) => (prev - 1 + pictureCards.length) % pictureCards.length)}
-        />
+        {filteredCards.length === 0 ? (
+          <div className="text-center py-20">
+            <ParrotMascot size="lg" message="No cards in this category yet!" />
+          </div>
+        ) : (
+          <PictureCard
+            card={currentCard}
+            currentIndex={pictureCardIndex}
+            total={filteredCards.length}
+            onNext={handleNext}
+            onPrev={handlePrev}
+            onRate={(wordId, confidence) => rateMutation.mutate({ wordId, confidence })}
+            currentRating={getRating(currentCard?.hebrewWord)}
+          />
+        )}
       </div>
     </div>
   );
