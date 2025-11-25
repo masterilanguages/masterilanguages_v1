@@ -347,7 +347,7 @@ export default function Videos() {
   const [showTranscript, setShowTranscript] = useState({});
   const [editMode, setEditMode] = useState({});
   const [editedFlashcards, setEditedFlashcards] = useState({});
-  const [transcriptEditMode, setTranscriptEditMode] = useState({});
+  
   const [editedTranscript, setEditedTranscript] = useState({});
   const queryClient = useQueryClient();
 
