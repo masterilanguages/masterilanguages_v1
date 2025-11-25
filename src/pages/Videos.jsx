@@ -31,21 +31,29 @@ function TranscriptWithClickableWords({ transcript, onWordClick, savedWords }) {
           const nextLine = lines[idx + 1];
           const englishTranslation = nextLine && !nextLine.startsWith('**') && !nextLine.startsWith('⭐') && nextLine.trim() !== '---' ? nextLine.trim() : '';
           
-          const words = content.split(/(\s+)/);
-          const isSaved = savedWords?.some(w => w.phonetic === content);
+          // Split into individual words
+          const words = content.split(/\s+/).filter(w => w.length > 0);
           
           return (
-            <p key={idx} className="mb-1">
-              <button
-                onClick={() => onWordClick(content, englishTranslation)}
-                className={`text-left font-semibold transition-all hover:bg-violet-100 rounded px-1 -mx-1 ${
-                  isSaved ? 'text-green-600' : 'text-gray-800 hover:text-violet-600'
-                }`}
-                title={isSaved ? "Already saved" : "Click to add to Word Bank"}
-              >
-                {content}
-                {isSaved && <span className="ml-1 text-green-500">✓</span>}
-              </button>
+            <p key={idx} className="mb-1 font-semibold text-gray-800">
+              {words.map((word, wordIdx) => {
+                const isSaved = savedWords?.some(w => w.phonetic === word);
+                return (
+                  <span key={wordIdx}>
+                    <button
+                      onClick={() => onWordClick(word, '')}
+                      className={`transition-all hover:bg-violet-100 rounded px-0.5 ${
+                        isSaved ? 'text-green-600' : 'hover:text-violet-600'
+                      }`}
+                      title={isSaved ? "Already saved" : `Click to add "${word}" to Word Bank`}
+                    >
+                      {word}
+                      {isSaved && <span className="text-green-500 text-xs">✓</span>}
+                    </button>
+                    {wordIdx < words.length - 1 && ' '}
+                  </span>
+                );
+              })}
             </p>
           );
         }
