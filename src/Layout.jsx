@@ -30,8 +30,13 @@ const hebrewItems = [
     icon: Image,
   },
   {
-    title: "Word Bank",
+    title: "Words I Don't Know",
     url: createPageUrl("WordBank"),
+    icon: Library,
+  },
+  {
+    title: "Words I Know",
+    url: createPageUrl("WordsIKnow"),
     icon: Library,
   },
   {

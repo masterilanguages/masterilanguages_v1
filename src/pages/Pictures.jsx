@@ -83,21 +83,41 @@ export default function Pictures() {
     queryFn: () => base44.entities.PictureWord.list(),
   });
 
+  const { data: wordsIKnow = [] } = useQuery({
+    queryKey: ['words_i_know'],
+    queryFn: () => base44.entities.Word.filter({ category: "words_i_know" }),
+  });
+
   const rateMutation = useMutation({
-    mutationFn: async ({ wordId, confidence }) => {
+    mutationFn: async ({ wordId, confidence, card }) => {
       const existing = ratings.find(r => r.word_id === wordId);
       if (existing) {
-        return base44.entities.PictureWord.update(existing.id, { confidence });
+        await base44.entities.PictureWord.update(existing.id, { confidence });
       } else {
-        return base44.entities.PictureWord.create({ 
+        await base44.entities.PictureWord.create({ 
           word_id: wordId, 
           hebrew_word: wordId,
           confidence 
         });
       }
+      
+      // If rated 5, add to "Words I Know" word bank
+      if (confidence === 5 && card) {
+        const alreadySaved = wordsIKnow.some(w => w.phonetic === card.transliteration);
+        if (!alreadySaved) {
+          await base44.entities.Word.create({
+            word: card.hebrewWord,
+            translation: card.meaning,
+            phonetic: card.transliteration,
+            category: "words_i_know",
+            difficulty: "beginner",
+          });
+        }
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pictureWordRatings'] });
+      queryClient.invalidateQueries({ queryKey: ['words_i_know'] });
     },
   });
 
@@ -174,7 +194,7 @@ export default function Pictures() {
             total={filteredCards.length}
             onNext={handleNext}
             onPrev={handlePrev}
-            onRate={(wordId, confidence) => rateMutation.mutate({ wordId, confidence })}
+            onRate={(wordId, confidence) => rateMutation.mutate({ wordId, confidence, card: currentCard })}
             currentRating={getRating(currentCard?.hebrewWord)}
           />
         )}
