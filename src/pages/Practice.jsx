@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Sparkles, RotateCcw } from "lucide-react";
+import { Sparkles, RotateCcw, Play, Volume2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import WordCard from "../components/practice/WordCard";
 import SoundWave from "../components/practice/SoundWave";
@@ -16,6 +16,7 @@ export default function Practice() {
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [sessionWords, setSessionWords] = useState([]);
   const [sessionStats, setSessionStats] = useState({ correct: 0, total: 0 });
+  const [mode, setMode] = useState("list"); // "list" or "flashcards"
   
   const queryClient = useQueryClient();
 
@@ -87,8 +88,20 @@ export default function Practice() {
   const resetSession = () => {
     setSessionStats({ correct: 0, total: 0 });
     setCurrentWordIndex(0);
-    const shuffled = [...words].sort(() => Math.random() - 0.5);
+    const shuffled = [...filteredByFolder].sort(() => Math.random() - 0.5);
     setSessionWords(shuffled);
+  };
+
+  const startFlashcards = () => {
+    resetSession();
+    setMode("flashcards");
+  };
+
+  const playAudio = (word) => {
+    if (word.audio_url) {
+      const audio = new Audio(word.audio_url);
+      audio.play();
+    }
   };
 
   if (isLoading) {
@@ -181,7 +194,7 @@ export default function Practice() {
                               </div>
                             </div>
 
-                            {sessionWords.length === 0 ? (
+                            {filteredByFolder.length === 0 ? (
                               <motion.div
                                 initial={{ scale: 0.9, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
@@ -189,16 +202,81 @@ export default function Practice() {
                               >
                                 <ParrotMascot size="lg" message="Add some words to start learning!" className="mb-4" />
                               </motion.div>
+                            ) : mode === "list" ? (
+                              <div>
+                                <div className="bg-gradient-to-r from-violet-500 to-blue-500 rounded-2xl p-6 mb-6 text-white">
+                                  <div className="flex items-center justify-between">
+                                    <div>
+                                      <h2 className="text-xl font-bold mb-1">Ready to practice?</h2>
+                                      <p className="text-white/80">Test yourself with flashcards</p>
+                                    </div>
+                                    <Button 
+                                      onClick={startFlashcards}
+                                      className="bg-white text-violet-600 hover:bg-violet-50 rounded-xl px-6"
+                                    >
+                                      <Play className="w-4 h-4 mr-2" />
+                                      Start Flashcards
+                                    </Button>
+                                  </div>
+                                </div>
+                                
+                                <div className="grid gap-3">
+                                  {filteredByFolder.map((word) => (
+                                    <motion.div
+                                      key={word.id}
+                                      initial={{ opacity: 0, y: 10 }}
+                                      animate={{ opacity: 1, y: 0 }}
+                                      className="bg-white/80 backdrop-blur-sm rounded-xl border border-violet-100 p-4 flex items-center justify-between hover:shadow-md transition-shadow"
+                                    >
+                                      <div className="flex items-center gap-4">
+                                        <span className="text-2xl font-bold text-violet-600" dir="rtl">{word.word}</span>
+                                        <span className="text-gray-400">•</span>
+                                        <span className="text-gray-600">{word.phonetic}</span>
+                                        <span className="text-gray-400">•</span>
+                                        <span className="text-gray-500">{word.translation}</span>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        {word.audio_url && (
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => playAudio(word)}
+                                            className="text-violet-500 hover:text-violet-600 hover:bg-violet-50"
+                                          >
+                                            <Volume2 className="w-4 h-4" />
+                                          </Button>
+                                        )}
+                                        <span className={`text-xs px-2 py-1 rounded-full ${
+                                          (word.times_practiced || 0) >= 5 
+                                            ? "bg-green-100 text-green-700" 
+                                            : "bg-violet-100 text-violet-700"
+                                        }`}>
+                                          {word.times_practiced || 0}/5
+                                        </span>
+                                      </div>
+                                    </motion.div>
+                                  ))}
+                                </div>
+                              </div>
                             ) : (
-                              <AnimatePresence mode="wait">
-                                <WordCard
-                                  key={currentWord?.id}
-                                  word={currentWord}
-                                  onRate={handleRate}
-                                  onSkip={handleSkip}
-                                  currentRating={currentWord?.times_practiced || 0}
-                                />
-                              </AnimatePresence>
+                              <div>
+                                <Button
+                                  onClick={() => setMode("list")}
+                                  variant="outline"
+                                  className="mb-4 border-2 border-violet-200 hover:border-violet-300 rounded-xl"
+                                >
+                                  ← Back to Word List
+                                </Button>
+                                <AnimatePresence mode="wait">
+                                  <WordCard
+                                    key={currentWord?.id}
+                                    word={currentWord}
+                                    onRate={handleRate}
+                                    onSkip={handleSkip}
+                                    currentRating={currentWord?.times_practiced || 0}
+                                  />
+                                </AnimatePresence>
+                              </div>
                             )}
               </div>
             </div>
