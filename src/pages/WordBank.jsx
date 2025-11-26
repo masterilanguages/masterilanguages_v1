@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Trash2 } from "lucide-react";
+import { Trash2, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -9,6 +9,8 @@ import ParrotMascot from "../components/mascot/ParrotMascot";
 
 export default function WordBank() {
   const queryClient = useQueryClient();
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [showAnswer, setShowAnswer] = useState(false);
 
   const { data: words = [], isLoading } = useQuery({
     queryKey: ['wordbank'],
@@ -71,39 +73,47 @@ export default function WordBank() {
             <ParrotMascot size="lg" message="No words yet! Click on words in video transcripts to add them here." />
           </div>
         ) : (
-          <div className="grid gap-3">
-            <AnimatePresence>
-              {words.map((word) => (
+          <div>
+            <div className="text-center mb-4 text-sm text-gray-500">
+              Word {currentIndex + 1} of {words.length}
+            </div>
+            <AnimatePresence mode="wait">
+              {words[currentIndex] && (
                 <motion.div
-                  key={word.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, x: -100 }}
-                  className="bg-white/80 backdrop-blur-sm rounded-xl border border-violet-100 p-4"
+                  key={words[currentIndex].id}
+                  initial={{ opacity: 0, x: 50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -50 }}
+                  className="bg-white/80 backdrop-blur-sm rounded-xl border border-violet-100 p-6"
                 >
-                  <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
-                      <span className="text-xl font-bold text-violet-600">{word.phonetic}</span>
+                      <span className="text-2xl font-bold text-violet-600">{words[currentIndex].phonetic}</span>
                       <span className="text-gray-400">=</span>
-                      <span className="text-gray-600">_____</span>
+                      <span className="text-gray-600 text-xl">
+                        {showAnswer ? words[currentIndex].translation : "_____"}
+                      </span>
                     </div>
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => deleteMutation.mutate(word.id)}
+                      onClick={() => deleteMutation.mutate(words[currentIndex].id)}
                       className="text-gray-400 hover:text-red-500 hover:bg-red-50"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 mb-4">
                     {[1, 2, 3, 4, 5].map((num) => (
                       <Button
                         key={num}
-                        onClick={() => rateMutation.mutate({ word, rating: num })}
-                        variant={word.times_practiced === num ? "default" : "outline"}
+                        onClick={() => {
+                          rateMutation.mutate({ word: words[currentIndex], rating: num });
+                          setShowAnswer(true);
+                        }}
+                        variant={words[currentIndex].times_practiced === num ? "default" : "outline"}
                         className={`w-10 h-10 p-0 text-lg font-bold ${
-                          word.times_practiced === num
+                          words[currentIndex].times_practiced === num
                             ? "bg-gradient-to-r from-violet-500 to-blue-500 text-white"
                             : "border-2 border-violet-200 hover:border-violet-300"
                         }`}
@@ -112,8 +122,19 @@ export default function WordBank() {
                       </Button>
                     ))}
                   </div>
+                  {showAnswer && (
+                    <Button
+                      onClick={() => {
+                        setShowAnswer(false);
+                        setCurrentIndex((prev) => (prev + 1) % words.length);
+                      }}
+                      className="w-full bg-gradient-to-r from-violet-500 to-blue-500 hover:from-violet-600 hover:to-blue-600 text-white rounded-xl"
+                    >
+                      Next Word <ChevronRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  )}
                 </motion.div>
-              ))}
+              )}
             </AnimatePresence>
           </div>
         )}
