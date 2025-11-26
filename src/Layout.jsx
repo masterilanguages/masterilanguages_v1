@@ -2,6 +2,7 @@ import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Volume2, LayoutDashboard, Library, Sparkles, PlayCircle, Image } from "lucide-react";
+import QuickAddWord from "./components/QuickAddWord";
 import {
   Sidebar,
   SidebarContent,
@@ -192,6 +193,7 @@ export default function Layout({ children, currentPageName }) {
           <div className="flex-1 overflow-auto">
             {children}
           </div>
+          <QuickAddWord />
         </main>
       </div>
     </SidebarProvider>
