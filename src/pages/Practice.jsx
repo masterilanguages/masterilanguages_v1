@@ -3,11 +3,14 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Sparkles, RotateCcw, Play, Volume2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Sparkles, RotateCcw, Play, Volume2, Image, Loader2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import WordCard from "../components/practice/WordCard";
 import SoundWave from "../components/practice/SoundWave";
 import ParrotMascot from "../components/mascot/ParrotMascot";
+import { toast } from "sonner";
 
 
 export default function Practice() {
@@ -17,6 +20,10 @@ export default function Practice() {
   const [sessionWords, setSessionWords] = useState([]);
   const [sessionStats, setSessionStats] = useState({ correct: 0, total: 0 });
   const [mode, setMode] = useState("list"); // "list" or "flashcards"
+  const [mnemonicDialog, setMnemonicDialog] = useState({ open: false, word: null });
+  const [mnemonicPrompt, setMnemonicPrompt] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [expandedMnemonic, setExpandedMnemonic] = useState(null);
   
   const queryClient = useQueryClient();
 
@@ -101,6 +108,40 @@ export default function Practice() {
     if (word.audio_url) {
       const audio = new Audio(word.audio_url);
       audio.play();
+    }
+  };
+
+  const openMnemonicDialog = (word, e) => {
+    e.stopPropagation();
+    if (word.image_url) {
+      setExpandedMnemonic(expandedMnemonic === word.id ? null : word.id);
+    } else {
+      setMnemonicDialog({ open: true, word });
+      setMnemonicPrompt("");
+    }
+  };
+
+  const generateMnemonic = async () => {
+    if (!mnemonicPrompt.trim()) {
+      toast.error("Please describe your mnemonic idea");
+      return;
+    }
+    setIsGenerating(true);
+    try {
+      const { url } = await base44.integrations.Core.GenerateImage({
+        prompt: `Cute, funny, colorful mnemonic illustration for learning the word "${mnemonicDialog.word.phonetic}" (${mnemonicDialog.word.translation}): ${mnemonicPrompt}. Cartoon style, memorable, educational.`,
+      });
+      await updateWordMutation.mutateAsync({
+        id: mnemonicDialog.word.id,
+        data: { image_url: url },
+      });
+      toast.success("Mnemonic picture created!");
+      setMnemonicDialog({ open: false, word: null });
+      setExpandedMnemonic(mnemonicDialog.word.id);
+    } catch (error) {
+      toast.error("Failed to generate picture");
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -244,13 +285,19 @@ export default function Practice() {
                                               className={`${levelLabels[level].bg} ${levelLabels[level].border} border-2 rounded-2xl px-3 py-2 hover:shadow-md transition-all flex items-center gap-2`}
                                             >
                                               <button 
-                                                onClick={() => word.audio_url && playAudio(word)}
+                                                onClick={(e) => openMnemonicDialog(word, e)}
                                                 className="flex items-center gap-2 hover:opacity-80"
                                               >
                                                 <span className="font-medium text-gray-700">{word.phonetic}</span>
                                                 <span className="text-lg font-bold text-violet-600" dir="rtl">{word.word}</span>
                                                 <span className="text-gray-400 text-sm">({word.translation})</span>
-                                                {word.audio_url && <Volume2 className="w-3 h-3 text-gray-400" />}
+                                                {word.image_url && <Image className="w-3 h-3 text-violet-400" />}
+                                                {word.audio_url && (
+                                                  <Volume2 
+                                                    className="w-3 h-3 text-gray-400 hover:text-violet-500" 
+                                                    onClick={(e) => { e.stopPropagation(); playAudio(word); }}
+                                                  />
+                                                )}
                                               </button>
                                               <div className="flex gap-1 ml-2 border-l border-gray-200 pl-2">
                                                 {[1, 2, 3, 4, 5].map(num => (
@@ -267,6 +314,20 @@ export default function Practice() {
                                                   </button>
                                                 ))}
                                               </div>
+                                            {expandedMnemonic === word.id && word.image_url && (
+                                                <motion.div
+                                                  initial={{ opacity: 0, height: 0 }}
+                                                  animate={{ opacity: 1, height: "auto" }}
+                                                  exit={{ opacity: 0, height: 0 }}
+                                                  className="w-full mt-2"
+                                                >
+                                                  <img 
+                                                    src={word.image_url} 
+                                                    alt="Mnemonic" 
+                                                    className="w-full max-w-xs rounded-xl border-2 border-violet-200"
+                                                  />
+                                                </motion.div>
+                                              )}
                                             </motion.div>
                                           ))}
                                         </div>
@@ -274,6 +335,44 @@ export default function Practice() {
                                     );
                                   })}
                                 </div>
+
+                                <Dialog open={mnemonicDialog.open} onOpenChange={(open) => setMnemonicDialog({ ...mnemonicDialog, open })}>
+                                  <DialogContent className="sm:max-w-md">
+                                    <DialogHeader>
+                                      <DialogTitle>
+                                        Create mnemonic for <span className="text-violet-600">{mnemonicDialog.word?.phonetic}</span>
+                                      </DialogTitle>
+                                    </DialogHeader>
+                                    <div className="space-y-4">
+                                      <p className="text-sm text-gray-600">
+                                        What does "{mnemonicDialog.word?.phonetic}" sound like? Describe a funny picture to help you remember it means "{mnemonicDialog.word?.translation}"
+                                      </p>
+                                      <Textarea
+                                        placeholder="e.g., 'A dog waving a flag (degel sounds like dog + gel)'"
+                                        value={mnemonicPrompt}
+                                        onChange={(e) => setMnemonicPrompt(e.target.value)}
+                                        className="min-h-24"
+                                      />
+                                      <Button 
+                                        onClick={generateMnemonic}
+                                        disabled={isGenerating}
+                                        className="w-full bg-gradient-to-r from-violet-500 to-blue-500 hover:from-violet-600 hover:to-blue-600"
+                                      >
+                                        {isGenerating ? (
+                                          <>
+                                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                            Generating...
+                                          </>
+                                        ) : (
+                                          <>
+                                            <Image className="w-4 h-4 mr-2" />
+                                            Create Mnemonic Picture
+                                          </>
+                                        )}
+                                      </Button>
+                                    </div>
+                                  </DialogContent>
+                                </Dialog>
                               </div>
                             ) : (
                               <div>
