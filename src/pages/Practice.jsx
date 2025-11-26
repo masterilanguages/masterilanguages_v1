@@ -24,6 +24,7 @@ export default function Practice() {
   const [mnemonicPrompt, setMnemonicPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [expandedMnemonic, setExpandedMnemonic] = useState(null);
+  const [sentencesDialog, setSentencesDialog] = useState({ open: false, word: null, sentences: [], loading: false });
   
   const queryClient = useQueryClient();
 
@@ -118,6 +119,36 @@ export default function Practice() {
     } else {
       setMnemonicDialog({ open: true, word });
       setMnemonicPrompt("");
+    }
+  };
+
+  const openSentencesDialog = async (word, e) => {
+    e.stopPropagation();
+    setSentencesDialog({ open: true, word, sentences: [], loading: true });
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Generate 3 common Hebrew sentences using the word "${word.word}" (${word.phonetic} - ${word.translation}). For each sentence provide the Hebrew, transliteration, and English translation.`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            sentences: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  hebrew: { type: "string" },
+                  transliteration: { type: "string" },
+                  english: { type: "string" }
+                }
+              }
+            }
+          }
+        }
+      });
+      setSentencesDialog(prev => ({ ...prev, sentences: result.sentences, loading: false }));
+    } catch (error) {
+      toast.error("Failed to generate sentences");
+      setSentencesDialog(prev => ({ ...prev, loading: false }));
     }
   };
 
@@ -288,7 +319,7 @@ export default function Practice() {
                                               className={`${levelLabels[level].bg} ${levelLabels[level].border} border-2 rounded-2xl px-3 py-2 hover:shadow-md transition-all flex items-center gap-2`}
                                             >
                                               <button 
-                                                onClick={(e) => openMnemonicDialog(word, e)}
+                                                onClick={(e) => openSentencesDialog(word, e)}
                                                 className="flex items-center gap-2 hover:opacity-80"
                                               >
                                                 <span className="font-medium text-gray-700">{word.phonetic}</span>
@@ -380,6 +411,33 @@ export default function Practice() {
                                           </>
                                         )}
                                       </Button>
+                                    </div>
+                                  </DialogContent>
+                                </Dialog>
+
+                                <Dialog open={sentencesDialog.open} onOpenChange={(open) => setSentencesDialog({ ...sentencesDialog, open })}>
+                                  <DialogContent className="sm:max-w-lg">
+                                    <DialogHeader>
+                                      <DialogTitle className="flex items-center gap-2">
+                                        <span className="text-violet-600 text-xl" dir="rtl">{sentencesDialog.word?.word}</span>
+                                        <span className="text-gray-500">({sentencesDialog.word?.phonetic})</span>
+                                      </DialogTitle>
+                                    </DialogHeader>
+                                    <div className="space-y-4">
+                                      {sentencesDialog.loading ? (
+                                        <div className="flex items-center justify-center py-8">
+                                          <Loader2 className="w-6 h-6 animate-spin text-violet-500" />
+                                          <span className="ml-2 text-gray-500">Generating sentences...</span>
+                                        </div>
+                                      ) : (
+                                        sentencesDialog.sentences.map((sentence, idx) => (
+                                          <div key={idx} className="bg-violet-50 rounded-xl p-4 border border-violet-100">
+                                            <p className="text-xl font-medium text-gray-800 mb-1" dir="rtl">{sentence.hebrew}</p>
+                                            <p className="text-violet-600 text-sm mb-1">{sentence.transliteration}</p>
+                                            <p className="text-gray-500 text-sm">{sentence.english}</p>
+                                          </div>
+                                        ))
+                                      )}
                                     </div>
                                   </DialogContent>
                                 </Dialog>
