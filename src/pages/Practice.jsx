@@ -348,11 +348,18 @@ export default function Practice() {
                                         What does "{mnemonicDialog.word?.phonetic}" sound like? Describe a funny picture to help you remember it means "{mnemonicDialog.word?.translation}"
                                       </p>
                                       <Textarea
-                                        placeholder="e.g., 'A dog waving a flag (degel sounds like dog + gel)'"
+                                        placeholder="Describe what the picture should look like..."
                                         value={mnemonicPrompt}
                                         onChange={(e) => setMnemonicPrompt(e.target.value)}
                                         className="min-h-24"
                                       />
+                                      <button
+                                        type="button"
+                                        onClick={() => setMnemonicPrompt(`A funny picture showing "${mnemonicDialog.word?.phonetic}" sounds like...`)}
+                                        className="text-xs text-violet-500 hover:text-violet-700 underline text-left"
+                                      >
+                                        e.g., "A dog waving a flag (degel sounds like dog + gel)"
+                                      </button>
                                       <Button 
                                         onClick={generateMnemonic}
                                         disabled={isGenerating}
