@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, X, ChevronUp, ChevronDown } from "lucide-react";
+import { Plus, X, ChevronDown, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -11,24 +11,51 @@ export default function QuickAddWord() {
   const [isOpen, setIsOpen] = useState(false);
   const [word, setWord] = useState("");
   const [meaning, setMeaning] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
   const queryClient = useQueryClient();
 
   const addMutation = useMutation({
     mutationFn: (wordData) => base44.entities.Word.create(wordData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['wordbank'] });
+      queryClient.invalidateQueries({ queryKey: ['words'] });
       toast.success("Word added!");
       setWord("");
       setMeaning("");
     },
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!word.trim()) return;
+    
+    let translation = meaning.trim();
+    
+    // If no meaning provided, generate it
+    if (!translation) {
+      setIsGenerating(true);
+      try {
+        const result = await base44.integrations.Core.InvokeLLM({
+          prompt: `What is the English translation of the Hebrew word "${word}"? Just provide the translation, nothing else.`,
+          response_json_schema: {
+            type: "object",
+            properties: {
+              translation: { type: "string" }
+            }
+          }
+        });
+        translation = result.translation;
+      } catch (error) {
+        toast.error("Could not generate meaning");
+        setIsGenerating(false);
+        return;
+      }
+      setIsGenerating(false);
+    }
+    
     addMutation.mutate({
       word: word,
-      translation: meaning,
+      translation: translation,
       phonetic: word,
       category: "wordbank",
       difficulty: "beginner",
@@ -66,11 +93,14 @@ export default function QuickAddWord() {
               />
               <Button 
                 type="submit" 
-                disabled={!word.trim() || addMutation.isPending}
+                disabled={!word.trim() || addMutation.isPending || isGenerating}
                 className="w-full bg-gradient-to-r from-violet-500 to-blue-500 hover:from-violet-600 hover:to-blue-600 text-sm"
               >
-                <Plus className="w-4 h-4 mr-1" />
-                Add to Word Bank
+                {isGenerating ? (
+                  <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Generating...</>
+                ) : (
+                  <><Plus className="w-4 h-4 mr-1" /> Add to Word Bank</>
+                )}
               </Button>
             </form>
           </motion.div>
@@ -79,9 +109,9 @@ export default function QuickAddWord() {
       
       <Button
         onClick={() => setIsOpen(!isOpen)}
-        className="rounded-full h-12 w-12 bg-gradient-to-r from-violet-500 to-blue-500 hover:from-violet-600 hover:to-blue-600 shadow-lg"
+        className="rounded-full h-auto px-4 py-3 bg-gradient-to-r from-violet-500 to-blue-500 hover:from-violet-600 hover:to-blue-600 shadow-lg"
       >
-        {isOpen ? <ChevronDown className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
+        {isOpen ? <ChevronDown className="w-5 h-5" /> : <><Plus className="w-5 h-5 mr-1" /> Add a word</>}
       </Button>
     </div>
   );
