@@ -305,7 +305,7 @@ export default function Practice() {
                                                                                 3: { label: "💪 Comfortable", bg: "bg-blue-50", border: "border-blue-200" },
                                                                                 2: { label: "📚 Familiar", bg: "bg-violet-50", border: "border-violet-200" },
                                                                                 1: { label: "🌱 New", bg: "bg-purple-50", border: "border-purple-200" },
-                                                                                0: { label: "✨ New", bg: "bg-gray-50", border: "border-gray-200" },
+                                                                                0: { label: "📝 Rank the following words", bg: "bg-gray-50", border: "border-gray-200" },
                                                                               };
                                     return (
                                       <div key={level}>
