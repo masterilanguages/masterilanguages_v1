@@ -25,6 +25,7 @@ export default function Practice() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [expandedMnemonic, setExpandedMnemonic] = useState(null);
   const [sentencesDialog, setSentencesDialog] = useState({ open: false, word: null, sentences: [], loading: false });
+  const [conjugationDialog, setConjugationDialog] = useState({ open: false, word: null, conjugations: null, loading: false });
   
   const queryClient = useQueryClient();
 
@@ -122,7 +123,7 @@ export default function Practice() {
     }
   };
 
-  const openSentencesDialog = async (word, e) => {
+  const openWordDialog = async (word, e) => {
     e.stopPropagation();
     setSentencesDialog({ open: true, word, sentences: [], loading: true });
     try {
@@ -149,6 +150,39 @@ export default function Practice() {
     } catch (error) {
       toast.error("Failed to generate sentences");
       setSentencesDialog(prev => ({ ...prev, loading: false }));
+    }
+  };
+
+  const loadConjugations = async () => {
+    const word = sentencesDialog.word;
+    setConjugationDialog({ open: true, word, conjugations: null, loading: true });
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Conjugate the Hebrew verb "${word.word}" (${word.phonetic} - ${word.translation}) in present tense for all persons (I, you m/f, he, she, we, you pl m/f, they). Provide Hebrew, transliteration, and English for each.`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            root: { type: "string" },
+            binyan: { type: "string" },
+            conjugations: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  person: { type: "string" },
+                  hebrew: { type: "string" },
+                  transliteration: { type: "string" },
+                  english: { type: "string" }
+                }
+              }
+            }
+          }
+        }
+      });
+      setConjugationDialog(prev => ({ ...prev, conjugations: result, loading: false }));
+    } catch (error) {
+      toast.error("Failed to load conjugations");
+      setConjugationDialog(prev => ({ ...prev, loading: false }));
     }
   };
 
@@ -319,7 +353,7 @@ export default function Practice() {
                                               className={`${levelLabels[level].bg} ${levelLabels[level].border} border-2 rounded-2xl px-3 py-2 hover:shadow-md transition-all flex items-center gap-2`}
                                             >
                                               <button 
-                                                onClick={(e) => openSentencesDialog(word, e)}
+                                                onClick={(e) => openWordDialog(word, e)}
                                                 className="flex items-center gap-2 hover:opacity-80"
                                               >
                                                 <span className="font-medium text-gray-700">{word.phonetic}</span>
@@ -430,19 +464,63 @@ export default function Practice() {
                                           <span className="ml-2 text-gray-500">Generating sentences...</span>
                                         </div>
                                       ) : (
-                                        sentencesDialog.sentences.map((sentence, idx) => (
-                                          <div key={idx} className="bg-violet-50 rounded-xl p-4 border border-violet-100">
-                                            <p className="text-xl font-medium text-gray-800 mb-1" dir="rtl">{sentence.hebrew}</p>
-                                            <p className="text-violet-600 text-sm mb-1">{sentence.transliteration}</p>
-                                            <p className="text-gray-500 text-sm">{sentence.english}</p>
-                                          </div>
-                                        ))
+                                        <>
+                                          <Button
+                                            variant="outline"
+                                            onClick={loadConjugations}
+                                            className="w-full mb-4 border-2 border-blue-200 hover:border-blue-300 hover:bg-blue-50 text-blue-600"
+                                          >
+                                            <Sparkles className="w-4 h-4 mr-2" />
+                                            Conjugate Verb
+                                          </Button>
+                                          {sentencesDialog.sentences.map((sentence, idx) => (
+                                            <div key={idx} className="bg-violet-50 rounded-xl p-4 border border-violet-100">
+                                              <p className="text-xl font-medium text-gray-800 mb-1" dir="rtl">{sentence.hebrew}</p>
+                                              <p className="text-violet-600 text-sm mb-1">{sentence.transliteration}</p>
+                                              <p className="text-gray-500 text-sm">{sentence.english}</p>
+                                            </div>
+                                          ))}
+                                        </>
                                       )}
                                     </div>
                                   </DialogContent>
-                                </Dialog>
-                              </div>
-                            ) : (
+                                                                  </Dialog>
+
+                                                                  <Dialog open={conjugationDialog.open} onOpenChange={(open) => setConjugationDialog({ ...conjugationDialog, open })}>
+                                                                    <DialogContent className="sm:max-w-lg">
+                                                                      <DialogHeader>
+                                                                        <DialogTitle className="flex items-center gap-2">
+                                                                          Conjugations: <span className="text-violet-600" dir="rtl">{conjugationDialog.word?.word}</span>
+                                                                        </DialogTitle>
+                                                                      </DialogHeader>
+                                                                      <div className="space-y-3">
+                                                                        {conjugationDialog.loading ? (
+                                                                          <div className="flex items-center justify-center py-8">
+                                                                            <Loader2 className="w-6 h-6 animate-spin text-violet-500" />
+                                                                            <span className="ml-2 text-gray-500">Loading conjugations...</span>
+                                                                          </div>
+                                                                        ) : conjugationDialog.conjugations && (
+                                                                          <>
+                                                                            <div className="flex gap-2 text-sm text-gray-500 mb-2">
+                                                                              <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded">Root: {conjugationDialog.conjugations.root}</span>
+                                                                              <span className="bg-violet-100 text-violet-700 px-2 py-1 rounded">Binyan: {conjugationDialog.conjugations.binyan}</span>
+                                                                            </div>
+                                                                            <div className="grid gap-2">
+                                                                              {conjugationDialog.conjugations.conjugations.map((conj, idx) => (
+                                                                                <div key={idx} className="flex items-center justify-between bg-gray-50 rounded-lg p-3 border">
+                                                                                  <span className="text-gray-500 text-sm w-20">{conj.person}</span>
+                                                                                  <span className="text-xl font-medium text-gray-800" dir="rtl">{conj.hebrew}</span>
+                                                                                  <span className="text-violet-600 text-sm">{conj.transliteration}</span>
+                                                                                </div>
+                                                                              ))}
+                                                                            </div>
+                                                                          </>
+                                                                        )}
+                                                                      </div>
+                                                                    </DialogContent>
+                                                                  </Dialog>
+                                                                </div>
+                                                            ) : (
                               <div>
                                 <Button
                                   onClick={() => setMode("list")}
