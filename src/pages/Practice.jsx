@@ -427,6 +427,7 @@ export default function Practice() {
                                       {sentencesDialog.loading ? (
                                         <div className="flex items-center justify-center py-8">
                                           <Loader2 className="w-6 h-6 animate-spin text-violet-500" />
+                                          <span className="ml-2 text-gray-500">Generating sentences...</span>
                                         </div>
                                       ) : (
                                         sentencesDialog.sentences.map((sentence, idx) => (
