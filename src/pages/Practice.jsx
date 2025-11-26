@@ -220,42 +220,40 @@ export default function Practice() {
                                   </div>
                                 </div>
                                 
-                                <div className="grid gap-3">
-                                  {filteredByFolder.map((word) => (
-                                    <motion.div
-                                      key={word.id}
-                                      initial={{ opacity: 0, y: 10 }}
-                                      animate={{ opacity: 1, y: 0 }}
-                                      className="bg-white/80 backdrop-blur-sm rounded-xl border border-violet-100 p-4 flex items-center justify-between hover:shadow-md transition-shadow"
-                                    >
-                                      <div className="flex items-center gap-4">
-                                        <span className="text-2xl font-bold text-violet-600" dir="rtl">{word.word}</span>
-                                        <span className="text-gray-400">•</span>
-                                        <span className="text-gray-600">{word.phonetic}</span>
-                                        <span className="text-gray-400">•</span>
-                                        <span className="text-gray-500">{word.translation}</span>
+                                <div className="space-y-6">
+                                  {[5, 4, 3, 2, 1, 0].map(level => {
+                                    const levelWords = filteredByFolder.filter(w => (w.times_practiced || 0) === level);
+                                    if (levelWords.length === 0) return null;
+                                    const levelLabels = {
+                                      5: { label: "⭐ Mastered", bg: "bg-green-50", border: "border-green-200" },
+                                      4: { label: "🔥 Almost There", bg: "bg-emerald-50", border: "border-emerald-200" },
+                                      3: { label: "💪 Getting Better", bg: "bg-blue-50", border: "border-blue-200" },
+                                      2: { label: "📚 Learning", bg: "bg-violet-50", border: "border-violet-200" },
+                                      1: { label: "🌱 Just Started", bg: "bg-purple-50", border: "border-purple-200" },
+                                      0: { label: "✨ New Words", bg: "bg-gray-50", border: "border-gray-200" },
+                                    };
+                                    return (
+                                      <div key={level}>
+                                        <h3 className="text-sm font-semibold text-gray-500 mb-3">{levelLabels[level].label} ({levelWords.length})</h3>
+                                        <div className="flex flex-wrap gap-2">
+                                          {levelWords.map((word) => (
+                                            <motion.button
+                                              key={word.id}
+                                              initial={{ opacity: 0, scale: 0.9 }}
+                                              animate={{ opacity: 1, scale: 1 }}
+                                              onClick={() => word.audio_url && playAudio(word)}
+                                              className={`${levelLabels[level].bg} ${levelLabels[level].border} border-2 rounded-2xl px-4 py-2 hover:shadow-md transition-all hover:scale-105 flex items-center gap-2`}
+                                            >
+                                              <span className="font-medium text-gray-700">{word.phonetic}</span>
+                                              <span className="text-lg font-bold text-violet-600" dir="rtl">{word.word}</span>
+                                              <span className="text-gray-400 text-sm">({word.translation})</span>
+                                              {word.audio_url && <Volume2 className="w-3 h-3 text-gray-400" />}
+                                            </motion.button>
+                                          ))}
+                                        </div>
                                       </div>
-                                      <div className="flex items-center gap-2">
-                                        {word.audio_url && (
-                                          <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() => playAudio(word)}
-                                            className="text-violet-500 hover:text-violet-600 hover:bg-violet-50"
-                                          >
-                                            <Volume2 className="w-4 h-4" />
-                                          </Button>
-                                        )}
-                                        <span className={`text-xs px-2 py-1 rounded-full ${
-                                          (word.times_practiced || 0) >= 5 
-                                            ? "bg-green-100 text-green-700" 
-                                            : "bg-violet-100 text-violet-700"
-                                        }`}>
-                                          {word.times_practiced || 0}/5
-                                        </span>
-                                      </div>
-                                    </motion.div>
-                                  ))}
+                                    );
+                                  })}
                                 </div>
                               </div>
                             ) : (
