@@ -7,14 +7,7 @@ import PictureCard from "../components/practice/PictureCard";
 import ParrotMascot from "../components/mascot/ParrotMascot";
 
 const pictureCards = [
-  {
-    image: "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b9324b0c0f25014c5938d/d31b8c35f_Screenshot2025-11-24at70051PM.png",
-    hint: "This laser is here <u>to help</u>",
-    hebrewWord: "לעזור",
-    transliteration: "laazor",
-    meaning: "To help",
-    mnemonic: "Sounds like 'laser' - imagine a laser beam helping someone!"
-  },
+
   {
     image: "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b9324b0c0f25014c5938d/a8bc7068f_image.png",
     hint: "A bear in a dove costume is saying 'Dov!' - a _____",
