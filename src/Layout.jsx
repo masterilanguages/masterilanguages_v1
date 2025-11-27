@@ -30,11 +30,7 @@ const hebrewItems = [
     url: createPageUrl("PicturesLesson2"),
     icon: Image,
   },
-  {
-    title: "Words I Know",
-    url: createPageUrl("WordsIKnow"),
-    icon: Library,
-  },
+
   {
     title: "Words",
     url: createPageUrl("Practice"),
