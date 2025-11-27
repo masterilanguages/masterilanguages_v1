@@ -26,6 +26,7 @@ export default function Practice() {
   const [expandedMnemonic, setExpandedMnemonic] = useState(null);
   const [sentencesDialog, setSentencesDialog] = useState({ open: false, word: null, sentences: [], loading: false });
   const [conjugationDialog, setConjugationDialog] = useState({ open: false, word: null, conjugations: null, loading: false });
+  const [expandedLevel, setExpandedLevel] = useState(null);
   
   const queryClient = useQueryClient();
 
@@ -326,83 +327,115 @@ export default function Practice() {
                                   </div>
                                 </div>
                                 
-                                <div className="space-y-6">
-                                  {[6, 5, 4, 3, 2, 1, 0].map(level => {
-                                    const levelWords = level === 6 
-                                      ? filteredByFolder.filter(w => (w.times_practiced || 0) >= 6)
-                                      : filteredByFolder.filter(w => (w.times_practiced || 0) === level);
-                                    if (levelWords.length === 0) return null;
-                                    const levelLabels = {
-                                                                                6: { label: "🏆 Mastered", bg: "bg-yellow-50", border: "border-yellow-300" },
-                                                                                5: { label: "⭐ Fluent", bg: "bg-green-50", border: "border-green-200" },
-                                                                                4: { label: "🔥 Almost Fluent", bg: "bg-emerald-50", border: "border-emerald-200" },
-                                                                                3: { label: "💪 Comfortable", bg: "bg-blue-50", border: "border-blue-200" },
-                                                                                2: { label: "📚 Familiar", bg: "bg-violet-50", border: "border-violet-200" },
-                                                                                1: { label: "🌱 New", bg: "bg-purple-50", border: "border-purple-200" },
-                                                                                0: { label: "📝 Rank the following words", bg: "bg-gray-50", border: "border-gray-200" },
-                                                                              };
-                                    return (
-                                      <div key={level}>
-                                        <h3 className="text-sm font-semibold text-gray-500 mb-3">{levelLabels[level].label}</h3>
-                                        <div className="flex flex-wrap gap-2">
-                                          {levelWords.map((word) => (
-                                            <motion.div
-                                              key={word.id}
-                                              initial={{ opacity: 0, scale: 0.9 }}
-                                              animate={{ opacity: 1, scale: 1 }}
-                                              className={`${levelLabels[level].bg} ${levelLabels[level].border} border-2 rounded-2xl px-3 py-2 hover:shadow-md transition-all flex items-center gap-2`}
-                                            >
-                                              <button 
-                                                onClick={(e) => openWordDialog(word, e)}
-                                                className="flex items-center gap-2 hover:opacity-80"
-                                              >
-                                                <span className="font-medium text-gray-700">{word.phonetic}</span>
-                                                <span className="text-lg font-bold text-violet-600" dir="rtl">{word.word}</span>
-                                                <span className="text-gray-400 text-sm">({word.translation})</span>
-                                                {word.image_url && <Image className="w-3 h-3 text-violet-400" />}
-                                                {word.audio_url && (
-                                                  <Volume2 
-                                                    className="w-3 h-3 text-gray-400 hover:text-violet-500" 
-                                                    onClick={(e) => { e.stopPropagation(); playAudio(word); }}
-                                                  />
-                                                )}
-                                              </button>
-                                              <div className="flex gap-1 ml-2 border-l border-gray-200 pl-2">
-                                                {[1, 2, 3, 4, 5].map(num => (
-                                                  <button
-                                                    key={num}
-                                                    onClick={() => handleRate(word.id, num)}
-                                                    className={`w-6 h-6 rounded-full text-xs font-bold transition-all hover:scale-110 ${
-                                                      (word.times_practiced || 0) >= num 
-                                                        ? "bg-violet-500 text-white" 
-                                                        : "bg-white border border-gray-300 text-gray-500 hover:border-violet-400 hover:text-violet-500"
-                                                    }`}
-                                                  >
-                                                    {num}
-                                                  </button>
-                                                ))}
-                                              </div>
-                                            {expandedMnemonic === word.id && word.image_url && (
-                                                <motion.div
-                                                  initial={{ opacity: 0, height: 0 }}
-                                                  animate={{ opacity: 1, height: "auto" }}
-                                                  exit={{ opacity: 0, height: 0 }}
-                                                  className="w-full mt-2"
-                                                >
-                                                  <img 
-                                                    src={word.image_url} 
-                                                    alt="Mnemonic" 
-                                                    className="w-full max-w-xs rounded-xl border-2 border-violet-200"
-                                                  />
-                                                </motion.div>
-                                              )}
-                                            </motion.div>
-                                          ))}
-                                        </div>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
+                                <div className="flex flex-wrap gap-3 mb-6">
+                                                                        {[
+                                                                          { level: 0, label: "📝 Rank the following words", bg: "bg-gray-100", activeBg: "bg-gray-200", text: "text-gray-700" },
+                                                                          { level: 2, label: "📚 Familiar", bg: "bg-violet-100", activeBg: "bg-violet-200", text: "text-violet-700" },
+                                                                          { level: 3, label: "💪 Comfortable", bg: "bg-blue-100", activeBg: "bg-blue-200", text: "text-blue-700" },
+                                                                          { level: 4, label: "🔥 Almost Fluent", bg: "bg-emerald-100", activeBg: "bg-emerald-200", text: "text-emerald-700" },
+                                                                          { level: 5, label: "⭐ Fluent", bg: "bg-green-100", activeBg: "bg-green-200", text: "text-green-700" },
+                                                                        ].map(({ level, label, bg, activeBg, text }) => {
+                                                                          const count = level === 0 
+                                                                            ? filteredByFolder.filter(w => (w.times_practiced || 0) === 0 || (w.times_practiced || 0) === 1).length
+                                                                            : filteredByFolder.filter(w => (w.times_practiced || 0) === level).length;
+                                                                          if (count === 0) return null;
+                                                                          return (
+                                                                            <button
+                                                                              key={level}
+                                                                              onClick={() => setExpandedLevel(expandedLevel === level ? null : level)}
+                                                                              className={`px-4 py-2 rounded-full font-medium transition-all ${
+                                                                                expandedLevel === level ? activeBg : bg
+                                                                              } ${text} hover:shadow-md`}
+                                                                            >
+                                                                              {label} ({count})
+                                                                            </button>
+                                                                          );
+                                                                        })}
+                                                                      </div>
+
+                                                                      <AnimatePresence mode="wait">
+                                                                        {expandedLevel !== null && (
+                                                                          <motion.div
+                                                                            key={expandedLevel}
+                                                                            initial={{ opacity: 0, y: -10 }}
+                                                                            animate={{ opacity: 1, y: 0 }}
+                                                                            exit={{ opacity: 0, y: -10 }}
+                                                                            className="bg-white/80 backdrop-blur-sm rounded-2xl border border-violet-100 p-4 mb-6"
+                                                                          >
+                                                                            <div className="flex flex-wrap gap-2">
+                                                                              {filteredByFolder
+                                                                                .filter(w => {
+                                                                                  const rating = w.times_practiced || 0;
+                                                                                  if (expandedLevel === 0) return rating === 0 || rating === 1;
+                                                                                  return rating === expandedLevel;
+                                                                                })
+                                                                                .map((word) => {
+                                                                                  const levelStyles = {
+                                                                                    0: { bg: "bg-gray-50", border: "border-gray-200" },
+                                                                                    2: { bg: "bg-violet-50", border: "border-violet-200" },
+                                                                                    3: { bg: "bg-blue-50", border: "border-blue-200" },
+                                                                                    4: { bg: "bg-emerald-50", border: "border-emerald-200" },
+                                                                                    5: { bg: "bg-green-50", border: "border-green-200" },
+                                                                                  };
+                                                                                  const style = levelStyles[expandedLevel] || levelStyles[0];
+                                                                                  return (
+                                                                                    <motion.div
+                                                                                      key={word.id}
+                                                                                      initial={{ opacity: 0, scale: 0.9 }}
+                                                                                      animate={{ opacity: 1, scale: 1 }}
+                                                                                      className={`${style.bg} ${style.border} border-2 rounded-2xl px-3 py-2 hover:shadow-md transition-all flex items-center gap-2`}
+                                                                                    >
+                                                                                      <button 
+                                                                                        onClick={(e) => openWordDialog(word, e)}
+                                                                                        className="flex items-center gap-2 hover:opacity-80"
+                                                                                      >
+                                                                                        <span className="font-medium text-gray-700">{word.phonetic}</span>
+                                                                                        <span className="text-lg font-bold text-violet-600" dir="rtl">{word.word}</span>
+                                                                                        <span className="text-gray-400 text-sm">({word.translation})</span>
+                                                                                        {word.image_url && <Image className="w-3 h-3 text-violet-400" />}
+                                                                                        {word.audio_url && (
+                                                                                          <Volume2 
+                                                                                            className="w-3 h-3 text-gray-400 hover:text-violet-500" 
+                                                                                            onClick={(e) => { e.stopPropagation(); playAudio(word); }}
+                                                                                          />
+                                                                                        )}
+                                                                                      </button>
+                                                                                      <div className="flex gap-1 ml-2 border-l border-gray-200 pl-2">
+                                                                                        {[1, 2, 3, 4, 5].map(num => (
+                                                                                          <button
+                                                                                            key={num}
+                                                                                            onClick={() => handleRate(word.id, num)}
+                                                                                            className={`w-6 h-6 rounded-full text-xs font-bold transition-all hover:scale-110 ${
+                                                                                              (word.times_practiced || 0) >= num 
+                                                                                                ? "bg-violet-500 text-white" 
+                                                                                                : "bg-white border border-gray-300 text-gray-500 hover:border-violet-400 hover:text-violet-500"
+                                                                                            }`}
+                                                                                          >
+                                                                                            {num}
+                                                                                          </button>
+                                                                                        ))}
+                                                                                      </div>
+                                                                                      {expandedMnemonic === word.id && word.image_url && (
+                                                                                        <motion.div
+                                                                                          initial={{ opacity: 0, height: 0 }}
+                                                                                          animate={{ opacity: 1, height: "auto" }}
+                                                                                          exit={{ opacity: 0, height: 0 }}
+                                                                                          className="w-full mt-2"
+                                                                                        >
+                                                                                          <img 
+                                                                                            src={word.image_url} 
+                                                                                            alt="Mnemonic" 
+                                                                                            className="w-full max-w-xs rounded-xl border-2 border-violet-200"
+                                                                                          />
+                                                                                        </motion.div>
+                                                                                      )}
+                                                                                    </motion.div>
+                                                                                  );
+                                                                                })}
+                                                                            </div>
+                                                                          </motion.div>
+                                                                        )}
+                                                                      </AnimatePresence>
 
                                 <Dialog open={mnemonicDialog.open} onOpenChange={(open) => setMnemonicDialog({ ...mnemonicDialog, open })}>
                                   <DialogContent className="sm:max-w-md">
