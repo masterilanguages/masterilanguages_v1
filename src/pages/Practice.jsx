@@ -30,6 +30,11 @@ export default function Practice() {
   const [expandedTransliterations, setExpandedTransliterations] = useState({});
   const [picturePrompt, setPicturePrompt] = useState("");
   const [isGeneratingPicture, setIsGeneratingPicture] = useState(false);
+  const [mnemonicSuggestions, setMnemonicSuggestions] = useState([]);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  const [editingMeaning, setEditingMeaning] = useState("");
+  const [isEditingMeaning, setIsEditingMeaning] = useState(false);
+  const [conjugationTense, setConjugationTense] = useState("present");
   
   const queryClient = useQueryClient();
 
@@ -135,11 +140,41 @@ export default function Practice() {
     }
   };
 
+  const loadMnemonicSuggestions = async (word) => {
+    setIsLoadingSuggestions(true);
+    setMnemonicSuggestions([]);
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Generate 3 creative, funny mnemonic picture ideas to help remember the Hebrew word "${word.phonetic}" means "${word.translation}". Each should use wordplay or sound-alikes. Keep each under 15 words.`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            suggestions: {
+              type: "array",
+              items: { type: "string" }
+            }
+          }
+        }
+      });
+      setMnemonicSuggestions(result.suggestions || []);
+    } catch (error) {
+      console.error("Failed to load suggestions");
+    } finally {
+      setIsLoadingSuggestions(false);
+    }
+  };
+
   const openWordDialog = async (word, e) => {
     e.stopPropagation();
     setSentencesDialog({ open: true, word, sentences: [], loading: true });
     setPicturePrompt("");
     setExpandedTransliterations({});
+    setMnemonicSuggestions([]);
+    setIsEditingMeaning(false);
+    setEditingMeaning(word.translation);
+    if (!word.image_url) {
+      loadMnemonicSuggestions(word);
+    }
     try {
       const result = await base44.integrations.Core.InvokeLLM({
         prompt: `Generate 3 common Hebrew sentences using the word "${word.word}" (${word.phonetic} - ${word.translation}). For each sentence provide the Hebrew (with each word separated), transliteration, English translation, and a breakdown of each Hebrew word with its transliteration and meaning.`,
@@ -226,15 +261,18 @@ export default function Practice() {
     });
   };
 
-  const loadConjugations = async () => {
-    const word = sentencesDialog.word;
+  const loadConjugations = async (tense = "present") => {
+    const word = conjugationDialog.word || sentencesDialog.word;
     setConjugationDialog({ open: true, word, conjugations: null, loading: true });
+    setConjugationTense(tense);
     try {
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Conjugate the Hebrew verb "${word.word}" (${word.phonetic} - ${word.translation}) in present tense for all persons (I, you m/f, he, she, we, you pl m/f, they). Provide Hebrew, transliteration, and English for each.`,
+        prompt: `Conjugate the Hebrew verb "${word.word}" (${word.phonetic} - ${word.translation}) in ${tense} tense for all persons (I, you m/f, he, she, we, you pl m/f, they). Also provide the infinitive form. Provide Hebrew, transliteration, and English for each.`,
         response_json_schema: {
           type: "object",
           properties: {
+            infinitive: { type: "string" },
+            infinitive_transliteration: { type: "string" },
             root: { type: "string" },
             binyan: { type: "string" },
             conjugations: {
@@ -257,6 +295,17 @@ export default function Practice() {
       toast.error("Failed to load conjugations");
       setConjugationDialog(prev => ({ ...prev, loading: false }));
     }
+  };
+
+  const saveMeaning = async () => {
+    if (!editingMeaning.trim()) return;
+    await updateWordMutation.mutateAsync({
+      id: sentencesDialog.word.id,
+      data: { translation: editingMeaning }
+    });
+    setSentencesDialog(prev => ({ ...prev, word: { ...prev.word, translation: editingMeaning } }));
+    setIsEditingMeaning(false);
+    toast.success("Meaning updated!");
   };
 
   const generateMnemonic = async () => {
@@ -569,9 +618,30 @@ export default function Practice() {
                                 <Dialog open={sentencesDialog.open} onOpenChange={(open) => setSentencesDialog({ ...sentencesDialog, open })}>
                                   <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
                                     <DialogHeader>
-                                      <DialogTitle className="flex items-center gap-2">
+                                      <DialogTitle className="flex items-center gap-2 flex-wrap">
                                         <span className="text-violet-600 text-xl" dir="rtl">{sentencesDialog.word?.word}</span>
-                                        <span className="text-gray-500">({sentencesDialog.word?.phonetic} - {sentencesDialog.word?.translation})</span>
+                                        <span className="text-gray-500">({sentencesDialog.word?.phonetic})</span>
+                                        {isEditingMeaning ? (
+                                          <div className="flex items-center gap-1">
+                                            <input
+                                              type="text"
+                                              value={editingMeaning}
+                                              onChange={(e) => setEditingMeaning(e.target.value)}
+                                              className="border rounded px-2 py-1 text-sm w-32"
+                                              autoFocus
+                                            />
+                                            <button onClick={saveMeaning} className="text-green-600 text-sm">✓</button>
+                                            <button onClick={() => setIsEditingMeaning(false)} className="text-gray-400 text-sm">✕</button>
+                                          </div>
+                                        ) : (
+                                          <button 
+                                            onClick={() => { setEditingMeaning(sentencesDialog.word?.translation); setIsEditingMeaning(true); }}
+                                            className="text-gray-500 hover:text-violet-600 transition-all"
+                                            title="Click to edit meaning"
+                                          >
+                                            - {sentencesDialog.word?.translation} ✏️
+                                          </button>
+                                        )}
                                       </DialogTitle>
                                     </DialogHeader>
                                     <div className="space-y-4">
@@ -592,8 +662,28 @@ export default function Practice() {
                                       ) : (
                                         <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
                                           <p className="text-sm text-gray-600 mb-2">Create a mnemonic picture:</p>
+                                          
+                                          {isLoadingSuggestions ? (
+                                            <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
+                                              <Loader2 className="w-4 h-4 animate-spin" /> Loading suggestions...
+                                            </div>
+                                          ) : mnemonicSuggestions.length > 0 && (
+                                            <div className="mb-3 space-y-2">
+                                              <p className="text-xs text-gray-500">💡 Suggestions (click to use):</p>
+                                              {mnemonicSuggestions.map((suggestion, idx) => (
+                                                <button
+                                                  key={idx}
+                                                  onClick={() => setPicturePrompt(suggestion)}
+                                                  className="block w-full text-left text-sm bg-white border border-violet-200 rounded-lg px-3 py-2 hover:bg-violet-50 hover:border-violet-300 transition-all"
+                                                >
+                                                  {suggestion}
+                                                </button>
+                                              ))}
+                                            </div>
+                                          )}
+                                          
                                           <Textarea
-                                            placeholder="Describe what the picture should look like..."
+                                            placeholder="Or describe your own picture idea..."
                                             value={picturePrompt}
                                             onChange={(e) => setPicturePrompt(e.target.value)}
                                             className="mb-2"
@@ -677,7 +767,7 @@ export default function Practice() {
                                                                   </Dialog>
 
                                                                   <Dialog open={conjugationDialog.open} onOpenChange={(open) => setConjugationDialog({ ...conjugationDialog, open })}>
-                                                                    <DialogContent className="sm:max-w-lg">
+                                                                    <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
                                                                       <DialogHeader>
                                                                         <DialogTitle className="flex items-center gap-2">
                                                                           Conjugations: <span className="text-violet-600" dir="rtl">{conjugationDialog.word?.word}</span>
@@ -691,7 +781,31 @@ export default function Practice() {
                                                                           </div>
                                                                         ) : conjugationDialog.conjugations && (
                                                                           <>
-                                                                            <div className="flex gap-2 text-sm text-gray-500 mb-2">
+                                                                            {/* Infinitive at top */}
+                                                                            <div className="bg-gradient-to-r from-violet-100 to-blue-100 rounded-xl p-4 text-center border border-violet-200">
+                                                                              <p className="text-xs text-gray-500 mb-1">Infinitive</p>
+                                                                              <p className="text-2xl font-bold text-violet-700" dir="rtl">{conjugationDialog.conjugations.infinitive}</p>
+                                                                              <p className="text-sm text-gray-600">{conjugationDialog.conjugations.infinitive_transliteration}</p>
+                                                                            </div>
+
+                                                                            {/* Tense buttons */}
+                                                                            <div className="flex gap-2 justify-center">
+                                                                              {["past", "present", "future"].map(tense => (
+                                                                                <button
+                                                                                  key={tense}
+                                                                                  onClick={() => loadConjugations(tense)}
+                                                                                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                                                                                    conjugationTense === tense 
+                                                                                      ? "bg-violet-500 text-white" 
+                                                                                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                                                                  }`}
+                                                                                >
+                                                                                  {tense.charAt(0).toUpperCase() + tense.slice(1)}
+                                                                                </button>
+                                                                              ))}
+                                                                            </div>
+
+                                                                            <div className="flex gap-2 text-sm text-gray-500 mb-2 flex-wrap">
                                                                               <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded">Root: {conjugationDialog.conjugations.root}</span>
                                                                               <span className="bg-violet-100 text-violet-700 px-2 py-1 rounded">Binyan: {conjugationDialog.conjugations.binyan}</span>
                                                                             </div>
