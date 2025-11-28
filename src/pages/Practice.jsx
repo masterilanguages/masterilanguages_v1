@@ -10,6 +10,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import WordCard from "../components/practice/WordCard";
 import SoundWave from "../components/practice/SoundWave";
 import ParrotMascot from "../components/mascot/ParrotMascot";
+import AnimatedParrot from "../components/mascot/AnimatedParrot";
 import { toast } from "sonner";
 
 
@@ -37,6 +38,7 @@ export default function Practice() {
   const [conjugationTense, setConjugationTense] = useState("present");
   const [lastPicturePrompt, setLastPicturePrompt] = useState("");
   const [addedWords, setAddedWords] = useState(new Set());
+  const [parrotTrigger, setParrotTrigger] = useState(0);
   
   const queryClient = useQueryClient();
 
@@ -96,6 +98,7 @@ export default function Practice() {
       correct: rating >= 4 ? prev.correct + 1 : prev.correct, 
       total: prev.total + 1 
     }));
+    setParrotTrigger(prev => prev + 1);
     moveToNext();
   };
 
@@ -469,14 +472,10 @@ Return the infinitive Hebrew word, its transliteration, and whether it's top 500
                               </Select>
 
                               <div className="flex gap-4 items-center flex-1">
-                                <ParrotMascot 
+                                <AnimatedParrot 
+                                  trigger={parrotTrigger}
                                   size="sm" 
-                                  message={
-                                    sessionStats.total === 0 ? "Let's learn!" :
-                                    sessionStats.correct / sessionStats.total >= 0.8 ? "Amazing work! 🎉" :
-                                    sessionStats.correct / sessionStats.total >= 0.5 ? "Keep going! 💪" :
-                                    "You can do it! 🌟"
-                                  }
+                                  showMessage={true}
                                 />
                                 <div className="bg-white/80 backdrop-blur-sm rounded-xl px-6 py-3 border border-violet-100 shadow-sm">
                                   <p className="text-sm text-gray-500">Progress</p>
