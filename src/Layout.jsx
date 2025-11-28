@@ -36,10 +36,10 @@ const hebrewItems = [
     icon: PlayCircle,
   },
   {
-    title: "Progress",
-    url: createPageUrl("Progress"),
-    icon: LayoutDashboard,
-  },
+            title: "Schedule",
+            url: createPageUrl("Progress"),
+            icon: LayoutDashboard,
+          },
   {
     title: "Library",
     url: createPageUrl("Library"),
