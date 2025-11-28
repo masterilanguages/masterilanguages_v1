@@ -27,6 +27,7 @@ export default function Practice() {
   const [sentencesDialog, setSentencesDialog] = useState({ open: false, word: null, sentences: [], loading: false });
   const [conjugationDialog, setConjugationDialog] = useState({ open: false, word: null, conjugations: null, loading: false });
   const [expandedLevel, setExpandedLevel] = useState(null);
+  const [expandedTransliterations, setExpandedTransliterations] = useState({});
   
   const queryClient = useQueryClient();
 
@@ -129,7 +130,7 @@ export default function Practice() {
     setSentencesDialog({ open: true, word, sentences: [], loading: true });
     try {
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Generate 3 common Hebrew sentences using the word "${word.word}" (${word.phonetic} - ${word.translation}). For each sentence provide the Hebrew, transliteration, and English translation.`,
+        prompt: `Generate 3 common Hebrew sentences using the word "${word.word}" (${word.phonetic} - ${word.translation}). For each sentence provide the Hebrew, transliteration, and English translation. Make sure the English translation is natural and accurate.`,
         response_json_schema: {
           type: "object",
           properties: {
@@ -329,7 +330,7 @@ export default function Practice() {
                                 
                                 <div className="flex flex-wrap gap-3 mb-6">
                                                                         {[
-                                                                          { level: 0, label: "📝 Rank the following words", bg: "bg-gray-100", activeBg: "bg-gray-200", text: "text-gray-700" },
+                                                                          { level: 0, label: "📝 New Words", bg: "bg-gray-100", activeBg: "bg-gray-200", text: "text-gray-700" },
                                                                           { level: 2, label: "📚 Familiar", bg: "bg-violet-100", activeBg: "bg-violet-200", text: "text-violet-700" },
                                                                           { level: 3, label: "💪 Comfortable", bg: "bg-blue-100", activeBg: "bg-blue-200", text: "text-blue-700" },
                                                                           { level: 4, label: "🔥 Almost Fluent", bg: "bg-emerald-100", activeBg: "bg-emerald-200", text: "text-emerald-700" },
@@ -394,7 +395,7 @@ export default function Practice() {
                                                                                       >
                                                                                         <span className="font-medium text-gray-700">{word.phonetic}</span>
                                                                                         <span className="text-lg font-bold text-violet-600" dir="rtl">{word.word}</span>
-                                                                                        <span className="text-gray-400 text-sm">({word.translation})</span>
+                                                                                        <span className="text-gray-400 text-sm">({word.translation}{word.phonetic ? ` • ${word.phonetic}` : ''})</span>
                                                                                         {word.image_url && <Image className="w-3 h-3 text-violet-400" />}
                                                                                         {word.audio_url && (
                                                                                           <Volume2 
@@ -511,9 +512,19 @@ export default function Practice() {
                                           </Button>
                                           {sentencesDialog.sentences.map((sentence, idx) => (
                                             <div key={idx} className="bg-violet-50 rounded-xl p-4 border border-violet-100">
-                                              <p className="text-xl font-medium text-gray-800 mb-1" dir="rtl">{sentence.hebrew}</p>
-                                              <p className="text-violet-600 text-sm mb-1">{sentence.transliteration}</p>
-                                              <p className="text-gray-500 text-sm">{sentence.english}</p>
+                                              <p className="text-xl font-medium text-gray-800 mb-2" dir="rtl">{sentence.hebrew}</p>
+                                              <div className="flex items-center gap-2">
+                                                <p className="text-gray-700">{sentence.english}</p>
+                                                <button
+                                                  onClick={() => setExpandedTransliterations(prev => ({ ...prev, [idx]: !prev[idx] }))}
+                                                  className="text-xs px-2 py-1 bg-violet-200 hover:bg-violet-300 text-violet-700 rounded-full transition-all"
+                                                >
+                                                  {expandedTransliterations[idx] ? "Hide" : "Transliterate"}
+                                                </button>
+                                              </div>
+                                              {expandedTransliterations[idx] && (
+                                                <p className="text-violet-600 text-sm mt-2 italic">{sentence.transliteration}</p>
+                                              )}
                                             </div>
                                           ))}
                                         </>
