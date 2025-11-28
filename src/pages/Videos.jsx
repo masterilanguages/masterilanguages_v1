@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ChevronDown, ChevronUp, Plus, Check, FileText, Image, Loader2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Plus, Check, FileText, Image, Loader2, Save } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -13,7 +13,7 @@ import YouTubePlayer from "../components/practice/YouTubePlayer";
 import ClozeFlashcard from "../components/videos/ClozeFlashcard";
 import ParrotMascot from "../components/mascot/ParrotMascot";
 
-function TranscriptWithClickableWords({ transcript, onWordClick, savedWords }) {
+function TranscriptWithClickableWords({ transcript, onWordClick, onSaveSentence, savedWords }) {
   const lines = transcript.split('\n');
   
   return (
@@ -38,26 +38,35 @@ function TranscriptWithClickableWords({ transcript, onWordClick, savedWords }) {
           const words = content.split(/\s+/).filter(w => w.length > 0);
           
           return (
-            <p key={idx} className="mb-1 font-semibold text-gray-800">
-              {words.map((word, wordIdx) => {
-                const isSaved = savedWords?.some(w => w.phonetic === word);
-                return (
-                  <span key={wordIdx}>
-                    <button
-                      onClick={() => onWordClick(word, '')}
-                      className={`transition-all hover:bg-violet-100 rounded px-0.5 ${
-                        isSaved ? 'text-green-600' : 'hover:text-violet-600'
-                      }`}
-                      title={isSaved ? "Already saved" : `Click to add "${word}" to Word Bank`}
-                    >
-                      {word}
-                      {isSaved && <span className="text-green-500 text-xs">✓</span>}
-                    </button>
-                    {wordIdx < words.length - 1 && ' '}
-                  </span>
-                );
-              })}
-            </p>
+            <div key={idx} className="mb-1 font-semibold text-gray-800 flex items-start gap-2">
+              <div className="flex-1">
+                {words.map((word, wordIdx) => {
+                  const isSaved = savedWords?.some(w => w.phonetic === word);
+                  return (
+                    <span key={wordIdx}>
+                      <button
+                        onClick={() => onWordClick(word, '')}
+                        className={`transition-all hover:bg-violet-100 rounded px-0.5 ${
+                          isSaved ? 'text-green-600' : 'hover:text-violet-600'
+                        }`}
+                        title={isSaved ? "Already saved" : `Click to add "${word}" to Word Bank`}
+                      >
+                        {word}
+                        {isSaved && <span className="text-green-500 text-xs">✓</span>}
+                      </button>
+                      {wordIdx < words.length - 1 && ' '}
+                    </span>
+                  );
+                })}
+              </div>
+              <button
+                onClick={() => onSaveSentence(content, englishTranslation)}
+                className="text-blue-500 hover:text-blue-700 text-xs flex items-center gap-1 shrink-0"
+                title="Save sentence"
+              >
+                <Save className="w-3 h-3" />
+              </button>
+            </div>
           );
         }
         
@@ -438,6 +447,24 @@ export default function Videos() {
     },
   });
 
+  const saveSentenceMutation = useMutation({
+    mutationFn: (sentenceData) => base44.entities.Word.create(sentenceData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['words'] });
+      toast.success("Sentence saved!");
+    },
+  });
+
+  const handleSaveSentence = (transliteration, english) => {
+    saveSentenceMutation.mutate({
+      word: transliteration,
+      translation: english,
+      phonetic: transliteration,
+      category: "sentences",
+      difficulty: "beginner",
+    });
+  };
+
   const isWordSaved = (hebrewWord) => {
     return words.some(w => w.word === hebrewWord);
   };
@@ -513,6 +540,7 @@ export default function Videos() {
                                                                                                         <TranscriptWithClickableWords 
                                                                                                           transcript={israeliMusicTranscript} 
                                                                                                           onWordClick={handleWordClick}
+                                                                                                          onSaveSentence={handleSaveSentence}
                                                                                                           savedWords={wordBankWords}
                                                                                                         />
                                                                                                       </div>
