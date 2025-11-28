@@ -707,14 +707,29 @@ Return the infinitive Hebrew word, its transliteration, and whether it's top 500
                                                                                   )}
                                                                                 </DialogTitle>
                                                                                 <p className="text-xs text-gray-400 mt-1">
-                                                                                  Save as: <button 
+                                                                                  <button 
                                                                                     onClick={() => {
                                                                                       navigator.clipboard.writeText(sentencesDialog.word?.phonetic);
                                                                                       toast.success("Copied transliteration!");
                                                                                     }}
-                                                                                    className="text-violet-500 hover:text-violet-700 underline"
+                                                                                    className="text-violet-500 hover:text-violet-700 underline mr-2"
                                                                                   >
-                                                                                    {sentencesDialog.word?.phonetic}
+                                                                                    📋 Copy: {sentencesDialog.word?.phonetic}
+                                                                                  </button>
+                                                                                  <button 
+                                                                                    onClick={() => {
+                                                                                      createWordMutation.mutate({
+                                                                                        word: sentencesDialog.word?.phonetic,
+                                                                                        translation: sentencesDialog.word?.translation,
+                                                                                        phonetic: sentencesDialog.word?.phonetic,
+                                                                                        category: "basics",
+                                                                                        difficulty: "beginner",
+                                                                                        times_practiced: 0,
+                                                                                      });
+                                                                                    }}
+                                                                                    className="text-green-500 hover:text-green-700 underline"
+                                                                                  >
+                                                                                    💾 Save transliterated
                                                                                   </button>
                                                                                 </p>
                                                                               </DialogHeader>
@@ -741,7 +756,15 @@ Return the infinitive Hebrew word, its transliteration, and whether it's top 500
                                             </div>
                                           ) : mnemonicSuggestions.length > 0 && (
                                             <div className="mb-3 space-y-2">
-                                              <p className="text-xs text-gray-500">💡 Suggestions (click to use):</p>
+                                              <div className="flex items-center justify-between">
+                                                <p className="text-xs text-gray-500">💡 Suggestions (click to use):</p>
+                                                <button
+                                                  onClick={() => loadMnemonicSuggestions(sentencesDialog.word)}
+                                                  className="text-xs text-violet-500 hover:text-violet-700 flex items-center gap-1"
+                                                >
+                                                  <RotateCcw className="w-3 h-3" /> New ideas
+                                                </button>
+                                              </div>
                                               {mnemonicSuggestions.map((suggestion, idx) => (
                                                 <button
                                                   key={idx}
@@ -805,16 +828,15 @@ Return the infinitive Hebrew word, its transliteration, and whether it's top 500
                                                 {sentence.words?.map((w, wIdx) => {
                                                   const isAdded = words.some(word => word.word === w.hebrew) || addedWords.has(w.hebrew);
                                                   return (
-                                                    <div key={wIdx} className="flex flex-col items-center">
-                                                      {isAdded && <span className="text-green-500 text-xs">✓</span>}
-                                                      <button
-                                                        onClick={() => !isAdded && addWordFromSentence(w.hebrew, w.transliteration, w.meaning)}
-                                                        className={`px-1 rounded transition-all ${isAdded ? 'text-green-600 cursor-default' : 'hover:bg-violet-200'}`}
-                                                        title={isAdded ? "Already added" : `Add "${w.hebrew}" (${w.transliteration} - ${w.meaning}) to New Words`}
-                                                      >
-                                                        {w.hebrew}
-                                                      </button>
-                                                    </div>
+                                                    <button
+                                                      key={wIdx}
+                                                      onClick={() => !isAdded && addWordFromSentence(w.hebrew, w.transliteration, w.meaning)}
+                                                      className={`px-1 rounded transition-all relative ${isAdded ? 'text-green-600 cursor-default' : 'hover:bg-violet-200'}`}
+                                                      title={isAdded ? "Already added" : `Add "${w.hebrew}" (${w.transliteration} - ${w.meaning}) to New Words`}
+                                                    >
+                                                      {w.hebrew}
+                                                      {isAdded && <span className="absolute -top-2 -right-1 text-green-500 text-xs">✓</span>}
+                                                    </button>
                                                   );
                                                 }) || sentence.hebrew}
                                               </div>
