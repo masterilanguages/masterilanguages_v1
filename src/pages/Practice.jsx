@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Sparkles, RotateCcw, Play, Volume2, Image, Loader2 } from "lucide-react";
+import { Sparkles, RotateCcw, Play, Volume2, Image, Loader2, Star } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import WordCard from "../components/practice/WordCard";
 import SoundWave from "../components/practice/SoundWave";
@@ -35,6 +35,7 @@ export default function Practice() {
   const [editingMeaning, setEditingMeaning] = useState("");
   const [isEditingMeaning, setIsEditingMeaning] = useState(false);
   const [conjugationTense, setConjugationTense] = useState("present");
+  const [lastPicturePrompt, setLastPicturePrompt] = useState("");
   
   const queryClient = useQueryClient();
 
@@ -219,15 +220,16 @@ Focus on the sound-alike English word and create a visual scene connecting it to
     }
   };
 
-  const generatePictureForWord = async () => {
-    if (!picturePrompt.trim()) {
+  const generatePictureForWord = async (useLastPrompt = false) => {
+    const promptToUse = useLastPrompt ? lastPicturePrompt : picturePrompt;
+    if (!promptToUse.trim()) {
       toast.error("Please describe the picture");
       return;
     }
     setIsGeneratingPicture(true);
     try {
       const { url } = await base44.integrations.Core.GenerateImage({
-        prompt: `Cute, funny, colorful mnemonic illustration for learning the Hebrew word "${sentencesDialog.word.phonetic}" (${sentencesDialog.word.translation}): ${picturePrompt}. Cartoon style, memorable, educational.`,
+        prompt: `Cute, funny, colorful mnemonic illustration for learning the Hebrew word "${sentencesDialog.word.phonetic}" (${sentencesDialog.word.translation}): ${promptToUse}. Cartoon style, memorable, educational.`,
       });
       await updateWordMutation.mutateAsync({
         id: sentencesDialog.word.id,
@@ -235,6 +237,9 @@ Focus on the sound-alike English word and create a visual scene connecting it to
       });
       setSentencesDialog(prev => ({ ...prev, word: { ...prev.word, image_url: url } }));
       toast.success("Picture created!");
+      if (!useLastPrompt) {
+        setLastPicturePrompt(picturePrompt);
+      }
       setPicturePrompt("");
     } catch (error) {
       toast.error("Failed to generate picture");
@@ -251,20 +256,51 @@ Focus on the sound-alike English word and create a visual scene connecting it to
     },
   });
 
-  const addWordFromSentence = (hebrewWord, transliteration, meaning) => {
+  const addWordFromSentence = async (hebrewWord, transliteration, meaning) => {
     const existingWord = words.find(w => w.word === hebrewWord);
     if (existingWord) {
       toast.info("This word is already in your library");
       return;
     }
-    createWordMutation.mutate({
-      word: hebrewWord,
-      translation: `${meaning} (${transliteration})`,
-      phonetic: transliteration,
-      category: "basics",
-      difficulty: "beginner",
-      times_practiced: 0,
-    });
+    
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `For the Hebrew word "${hebrewWord}" (${transliteration} - ${meaning}):
+1. If this is a conjugated verb, provide the infinitive form. If not a verb or already infinitive, return the same word.
+2. Is this word in the top 500 most common Hebrew words? Answer true or false.
+
+Return the infinitive Hebrew word, its transliteration, and whether it's top 500.`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            hebrew_infinitive: { type: "string" },
+            transliteration_infinitive: { type: "string" },
+            meaning: { type: "string" },
+            is_top_500: { type: "boolean" }
+          }
+        }
+      });
+      
+      createWordMutation.mutate({
+        word: result.hebrew_infinitive,
+        translation: `${result.meaning} (${result.transliteration_infinitive})`,
+        phonetic: result.transliteration_infinitive,
+        category: "basics",
+        difficulty: "beginner",
+        times_practiced: 0,
+        is_top_500: result.is_top_500,
+        is_starred: result.is_top_500,
+      });
+    } catch (error) {
+      createWordMutation.mutate({
+        word: hebrewWord,
+        translation: `${meaning} (${transliteration})`,
+        phonetic: transliteration,
+        category: "basics",
+        difficulty: "beginner",
+        times_practiced: 0,
+      });
+    }
   };
 
   const loadConjugations = async (tense = "present") => {
@@ -539,6 +575,16 @@ Focus on the sound-alike English word and create a visual scene connecting it to
                                                                                           />
                                                                                         )}
                                                                                       </button>
+                                                                                      <button
+                                                                                        onClick={(e) => {
+                                                                                          e.stopPropagation();
+                                                                                          updateWordMutation.mutate({ id: word.id, data: { is_starred: !word.is_starred } });
+                                                                                        }}
+                                                                                        className="ml-1"
+                                                                                        title={word.is_starred ? "Important word" : "Mark as important"}
+                                                                                      >
+                                                                                        <Star className={`w-4 h-4 ${word.is_starred ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300 hover:text-yellow-400'}`} />
+                                                                                      </button>
                                                                                       <div className="flex gap-1 ml-2 border-l border-gray-200 pl-2">
                                                                                         {[1, 2, 3, 4, 5].map(num => (
                                                                                           <button
@@ -656,13 +702,11 @@ Focus on the sound-alike English word and create a visual scene connecting it to
                                         <div className="rounded-xl overflow-hidden border-2 border-violet-200 relative">
                                           <img src={sentencesDialog.word.image_url} alt="Mnemonic" className="w-full" />
                                           <button
-                                            onClick={() => {
-                                              updateWordMutation.mutate({ id: sentencesDialog.word.id, data: { image_url: null } });
-                                              setSentencesDialog(prev => ({ ...prev, word: { ...prev.word, image_url: null } }));
-                                            }}
+                                            onClick={() => generatePictureForWord(true)}
+                                            disabled={isGeneratingPicture}
                                             className="absolute bottom-2 right-2 bg-white/90 hover:bg-white text-violet-600 text-xs px-2 py-1 rounded-lg shadow-md transition-all"
                                           >
-                                            🔄 New Image
+                                            {isGeneratingPicture ? "🔄 Generating..." : "🔄 New Image"}
                                           </button>
                                         </div>
                                       ) : (
