@@ -39,7 +39,6 @@ export default function Practice() {
   const [lastPicturePrompt, setLastPicturePrompt] = useState("");
   const [addedWords, setAddedWords] = useState(new Set());
   const [parrotTrigger, setParrotTrigger] = useState(0);
-  const [showCelebration, setShowCelebration] = useState(false);
   
   const queryClient = useQueryClient();
 
@@ -253,8 +252,7 @@ Focus on the sound-alike English word for "${phoneticCore}" and create a visual 
       
       if (result && result.url) {
         setSentencesDialog(prev => ({ ...prev, word: { ...prev.word, image_url: result.url, pending_approval: true } }));
-        setShowCelebration(true);
-        setTimeout(() => setShowCelebration(false), 3000);
+        toast.success("Picture created!");
         if (!useLastPrompt) {
           setLastPicturePrompt(promptToUse);
         }
@@ -754,18 +752,6 @@ Return the infinitive Hebrew word, its transliteration, and whether it's top 500
                                       {sentencesDialog.word?.image_url ? (
                                         <div className="rounded-xl overflow-hidden border-2 border-violet-200 relative">
                                           <img src={sentencesDialog.word.image_url} alt="Mnemonic" className="w-full" />
-                                          
-                                          {/* Celebration overlay with parrot */}
-                                          {showCelebration && (
-                                            <motion.div
-                                              initial={{ opacity: 0 }}
-                                              animate={{ opacity: 1 }}
-                                              exit={{ opacity: 0 }}
-                                              className="absolute inset-0 flex items-center justify-center pointer-events-none"
-                                            >
-                                              <AnimatedParrot trigger={Date.now()} size="lg" showMessage={true} />
-                                            </motion.div>
-                                          )}
                                           
                                           <div className="absolute bottom-2 right-2 flex gap-2">
                                             {sentencesDialog.word.pending_approval && (
