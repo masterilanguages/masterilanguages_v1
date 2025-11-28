@@ -8,12 +8,12 @@ import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 
 const avatars = [
-  { id: "alex", name: "Alex", gender: "male", personality: "Adventurous & Bold", emoji: "🧑‍🦱", color: "from-blue-500 to-cyan-500", desc: "Loves sports and outdoor activities", traits: ["athletic", "competitive"] },
-  { id: "maya", name: "Maya", gender: "female", personality: "Creative & Artistic", emoji: "👩‍🦰", color: "from-pink-500 to-rose-500", desc: "Passionate about art and music", traits: ["creative", "dreamy"] },
-  { id: "jordan", name: "Jordan", gender: "male", personality: "Fabulous & Stylish", emoji: "👨‍🦳", color: "from-fuchsia-500 to-pink-400", desc: "Fashion-forward trendsetter", traits: ["stylish", "confident"], special: "pink" },
-  { id: "sam", name: "Sam", gender: "male", personality: "Nerdy & Curious", emoji: "🧑‍💻", color: "from-violet-500 to-purple-500", desc: "Tech enthusiast and bookworm", traits: ["smart", "curious"] },
-  { id: "zoe", name: "Zoe", gender: "female", personality: "Sporty & Energetic", emoji: "👩‍🦱", color: "from-green-500 to-emerald-500", desc: "Always on the move", traits: ["energetic", "social"] },
-  { id: "luna", name: "Luna", gender: "female", personality: "Mysterious & Deep", emoji: "👩‍🦲", color: "from-indigo-500 to-purple-600", desc: "Philosophical thinker", traits: ["thoughtful", "spiritual"] },
+  { id: "alex", name: "Alex", gender: "male", personality: "Adventurous & Bold", image: "🧍‍♂️", color: "from-blue-500 to-cyan-500", desc: "Loves sports and outdoor activities", traits: ["athletic", "competitive"], outfit: "casual" },
+  { id: "maya", name: "Maya", gender: "female", personality: "Creative & Artistic", image: "🧍‍♀️", color: "from-pink-500 to-rose-500", desc: "Passionate about art and music", traits: ["creative", "dreamy"], outfit: "artistic" },
+  { id: "jordan", name: "Jordan", gender: "male", personality: "Fabulous & Stylish", image: "🧍‍♂️", color: "from-fuchsia-500 to-pink-400", desc: "Fashion-forward trendsetter", traits: ["stylish", "confident"], special: "pink", outfit: "pink_shirt" },
+  { id: "sam", name: "Sam", gender: "male", personality: "Nerdy & Curious", image: "🧍‍♂️", color: "from-violet-500 to-purple-500", desc: "Tech enthusiast and bookworm", traits: ["smart", "curious"], outfit: "nerdy" },
+  { id: "zoe", name: "Zoe", gender: "female", personality: "Sporty & Energetic", image: "🧍‍♀️", color: "from-green-500 to-emerald-500", desc: "Always on the move", traits: ["energetic", "social"], outfit: "sporty" },
+  { id: "luna", name: "Luna", gender: "female", personality: "Mysterious & Deep", image: "🧍‍♀️", color: "from-indigo-500 to-purple-600", desc: "Philosophical thinker", traits: ["thoughtful", "spiritual"], outfit: "elegant" },
 ];
 
 export default function AvatarSelect() {
@@ -107,8 +107,10 @@ export default function AvatarSelect() {
                         className="absolute inset-0 rounded-2xl border-2 border-cyan-400"
                       />
                     )}
-                    <div className={`w-20 h-20 mx-auto rounded-full bg-gradient-to-br ${avatar.color} flex items-center justify-center text-4xl mb-3 shadow-lg`}>
-                      {avatar.emoji}
+                    <div className="h-32 flex items-end justify-center mb-3">
+                      <div className={`text-7xl ${avatar.special === 'pink' ? 'hue-rotate-[320deg]' : ''}`}>
+                        {avatar.image}
+                      </div>
                     </div>
                     <h3 className="text-white font-bold text-lg">{avatar.name}</h3>
                     <p className="text-white/60 text-sm">{avatar.personality}</p>
@@ -125,8 +127,8 @@ export default function AvatarSelect() {
               exit={{ opacity: 0, scale: 0.9 }}
               className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20"
             >
-              <div className={`w-32 h-32 mx-auto rounded-full bg-gradient-to-br ${selectedAvatar.color} flex items-center justify-center text-6xl mb-6 shadow-xl`}>
-                {selectedAvatar.emoji}
+              <div className={`h-40 flex items-end justify-center mb-6 ${selectedAvatar.special === 'pink' ? 'hue-rotate-[320deg]' : ''}`}>
+                <span className="text-9xl">{selectedAvatar.image}</span>
               </div>
               <h2 className="text-2xl font-bold text-white text-center mb-2">Name Your Character</h2>
               <p className="text-white/60 text-center mb-6">They're just a kid now, but with your help they'll grow!</p>
@@ -155,7 +157,7 @@ export default function AvatarSelect() {
               onClick={() => setStep(1)}
               className="border-white/30 text-white hover:bg-white/10"
             >
-              Back
+              ← Back
             </Button>
           )}
           <Button

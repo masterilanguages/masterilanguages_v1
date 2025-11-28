@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingCart, Dumbbell, Church, UtensilsCrossed, Users, ShoppingBag, Heart, BookOpen, Lock, Check, Coins, ArrowLeft, Sparkles, Brain } from "lucide-react";
+import { ShoppingCart, Dumbbell, Church, UtensilsCrossed, Users, ShoppingBag, Heart, BookOpen, Lock, Check, Coins, ArrowLeft, Sparkles, Brain, Trophy, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useSearchParams } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -11,8 +11,10 @@ import GameHeader from "../components/game/GameHeader";
 
 const activities = [
   { id: "supermarket", name: "Supermarket", icon: ShoppingCart, gradient: "from-green-500 to-emerald-500", cost: 50, minAge: 5 },
-  { id: "gym", name: "Gym", icon: Dumbbell, gradient: "from-orange-500 to-red-500", cost: 75, minAge: 12, unlockReq: { activity: "supermarket", count: 3 } },
+  { id: "sports", name: "Sports Club", icon: Trophy, gradient: "from-amber-500 to-yellow-500", cost: 60, minAge: 8 },
+  { id: "gym", name: "Gym", icon: Dumbbell, gradient: "from-orange-500 to-red-500", cost: 75, minAge: 16, unlockReq: { activity: "sports", count: 2 } },
   { id: "synagogue", name: "Synagogue", icon: Church, gradient: "from-blue-500 to-indigo-500", cost: 100, minAge: 8 },
+  { id: "job", name: "Get a Job", icon: Briefcase, gradient: "from-slate-500 to-gray-600", cost: 100, minAge: 18 },
   { id: "shabbat_dinner", name: "Shabbat Dinner", icon: UtensilsCrossed, gradient: "from-purple-500 to-violet-500", cost: 150, minAge: 16, unlockReq: { activity: "synagogue", count: 3, item: "tuxedo" } },
   { id: "meet_moroccan", name: "Moroccan Date", icon: Heart, gradient: "from-pink-500 to-rose-500", cost: 100, minAge: 18, unlockReq: { activity: "shabbat_dinner", count: 1 } },
   { id: "mall", name: "Shopping Mall", icon: ShoppingBag, gradient: "from-cyan-500 to-blue-500", cost: 75, minAge: 10 },
@@ -27,6 +29,20 @@ const activityData = {
       { scene: "🛒", question: "How do you say 'shopping cart'?", hebrew: "עגלת קניות", phonetic: "agalat kniyot", options: ["agalat kniyot", "sal kniyot", "kli kniyot"], correct: 0 },
       { scene: "🍎", question: "Ask for apples", hebrew: "אני רוצה תפוחים", phonetic: "ani rotze tapuchim", options: ["ani rotze tapuchim", "ani ohev tapuchim", "tapuchim bevakasha"], correct: 0 },
       { scene: "💰", question: "How much does it cost?", hebrew: "כמה זה עולה?", phonetic: "kama ze ole?", options: ["ma hashem?", "kama ze ole?", "eifo ze?"], correct: 1 },
+    ]
+  },
+  sports: {
+    scenarios: [
+      { scene: "⚽", question: "How do you say 'soccer ball'?", hebrew: "כדורגל", phonetic: "kaduregel", options: ["kaduregel", "kadursal", "kadur"], correct: 0 },
+      { scene: "🏀", question: "How do you say 'basketball'?", hebrew: "כדורסל", phonetic: "kadursal", options: ["kaduregel", "kadursal", "tenis"], correct: 1 },
+      { scene: "🏃", question: "How do you say 'to run'?", hebrew: "לרוץ", phonetic: "larutz", options: ["lalechet", "larutz", "liskot"], correct: 1 },
+    ]
+  },
+  job: {
+    scenarios: [
+      { scene: "💼", question: "How do you say 'work'?", hebrew: "עבודה", phonetic: "avoda", options: ["avoda", "mishpat", "limud"], correct: 0 },
+      { scene: "💵", question: "How do you say 'salary'?", hebrew: "משכורת", phonetic: "maskoret", options: ["kesef", "maskoret", "matana"], correct: 1 },
+      { scene: "🏢", question: "How do you say 'office'?", hebrew: "משרד", phonetic: "misrad", options: ["misrad", "bayit", "beit sefer"], correct: 0 },
     ]
   },
   gym: {
