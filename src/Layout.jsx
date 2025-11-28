@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Volume2, LayoutDashboard, Library, Sparkles, PlayCircle, MessageSquare, Search, X } from "lucide-react";
 import QuickAddWord from "./components/QuickAddWord";
+import CoinDisplay from "./components/CoinDisplay";
 import { base44 } from "@/api/base44Client";
 import { Input } from "@/components/ui/input";
 import {
@@ -46,6 +47,11 @@ const hebrewItems = [
     title: "Schedule",
     url: createPageUrl("Progress"),
     icon: LayoutDashboard,
+  },
+  {
+    title: "Activities",
+    url: createPageUrl("Activities"),
+    icon: PlayCircle,
   },
   {
     title: "Treasure",
@@ -199,17 +205,20 @@ export default function Layout({ children, currentPageName }) {
 
         <main className="flex-1 flex flex-col">
                         <header className="bg-white/60 backdrop-blur-md border-b border-violet-100/50 px-4 py-3">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="md:hidden">
-                                <SidebarTrigger className="hover:bg-violet-50 p-2 rounded-lg transition-colors duration-200" />
-                              </div>
-                              <button
-                                onClick={() => setSearchOpen(!searchOpen)}
-                                className="p-2 rounded-lg hover:bg-violet-50 text-gray-500 hover:text-violet-600 transition-all"
-                              >
-                                <Search className="w-5 h-5" />
-                              </button>
+                                        <div className="flex items-center justify-between">
+                                          <div className="flex items-center gap-3">
+                                            <div className="md:hidden">
+                                              <SidebarTrigger className="hover:bg-violet-50 p-2 rounded-lg transition-colors duration-200" />
+                                            </div>
+                                            <button
+                                              onClick={() => setSearchOpen(!searchOpen)}
+                                              className="p-2 rounded-lg hover:bg-violet-50 text-gray-500 hover:text-violet-600 transition-all"
+                                            >
+                                              <Search className="w-5 h-5" />
+                                            </button>
+                                          </div>
+                                          <div className="flex items-center gap-3">
+                                            <CoinDisplay />
                               {searchOpen && (
                                 <div className="relative">
                                   <Input
@@ -242,8 +251,9 @@ export default function Layout({ children, currentPageName }) {
                               )}
                             </div>
                             <h1 className="text-lg font-bold bg-gradient-to-r from-violet-600 to-blue-600 bg-clip-text text-transparent md:hidden">Masteri</h1>
-                          </div>
-                        </header>
+                                              </div>
+                                            </div>
+                                          </header>
 
                         <div className="flex-1 overflow-auto">
                           {children}
