@@ -36,6 +36,7 @@ export default function Practice() {
   const [isEditingMeaning, setIsEditingMeaning] = useState(false);
   const [conjugationTense, setConjugationTense] = useState("present");
   const [lastPicturePrompt, setLastPicturePrompt] = useState("");
+  const [addedWords, setAddedWords] = useState(new Set());
   
   const queryClient = useQueryClient();
 
@@ -289,6 +290,7 @@ Return the infinitive Hebrew word, its transliteration, and whether it's top 500
         }
       });
       
+      setAddedWords(prev => new Set([...prev, hebrewWord, result.hebrew_infinitive]));
       createWordMutation.mutate({
         word: result.hebrew_infinitive,
         translation: `${result.meaning} (${result.transliteration_infinitive})`,
@@ -300,6 +302,7 @@ Return the infinitive Hebrew word, its transliteration, and whether it's top 500
         is_starred: result.is_top_500,
       });
     } catch (error) {
+      setAddedWords(prev => new Set([...prev, hebrewWord]));
       createWordMutation.mutate({
         word: hebrewWord,
         translation: `${meaning} (${transliteration})`,
@@ -800,7 +803,7 @@ Return the infinitive Hebrew word, its transliteration, and whether it's top 500
                                               </button>
                                               <div className="text-xl font-medium text-gray-800 mb-2 flex flex-wrap gap-1" dir="rtl">
                                                 {sentence.words?.map((w, wIdx) => {
-                                                  const isAdded = words.some(word => word.word === w.hebrew);
+                                                  const isAdded = words.some(word => word.word === w.hebrew) || addedWords.has(w.hebrew);
                                                   return (
                                                     <div key={wIdx} className="flex flex-col items-center">
                                                       {isAdded && <span className="text-green-500 text-xs">✓</span>}
