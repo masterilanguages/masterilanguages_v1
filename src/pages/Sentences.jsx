@@ -1,16 +1,34 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Volume2, Play } from "lucide-react";
+import { Volume2, Play, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-import ParrotMascot from "../components/mascot/ParrotMascot";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 import SoundWave from "../components/practice/SoundWave";
+import GameHeader from "../components/game/GameHeader";
 
 export default function Sentences() {
   const [mode, setMode] = useState("list");
   const [currentIndex, setCurrentIndex] = useState(0);
   const queryClient = useQueryClient();
+
+  const { data: userProfile } = useQuery({
+    queryKey: ['userProfile'],
+    queryFn: async () => {
+      const profiles = await base44.entities.UserProfile.list();
+      return profiles[0] || null;
+    },
+  });
+
+  const { data: userCoins } = useQuery({
+    queryKey: ['userCoins'],
+    queryFn: async () => {
+      const coins = await base44.entities.UserCoins.list();
+      return coins[0] || { coins: 0 };
+    },
+  });
 
   const { data: sentences = [], isLoading } = useQuery({
     queryKey: ['sentences'],
@@ -45,27 +63,29 @@ export default function Sentences() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
         <SoundWave isPlaying={true} />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen p-4 md:p-8">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      <GameHeader profile={userProfile} coins={userCoins?.coins} onBuyCoins={() => {}} />
+      
+      <div className="max-w-4xl mx-auto px-4 py-6">
         <motion.div 
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           className="mb-8"
         >
           <div className="flex items-center gap-4 mb-6">
-            <ParrotMascot size="sm" message="Practice sentences!" />
+            <Link to={createPageUrl("Home")} className="text-white/60 hover:text-white">
+              <ArrowLeft className="w-6 h-6" />
+            </Link>
             <div>
-              <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-violet-600 via-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">
-                Sentences
-              </h1>
-              <p className="text-gray-500">Practice full sentences and phrases</p>
+              <h1 className="text-3xl font-bold text-white">Sentences</h1>
+              <p className="text-white/60">Practice full sentences and phrases</p>
             </div>
           </div>
         </motion.div>
@@ -76,19 +96,19 @@ export default function Sentences() {
             animate={{ scale: 1, opacity: 1 }}
             className="text-center py-20"
           >
-            <ParrotMascot size="lg" message="No sentences yet! Add some from videos." className="mb-4" />
+            <p className="text-white/60">No sentences yet! Add some from Practice page.</p>
           </motion.div>
         ) : mode === "list" ? (
           <div>
-            <div className="bg-gradient-to-r from-violet-500 to-blue-500 rounded-2xl p-6 mb-6 text-white">
+            <div className="bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-white/10 rounded-2xl p-6 mb-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-bold mb-1">Ready to practice?</h2>
-                  <p className="text-white/80">Test yourself with sentence flashcards</p>
+                  <h2 className="text-xl font-bold text-white mb-1">Ready to practice?</h2>
+                  <p className="text-white/60">Test yourself with sentence flashcards</p>
                 </div>
                 <Button 
                   onClick={startFlashcards}
-                  className="bg-white text-violet-600 hover:bg-violet-50 rounded-xl px-6"
+                  className="bg-gradient-to-r from-cyan-500 to-purple-500 rounded-xl px-6"
                 >
                   <Play className="w-4 h-4 mr-2" />
                   Start Flashcards
@@ -101,42 +121,42 @@ export default function Sentences() {
                 const levelSentences = sentences.filter(s => (s.times_practiced || 0) === level);
                 if (levelSentences.length === 0) return null;
                 const levelLabels = {
-                  5: { label: "⭐ Mastered", bg: "bg-green-50", border: "border-green-200" },
-                  4: { label: "🔥 Almost There", bg: "bg-emerald-50", border: "border-emerald-200" },
-                  3: { label: "💪 Getting Better", bg: "bg-blue-50", border: "border-blue-200" },
-                  2: { label: "📚 Learning", bg: "bg-violet-50", border: "border-violet-200" },
-                  1: { label: "🌱 Just Started", bg: "bg-purple-50", border: "border-purple-200" },
-                  0: { label: "✨ New", bg: "bg-gray-50", border: "border-gray-200" },
+                  5: { label: "⭐ Mastered", bg: "bg-green-500/10", border: "border-green-500/30" },
+                  4: { label: "🔥 Almost There", bg: "bg-emerald-500/10", border: "border-emerald-500/30" },
+                  3: { label: "💪 Getting Better", bg: "bg-blue-500/10", border: "border-blue-500/30" },
+                  2: { label: "📚 Learning", bg: "bg-violet-500/10", border: "border-violet-500/30" },
+                  1: { label: "🌱 Just Started", bg: "bg-purple-500/10", border: "border-purple-500/30" },
+                  0: { label: "✨ New", bg: "bg-white/5", border: "border-white/10" },
                 };
                 return (
                   <div key={level}>
-                    <h3 className="text-sm font-semibold text-gray-500 mb-3">{levelLabels[level].label} ({levelSentences.length})</h3>
+                    <h3 className="text-sm font-semibold text-white/60 mb-3">{levelLabels[level].label} ({levelSentences.length})</h3>
                     <div className="space-y-2">
                       {levelSentences.map((sentence) => (
                         <motion.div
                           key={sentence.id}
                           initial={{ opacity: 0, scale: 0.9 }}
                           animate={{ opacity: 1, scale: 1 }}
-                          className={`${levelLabels[level].bg} ${levelLabels[level].border} border-2 rounded-2xl px-4 py-3 flex items-center justify-between`}
+                          className={`${levelLabels[level].bg} ${levelLabels[level].border} border rounded-2xl px-4 py-3 flex items-center justify-between`}
                         >
                           <button 
                             onClick={() => sentence.audio_url && playAudio(sentence)}
                             className="flex-1 text-left flex items-center gap-3 hover:opacity-80"
                           >
-                            <span className="font-medium text-gray-700">{sentence.phonetic}</span>
-                            <span className="text-lg font-bold text-violet-600" dir="rtl">{sentence.word}</span>
-                            <span className="text-gray-400 text-sm">({sentence.translation})</span>
-                            {sentence.audio_url && <Volume2 className="w-3 h-3 text-gray-400" />}
+                            <span className="font-medium text-white/80">{sentence.phonetic}</span>
+                            <span className="text-lg font-bold text-cyan-400" dir="rtl">{sentence.word}</span>
+                            <span className="text-white/50 text-sm">({sentence.translation})</span>
+                            {sentence.audio_url && <Volume2 className="w-3 h-3 text-white/40" />}
                           </button>
-                          <div className="flex gap-1 ml-2 border-l border-gray-200 pl-2">
+                          <div className="flex gap-1 ml-2 border-l border-white/10 pl-2">
                             {[1, 2, 3, 4, 5].map(num => (
                               <button
                                 key={num}
                                 onClick={() => handleRate(sentence.id, num)}
                                 className={`w-6 h-6 rounded-full text-xs font-bold transition-all hover:scale-110 ${
                                   (sentence.times_practiced || 0) >= num 
-                                    ? "bg-violet-500 text-white" 
-                                    : "bg-white border border-gray-300 text-gray-500 hover:border-violet-400 hover:text-violet-500"
+                                    ? "bg-cyan-500 text-white" 
+                                    : "bg-white/10 text-white/50 hover:bg-white/20"
                                 }`}
                               >
                                 {num}
@@ -156,11 +176,11 @@ export default function Sentences() {
             <Button
               onClick={() => setMode("list")}
               variant="outline"
-              className="mb-4 border-2 border-violet-200 hover:border-violet-300 rounded-xl"
+              className="mb-4 border-white/20 text-white hover:bg-white/10 rounded-xl"
             >
               ← Back to Sentence List
             </Button>
-            <div className="text-center text-gray-500 mb-4">
+            <div className="text-center text-white/60 mb-4">
               {currentIndex + 1} / {sentences.length}
             </div>
             <AnimatePresence mode="wait">
@@ -170,13 +190,13 @@ export default function Sentences() {
                   initial={{ opacity: 0, x: 50 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -50 }}
-                  className="bg-white rounded-2xl border border-violet-100 shadow-lg p-8 text-center"
+                  className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-8 text-center"
                 >
-                  <p className="text-2xl font-bold text-violet-600 mb-4" dir="rtl">{sentences[currentIndex].word}</p>
-                  <p className="text-lg text-gray-600 mb-2">{sentences[currentIndex].phonetic}</p>
-                  <p className="text-gray-500 mb-6">{sentences[currentIndex].translation}</p>
+                  <p className="text-2xl font-bold text-cyan-400 mb-4" dir="rtl">{sentences[currentIndex].word}</p>
+                  <p className="text-lg text-white/80 mb-2">{sentences[currentIndex].phonetic}</p>
+                  <p className="text-white/60 mb-6">{sentences[currentIndex].translation}</p>
                   {sentences[currentIndex].audio_url && (
-                    <Button onClick={() => playAudio(sentences[currentIndex])} variant="outline" className="mb-6">
+                    <Button onClick={() => playAudio(sentences[currentIndex])} variant="outline" className="mb-6 border-white/20 text-white">
                       <Volume2 className="w-4 h-4 mr-2" /> Play Audio
                     </Button>
                   )}
@@ -190,8 +210,8 @@ export default function Sentences() {
                         }}
                         className={`w-10 h-10 rounded-full text-sm font-bold transition-all hover:scale-110 ${
                           (sentences[currentIndex].times_practiced || 0) >= num 
-                            ? "bg-violet-500 text-white" 
-                            : "bg-gray-100 border border-gray-300 text-gray-500 hover:border-violet-400"
+                            ? "bg-cyan-500 text-white" 
+                            : "bg-white/10 text-white/50 hover:bg-white/20"
                         }`}
                       >
                         {num}

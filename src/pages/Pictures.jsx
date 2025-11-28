@@ -3,8 +3,11 @@ import { motion } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowLeft } from "lucide-react";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 import PictureCard from "../components/practice/PictureCard";
-import ParrotMascot from "../components/mascot/ParrotMascot";
+import GameHeader from "../components/game/GameHeader";
 
 const pictureCards = [
 
@@ -70,6 +73,22 @@ export default function Pictures() {
   const [pictureCardIndex, setPictureCardIndex] = useState(0);
   const [selectedLevel, setSelectedLevel] = useState("all");
   const queryClient = useQueryClient();
+
+  const { data: userProfile } = useQuery({
+    queryKey: ['userProfile'],
+    queryFn: async () => {
+      const profiles = await base44.entities.UserProfile.list();
+      return profiles[0] || null;
+    },
+  });
+
+  const { data: userCoins } = useQuery({
+    queryKey: ['userCoins'],
+    queryFn: async () => {
+      const coins = await base44.entities.UserCoins.list();
+      return coins[0] || { coins: 0 };
+    },
+  });
 
   const { data: ratings = [] } = useQuery({
     queryKey: ['pictureWordRatings'],
@@ -141,26 +160,28 @@ export default function Pictures() {
   }, [selectedLevel]);
 
   return (
-    <div className="min-h-screen p-4 md:p-8">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      <GameHeader profile={userProfile} coins={userCoins?.coins} onBuyCoins={() => {}} />
+
+      <div className="max-w-4xl mx-auto px-4 py-6">
         <motion.div 
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           className="mb-8"
         >
           <div className="flex items-center gap-4 mb-6">
-            <ParrotMascot size="sm" message="Learn with pictures!" />
+            <Link to={createPageUrl("Home")} className="text-white/60 hover:text-white">
+              <ArrowLeft className="w-6 h-6" />
+            </Link>
             <div>
-              <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-violet-600 via-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">
-                Picture Mnemonics
-              </h1>
-              <p className="text-gray-500">Learn Hebrew words through visual associations</p>
+              <h1 className="text-3xl font-bold text-white">Picture Mnemonics</h1>
+              <p className="text-white/60">Learn Hebrew words through visual associations</p>
             </div>
           </div>
 
           <div className="flex items-center gap-4">
             <Select value={selectedLevel} onValueChange={setSelectedLevel}>
-              <SelectTrigger className="w-48 border-2 border-violet-100 rounded-xl">
+              <SelectTrigger className="w-48 bg-white/10 border-white/20 text-white">
                 <SelectValue placeholder="Filter by level" />
               </SelectTrigger>
               <SelectContent>
@@ -178,7 +199,7 @@ export default function Pictures() {
 
         {filteredCards.length === 0 ? (
           <div className="text-center py-20">
-            <ParrotMascot size="lg" message="No cards in this category yet!" />
+            <p className="text-white/60">No cards in this category yet!</p>
           </div>
         ) : (
           <PictureCard
@@ -191,6 +212,7 @@ export default function Pictures() {
             currentRating={getRating(currentCard?.hebrewWord)}
           />
         )}
+      </div>
       </div>
     </div>
   );
