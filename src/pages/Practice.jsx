@@ -28,6 +28,8 @@ export default function Practice() {
   const [conjugationDialog, setConjugationDialog] = useState({ open: false, word: null, conjugations: null, loading: false });
   const [expandedLevel, setExpandedLevel] = useState(null);
   const [expandedTransliterations, setExpandedTransliterations] = useState({});
+  const [picturePrompt, setPicturePrompt] = useState("");
+  const [isGeneratingPicture, setIsGeneratingPicture] = useState(false);
   
   const queryClient = useQueryClient();
 
@@ -128,9 +130,11 @@ export default function Practice() {
   const openWordDialog = async (word, e) => {
     e.stopPropagation();
     setSentencesDialog({ open: true, word, sentences: [], loading: true });
+    setPicturePrompt("");
+    setExpandedTransliterations({});
     try {
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Generate 3 common Hebrew sentences using the word "${word.word}" (${word.phonetic} - ${word.translation}). For each sentence provide the Hebrew, transliteration, and English translation. Make sure the English translation is natural and accurate.`,
+        prompt: `Generate 3 common Hebrew sentences using the word "${word.word}" (${word.phonetic} - ${word.translation}). For each sentence provide the Hebrew (with each word separated), transliteration, English translation, and a breakdown of each Hebrew word with its transliteration and meaning.`,
         response_json_schema: {
           type: "object",
           properties: {
@@ -141,7 +145,18 @@ export default function Practice() {
                 properties: {
                   hebrew: { type: "string" },
                   transliteration: { type: "string" },
-                  english: { type: "string" }
+                  english: { type: "string" },
+                  words: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        hebrew: { type: "string" },
+                        transliteration: { type: "string" },
+                        meaning: { type: "string" }
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -153,6 +168,54 @@ export default function Practice() {
       toast.error("Failed to generate sentences");
       setSentencesDialog(prev => ({ ...prev, loading: false }));
     }
+  };
+
+  const generatePictureForWord = async () => {
+    if (!picturePrompt.trim()) {
+      toast.error("Please describe the picture");
+      return;
+    }
+    setIsGeneratingPicture(true);
+    try {
+      const { url } = await base44.integrations.Core.GenerateImage({
+        prompt: `Cute, funny, colorful mnemonic illustration for learning the Hebrew word "${sentencesDialog.word.phonetic}" (${sentencesDialog.word.translation}): ${picturePrompt}. Cartoon style, memorable, educational.`,
+      });
+      await updateWordMutation.mutateAsync({
+        id: sentencesDialog.word.id,
+        data: { image_url: url },
+      });
+      setSentencesDialog(prev => ({ ...prev, word: { ...prev.word, image_url: url } }));
+      toast.success("Picture created!");
+      setPicturePrompt("");
+    } catch (error) {
+      toast.error("Failed to generate picture");
+    } finally {
+      setIsGeneratingPicture(false);
+    }
+  };
+
+  const createWordMutation = useMutation({
+    mutationFn: (wordData) => base44.entities.Word.create(wordData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['words'] });
+      toast.success("Word added to New Words!");
+    },
+  });
+
+  const addWordFromSentence = (hebrewWord, transliteration, meaning) => {
+    const existingWord = words.find(w => w.word === hebrewWord);
+    if (existingWord) {
+      toast.info("This word is already in your library");
+      return;
+    }
+    createWordMutation.mutate({
+      word: hebrewWord,
+      translation: meaning,
+      phonetic: transliteration,
+      category: "basics",
+      difficulty: "beginner",
+      times_practiced: 0,
+    });
   };
 
   const loadConjugations = async () => {
@@ -489,14 +552,43 @@ export default function Practice() {
                                 </Dialog>
 
                                 <Dialog open={sentencesDialog.open} onOpenChange={(open) => setSentencesDialog({ ...sentencesDialog, open })}>
-                                  <DialogContent className="sm:max-w-lg">
+                                  <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
                                     <DialogHeader>
                                       <DialogTitle className="flex items-center gap-2">
                                         <span className="text-violet-600 text-xl" dir="rtl">{sentencesDialog.word?.word}</span>
-                                        <span className="text-gray-500">({sentencesDialog.word?.phonetic})</span>
+                                        <span className="text-gray-500">({sentencesDialog.word?.phonetic} - {sentencesDialog.word?.translation})</span>
                                       </DialogTitle>
                                     </DialogHeader>
                                     <div className="space-y-4">
+                                      {/* Picture section */}
+                                      {sentencesDialog.word?.image_url ? (
+                                        <div className="rounded-xl overflow-hidden border-2 border-violet-200">
+                                          <img src={sentencesDialog.word.image_url} alt="Mnemonic" className="w-full" />
+                                        </div>
+                                      ) : (
+                                        <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                                          <p className="text-sm text-gray-600 mb-2">Create a mnemonic picture:</p>
+                                          <Textarea
+                                            placeholder="Describe what the picture should look like..."
+                                            value={picturePrompt}
+                                            onChange={(e) => setPicturePrompt(e.target.value)}
+                                            className="mb-2"
+                                          />
+                                          <Button
+                                            onClick={generatePictureForWord}
+                                            disabled={isGeneratingPicture}
+                                            size="sm"
+                                            className="w-full bg-gradient-to-r from-violet-500 to-blue-500"
+                                          >
+                                            {isGeneratingPicture ? (
+                                              <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating...</>
+                                            ) : (
+                                              <><Image className="w-4 h-4 mr-2" /> Generate Picture</>
+                                            )}
+                                          </Button>
+                                        </div>
+                                      )}
+
                                       {sentencesDialog.loading ? (
                                         <div className="flex items-center justify-center py-8">
                                           <Loader2 className="w-6 h-6 animate-spin text-violet-500" />
@@ -507,15 +599,26 @@ export default function Practice() {
                                           <Button
                                             variant="outline"
                                             onClick={loadConjugations}
-                                            className="w-full mb-4 border-2 border-blue-200 hover:border-blue-300 hover:bg-blue-50 text-blue-600"
+                                            className="w-full mb-2 border-2 border-blue-200 hover:border-blue-300 hover:bg-blue-50 text-blue-600"
                                           >
                                             <Sparkles className="w-4 h-4 mr-2" />
                                             Conjugate Verb
                                           </Button>
                                           {sentencesDialog.sentences.map((sentence, idx) => (
                                             <div key={idx} className="bg-violet-50 rounded-xl p-4 border border-violet-100">
-                                              <p className="text-xl font-medium text-gray-800 mb-2" dir="rtl">{sentence.hebrew}</p>
-                                              <div className="flex items-center gap-2">
+                                              <div className="text-xl font-medium text-gray-800 mb-2 flex flex-wrap gap-1" dir="rtl">
+                                                {sentence.words?.map((w, wIdx) => (
+                                                  <button
+                                                    key={wIdx}
+                                                    onClick={() => addWordFromSentence(w.hebrew, w.transliteration, w.meaning)}
+                                                    className="hover:bg-violet-200 px-1 rounded transition-all"
+                                                    title={`Add "${w.hebrew}" (${w.transliteration} - ${w.meaning}) to New Words`}
+                                                  >
+                                                    {w.hebrew}
+                                                  </button>
+                                                )) || sentence.hebrew}
+                                              </div>
+                                              <div className="flex items-center gap-2 flex-wrap">
                                                 <p className="text-gray-700">{sentence.english}</p>
                                                 <button
                                                   onClick={() => setExpandedTransliterations(prev => ({ ...prev, [idx]: !prev[idx] }))}

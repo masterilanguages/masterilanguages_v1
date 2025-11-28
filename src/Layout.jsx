@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Volume2, LayoutDashboard, Library, Sparkles, PlayCircle, Image, MessageSquare } from "lucide-react";
+import { Volume2, LayoutDashboard, Library, Sparkles, PlayCircle, MessageSquare } from "lucide-react";
 import QuickAddWord from "./components/QuickAddWord";
 import {
   Sidebar,
@@ -20,17 +20,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ChevronDown } from "lucide-react";
 
 const hebrewItems = [
-  {
-    title: "Pictures - Level 1",
-    url: createPageUrl("Pictures"),
-    icon: Image,
-  },
-  {
-    title: "Pictures - Level 2",
-    url: createPageUrl("PicturesLesson2"),
-    icon: Image,
-  },
-
   {
     title: "Words",
     url: createPageUrl("Practice"),
