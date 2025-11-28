@@ -50,6 +50,14 @@ export default function Practice() {
     },
   });
 
+  const deleteWordMutation = useMutation({
+    mutationFn: (id) => base44.entities.Word.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['words'] });
+      toast.success("Word deleted");
+    },
+  });
+
   const filteredByFolder = words.filter(word => {
     const rating = word.times_practiced || 0;
     if (selectedFolder === "know") return rating >= 5;
@@ -454,13 +462,20 @@ export default function Practice() {
                                                                                       animate={{ opacity: 1, scale: 1 }}
                                                                                       className={`${style.bg} ${style.border} border-2 rounded-2xl px-3 py-2 hover:shadow-md transition-all flex items-center gap-2`}
                                                                                     >
+                                                                                      <button
+                                                                                        onClick={(e) => { e.stopPropagation(); deleteWordMutation.mutate(word.id); }}
+                                                                                        className="text-gray-400 hover:text-red-500 text-xs"
+                                                                                        title="Delete word"
+                                                                                      >
+                                                                                        ✕
+                                                                                      </button>
                                                                                       <button 
                                                                                         onClick={(e) => openWordDialog(word, e)}
                                                                                         className="flex items-center gap-2 hover:opacity-80"
                                                                                       >
                                                                                         <span className="font-medium text-gray-700">{word.phonetic}</span>
                                                                                         <span className="text-lg font-bold text-violet-600" dir="rtl">{word.word}</span>
-                                                                                        <span className="text-gray-400 text-sm">({word.translation}{word.phonetic ? ` • ${word.phonetic}` : ''})</span>
+                                                                                        <span className="text-gray-400 text-sm">({word.translation})</span>
                                                                                         {word.image_url && <Image className="w-3 h-3 text-violet-400" />}
                                                                                         {word.audio_url && (
                                                                                           <Volume2 
@@ -562,8 +577,17 @@ export default function Practice() {
                                     <div className="space-y-4">
                                       {/* Picture section */}
                                       {sentencesDialog.word?.image_url ? (
-                                        <div className="rounded-xl overflow-hidden border-2 border-violet-200">
+                                        <div className="rounded-xl overflow-hidden border-2 border-violet-200 relative">
                                           <img src={sentencesDialog.word.image_url} alt="Mnemonic" className="w-full" />
+                                          <button
+                                            onClick={() => {
+                                              updateWordMutation.mutate({ id: sentencesDialog.word.id, data: { image_url: null } });
+                                              setSentencesDialog(prev => ({ ...prev, word: { ...prev.word, image_url: null } }));
+                                            }}
+                                            className="absolute bottom-2 right-2 bg-white/90 hover:bg-white text-violet-600 text-xs px-2 py-1 rounded-lg shadow-md transition-all"
+                                          >
+                                            🔄 New Image
+                                          </button>
                                         </div>
                                       ) : (
                                         <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
@@ -605,18 +629,32 @@ export default function Practice() {
                                             Conjugate Verb
                                           </Button>
                                           {sentencesDialog.sentences.map((sentence, idx) => (
-                                            <div key={idx} className="bg-violet-50 rounded-xl p-4 border border-violet-100">
+                                            <div key={idx} className="bg-violet-50 rounded-xl p-4 border border-violet-100 relative">
+                                              <button
+                                                onClick={() => setSentencesDialog(prev => ({
+                                                  ...prev,
+                                                  sentences: prev.sentences.filter((_, i) => i !== idx)
+                                                }))}
+                                                className="absolute top-2 right-2 text-gray-400 hover:text-red-500 text-xs"
+                                              >
+                                                ✕
+                                              </button>
                                               <div className="text-xl font-medium text-gray-800 mb-2 flex flex-wrap gap-1" dir="rtl">
-                                                {sentence.words?.map((w, wIdx) => (
-                                                  <button
-                                                    key={wIdx}
-                                                    onClick={() => addWordFromSentence(w.hebrew, w.transliteration, w.meaning)}
-                                                    className="hover:bg-violet-200 px-1 rounded transition-all"
-                                                    title={`Add "${w.hebrew}" (${w.transliteration} - ${w.meaning}) to New Words`}
-                                                  >
-                                                    {w.hebrew}
-                                                  </button>
-                                                )) || sentence.hebrew}
+                                                {sentence.words?.map((w, wIdx) => {
+                                                  const isAdded = words.some(word => word.word === w.hebrew);
+                                                  return (
+                                                    <div key={wIdx} className="flex flex-col items-center">
+                                                      {isAdded && <span className="text-green-500 text-xs">✓</span>}
+                                                      <button
+                                                        onClick={() => !isAdded && addWordFromSentence(w.hebrew, w.transliteration, w.meaning)}
+                                                        className={`px-1 rounded transition-all ${isAdded ? 'text-green-600 cursor-default' : 'hover:bg-violet-200'}`}
+                                                        title={isAdded ? "Already added" : `Add "${w.hebrew}" (${w.transliteration} - ${w.meaning}) to New Words`}
+                                                      >
+                                                        {w.hebrew}
+                                                      </button>
+                                                    </div>
+                                                  );
+                                                }) || sentence.hebrew}
                                               </div>
                                               <div className="flex items-center gap-2 flex-wrap">
                                                 <p className="text-gray-700">{sentence.english}</p>
