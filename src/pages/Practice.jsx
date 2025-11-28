@@ -145,7 +145,13 @@ export default function Practice() {
     setMnemonicSuggestions([]);
     try {
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Generate 3 creative, funny mnemonic picture ideas to help remember the Hebrew word "${word.phonetic}" means "${word.translation}". Each should use wordplay or sound-alikes. Keep each under 15 words.`,
+        prompt: `Generate 3 creative mnemonic picture ideas to help remember the Hebrew word "${word.phonetic}" (sounds like) means "${word.translation}". 
+        
+IMPORTANT: Each suggestion MUST be based on an English word that SOUNDS SIMILAR to "${word.phonetic}". 
+For example: if the word is "tohniot" (plans), suggest "A tornado spinning plans around" because "tohniot" sounds like "tornado".
+If the word is "kelev" (dog), suggest "A dog named Clive" because "kelev" sounds like "Clive".
+
+Focus on the sound-alike English word and create a visual scene connecting it to the meaning "${word.translation}". Keep each under 20 words.`,
         response_json_schema: {
           type: "object",
           properties: {
@@ -253,7 +259,7 @@ export default function Practice() {
     }
     createWordMutation.mutate({
       word: hebrewWord,
-      translation: meaning,
+      translation: `${meaning} (${transliteration})`,
       phonetic: transliteration,
       category: "basics",
       difficulty: "beginner",
