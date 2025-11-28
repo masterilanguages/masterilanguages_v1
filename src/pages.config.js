@@ -10,6 +10,7 @@ import BodyPartsLesson from './pages/BodyPartsLesson';
 import DaysLesson from './pages/DaysLesson';
 import MonthsLesson from './pages/MonthsLesson';
 import ColorsTest from './pages/ColorsTest';
+import Home from './pages/Home';
 import __Layout from './Layout.jsx';
 
 
@@ -26,6 +27,7 @@ export const PAGES = {
     "DaysLesson": DaysLesson,
     "MonthsLesson": MonthsLesson,
     "ColorsTest": ColorsTest,
+    "Home": Home,
 }
 
 export const pagesConfig = {
