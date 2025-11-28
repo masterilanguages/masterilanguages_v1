@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Sparkles, RotateCcw, Play, Volume2, Image, Loader2, Star, Check, ArrowLeft, Coins, Zap } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Sparkles, RotateCcw, Play, Volume2, Image, Loader2, Star, Check, ArrowLeft, Coins, Zap, Wand2, MessageSquare, Brain } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -22,6 +23,12 @@ export default function Practice() {
   const [mode, setMode] = useState("list");
   const [expandedLevel, setExpandedLevel] = useState(null);
   const [buyCoinsDialog, setBuyCoinsDialog] = useState(false);
+  
+  // AI Features
+  const [aiDialog, setAiDialog] = useState(null); // 'mnemonic' | 'sentence' | 'image'
+  const [selectedWord, setSelectedWord] = useState(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [generatedContent, setGeneratedContent] = useState(null);
 
   const queryClient = useQueryClient();
 
@@ -63,6 +70,102 @@ export default function Practice() {
     mutationFn: ({ id, data }) => base44.entities.Word.update(id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['words'] }),
   });
+
+  // AI Generation functions
+  const generateMnemonic = async (word) => {
+    setSelectedWord(word);
+    setAiDialog('mnemonic');
+    setAiLoading(true);
+    setGeneratedContent(null);
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Create a fun, memorable mnemonic to help remember the Hebrew word "${word.word}" (${word.phonetic}) which means "${word.translation}". 
+        The mnemonic should use the sound of the Hebrew word to create an English phrase or image. 
+        Also suggest a visual image that would help remember this word.
+        Keep it short and memorable.`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            mnemonic: { type: "string" },
+            visual_description: { type: "string" },
+            example_sentence_hebrew: { type: "string" },
+            example_sentence_english: { type: "string" }
+          }
+        }
+      });
+      setGeneratedContent(result);
+    } catch (e) {
+      toast.error("Failed to generate mnemonic");
+    }
+    setAiLoading(false);
+  };
+
+  const generateSentence = async (word) => {
+    setSelectedWord(word);
+    setAiDialog('sentence');
+    setAiLoading(true);
+    setGeneratedContent(null);
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Create 3 example sentences using the Hebrew word "${word.word}" (${word.phonetic}) which means "${word.translation}".
+        Include both Hebrew and English translations with phonetic pronunciation.`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            sentences: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  hebrew: { type: "string" },
+                  phonetic: { type: "string" },
+                  english: { type: "string" }
+                }
+              }
+            }
+          }
+        }
+      });
+      setGeneratedContent(result);
+    } catch (e) {
+      toast.error("Failed to generate sentences");
+    }
+    setAiLoading(false);
+  };
+
+  const generateImage = async (word) => {
+    setSelectedWord(word);
+    setAiDialog('image');
+    setAiLoading(true);
+    setGeneratedContent(null);
+    try {
+      const result = await base44.integrations.Core.GenerateImage({
+        prompt: `A colorful, memorable illustration for learning the Hebrew word "${word.phonetic}" meaning "${word.translation}". The image should be a visual mnemonic that helps remember the word through visual association. Cartoon style, vibrant colors, educational.`
+      });
+      setGeneratedContent({ url: result.url });
+      // Save to word
+      await updateWordMutation.mutateAsync({
+        id: word.id,
+        data: { image_url: result.url }
+      });
+      toast.success("Image saved to word!");
+    } catch (e) {
+      toast.error("Failed to generate image");
+    }
+    setAiLoading(false);
+  };
+
+  const saveSentenceAsWord = async (sentence) => {
+    await base44.entities.Word.create({
+      word: sentence.hebrew,
+      translation: sentence.english,
+      phonetic: sentence.phonetic,
+      category: "sentences",
+      difficulty: "beginner",
+    });
+    toast.success("Sentence saved!");
+    queryClient.invalidateQueries({ queryKey: ['words'] });
+  };
 
   const filteredByFolder = words.filter(word => {
     const rating = word.times_practiced || 0;
@@ -260,7 +363,29 @@ export default function Practice() {
                         >
                           <span className="text-white font-medium">{word.phonetic}</span>
                           <span className="text-cyan-400" dir="rtl">{word.word}</span>
-                          <div className="flex gap-1 ml-2">
+                          <div className="flex items-center gap-1 ml-2">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); generateMnemonic(word); }}
+                              className="w-6 h-6 rounded bg-purple-500/30 hover:bg-purple-500/50 flex items-center justify-center text-purple-300"
+                              title="Generate Mnemonic"
+                            >
+                              <Brain className="w-3 h-3" />
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); generateSentence(word); }}
+                              className="w-6 h-6 rounded bg-blue-500/30 hover:bg-blue-500/50 flex items-center justify-center text-blue-300"
+                              title="Generate Sentences"
+                            >
+                              <MessageSquare className="w-3 h-3" />
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); generateImage(word); }}
+                              className="w-6 h-6 rounded bg-green-500/30 hover:bg-green-500/50 flex items-center justify-center text-green-300"
+                              title="Generate Image"
+                            >
+                              <Image className="w-3 h-3" />
+                            </button>
+                            <div className="w-px h-4 bg-white/20 mx-1" />
                             {[1, 2, 3, 4, 5].map(num => (
                               <button
                                 key={num}
@@ -332,6 +457,86 @@ export default function Practice() {
               </button>
             ))}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* AI Generated Content Dialog */}
+      <Dialog open={!!aiDialog} onOpenChange={() => setAiDialog(null)}>
+        <DialogContent className="bg-slate-900 border-white/20 text-white max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-cyan-400" />
+              {aiDialog === 'mnemonic' && 'AI Mnemonic Generator'}
+              {aiDialog === 'sentence' && 'AI Sentence Generator'}
+              {aiDialog === 'image' && 'AI Image Generator'}
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedWord && (
+            <div className="bg-white/5 rounded-xl p-4 mb-4">
+              <p className="text-2xl font-bold text-cyan-400" dir="rtl">{selectedWord.word}</p>
+              <p className="text-white/60">{selectedWord.phonetic} - {selectedWord.translation}</p>
+            </div>
+          )}
+
+          {aiLoading ? (
+            <div className="flex flex-col items-center py-8">
+              <Loader2 className="w-10 h-10 text-cyan-400 animate-spin mb-4" />
+              <p className="text-white/60">Generating with AI...</p>
+            </div>
+          ) : generatedContent && (
+            <div className="space-y-4">
+              {aiDialog === 'mnemonic' && (
+                <>
+                  <div className="bg-purple-500/20 border border-purple-500/30 rounded-xl p-4">
+                    <h4 className="text-purple-300 text-sm font-semibold mb-2">💡 Mnemonic</h4>
+                    <p className="text-white">{generatedContent.mnemonic}</p>
+                  </div>
+                  <div className="bg-blue-500/20 border border-blue-500/30 rounded-xl p-4">
+                    <h4 className="text-blue-300 text-sm font-semibold mb-2">🖼️ Visual</h4>
+                    <p className="text-white/80">{generatedContent.visual_description}</p>
+                  </div>
+                  {generatedContent.example_sentence_hebrew && (
+                    <div className="bg-green-500/20 border border-green-500/30 rounded-xl p-4">
+                      <h4 className="text-green-300 text-sm font-semibold mb-2">📝 Example</h4>
+                      <p className="text-white" dir="rtl">{generatedContent.example_sentence_hebrew}</p>
+                      <p className="text-white/60 mt-1">{generatedContent.example_sentence_english}</p>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {aiDialog === 'sentence' && generatedContent.sentences && (
+                <div className="space-y-3">
+                  {generatedContent.sentences.map((s, i) => (
+                    <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-4">
+                      <p className="text-lg text-cyan-400" dir="rtl">{s.hebrew}</p>
+                      <p className="text-white/60 text-sm">{s.phonetic}</p>
+                      <p className="text-white/80 mt-1">{s.english}</p>
+                      <Button
+                        size="sm"
+                        onClick={() => saveSentenceAsWord(s)}
+                        className="mt-2 bg-green-500/20 text-green-400 hover:bg-green-500/30"
+                      >
+                        <Check className="w-3 h-3 mr-1" /> Save Sentence
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {aiDialog === 'image' && generatedContent.url && (
+                <div className="text-center">
+                  <img 
+                    src={generatedContent.url} 
+                    alt="Generated mnemonic" 
+                    className="rounded-xl max-h-64 mx-auto shadow-lg"
+                  />
+                  <p className="text-green-400 mt-3">✓ Image saved to word!</p>
+                </div>
+              )}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
