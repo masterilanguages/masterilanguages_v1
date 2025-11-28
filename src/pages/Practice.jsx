@@ -802,8 +802,8 @@ Return the infinitive Hebrew word, its transliteration, and whether it's top 500
                                             className="mb-2"
                                           />
                                           <Button
-                                            onClick={generatePictureForWord}
-                                            disabled={isGeneratingPicture}
+                                            onClick={() => generatePictureForWord(false)}
+                                            disabled={isGeneratingPicture || !picturePrompt.trim()}
                                             size="sm"
                                             className="w-full bg-gradient-to-r from-violet-500 to-blue-500"
                                           >
