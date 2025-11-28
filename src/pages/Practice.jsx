@@ -237,9 +237,15 @@ Focus on the sound-alike English word for "${phoneticCore}" and create a visual 
     }
     setIsGeneratingPicture(true);
     try {
-      const { url } = await base44.integrations.Core.GenerateImage({
+      const result = await base44.integrations.Core.GenerateImage({
         prompt: `Cute, funny, colorful mnemonic illustration for learning the Hebrew word "${sentencesDialog.word.phonetic}" (${sentencesDialog.word.translation}): ${promptToUse}. Cartoon style, memorable, educational.`,
       });
+      const url = result.url;
+      if (!url) {
+        toast.error("No image URL returned");
+        setIsGeneratingPicture(false);
+        return;
+      }
       await updateWordMutation.mutateAsync({
         id: sentencesDialog.word.id,
         data: { image_url: url },
@@ -247,11 +253,12 @@ Focus on the sound-alike English word for "${phoneticCore}" and create a visual 
       setSentencesDialog(prev => ({ ...prev, word: { ...prev.word, image_url: url } }));
       toast.success("Picture created!");
       if (!useLastPrompt) {
-        setLastPicturePrompt(picturePrompt);
+        setLastPicturePrompt(promptToUse);
       }
       setPicturePrompt("");
     } catch (error) {
-      toast.error("Failed to generate picture");
+      console.error("Generate picture error:", error);
+      toast.error("Failed to generate picture: " + (error.message || "Unknown error"));
     } finally {
       setIsGeneratingPicture(false);
     }
@@ -368,9 +375,15 @@ Return the infinitive Hebrew word, its transliteration, and whether it's top 500
     }
     setIsGenerating(true);
     try {
-      const { url } = await base44.integrations.Core.GenerateImage({
+      const result = await base44.integrations.Core.GenerateImage({
         prompt: `Cute, funny, colorful mnemonic illustration for learning the word "${mnemonicDialog.word.phonetic}" (${mnemonicDialog.word.translation}): ${mnemonicPrompt}. Cartoon style, memorable, educational.`,
       });
+      const url = result.url;
+      if (!url) {
+        toast.error("No image URL returned");
+        setIsGenerating(false);
+        return;
+      }
       await updateWordMutation.mutateAsync({
         id: mnemonicDialog.word.id,
         data: { image_url: url },
@@ -379,7 +392,8 @@ Return the infinitive Hebrew word, its transliteration, and whether it's top 500
       setMnemonicDialog({ open: false, word: null });
       setExpandedMnemonic(mnemonicDialog.word.id);
     } catch (error) {
-      toast.error("Failed to generate picture");
+      console.error("Generate mnemonic error:", error);
+      toast.error("Failed to generate picture: " + (error.message || "Unknown error"));
     } finally {
       setIsGenerating(false);
     }
