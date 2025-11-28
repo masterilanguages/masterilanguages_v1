@@ -17,13 +17,8 @@ export default function GameHeader({ profile, coins, onBuyCoins }) {
             whileHover={{ scale: 1.1 }}
             className="relative"
           >
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-400 to-purple-500 flex items-center justify-center text-2xl border-2 border-cyan-400 shadow-lg shadow-cyan-500/30">
-              {profile?.avatar_id === 'alex' && '🧑‍🦱'}
-              {profile?.avatar_id === 'maya' && '👩‍🦰'}
-              {profile?.avatar_id === 'jordan' && '👨‍🦳'}
-              {profile?.avatar_id === 'sam' && '🧑‍💻'}
-              {profile?.avatar_id === 'zoe' && '👩‍🦱'}
-              {profile?.avatar_id === 'luna' && '👩‍🦲'}
+            <div className={`w-12 h-12 flex items-center justify-center text-3xl ${profile?.avatar_id === 'jordan' ? 'hue-rotate-[320deg]' : ''}`}>
+              {['alex', 'jordan', 'sam'].includes(profile?.avatar_id) ? '🧍‍♂️' : '🧍‍♀️'}
               {!profile?.avatar_id && '👤'}
             </div>
             <div className="absolute -bottom-1 -right-1 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full px-2 py-0.5 text-xs font-bold text-black">

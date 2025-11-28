@@ -2,20 +2,20 @@ import React from "react";
 import { motion } from "framer-motion";
 
 const avatarDetails = {
-  alex: { emoji: "🧑‍🦱", color: "from-blue-500 to-cyan-500" },
-  maya: { emoji: "👩‍🦰", color: "from-pink-500 to-rose-500" },
-  jordan: { emoji: "👨‍🦳", color: "from-fuchsia-500 to-pink-400" },
-  sam: { emoji: "🧑‍💻", color: "from-violet-500 to-purple-500" },
-  zoe: { emoji: "👩‍🦱", color: "from-green-500 to-emerald-500" },
-  luna: { emoji: "👩‍🦲", color: "from-indigo-500 to-purple-600" },
+  alex: { image: "🧍‍♂️", color: "from-blue-500 to-cyan-500" },
+  maya: { image: "🧍‍♀️", color: "from-pink-500 to-rose-500" },
+  jordan: { image: "🧍‍♂️", color: "from-fuchsia-500 to-pink-400", special: "pink" },
+  sam: { image: "🧍‍♂️", color: "from-violet-500 to-purple-500" },
+  zoe: { image: "🧍‍♀️", color: "from-green-500 to-emerald-500" },
+  luna: { image: "🧍‍♀️", color: "from-indigo-500 to-purple-600" },
 };
 
 const ageAppearance = (age) => {
-  if (age <= 7) return { size: "text-6xl", label: "Kid" };
-  if (age <= 12) return { size: "text-7xl", label: "Child" };
-  if (age <= 17) return { size: "text-8xl", label: "Teen" };
-  if (age <= 21) return { size: "text-9xl", label: "Young Adult" };
-  return { size: "text-9xl", label: "Adult" };
+  if (age <= 7) return { scale: 0.6, label: "Kid" };
+  if (age <= 12) return { scale: 0.75, label: "Child" };
+  if (age <= 17) return { scale: 0.9, label: "Teen" };
+  if (age <= 21) return { scale: 1, label: "Young Adult" };
+  return { scale: 1, label: "Adult" };
 };
 
 export default function AvatarDisplay({ profile, equippedItem, className = "" }) {
@@ -28,39 +28,44 @@ export default function AvatarDisplay({ profile, equippedItem, className = "" })
       animate={{ scale: 1, opacity: 1 }}
       className={`relative ${className}`}
     >
-      {/* Glow effect */}
+      {/* Glow effect behind avatar */}
       <motion.div
-        className={`absolute inset-0 rounded-full bg-gradient-to-br ${avatar.color} blur-3xl opacity-30`}
-        animate={{ scale: [1, 1.1, 1], opacity: [0.2, 0.4, 0.2] }}
+        className={`absolute inset-0 bg-gradient-to-br ${avatar.color} blur-3xl opacity-20`}
+        animate={{ scale: [1, 1.1, 1], opacity: [0.15, 0.3, 0.15] }}
         transition={{ duration: 3, repeat: Infinity }}
       />
 
-      {/* Avatar circle */}
+      {/* Full body avatar */}
       <motion.div
         whileHover={{ scale: 1.05 }}
-        className={`relative w-48 h-48 rounded-full bg-gradient-to-br ${avatar.color} flex items-center justify-center shadow-2xl border-4 border-white/30`}
+        className="relative flex flex-col items-center"
       >
-        <span className={appearance.size}>{avatar.emoji}</span>
+        <div 
+          className={`relative ${avatar.special === 'pink' ? 'hue-rotate-[320deg]' : ''}`}
+          style={{ transform: `scale(${appearance.scale})`, transformOrigin: 'bottom center' }}
+        >
+          <span className="text-[120px] leading-none">{avatar.image}</span>
+        </div>
 
         {/* Equipped item */}
         {equippedItem && (
           <motion.div
             initial={{ scale: 0, rotate: -180 }}
             animate={{ scale: 1, rotate: 0 }}
-            className="absolute -top-4 -right-4 text-5xl"
+            className="absolute top-0 right-0 text-4xl"
           >
             {equippedItem.emoji}
           </motion.div>
         )}
 
         {/* Age badge */}
-        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full px-4 py-1 shadow-lg">
+        <div className="mt-2 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full px-4 py-1 shadow-lg">
           <span className="font-bold text-black">{profile?.age_level || 5} yrs</span>
         </div>
       </motion.div>
 
       {/* Name & stage */}
-      <div className="text-center mt-6">
+      <div className="text-center mt-4">
         <h2 className="text-2xl font-bold text-white">{profile?.avatar_name || 'Avatar'}</h2>
         <p className="text-white/60">{appearance.label}</p>
       </div>
