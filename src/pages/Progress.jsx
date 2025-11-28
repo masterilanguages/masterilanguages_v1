@@ -1,8 +1,10 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Palette, User, Calendar, CalendarDays } from "lucide-react";
+import { Palette, User, Calendar, CalendarDays, CheckCircle, Award } from "lucide-react";
 import ParrotMascot from "../components/mascot/ParrotMascot";
+import { base44 } from "@/api/base44Client";
+import { useQuery } from "@tanstack/react-query";
 
 const scheduleTopics = [
   { title: "Colors", icon: Palette, description: "12 colors: adom, kachol, yarok...", gradient: "from-pink-500 to-rose-500", page: "ColorsLesson", count: 12 },
@@ -12,6 +14,15 @@ const scheduleTopics = [
 ];
 
 export default function Progress() {
+  const { data: lessonProgress = [] } = useQuery({
+    queryKey: ['lessonProgress'],
+    queryFn: () => base44.entities.LessonProgress.list(),
+  });
+
+  const getProgress = (lessonName) => {
+    return lessonProgress.find(p => p.lesson_name === lessonName);
+  };
+
   return (
     <div className="min-h-screen p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
@@ -26,25 +37,42 @@ export default function Progress() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {scheduleTopics.map((topic, idx) => (
-            <Link
-              key={idx}
-              to={createPageUrl(topic.page)}
-              className="bg-white/80 backdrop-blur-sm rounded-2xl border border-violet-100 shadow-lg p-6 hover:shadow-xl transition-all hover:scale-[1.02] group"
-            >
-              <div className="flex items-center gap-4">
-                <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${topic.gradient} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
-                  <topic.icon className="w-7 h-7 text-white" />
-                </div>
-                <div>
-                                        <h2 className="text-xl font-bold text-gray-800">{topic.title}</h2>
-                                        <p className="text-gray-500 text-sm">{topic.description}</p>
-                                        <span className="text-xs text-gray-400">{topic.count} words</span>
-                                      </div>
-              </div>
-            </Link>
-          ))}
-        </div>
+                        {scheduleTopics.map((topic, idx) => {
+                          const progress = getProgress(topic.page);
+                          return (
+                            <Link
+                              key={idx}
+                              to={createPageUrl(topic.page)}
+                              className="bg-white/80 backdrop-blur-sm rounded-2xl border border-violet-100 shadow-lg p-6 hover:shadow-xl transition-all hover:scale-[1.02] group relative"
+                            >
+                              {progress?.completed && (
+                                <div className="absolute top-3 right-3">
+                                  <CheckCircle className="w-6 h-6 text-green-500" />
+                                </div>
+                              )}
+                              {progress?.test_completed && (
+                                <div className="absolute top-3 right-10 bg-yellow-100 px-2 py-1 rounded-full flex items-center gap-1">
+                                  <Award className="w-4 h-4 text-yellow-600" />
+                                  <span className="text-xs font-bold text-yellow-700">{progress.test_score}%</span>
+                                </div>
+                              )}
+                              <div className="flex items-center gap-4">
+                                <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${topic.gradient} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
+                                  <topic.icon className="w-7 h-7 text-white" />
+                                </div>
+                                <div>
+                                  <h2 className="text-xl font-bold text-gray-800">{topic.title}</h2>
+                                  <p className="text-gray-500 text-sm">{topic.description}</p>
+                                  <span className="text-xs text-gray-400">{topic.count} words</span>
+                                  {progress?.completed && !progress?.test_completed && (
+                                    <span className="ml-2 text-xs text-green-600 font-medium">✓ Ready for test</span>
+                                  )}
+                                </div>
+                              </div>
+                            </Link>
+                          );
+                        })}
+                      </div>
       </div>
     </div>
   );

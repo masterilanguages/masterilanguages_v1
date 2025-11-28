@@ -9,6 +9,7 @@ import ColorsLesson from './pages/ColorsLesson';
 import BodyPartsLesson from './pages/BodyPartsLesson';
 import DaysLesson from './pages/DaysLesson';
 import MonthsLesson from './pages/MonthsLesson';
+import ColorsTest from './pages/ColorsTest';
 import __Layout from './Layout.jsx';
 
 
@@ -24,6 +25,7 @@ export const PAGES = {
     "BodyPartsLesson": BodyPartsLesson,
     "DaysLesson": DaysLesson,
     "MonthsLesson": MonthsLesson,
+    "ColorsTest": ColorsTest,
 }
 
 export const pagesConfig = {

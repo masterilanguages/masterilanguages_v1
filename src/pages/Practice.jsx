@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Sparkles, RotateCcw, Play, Volume2, Image, Loader2, Star } from "lucide-react";
+import { Sparkles, RotateCcw, Play, Volume2, Image, Loader2, Star, Check } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import WordCard from "../components/practice/WordCard";
 import SoundWave from "../components/practice/SoundWave";
@@ -39,6 +39,7 @@ export default function Practice() {
   const [lastPicturePrompt, setLastPicturePrompt] = useState("");
   const [addedWords, setAddedWords] = useState(new Set());
   const [parrotTrigger, setParrotTrigger] = useState(0);
+  const [showCelebration, setShowCelebration] = useState(false);
   
   const queryClient = useQueryClient();
 
@@ -251,12 +252,9 @@ Focus on the sound-alike English word for "${phoneticCore}" and create a visual 
       });
       
       if (result && result.url) {
-        await updateWordMutation.mutateAsync({
-          id: sentencesDialog.word.id,
-          data: { image_url: result.url },
-        });
-        setSentencesDialog(prev => ({ ...prev, word: { ...prev.word, image_url: result.url } }));
-        toast.success("Picture created!");
+        setSentencesDialog(prev => ({ ...prev, word: { ...prev.word, image_url: result.url, pending_approval: true } }));
+        setShowCelebration(true);
+        setTimeout(() => setShowCelebration(false), 3000);
         if (!useLastPrompt) {
           setLastPicturePrompt(promptToUse);
         }
@@ -756,11 +754,41 @@ Return the infinitive Hebrew word, its transliteration, and whether it's top 500
                                       {sentencesDialog.word?.image_url ? (
                                         <div className="rounded-xl overflow-hidden border-2 border-violet-200 relative">
                                           <img src={sentencesDialog.word.image_url} alt="Mnemonic" className="w-full" />
+                                          
+                                          {/* Celebration overlay with parrot */}
+                                          {showCelebration && (
+                                            <motion.div
+                                              initial={{ opacity: 0 }}
+                                              animate={{ opacity: 1 }}
+                                              exit={{ opacity: 0 }}
+                                              className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                                            >
+                                              <AnimatedParrot trigger={Date.now()} size="lg" showMessage={true} />
+                                            </motion.div>
+                                          )}
+                                          
                                           <div className="absolute bottom-2 right-2 flex gap-2">
+                                            {sentencesDialog.word.pending_approval && (
+                                              <button
+                                                onClick={async () => {
+                                                  await updateWordMutation.mutateAsync({
+                                                    id: sentencesDialog.word.id,
+                                                    data: { image_url: sentencesDialog.word.image_url },
+                                                  });
+                                                  setSentencesDialog(prev => ({ ...prev, word: { ...prev.word, pending_approval: false } }));
+                                                  toast.success("Picture approved!");
+                                                }}
+                                                className="bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-1.5 rounded-lg shadow-md transition-all flex items-center gap-1"
+                                              >
+                                                <Check className="w-4 h-4" /> Approve
+                                              </button>
+                                            )}
                                             <button
                                               onClick={() => {
-                                                setSentencesDialog(prev => ({ ...prev, word: { ...prev.word, image_url: null } }));
-                                                updateWordMutation.mutate({ id: sentencesDialog.word.id, data: { image_url: null } });
+                                                setSentencesDialog(prev => ({ ...prev, word: { ...prev.word, image_url: null, pending_approval: false } }));
+                                                if (!sentencesDialog.word.pending_approval) {
+                                                  updateWordMutation.mutate({ id: sentencesDialog.word.id, data: { image_url: null } });
+                                                }
                                               }}
                                               className="bg-white/90 hover:bg-white text-violet-600 text-xs px-2 py-1 rounded-lg shadow-md transition-all"
                                             >

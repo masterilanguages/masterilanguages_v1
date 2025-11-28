@@ -1,9 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, Volume2 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { ArrowLeft, ArrowRight, CheckCircle } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { base44 } from "@/api/base44Client";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import AnimatedParrot from "../components/mascot/AnimatedParrot";
 
 const colors = [
@@ -25,18 +28,52 @@ export default function ColorsLesson() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
   const [trigger, setTrigger] = useState(0);
+  const [viewedColors, setViewedColors] = useState(new Set([0]));
+  const [lessonComplete, setLessonComplete] = useState(false);
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const { data: progress } = useQuery({
+    queryKey: ['lessonProgress', 'ColorsLesson'],
+    queryFn: () => base44.entities.LessonProgress.filter({ lesson_name: 'ColorsLesson' }),
+  });
+
+  const completeLessonMutation = useMutation({
+    mutationFn: async () => {
+      const existing = progress?.[0];
+      if (existing) {
+        return base44.entities.LessonProgress.update(existing.id, { completed: true });
+      }
+      return base44.entities.LessonProgress.create({ lesson_name: 'ColorsLesson', completed: true });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['lessonProgress'] });
+      toast.success("Colors lesson completed!");
+      setLessonComplete(true);
+    },
+  });
 
   const current = colors[currentIndex];
 
+  useEffect(() => {
+    if (viewedColors.size === colors.length && !lessonComplete) {
+      completeLessonMutation.mutate();
+    }
+  }, [viewedColors.size]);
+
   const next = () => {
     setShowAnswer(false);
-    setCurrentIndex((prev) => (prev + 1) % colors.length);
+    const nextIdx = (currentIndex + 1) % colors.length;
+    setCurrentIndex(nextIdx);
+    setViewedColors(prev => new Set([...prev, nextIdx]));
     setTrigger(t => t + 1);
   };
 
   const prev = () => {
     setShowAnswer(false);
-    setCurrentIndex((prev) => (prev - 1 + colors.length) % colors.length);
+    const prevIdx = (currentIndex - 1 + colors.length) % colors.length;
+    setCurrentIndex(prevIdx);
+    setViewedColors(prev => new Set([...prev, prevIdx]));
   };
 
   return (
@@ -48,11 +85,33 @@ export default function ColorsLesson() {
 
         <div className="flex items-center gap-4 mb-8">
           <AnimatedParrot trigger={trigger} size="sm" />
-          <div>
+          <div className="flex-1">
             <h1 className="text-3xl font-bold bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent">Colors</h1>
-            <p className="text-gray-500">{currentIndex + 1} of {colors.length}</p>
+            <p className="text-gray-500">{viewedColors.size} of {colors.length} viewed</p>
           </div>
+          {lessonComplete && (
+            <Button
+              onClick={() => navigate(createPageUrl("ColorsTest"))}
+              className="bg-gradient-to-r from-green-500 to-emerald-500"
+            >
+              <CheckCircle className="w-4 h-4 mr-2" /> Take Test
+            </Button>
+          )}
         </div>
+
+        {lessonComplete && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-r from-green-100 to-emerald-100 border-2 border-green-300 rounded-2xl p-4 mb-6 flex items-center gap-4"
+          >
+            <CheckCircle className="w-8 h-8 text-green-600" />
+            <div>
+              <p className="font-bold text-green-800">Lesson Complete!</p>
+              <p className="text-green-700 text-sm">You've viewed all 12 colors. Ready for the test?</p>
+            </div>
+          </motion.div>
+        )}
 
         <AnimatePresence mode="wait">
           <motion.div
