@@ -42,6 +42,22 @@ export default function Practice() {
   
   const queryClient = useQueryClient();
 
+  const { data: userCoins } = useQuery({
+    queryKey: ['userCoins'],
+    queryFn: async () => {
+      const coins = await base44.entities.UserCoins.list();
+      if (coins.length === 0) {
+        return await base44.entities.UserCoins.create({ coins: 0, unlocked_items: [], equipped_item: null });
+      }
+      return coins[0];
+    },
+  });
+
+  const updateCoinsMutation = useMutation({
+    mutationFn: (data) => base44.entities.UserCoins.update(userCoins?.id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['userCoins'] }),
+  });
+
   const { data: words = [], isLoading } = useQuery({
     queryKey: ['words', selectedCategory],
     queryFn: () => {
@@ -66,6 +82,18 @@ export default function Practice() {
       toast.success("Word deleted");
     },
   });
+
+  const newWords = words.filter(w => (w.times_practiced || 0) === 0);
+  const [hasEarnedCoins, setHasEarnedCoins] = useState(false);
+
+  // Check if all new words are cleared
+  React.useEffect(() => {
+    if (words.length > 0 && newWords.length === 0 && !hasEarnedCoins && userCoins) {
+      setHasEarnedCoins(true);
+      updateCoinsMutation.mutate({ coins: (userCoins.coins || 0) + 100 });
+      toast.success("🎉 All new words cleared! +100 coins!");
+    }
+  }, [newWords.length, words.length, userCoins]);
 
   const filteredByFolder = words.filter(word => {
     const rating = word.times_practiced || 0;
