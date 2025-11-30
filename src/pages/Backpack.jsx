@@ -351,6 +351,179 @@ export default function Backpack() {
           </Link>
         </div>
       </div>
+
+      {/* Word Sentences Dialog */}
+      <Dialog open={!!selectedWord} onOpenChange={() => setSelectedWord(null)}>
+        <DialogContent className="bg-slate-900 border-white/20 text-white max-w-md max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <span className="text-cyan-400">{selectedWord?.phonetic || selectedWord?.word}</span>
+              <span className="text-white/60">=</span>
+              <span className="text-green-400">{selectedWord?.translation}</span>
+            </DialogTitle>
+          </DialogHeader>
+          
+          {loadingSentences ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 text-cyan-400 animate-spin" />
+            </div>
+          ) : sentences ? (
+            <div className="space-y-4">
+              <p className="text-white/60 text-sm">Tap words to add to New Words:</p>
+              {sentences.map((sentence, idx) => (
+                <div key={idx} className="bg-white/5 border border-white/10 rounded-xl p-3">
+                  <div className="flex flex-wrap gap-1 mb-1">
+                    {sentence.transliterated.split(' ').map((word, widx) => {
+                      const wordInfo = sentence.words?.find(w => 
+                        w.word.toLowerCase() === word.toLowerCase().replace(/[.,!?]/g, '')
+                      );
+                      const isQueued = newWords.find(w => w.word.toLowerCase() === wordInfo?.word?.toLowerCase());
+                      return (
+                        <button
+                          key={widx}
+                          onClick={() => wordInfo && addToNewWords(wordInfo.word, wordInfo.meaning)}
+                          className={`px-1 rounded ${
+                            isQueued 
+                              ? "text-green-400 bg-green-500/20" 
+                              : wordInfo 
+                              ? "text-cyan-400 hover:bg-cyan-500/20 underline decoration-dotted cursor-pointer" 
+                              : "text-white/80"
+                          }`}
+                        >
+                          {word}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="text-white/50 text-sm">{sentence.english}</p>
+                </div>
+              ))}
+              
+              {newWords.length > 0 && (
+                <div className="pt-2 border-t border-white/10">
+                  <p className="text-amber-400 text-sm mb-2">📝 New Words: {newWords.length}</p>
+                  <Button 
+                    onClick={() => { setSelectedWord(null); setActiveTab("new"); }}
+                    className="w-full bg-gradient-to-r from-amber-500 to-orange-500"
+                  >
+                    Rate New Words
+                  </Button>
+                </div>
+              )}
+            </div>
+          ) : null}
+        </DialogContent>
+      </Dialog>
+
+      {/* New Word Rating Dialog */}
+      <Dialog open={!!activeNewWord} onOpenChange={() => setActiveNewWord(null)}>
+        <DialogContent className="bg-slate-900 border-white/20 text-white max-w-md max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Rate: {activeNewWord?.word}</DialogTitle>
+          </DialogHeader>
+          
+          <p className="text-white/60">= {activeNewWord?.meaning}</p>
+          
+          {/* Rating */}
+          <div className="flex gap-2 justify-center my-4">
+            {[1, 2, 3, 4, 5].map((num) => (
+              <motion.button
+                key={num}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => handleNewWordRate(num)}
+                className={`w-12 h-12 rounded-xl font-bold ${
+                  num === 5 ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white"
+                  : "bg-white/20 text-white/80 hover:bg-white/30"
+                }`}
+              >
+                {num}{num === 5 && "⭐"}
+              </motion.button>
+            ))}
+          </div>
+
+          {/* Mnemonics */}
+          {loadingMnemonics && (
+            <div className="flex items-center gap-2 text-white/60 justify-center">
+              <Loader2 className="w-4 h-4 animate-spin" /> Generating ideas...
+            </div>
+          )}
+
+          {newWordMnemonics && (
+            <>
+              {/* Custom input */}
+              <div className="flex gap-2 mb-3">
+                <Textarea
+                  value={newWordCustomMnemonic}
+                  onChange={(e) => setNewWordCustomMnemonic(e.target.value)}
+                  placeholder="Your own mnemonic..."
+                  className="bg-white/5 border-white/20 text-white text-sm resize-none h-12 flex-1"
+                />
+                <Button
+                  onClick={() => generateImage(newWordCustomMnemonic)}
+                  disabled={!newWordCustomMnemonic.trim() || generatingImage}
+                  className="bg-gradient-to-r from-purple-500 to-pink-500"
+                >
+                  {generatingImage ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
+                </Button>
+              </div>
+
+              {/* Suggestions */}
+              <div className="flex flex-wrap gap-2 mb-3">
+                {newWordMnemonics.map((s, i) => (
+                  <button
+                    key={i}
+                    onClick={() => generateImage(s.imagePrompt)}
+                    disabled={generatingImage}
+                    className="bg-purple-500/20 hover:bg-purple-500/40 border border-purple-500/50 rounded-lg px-3 py-1.5 text-purple-300 text-sm transition-all"
+                  >
+                    {s.phrase}
+                  </button>
+                ))}
+                <button
+                  onClick={() => generateMnemonics(activeNewWord)}
+                  disabled={loadingMnemonics}
+                  className="bg-white/10 hover:bg-white/20 rounded-lg px-2 py-1.5 text-white/60 text-sm"
+                >
+                  🔄
+                </button>
+              </div>
+
+              {/* Generated Image */}
+              {newWordImage && (
+                <div className="flex justify-center mb-3">
+                  <div className="relative inline-block">
+                    <img src={newWordImage} alt="Mnemonic" className="w-48 rounded-xl border border-white/20" />
+                    <button
+                      onClick={() => generateImage(lastImagePrompt || newWordCustomMnemonic || newWordMnemonics?.[0]?.imagePrompt)}
+                      disabled={generatingImage}
+                      className="absolute bottom-2 left-2 w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center"
+                    >
+                      {generatingImage ? <Loader2 className="w-4 h-4 text-white animate-spin" /> : <span>🔄</span>}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setImageApproved(true);
+                        toast.success("Image saved! ✓");
+                      }}
+                      className={`absolute bottom-2 right-2 w-8 h-8 rounded-full flex items-center justify-center ${
+                        imageApproved ? "bg-green-500" : "bg-white/20 hover:bg-white/30"
+                      }`}
+                    >
+                      <Check className={`w-4 h-4 ${imageApproved ? "text-white" : "text-white/60"}`} />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Done button */}
+              <Button onClick={finishNewWord} className="w-full bg-gradient-to-r from-green-500 to-emerald-500">
+                Done with this word ✓
+              </Button>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
