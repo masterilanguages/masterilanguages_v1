@@ -64,7 +64,150 @@ export default function Backpack() {
     if (activeTab === "fluent") return fluentWords;
     if (activeTab === "learning") return learningWords;
     if (activeTab === "pictures") return wordRatings.filter(w => w.image_url);
+    if (activeTab === "new") return newWords;
     return [];
+  };
+
+  const handleWordClick = async (word) => {
+    setSelectedWord(word);
+    setSentences(null);
+    setLoadingSentences(true);
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Create 3 simple sentences using the word "${word.phonetic || word.word}" which means "${word.translation}".
+        For each sentence provide the transliterated version (not Hebrew letters) and English translation.
+        List each word separately with its meaning.`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            sentences: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  transliterated: { type: "string" },
+                  english: { type: "string" },
+                  words: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        word: { type: "string" },
+                        meaning: { type: "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      });
+      setSentences(result.sentences);
+    } catch (e) {
+      console.error(e);
+    }
+    setLoadingSentences(false);
+  };
+
+  const addToNewWords = (word, meaning) => {
+    const exists = wordRatings.find(w => w.phonetic?.toLowerCase() === word.toLowerCase());
+    if (exists) {
+      toast.info("Already in backpack!");
+      return;
+    }
+    const alreadyQueued = newWords.find(w => w.word.toLowerCase() === word.toLowerCase());
+    if (alreadyQueued) {
+      toast.info("Already added!");
+      return;
+    }
+    setNewWords(prev => [...prev, { word, meaning }]);
+    toast.success(`"${word}" added to New Words! 📝`);
+  };
+
+  const handleNewWordRate = async (rating) => {
+    if (!activeNewWord) return;
+    
+    await createWordMutation.mutateAsync({
+      word: activeNewWord.word,
+      translation: activeNewWord.meaning,
+      phonetic: activeNewWord.word,
+      category: "wordbank",
+      times_practiced: rating,
+      mastered: rating >= 5,
+    });
+
+    if (rating >= 5) {
+      toast.success("Added to Fluent! ⭐");
+      finishNewWord();
+    } else {
+      generateMnemonics(activeNewWord);
+    }
+  };
+
+  const generateMnemonics = async (wordObj) => {
+    setLoadingMnemonics(true);
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Create 3 very short mnemonic phrases (MAX 5 words each) to remember the word "${wordObj.word}" which means "${wordObj.meaning}".
+        Use the SOUND of the word to create memorable associations with OBJECTS or THINGS in English (not people's names).
+        Keep each phrase to 5 words or less.`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            suggestions: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  phrase: { type: "string" },
+                  imagePrompt: { type: "string" }
+                }
+              }
+            }
+          }
+        }
+      });
+      setNewWordMnemonics(result.suggestions);
+    } catch (e) {
+      console.error(e);
+    }
+    setLoadingMnemonics(false);
+  };
+
+  const generateImage = async (prompt) => {
+    setGeneratingImage(true);
+    setLastImagePrompt(prompt);
+    try {
+      const result = await base44.integrations.Core.GenerateImage({
+        prompt: `A colorful, memorable mnemonic illustration: ${prompt}. 
+        For learning the word "${activeNewWord.word}" meaning "${activeNewWord.meaning}".
+        Cartoon style, vibrant colors, educational, fun and memorable.`
+      });
+      setNewWordImage(result.url);
+      
+      const savedWord = wordRatings.find(w => w.phonetic?.toLowerCase() === activeNewWord.word.toLowerCase());
+      if (savedWord) {
+        await updateWordMutation.mutateAsync({
+          id: savedWord.id,
+          data: { image_url: result.url }
+        });
+      }
+      toast.success("Image saved!");
+    } catch (e) {
+      toast.error("Failed to generate image");
+    }
+    setGeneratingImage(false);
+  };
+
+  const finishNewWord = () => {
+    setNewWords(prev => prev.filter(w => w.word !== activeNewWord.word));
+    setActiveNewWord(null);
+    setNewWordMnemonics(null);
+    setNewWordImage(null);
+    setImageApproved(false);
+    setNewWordCustomMnemonic("");
+    setLastImagePrompt("");
   };
 
   return (
