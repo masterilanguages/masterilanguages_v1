@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Droplets, Cookie, Moon, Bath, Gamepad2, Heart, Tv, Volume2, Sparkles, Check, X, Backpack, Star, Loader2, Plus, CheckCircle } from "lucide-react";
+import { Droplets, Cookie, Moon, Bath, Gamepad2, Heart, Tv, Volume2, Sparkles, Check, X, Backpack, Star, Loader2, Plus, CheckCircle, Wand2 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { base44 } from "@/api/base44Client";
@@ -140,6 +141,14 @@ export default function BabyGame({ avatarName, onCorrect, onWatchTV }) {
   const [backpackOpen, setBackpackOpen] = useState(false);
   const [sentenceChecks, setSentenceChecks] = useState({});
   const [pendingRating, setPendingRating] = useState(null); // When 1-4 is rated, wait for image pick
+  const [showMnemonicPhase, setShowMnemonicPhase] = useState(false); // After correct pick, show mnemonics
+  const [mnemonicSuggestions, setMnemonicSuggestions] = useState(null);
+  const [loadingMnemonics, setLoadingMnemonics] = useState(false);
+  const [customMnemonic, setCustomMnemonic] = useState("");
+  const [generatingImage, setGeneratingImage] = useState(false);
+  const [generatedMnemonicImage, setGeneratedMnemonicImage] = useState(null);
+  const [postPickSentences, setPostPickSentences] = useState(null);
+  const [loadingPostPickSentences, setLoadingPostPickSentences] = useState(false);
 
   // Fetch word ratings from database
   const { data: wordRatings = [] } = useQuery({
@@ -267,6 +276,11 @@ export default function BabyGame({ avatarName, onCorrect, onWatchTV }) {
     setWrongChoices([]);
     setCorrectChoice(null);
     setPendingRating(null);
+    setShowMnemonicPhase(false);
+    setMnemonicSuggestions(null);
+    setPostPickSentences(null);
+    setCustomMnemonic("");
+    setGeneratedMnemonicImage(null);
     setGamePhase("rating");
   };
 
@@ -300,20 +314,117 @@ export default function BabyGame({ avatarName, onCorrect, onWatchTV }) {
     }
   };
 
-  const handleImagePick = (choice) => {
+  const handleImagePick = async (choice) => {
     if (choice.hebrew === currentWord.hebrew) {
       setCorrectChoice(choice.hebrew);
       toast.success("Correct! ✓");
-      setTimeout(() => {
-        setPendingRating(null);
-        setCorrectChoice(null);
-        setWrongChoices([]);
-        goToNextWord();
-      }, 600);
+      // Show mnemonic phase instead of moving to next word
+      setShowMnemonicPhase(true);
+      generateMnemonicsAndSentences(currentWord);
     } else {
       setWrongChoices([...wrongChoices, choice.hebrew]);
       toast.error(`That's ${choice.meaning}`);
     }
+  };
+
+  const generateMnemonicsAndSentences = async (word) => {
+    setLoadingMnemonics(true);
+    setLoadingPostPickSentences(true);
+    
+    // Generate mnemonics
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Create 3 mnemonic ideas to remember the Hebrew word "${word.transliteration}" which means "${word.meaning}".
+        Use the SOUND of the word to create memorable associations.
+        Be creative, funny, or absurd to make them memorable.`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            suggestions: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  title: { type: "string" },
+                  description: { type: "string" },
+                  imagePrompt: { type: "string" }
+                }
+              }
+            }
+          }
+        }
+      });
+      setMnemonicSuggestions(result.suggestions);
+    } catch (e) {
+      console.error(e);
+    }
+    setLoadingMnemonics(false);
+
+    // Generate sentences
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Create 3 simple sentences using the Hebrew word "${word.hebrew}" (${word.transliteration}) meaning "${word.meaning}".
+        For each sentence provide the transliterated version (not Hebrew letters) and English translation.
+        List each word separately with its meaning.`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            sentences: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  transliterated: { type: "string" },
+                  english: { type: "string" },
+                  words: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        word: { type: "string" },
+                        meaning: { type: "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      });
+      setPostPickSentences(result.sentences);
+    } catch (e) {
+      console.error(e);
+    }
+    setLoadingPostPickSentences(false);
+  };
+
+  const generateMnemonicImage = async (prompt) => {
+    setGeneratingImage(true);
+    try {
+      const result = await base44.integrations.Core.GenerateImage({
+        prompt: `A colorful, memorable mnemonic illustration: ${prompt}. 
+        For learning Hebrew word "${currentWord.transliteration}" meaning "${currentWord.meaning}".
+        Cartoon style, vibrant colors, educational, fun and memorable.`
+      });
+      setGeneratedMnemonicImage(result.url);
+      toast.success("Image generated!");
+    } catch (e) {
+      toast.error("Failed to generate image");
+    }
+    setGeneratingImage(false);
+  };
+
+  const finishMnemonicPhase = () => {
+    setShowMnemonicPhase(false);
+    setMnemonicSuggestions(null);
+    setPostPickSentences(null);
+    setCustomMnemonic("");
+    setGeneratedMnemonicImage(null);
+    setPendingRating(null);
+    setCorrectChoice(null);
+    setWrongChoices([]);
+    goToNextWord();
   };
 
   const generateSentences = async (word) => {
@@ -543,6 +654,131 @@ export default function BabyGame({ avatarName, onCorrect, onWatchTV }) {
     );
   }
 
+  // MNEMONIC PHASE - After correct pick, show mnemonics and sentences
+  if (gamePhase === "rating" && showMnemonicPhase && currentWord) {
+    return (
+      <div className="p-4 max-h-[80vh] overflow-y-auto">
+        {/* Word with meaning */}
+        <div className="text-center mb-6 bg-green-500/10 border border-green-500/30 rounded-xl p-4">
+          <span className="text-4xl mb-2 block">✓</span>
+          <p className="text-2xl font-bold text-yellow-400">{currentWord.transliteration}</p>
+          <p className="text-xl text-green-400">= {currentWord.meaning}</p>
+        </div>
+
+        {/* Mnemonic Ideas */}
+        <div className="mb-6">
+          <h4 className="text-white font-semibold mb-3">💡 Mnemonic Ideas</h4>
+          {loadingMnemonics ? (
+            <div className="flex items-center gap-2 text-white/60">
+              <Loader2 className="w-4 h-4 animate-spin" /> Generating ideas...
+            </div>
+          ) : mnemonicSuggestions ? (
+            <div className="space-y-2">
+              {mnemonicSuggestions.map((s, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  className="bg-white/5 border border-white/10 rounded-xl p-3 flex items-start justify-between"
+                >
+                  <div className="flex-1">
+                    <p className="text-purple-300 font-medium">{s.title}</p>
+                    <p className="text-white/60 text-sm">{s.description}</p>
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={() => generateMnemonicImage(s.imagePrompt)}
+                    disabled={generatingImage}
+                    className="bg-purple-500 hover:bg-purple-600 ml-2"
+                  >
+                    {generatingImage ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
+                  </Button>
+                </motion.div>
+              ))}
+            </div>
+          ) : null}
+
+          {/* Custom mnemonic input */}
+          <div className="mt-3 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-xl p-3">
+            <p className="text-white/60 text-sm mb-2">Or describe your own:</p>
+            <div className="flex gap-2">
+              <Textarea
+                value={customMnemonic}
+                onChange={(e) => setCustomMnemonic(e.target.value)}
+                placeholder="e.g., A cow saying 'moo' while drinking water..."
+                className="bg-white/5 border-white/20 text-white text-sm resize-none h-16"
+              />
+              <Button
+                onClick={() => generateMnemonicImage(customMnemonic)}
+                disabled={!customMnemonic.trim() || generatingImage}
+                className="bg-gradient-to-r from-purple-500 to-pink-500 h-auto"
+              >
+                {generatingImage ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
+              </Button>
+            </div>
+          </div>
+
+          {/* Generated Image */}
+          {generatedMnemonicImage && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="mt-3"
+            >
+              <img src={generatedMnemonicImage} alt="Mnemonic" className="w-full rounded-xl border border-white/20" />
+            </motion.div>
+          )}
+        </div>
+
+        {/* Sentences */}
+        <div className="mb-6">
+          <h4 className="text-white font-semibold mb-3">📝 Example Sentences <span className="text-white/40 text-sm">(tap words to add to backpack)</span></h4>
+          {loadingPostPickSentences ? (
+            <div className="flex items-center gap-2 text-white/60">
+              <Loader2 className="w-4 h-4 animate-spin" /> Generating sentences...
+            </div>
+          ) : postPickSentences ? (
+            <div className="space-y-3">
+              {postPickSentences.map((sentence, idx) => (
+                <div key={idx} className="bg-white/5 border border-white/10 rounded-xl p-3">
+                  <div className="flex flex-wrap gap-1 mb-1">
+                    {sentence.transliterated.split(' ').map((word, widx) => {
+                      const wordInfo = sentence.words?.find(w => 
+                        w.word.toLowerCase() === word.toLowerCase().replace(/[.,!?]/g, '')
+                      );
+                      return (
+                        <button
+                          key={widx}
+                          onClick={() => wordInfo && addWordToBackpack(wordInfo.word, wordInfo.meaning)}
+                          className={`px-1 rounded ${
+                            wordInfo ? "text-cyan-400 hover:bg-cyan-500/20 underline decoration-dotted cursor-pointer" : "text-white/80"
+                          }`}
+                          title={wordInfo ? `Add: ${wordInfo.meaning}` : undefined}
+                        >
+                          {word}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="text-white/50 text-sm">{sentence.english}</p>
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </div>
+
+        {/* Next Button */}
+        <Button
+          onClick={finishMnemonicPhase}
+          className="w-full bg-gradient-to-r from-cyan-500 to-purple-500 py-6 text-lg font-bold"
+        >
+          Next Word →
+        </Button>
+      </div>
+    );
+  }
+
   // RATING PHASE - Rate 1-5 with pictures below
   if (gamePhase === "rating" && currentWord) {
     return (
@@ -569,7 +805,12 @@ export default function BabyGame({ avatarName, onCorrect, onWatchTV }) {
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => handleRate(num)}
-                  className="w-8 h-8 rounded-lg font-bold text-sm bg-white/20 text-white/80 hover:bg-white/30"
+                  disabled={pendingRating !== null}
+                  className={`w-8 h-8 rounded-lg font-bold text-sm ${
+                    pendingRating === num 
+                      ? "bg-cyan-500 text-white" 
+                      : "bg-white/20 text-white/80 hover:bg-white/30"
+                  }`}
                 >
                   {num}
                 </motion.button>
