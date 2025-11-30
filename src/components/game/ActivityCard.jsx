@@ -8,10 +8,11 @@ export default function ActivityCard({
   completions, 
   minAge, 
   currentAge,
+  canAfford = true,
   onClick 
 }) {
   const isAgeLocked = currentAge < minAge;
-  const canAccess = isUnlocked && !isAgeLocked;
+  const canAccess = isUnlocked && !isAgeLocked && canAfford;
 
   return (
     <motion.div
@@ -61,9 +62,13 @@ export default function ActivityCard({
             <span className="font-bold">{activity.cost}</span>
           </div>
           
-          {isAgeLocked && (
+          {isAgeLocked ? (
             <span className="text-xs text-white/50 bg-white/10 px-2 py-1 rounded-full">
               Age {minAge}+
+            </span>
+          ) : !canAfford && (
+            <span className="text-xs text-red-400 bg-red-500/20 px-2 py-1 rounded-full">
+              Need coins
             </span>
           )}
         </div>
