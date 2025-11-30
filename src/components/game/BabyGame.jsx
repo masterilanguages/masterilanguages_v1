@@ -989,6 +989,13 @@ const [imageApproved, setImageApproved] = useState(false);
                       {s.phrase}
                     </button>
                   ))}
+                  <button
+                    onClick={() => generateNewWordMnemonics(activeNewWord)}
+                    disabled={loadingNewWordMnemonics}
+                    className="bg-white/10 hover:bg-white/20 rounded-lg px-2 py-1.5 text-white/60 text-sm transition-all"
+                  >
+                    🔄
+                  </button>
                 </div>
 
                 {/* Generated Image */}
