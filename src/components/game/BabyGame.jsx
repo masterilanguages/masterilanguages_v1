@@ -446,6 +446,10 @@ const [imageApproved, setImageApproved] = useState(false);
     setPendingRating(null);
     setCorrectChoice(null);
     setWrongChoices([]);
+    setNewWordsQueue([]);
+    setActiveNewWord(null);
+    setNewWordMnemonics(null);
+    setNewWordImage(null);
     goToNextWord();
   };
 
