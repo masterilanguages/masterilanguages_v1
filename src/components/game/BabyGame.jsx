@@ -711,7 +711,7 @@ const [lastImagePrompt, setLastImagePrompt] = useState("");
               <div className="relative inline-block">
                 <img src={generatedMnemonicImage} alt="Mnemonic" className="w-48 rounded-xl border border-white/20 mx-auto" />
                 <button
-                  onClick={() => generateMnemonicImage(customMnemonic || mnemonicSuggestions?.[0]?.imagePrompt || currentWord.meaning)}
+                  onClick={() => generateMnemonicImage(lastImagePrompt || customMnemonic || mnemonicSuggestions?.[0]?.imagePrompt || currentWord.meaning)}
                   disabled={generatingImage}
                   className="absolute bottom-2 left-2 w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center"
                 >
