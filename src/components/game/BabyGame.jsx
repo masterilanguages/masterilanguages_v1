@@ -408,7 +408,16 @@ export default function BabyGame({ avatarName, onCorrect, onWatchTV }) {
         Cartoon style, vibrant colors, educational, fun and memorable.`
       });
       setGeneratedMnemonicImage(result.url);
-      toast.success("Image generated!");
+      
+      // Save image to the word
+      const existingWord = wordRatings.find(w => w.word === currentWord.hebrew);
+      if (existingWord) {
+        await updateWordMutation.mutateAsync({
+          id: existingWord.id,
+          data: { image_url: result.url }
+        });
+      }
+      toast.success("Image saved!");
     } catch (e) {
       toast.error("Failed to generate image");
     }
@@ -667,7 +676,40 @@ export default function BabyGame({ avatarName, onCorrect, onWatchTV }) {
 
         {/* Mnemonic Ideas */}
         <div className="mb-6">
-          <h4 className="text-white font-semibold mb-3">💡 Mnemonic Ideas</h4>
+          <h4 className="text-white font-semibold mb-3">💡 This word sounds like...</h4>
+          
+          {/* Custom mnemonic input - ON TOP */}
+          <div className="mb-3 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-xl p-3">
+            <p className="text-white/60 text-sm mb-2">Describe your own:</p>
+            <div className="flex gap-2">
+              <Textarea
+                value={customMnemonic}
+                onChange={(e) => setCustomMnemonic(e.target.value)}
+                placeholder="e.g., A cow saying 'moo' while drinking water..."
+                className="bg-white/5 border-white/20 text-white text-sm resize-none h-16"
+              />
+              <Button
+                onClick={() => generateMnemonicImage(customMnemonic)}
+                disabled={!customMnemonic.trim() || generatingImage}
+                className="bg-gradient-to-r from-purple-500 to-pink-500 h-auto"
+              >
+                {generatingImage ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
+              </Button>
+            </div>
+          </div>
+
+          {/* Generated Image - smaller */}
+          {generatedMnemonicImage && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="mb-3 flex justify-center"
+            >
+              <img src={generatedMnemonicImage} alt="Mnemonic" className="w-1/4 rounded-xl border border-white/20" />
+            </motion.div>
+          )}
+
+          {/* AI Suggestions */}
           {loadingMnemonics ? (
             <div className="flex items-center gap-2 text-white/60">
               <Loader2 className="w-4 h-4 animate-spin" /> Generating ideas...
@@ -698,37 +740,6 @@ export default function BabyGame({ avatarName, onCorrect, onWatchTV }) {
               ))}
             </div>
           ) : null}
-
-          {/* Custom mnemonic input */}
-          <div className="mt-3 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-xl p-3">
-            <p className="text-white/60 text-sm mb-2">Or describe your own:</p>
-            <div className="flex gap-2">
-              <Textarea
-                value={customMnemonic}
-                onChange={(e) => setCustomMnemonic(e.target.value)}
-                placeholder="e.g., A cow saying 'moo' while drinking water..."
-                className="bg-white/5 border-white/20 text-white text-sm resize-none h-16"
-              />
-              <Button
-                onClick={() => generateMnemonicImage(customMnemonic)}
-                disabled={!customMnemonic.trim() || generatingImage}
-                className="bg-gradient-to-r from-purple-500 to-pink-500 h-auto"
-              >
-                {generatingImage ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
-              </Button>
-            </div>
-          </div>
-
-          {/* Generated Image */}
-          {generatedMnemonicImage && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="mt-3"
-            >
-              <img src={generatedMnemonicImage} alt="Mnemonic" className="w-full rounded-xl border border-white/20" />
-            </motion.div>
-          )}
         </div>
 
         {/* Sentences */}

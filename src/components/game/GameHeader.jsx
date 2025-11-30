@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Flame, Coins, Star, Zap } from "lucide-react";
+import { Flame } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 
@@ -51,15 +51,16 @@ export default function GameHeader({ profile, coins, onBuyCoins }) {
             <span className="font-bold text-orange-400">{profile?.daily_streak || 0}</span>
           </motion.div>
 
-          {/* Backpack (replaces coins) */}
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    onClick={onBuyCoins}
-                    className="flex items-center gap-2 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/50 rounded-xl px-4 py-2"
-                  >
-                    <span className="text-lg">🎒</span>
-                    <span className="font-bold text-amber-400">My Backpack</span>
-                  </motion.button>
+          {/* Backpack */}
+          <Link to={createPageUrl("Backpack")}>
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              className="flex items-center gap-2 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/50 rounded-xl px-4 py-2"
+            >
+              <span className="text-lg">🎒</span>
+              <span className="font-bold text-amber-400">My Backpack</span>
+            </motion.div>
+          </Link>
         </div>
       </div>
     </div>
