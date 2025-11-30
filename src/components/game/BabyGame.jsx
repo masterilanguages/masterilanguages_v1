@@ -147,6 +147,7 @@ export default function BabyGame({ avatarName, onCorrect, onWatchTV }) {
   const [customMnemonic, setCustomMnemonic] = useState("");
   const [generatingImage, setGeneratingImage] = useState(false);
   const [generatedMnemonicImage, setGeneratedMnemonicImage] = useState(null);
+const [lastImagePrompt, setLastImagePrompt] = useState("");
   const [postPickSentences, setPostPickSentences] = useState(null);
   const [loadingPostPickSentences, setLoadingPostPickSentences] = useState(false);
 
