@@ -4,7 +4,7 @@ import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingCart, Dumbbell, Church, UtensilsCrossed, Heart, ShoppingBag, BookOpen, Users, Play, Book, Video, Trophy, Sparkles, ArrowRight, Flame, Briefcase } from "lucide-react";
+import { ShoppingCart, Dumbbell, Church, UtensilsCrossed, Heart, ShoppingBag, BookOpen, Users, Play, Book, Video, Trophy, Sparkles, ArrowRight, Flame, Briefcase, School, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
@@ -12,6 +12,9 @@ import GameHeader from "../components/game/GameHeader";
 import AvatarDisplay from "../components/game/AvatarDisplay";
 import BadgeDisplay from "../components/game/BadgeDisplay";
 import ActivityCard from "../components/game/ActivityCard";
+import TimelineBar from "../components/game/TimelineBar";
+import ToddlerNeeds from "../components/game/ToddlerNeeds";
+import AvatarMenu from "../components/game/AvatarMenu";
 
 const activities = [
   { id: "supermarket", name: "Supermarket", icon: ShoppingCart, gradient: "from-green-500 to-emerald-500", cost: 50, minAge: 5, description: "Buy groceries in Hebrew" },
@@ -38,6 +41,7 @@ export default function Home() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [buyCoinsDialog, setBuyCoinsDialog] = useState(false);
+  const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
 
   const { data: userProfile, isLoading: profileLoading } = useQuery({
     queryKey: ['userProfile'],
@@ -66,6 +70,19 @@ export default function Home() {
   const updateCoinsMutation = useMutation({
     mutationFn: (data) => base44.entities.UserCoins.update(userCoins?.id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['userCoins'] }),
+  });
+
+  const updateProfileMutation = useMutation({
+    mutationFn: (data) => base44.entities.UserProfile.update(userProfile?.id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['userProfile'] }),
+  });
+
+  const deleteProfileMutation = useMutation({
+    mutationFn: () => base44.entities.UserProfile.delete(userProfile?.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['userProfile'] });
+      navigate(createPageUrl("AvatarSelect"));
+    },
   });
 
   // Redirect to avatar selection if no profile
@@ -106,6 +123,43 @@ export default function Home() {
     setBuyCoinsDialog(false);
   };
 
+  const handleToddlerNeedComplete = (need) => {
+    // Award coins and XP
+    const newXp = (userProfile?.xp || 0) + 10;
+    const needsCompleted = (userProfile?.toddler_needs_completed || 0) + 1;
+    
+    // Check if should age up (every 20 needs = 1 year until age 5)
+    const shouldAgeUp = needsCompleted % 20 === 0 && (userProfile?.age_level || 3) < 5;
+    
+    updateProfileMutation.mutate({
+      xp: newXp,
+      toddler_needs_completed: needsCompleted,
+      age_level: shouldAgeUp ? (userProfile?.age_level || 3) + 1 : userProfile?.age_level,
+    });
+    
+    updateCoinsMutation.mutate({ coins: coins + 15 });
+    toast.success(`+15 coins, +10 XP! ${shouldAgeUp ? '🎉 Level up!' : ''}`);
+  };
+
+  const handleRestartLife = () => {
+    updateProfileMutation.mutate({
+      age_level: 3,
+      xp: 0,
+      toddler_needs_completed: 0,
+      badges: [],
+      total_words_learned: 0,
+    });
+    toast.success("Life restarted! Your avatar is now a baby again.");
+  };
+
+  const handleChangeAvatar = () => {
+    deleteProfileMutation.mutate();
+  };
+
+  const currentAge = userProfile?.age_level || 3;
+  const isBaby = currentAge < 5;
+  const hasDiaper = unlockedItems.includes("diaper");
+
   if (profileLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
@@ -131,13 +185,21 @@ export default function Home() {
         coins={coins} 
         onBuyCoins={() => setBuyCoinsDialog(true)} 
       />
+      
+      <TimelineBar currentAge={currentAge} />
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 py-8">
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Left: Avatar */}
           <div className="lg:col-span-1">
             <div className="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 p-8">
-              <AvatarDisplay profile={userProfile} equippedItem={equippedItem} className="mx-auto" />
+              <AvatarDisplay 
+                profile={userProfile} 
+                equippedItem={equippedItem} 
+                hasDiaper={hasDiaper}
+                onClick={() => setAvatarMenuOpen(true)}
+                className="mx-auto" 
+              />
               
               <div className="mt-8">
                 <h3 className="text-white/80 text-sm font-semibold mb-3">BADGES</h3>
@@ -185,32 +247,10 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Right: Activities */}
+          {/* Right: Activities or Toddler Needs */}
           <div className="lg:col-span-2">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-white">Life Activities</h2>
-              <div className="flex items-center gap-2 text-white/60">
-                <Flame className="w-5 h-5 text-orange-400" />
-                <span>Complete activities to grow your avatar!</span>
-              </div>
-            </div>
-
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {activities.map((activity) => (
-                <ActivityCard
-                  key={activity.id}
-                  activity={activity}
-                  isUnlocked={isUnlocked(activity)}
-                  completions={getProgress(activity.id)?.completions || 0}
-                  minAge={activity.minAge}
-                  currentAge={userProfile?.age_level || 5}
-                  onClick={() => navigate(createPageUrl("Activities") + `?id=${activity.id}`)}
-                />
-              ))}
-            </div>
-
-            {/* Quick earn section */}
-            <div className="mt-8 bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-white/10 rounded-2xl p-6">
+            {/* Quick Earn Coins - MOVED TO TOP */}
+            <div className="mb-6 bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-white/10 rounded-2xl p-6">
               <h3 className="text-lg font-bold text-white mb-4">⚡ Quick Earn Coins</h3>
               <div className="grid sm:grid-cols-3 gap-4">
                 <Link
@@ -251,6 +291,76 @@ export default function Home() {
                 </Link>
               </div>
             </div>
+
+            {/* Baby Stage: Toddler Needs */}
+            {isBaby && (
+              <ToddlerNeeds 
+                onComplete={handleToddlerNeedComplete}
+                avatarName={userProfile?.avatar_name || 'Baby'}
+              />
+            )}
+
+            {/* School unlocked at age 5 */}
+            {currentAge >= 5 && (
+              <div className="mb-6">
+                <Link
+                  to={createPageUrl("Progress")}
+                  className="block bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border-2 border-blue-500/50 rounded-2xl p-6 hover:border-blue-400 transition-all"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center shadow-lg">
+                      <School className="w-7 h-7 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-white">School</h2>
+                      <p className="text-white/60">Learn words, earn scholarships!</p>
+                    </div>
+                    <div className="ml-auto">
+                      <div className="bg-yellow-500/20 px-3 py-1 rounded-full">
+                        <span className="text-yellow-400 text-sm font-bold">📚 To-do: Learn 30 words</span>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              </div>
+            )}
+
+            {/* Life Activities - only show after age 5 */}
+            {currentAge >= 5 && (
+              <>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-white">Life Activities</h2>
+                  <div className="flex items-center gap-2 text-white/60">
+                    <Flame className="w-5 h-5 text-orange-400" />
+                    <span>Complete activities to grow!</span>
+                  </div>
+                </div>
+
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {activities.map((activity) => {
+                    const canAfford = coins >= activity.cost;
+                    return (
+                      <ActivityCard
+                        key={activity.id}
+                        activity={activity}
+                        isUnlocked={isUnlocked(activity) && canAfford}
+                        completions={getProgress(activity.id)?.completions || 0}
+                        minAge={activity.minAge}
+                        currentAge={currentAge}
+                        canAfford={canAfford}
+                        onClick={() => {
+                          if (!canAfford) {
+                            toast.error(`You need ${activity.cost} coins for this activity!`);
+                            return;
+                          }
+                          navigate(createPageUrl("Activities") + `?id=${activity.id}`);
+                        }}
+                      />
+                    );
+                  })}
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -283,6 +393,15 @@ export default function Home() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Avatar Menu */}
+      <AvatarMenu
+        open={avatarMenuOpen}
+        onClose={() => setAvatarMenuOpen(false)}
+        onChangeAvatar={handleChangeAvatar}
+        onRestartLife={handleRestartLife}
+        avatarName={userProfile?.avatar_name || 'Avatar'}
+      />
     </div>
   );
 }
