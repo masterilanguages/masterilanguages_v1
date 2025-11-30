@@ -195,11 +195,22 @@ export default function BabyGame({ avatarName, onCorrect, onWatchTV }) {
     return wordBank[Math.floor(Math.random() * wordBank.length)];
   };
 
-  // Generate wrong choices from same category
+  // Generate wrong choices with unique icons
   const generateChoices = (correctWord) => {
-    const sameCategory = wordBank.filter(w => w.category === correctWord.category && w.hebrew !== correctWord.hebrew);
-    const shuffled = sameCategory.sort(() => Math.random() - 0.5).slice(0, 3);
-    const allChoices = [...shuffled, correctWord].sort(() => Math.random() - 0.5);
+    const usedIcons = new Set([correctWord.icon]);
+    const otherWords = wordBank.filter(w => w.hebrew !== correctWord.hebrew && !usedIcons.has(w.icon));
+    const uniqueChoices = [];
+    
+    // Get 4 words with unique icons
+    for (const word of otherWords.sort(() => Math.random() - 0.5)) {
+      if (!usedIcons.has(word.icon)) {
+        usedIcons.add(word.icon);
+        uniqueChoices.push(word);
+        if (uniqueChoices.length >= 4) break;
+      }
+    }
+    
+    const allChoices = [...uniqueChoices.slice(0, 4), correctWord].sort(() => Math.random() - 0.5);
     return allChoices;
   };
 
@@ -514,7 +525,7 @@ export default function BabyGame({ avatarName, onCorrect, onWatchTV }) {
     );
   }
 
-  // RATING PHASE - Rate 1-5
+  // RATING PHASE - Rate 1-5 with pictures below
   if (gamePhase === "rating" && currentWord) {
     return (
       <div className="p-4">
@@ -527,39 +538,46 @@ export default function BabyGame({ avatarName, onCorrect, onWatchTV }) {
           <span className="text-green-400">⭐{counts.fluent}</span>
         </div>
 
-        {/* Word to rate */}
+        {/* Word with inline rating */}
         <div className="text-center mb-6">
           <span className="text-5xl mb-3 block">👶</span>
-          <p className="text-2xl font-bold text-yellow-400 mb-1">{currentWord.transliteration}</p>
-          <button onClick={() => setShowTranslation(!showTranslation)} className="text-white/40 text-sm">
-            {showTranslation ? <span className="text-green-400">= {currentWord.meaning}</span> : "(tap for meaning)"}
-          </button>
+          <div className="flex items-center justify-center gap-3 flex-wrap">
+            <p className="text-2xl font-bold text-yellow-400">{currentWord.transliteration}</p>
+            <div className="flex gap-1">
+              {[1, 2, 3, 4, 5].map((num) => (
+                <motion.button
+                  key={num}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => handleRate(num)}
+                  className={`w-8 h-8 rounded-lg font-bold text-sm ${
+                    num === 5 ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white"
+                    : num >= 4 ? "bg-blue-500/50 text-white"
+                    : num >= 3 ? "bg-yellow-500/50 text-white"
+                    : "bg-white/20 text-white/80"
+                  }`}
+                >
+                  {num}
+                </motion.button>
+              ))}
+            </div>
+          </div>
         </div>
 
-        {/* Rating buttons */}
-        <p className="text-center text-white/60 text-sm mb-3">How well do you know this word?</p>
-        <div className="flex justify-center gap-2 mb-6">
-          {[1, 2, 3, 4, 5].map((num) => (
-            <motion.button
-              key={num}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => handleRate(num)}
-              className={`w-12 h-12 rounded-xl font-bold text-lg ${
-                num === 5 ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white"
-                : num >= 4 ? "bg-blue-500/50 text-white"
-                : num >= 3 ? "bg-yellow-500/50 text-white"
-                : "bg-white/20 text-white/80"
-              }`}
+        {/* Picture choices */}
+        <div className="grid grid-cols-5 gap-2 mb-6">
+          {choices.map((choice) => (
+            <div
+              key={choice.hebrew}
+              className="bg-white/5 border border-white/10 rounded-xl p-3 flex items-center justify-center"
             >
-              {num}
-            </motion.button>
+              <span className="text-3xl">{choice.icon}</span>
+            </div>
           ))}
         </div>
-        <p className="text-center text-xs text-white/40">5 = Fluent (skip) | 1-4 = Pick the picture</p>
 
         {/* Quick Links */}
-        <div className="flex gap-2 mt-6 text-xs">
+        <div className="flex gap-2 text-xs">
           <a href={createPageUrl("Practice")} className="flex-1 py-2 bg-white/5 rounded-lg text-cyan-400 text-center">📚</a>
           <a href={createPageUrl("Videos")} className="flex-1 py-2 bg-white/5 rounded-lg text-purple-400 text-center">📺</a>
           <a href={createPageUrl("Progress")} className="flex-1 py-2 bg-white/5 rounded-lg text-blue-400 text-center">📖</a>
