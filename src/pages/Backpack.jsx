@@ -423,6 +423,51 @@ export default function Backpack() {
         </DialogContent>
       </Dialog>
 
+      {/* Edit Word Dialog */}
+      <Dialog open={!!editingWord} onOpenChange={() => setEditingWord(null)}>
+        <DialogContent className="bg-slate-900 border-white/20 text-white max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Pencil className="w-4 h-4" /> Edit Word
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="text-white/60 text-sm mb-1 block">Word (transliteration)</label>
+              <Input
+                value={editWord}
+                onChange={(e) => setEditWord(e.target.value)}
+                className="bg-white/5 border-white/20 text-white"
+                placeholder="e.g., Shalom"
+              />
+            </div>
+            <div>
+              <label className="text-white/60 text-sm mb-1 block">Meaning</label>
+              <Input
+                value={editMeaning}
+                onChange={(e) => setEditMeaning(e.target.value)}
+                className="bg-white/5 border-white/20 text-white"
+                placeholder="e.g., Hello/Peace"
+              />
+            </div>
+            <Button
+              onClick={() => {
+                if (editWord.trim() && editMeaning.trim()) {
+                  addToNewWords(editWord.trim(), editMeaning.trim());
+                  setEditingWord(null);
+                } else {
+                  toast.error("Please fill in both fields");
+                }
+              }}
+              className="w-full bg-gradient-to-r from-cyan-500 to-purple-500"
+            >
+              Add to New Words
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* New Word Rating Dialog */}
       <Dialog open={!!activeNewWord} onOpenChange={() => setActiveNewWord(null)}>
         <DialogContent className="bg-slate-900 border-white/20 text-white max-w-md max-h-[80vh] overflow-y-auto">
