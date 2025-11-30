@@ -521,90 +521,76 @@ export default function BabyGame({ avatarName, onCorrect, onWatchTV }) {
 
   // NEEDS PHASE (main game)
   return (
-    <div className="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 p-6">
-      {/* Progress Bar */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-white/60 text-sm">Progress to unlock games</span>
-          <span className="text-cyan-400 font-bold">{totalRated}/100 words</span>
+    <div className="p-4">
+      {/* Compact Progress Bar */}
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-white/60 text-xs">{totalRated}/100</span>
+          <div className="flex gap-2 text-xs">
+            <span className="text-green-400">⭐{counts.fluent}</span>
+            <span className="text-yellow-400">📚{counts.learning}</span>
+          </div>
         </div>
-        <div className="h-3 bg-white/10 rounded-full overflow-hidden">
+        <div className="h-2 bg-white/10 rounded-full overflow-hidden">
           <motion.div
             className="h-full bg-gradient-to-r from-cyan-500 to-purple-500"
             animate={{ width: `${Math.min((totalRated / 100) * 100, 100)}%` }}
           />
         </div>
-        <div className="flex justify-between mt-2 text-xs">
-          <span className="text-green-400">⭐ Fluent: {counts.fluent}</span>
-          <span className="text-yellow-400">📚 Learning: {counts.learning}</span>
-        </div>
       </div>
 
       {/* Unlock Buttons */}
       {canWatchTV && (
-        <div className="grid grid-cols-2 gap-3 mb-6">
+        <div className="grid grid-cols-2 gap-2 mb-4">
           <motion.button
             whileHover={{ scale: 1.02 }}
             onClick={onWatchTV}
-            className="flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500 to-pink-500 px-4 py-3 rounded-xl text-white font-bold"
+            className="flex items-center justify-center gap-1 bg-gradient-to-r from-purple-500 to-pink-500 px-3 py-2 rounded-lg text-white text-sm font-bold"
           >
-            <Tv className="w-5 h-5" /> Watch TV 📺
+            <Tv className="w-4 h-4" /> TV
           </motion.button>
           <motion.button
             whileHover={{ scale: 1.02 }}
             onClick={() => { setCurrentWord(getNextWord()); setGamePhase("wordgame"); }}
-            className="flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-3 rounded-xl text-white font-bold"
+            className="flex items-center justify-center gap-1 bg-gradient-to-r from-green-500 to-emerald-500 px-3 py-2 rounded-lg text-white text-sm font-bold"
           >
-            <Gamepad2 className="w-5 h-5" /> Word Game 🎮
+            <Gamepad2 className="w-4 h-4" /> Game
           </motion.button>
         </div>
       )}
 
       {/* Baby Need */}
       {currentWord && needPhrase && (
-        <div className="text-center mb-6">
+        <div className="text-center mb-4">
           <motion.div
             key={currentWord.hebrew}
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
+            className="flex items-center justify-center gap-4"
           >
-            <span className="text-6xl block mb-4">👶</span>
-            
-            {/* Baby says in Hebrew */}
-            <div className="bg-white/10 rounded-2xl p-4 mb-4 relative">
-              <p className="text-white/60 text-sm mb-2">{avatarName} says:</p>
-              
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <p className="text-2xl font-bold text-cyan-400" dir="rtl">{needPhrase.hebrew}</p>
-                <Button variant="ghost" size="sm" onClick={() => playAudio(needPhrase.hebrew)} className="text-cyan-400">
-                  <Volume2 className="w-5 h-5" />
+            <span className="text-5xl">👶</span>
+            <div className="text-left">
+              <div className="flex items-center gap-2">
+                <p className="text-xl font-bold text-cyan-400">{needPhrase.transliteration}</p>
+                <Button variant="ghost" size="sm" onClick={() => playAudio(needPhrase.hebrew)} className="text-cyan-400 p-1 h-auto">
+                  <Volume2 className="w-4 h-4" />
                 </Button>
+                <button
+                  onClick={() => setShowTranslation(!showTranslation)}
+                  className="text-white/40 text-xs"
+                >
+                  {showTranslation ? <span className="text-green-400">({needPhrase.meaning})</span> : "(?)" }
+                </button>
               </div>
-              <p className="text-white/70">{needPhrase.transliteration}</p>
-              
-              <button
-                onClick={() => setShowTranslation(!showTranslation)}
-                className="text-white/40 text-sm mt-2 block mx-auto"
-              >
-                {showTranslation ? (
-                  <span className="text-green-400">= {needPhrase.meaning}</span>
-                ) : "(tap to reveal meaning)"}
-              </button>
-            </div>
-
-            {/* Word being asked */}
-            <div className="bg-gradient-to-r from-cyan-500/20 to-purple-500/20 rounded-xl p-3 mb-4">
-              <p className="text-white/60 text-sm mb-1">Give me:</p>
-              <div className="flex items-center justify-center gap-2">
-                <ClickableWord
-                  word={currentWord.hebrew}
-                  transliteration={currentWord.transliteration}
-                  translation={currentWord.meaning}
-                  variant="hebrew"
-                  className="text-3xl font-bold text-yellow-400"
-                />
-                <span className="text-white/60">({currentWord.transliteration})</span>
-              </div>
+              <p className="text-yellow-400 font-bold text-lg">
+                {currentWord.transliteration}
+                <button
+                  onClick={() => setShowTranslation(!showTranslation)}
+                  className="text-white/40 text-sm ml-2"
+                >
+                  {showTranslation && <span className="text-white/60">= {currentWord.meaning}</span>}
+                </button>
+              </p>
             </div>
           </motion.div>
         </div>
@@ -612,7 +598,7 @@ export default function BabyGame({ avatarName, onCorrect, onWatchTV }) {
 
       {/* Picture Choices */}
       {choices.length > 0 && (
-        <div className="grid grid-cols-2 gap-3 mb-6">
+        <div className="grid grid-cols-4 gap-2 mb-4">
           {choices.map((choice) => {
             const isWrong = wrongChoices.includes(choice.hebrew);
             return (
@@ -622,17 +608,16 @@ export default function BabyGame({ avatarName, onCorrect, onWatchTV }) {
                 whileTap={{ scale: 0.95 }}
                 onClick={() => !isWrong && handleChoiceClick(choice)}
                 disabled={isWrong}
-                className={`relative p-6 rounded-2xl border-2 transition-all ${
+                className={`relative p-3 rounded-xl border transition-all ${
                   isWrong 
                     ? "bg-red-500/20 border-red-500/50 opacity-50" 
                     : "bg-white/5 border-white/20 hover:border-cyan-400/50"
                 }`}
               >
-                <span className="text-5xl block mb-2">{choice.icon}</span>
-                <span className="text-white/60 text-sm">{choice.transliteration}</span>
+                <span className="text-4xl block">{choice.icon}</span>
                 {isWrong && (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <X className="w-12 h-12 text-red-500" />
+                    <X className="w-8 h-8 text-red-500" />
                   </div>
                 )}
               </motion.button>
@@ -642,42 +627,13 @@ export default function BabyGame({ avatarName, onCorrect, onWatchTV }) {
       )}
 
       {/* Quick Links */}
-      <div className="grid grid-cols-2 gap-2 mb-3">
-        <a
-          href={createPageUrl("Practice")}
-          className="flex items-center justify-center gap-2 py-2 bg-cyan-500/20 border border-cyan-500/50 rounded-xl text-cyan-400 text-sm font-medium hover:bg-cyan-500/30 transition-all"
-        >
-          📚 Learn Words
-        </a>
-        <a
-          href={createPageUrl("Videos")}
-          className="flex items-center justify-center gap-2 py-2 bg-purple-500/20 border border-purple-500/50 rounded-xl text-purple-400 text-sm font-medium hover:bg-purple-500/30 transition-all"
-        >
-          📺 Videos
-        </a>
-        <a
-          href={createPageUrl("Progress")}
-          className="flex items-center justify-center gap-2 py-2 bg-blue-500/20 border border-blue-500/50 rounded-xl text-blue-400 text-sm font-medium hover:bg-blue-500/30 transition-all"
-        >
-          📖 Lessons
-        </a>
-        <a
-          href={createPageUrl("Store")}
-          className="flex items-center justify-center gap-2 py-2 bg-yellow-500/20 border border-yellow-500/50 rounded-xl text-yellow-400 text-sm font-medium hover:bg-yellow-500/30 transition-all"
-        >
-          🏪 Store
-        </a>
+      <div className="flex gap-2 mb-3 text-xs">
+        <a href={createPageUrl("Practice")} className="flex-1 py-2 bg-white/5 rounded-lg text-cyan-400 text-center hover:bg-white/10">📚 Words</a>
+        <a href={createPageUrl("Videos")} className="flex-1 py-2 bg-white/5 rounded-lg text-purple-400 text-center hover:bg-white/10">📺 Videos</a>
+        <a href={createPageUrl("Progress")} className="flex-1 py-2 bg-white/5 rounded-lg text-blue-400 text-center hover:bg-white/10">📖 Lessons</a>
+        <a href={createPageUrl("Store")} className="flex-1 py-2 bg-white/5 rounded-lg text-yellow-400 text-center hover:bg-white/10">🏪 Store</a>
+        <button onClick={() => setBackpackOpen(true)} className="flex-1 py-2 bg-white/5 rounded-lg text-amber-400 text-center hover:bg-white/10">🎒</button>
       </div>
-
-      {/* Backpack Button */}
-      <Button
-        variant="outline"
-        className="w-full border-amber-500/50 text-amber-400 hover:bg-amber-500/10"
-        onClick={() => setBackpackOpen(true)}
-      >
-        <Backpack className="w-5 h-5 mr-2" />
-        My Backpack ({counts.fluent} ⭐ | {counts.learning} 📚)
-      </Button>
 
       {/* Backpack Dialog */}
       <Dialog open={backpackOpen} onOpenChange={setBackpackOpen}>
