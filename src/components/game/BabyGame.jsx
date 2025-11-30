@@ -151,6 +151,15 @@ const [lastImagePrompt, setLastImagePrompt] = useState("");
 const [imageApproved, setImageApproved] = useState(false);
   const [postPickSentences, setPostPickSentences] = useState(null);
   const [loadingPostPickSentences, setLoadingPostPickSentences] = useState(false);
+  const [newWordsQueue, setNewWordsQueue] = useState([]); // Words added from sentences
+  const [activeNewWord, setActiveNewWord] = useState(null); // Currently rating a new word
+  const [newWordMnemonics, setNewWordMnemonics] = useState(null);
+  const [loadingNewWordMnemonics, setLoadingNewWordMnemonics] = useState(false);
+  const [newWordImage, setNewWordImage] = useState(null);
+  const [generatingNewWordImage, setGeneratingNewWordImage] = useState(false);
+  const [newWordImageApproved, setNewWordImageApproved] = useState(false);
+  const [newWordCustomMnemonic, setNewWordCustomMnemonic] = useState("");
+  const [lastNewWordImagePrompt, setLastNewWordImagePrompt] = useState("");
 
   // Fetch word ratings from database
   const { data: wordRatings = [] } = useQuery({
