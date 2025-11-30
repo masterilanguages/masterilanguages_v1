@@ -335,10 +335,10 @@ const [lastImagePrompt, setLastImagePrompt] = useState("");
     // Generate mnemonics
     try {
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Create 3 mnemonic ideas to remember the Hebrew word "${word.transliteration}" which means "${word.meaning}".
+        prompt: `Create 3 very short mnemonic phrases (MAX 5 words each) to remember the Hebrew word "${word.transliteration}" which means "${word.meaning}".
         Use the SOUND of the word to create memorable associations with OBJECTS or THINGS in English (not people's names).
-        For example: "Mayim" sounds like "my yam" - imagine a yam drinking water.
-        Be creative, funny, or absurd. Only use common English objects, animals, or things - NO proper names.`,
+        For example: "Mayim" -> "My yam drinks water"
+        Keep each phrase to 5 words or less. Only use common English objects, animals, or things - NO proper names.`,
         response_json_schema: {
           type: "object",
           properties: {
@@ -347,8 +347,7 @@ const [lastImagePrompt, setLastImagePrompt] = useState("");
               items: {
                 type: "object",
                 properties: {
-                  title: { type: "string" },
-                  description: { type: "string" },
+                  phrase: { type: "string" },
                   imagePrompt: { type: "string" }
                 }
               }
