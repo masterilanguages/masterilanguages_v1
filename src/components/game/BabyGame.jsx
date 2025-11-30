@@ -7,6 +7,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import ClickableWord from "../learning/ClickableWord";
+import { createPageUrl } from "@/utils";
 
 // 100 basic Hebrew words organized by category (needs)
 const wordBank = [
@@ -639,6 +640,34 @@ export default function BabyGame({ avatarName, onCorrect, onWatchTV }) {
           })}
         </div>
       )}
+
+      {/* Quick Links */}
+      <div className="grid grid-cols-2 gap-2 mb-3">
+        <a
+          href={createPageUrl("Practice")}
+          className="flex items-center justify-center gap-2 py-2 bg-cyan-500/20 border border-cyan-500/50 rounded-xl text-cyan-400 text-sm font-medium hover:bg-cyan-500/30 transition-all"
+        >
+          📚 Learn Words
+        </a>
+        <a
+          href={createPageUrl("Videos")}
+          className="flex items-center justify-center gap-2 py-2 bg-purple-500/20 border border-purple-500/50 rounded-xl text-purple-400 text-sm font-medium hover:bg-purple-500/30 transition-all"
+        >
+          📺 Videos
+        </a>
+        <a
+          href={createPageUrl("Progress")}
+          className="flex items-center justify-center gap-2 py-2 bg-blue-500/20 border border-blue-500/50 rounded-xl text-blue-400 text-sm font-medium hover:bg-blue-500/30 transition-all"
+        >
+          📖 Lessons
+        </a>
+        <a
+          href={createPageUrl("Store")}
+          className="flex items-center justify-center gap-2 py-2 bg-yellow-500/20 border border-yellow-500/50 rounded-xl text-yellow-400 text-sm font-medium hover:bg-yellow-500/30 transition-all"
+        >
+          🏪 Store
+        </a>
+      </div>
 
       {/* Backpack Button */}
       <Button

@@ -15,6 +15,7 @@ import ActivityCard from "../components/game/ActivityCard";
 import TimelineBar from "../components/game/TimelineBar";
 import BabyGame from "../components/game/BabyGame";
 import AvatarMenu from "../components/game/AvatarMenu";
+import { Input } from "@/components/ui/input";
 
 const activities = [
   { id: "supermarket", name: "Supermarket", icon: ShoppingCart, gradient: "from-green-500 to-emerald-500", cost: 50, minAge: 5, description: "Buy groceries in Hebrew" },
@@ -42,6 +43,8 @@ export default function Home() {
   const queryClient = useQueryClient();
   const [buyCoinsDialog, setBuyCoinsDialog] = useState(false);
   const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
+  const [editingName, setEditingName] = useState(false);
+  const [newName, setNewName] = useState("");
 
   const { data: userProfile, isLoading: profileLoading } = useQuery({
     queryKey: ['userProfile'],
@@ -142,6 +145,7 @@ export default function Home() {
   };
 
   const handleRestartLife = () => {
+    // Delete all word ratings too for full reset
     updateProfileMutation.mutate({
       age_level: 3,
       xp: 0,
@@ -149,7 +153,16 @@ export default function Home() {
       badges: [],
       total_words_learned: 0,
     });
-    toast.success("Life restarted! Your avatar is now a baby again.");
+    deleteProfileMutation.mutate();
+    toast.success("Starting new life from the beginning!");
+  };
+
+  const handleSaveName = () => {
+    if (newName.trim()) {
+      updateProfileMutation.mutate({ avatar_name: newName.trim() });
+      toast.success("Name updated!");
+    }
+    setEditingName(false);
   };
 
   const handleChangeAvatar = () => {
@@ -194,53 +207,40 @@ export default function Home() {
           <div className="lg:col-span-1">
             <div className="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 p-8">
               <AvatarDisplay 
-                profile={userProfile} 
-                equippedItem={equippedItem} 
-                hasDiaper={hasDiaper}
-                onClick={() => setAvatarMenuOpen(true)}
-                className="mx-auto" 
-              />
+                    profile={userProfile} 
+                    equippedItem={equippedItem} 
+                    hasDiaper={hasDiaper}
+                    onClick={() => setAvatarMenuOpen(true)}
+                    className="mx-auto" 
+                  />
+
+                  {/* Editable Name */}
+                  <div className="mt-4 text-center">
+                    {editingName ? (
+                      <div className="flex items-center gap-2 justify-center">
+                        <Input
+                          value={newName}
+                          onChange={(e) => setNewName(e.target.value)}
+                          placeholder="Enter name..."
+                          className="bg-white/10 border-white/20 text-white text-center w-32"
+                          autoFocus
+                          onKeyDown={(e) => e.key === "Enter" && handleSaveName()}
+                        />
+                        <Button size="sm" onClick={handleSaveName} className="bg-green-500">Save</Button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => { setNewName(userProfile?.avatar_name || ""); setEditingName(true); }}
+                        className="text-xl font-bold text-white hover:text-cyan-400 transition-colors"
+                      >
+                        {userProfile?.avatar_name || "Baby"} ✏️
+                      </button>
+                    )}
+                  </div>
               
 
 
-              <div className="mt-6 grid grid-cols-2 gap-3">
-                <Link
-                  to={createPageUrl("Practice")}
-                  className="bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/50 rounded-xl p-4 text-center hover:bg-cyan-500/30 transition-all"
-                >
-                  <Book className="w-6 h-6 text-cyan-400 mx-auto mb-2" />
-                  <span className="text-white text-sm font-medium">Words</span>
-                </Link>
-                <Link
-                  to={createPageUrl("Pictures")}
-                  className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/50 rounded-xl p-4 text-center hover:bg-green-500/30 transition-all"
-                >
-                  <Sparkles className="w-6 h-6 text-green-400 mx-auto mb-2" />
-                  <span className="text-white text-sm font-medium">Pictures</span>
-                </Link>
-              </div>
 
-              <div className="mt-4 grid grid-cols-2 gap-3">
-                <Link
-                  to={createPageUrl("Videos")}
-                  className="flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/50 rounded-xl text-purple-400 font-medium hover:bg-purple-500/30 transition-all"
-                >
-                  <Video className="w-5 h-5" /> Videos
-                </Link>
-                <Link
-                  to={createPageUrl("Sentences")}
-                  className="flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-blue-500/50 rounded-xl text-blue-400 font-medium hover:bg-blue-500/30 transition-all"
-                >
-                  <Play className="w-5 h-5" /> Sentences
-                </Link>
-              </div>
-
-              <Link
-                to={createPageUrl("Store")}
-                className="mt-3 flex items-center justify-center gap-2 w-full py-3 bg-gradient-to-r from-yellow-500/20 to-amber-500/20 border border-yellow-500/50 rounded-xl text-yellow-400 font-medium hover:bg-yellow-500/30 transition-all"
-              >
-                <Sparkles className="w-5 h-5" /> Treasure Store
-              </Link>
             </div>
           </div>
 

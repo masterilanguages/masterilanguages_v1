@@ -40,21 +40,6 @@ export default function AvatarMenu({
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => { onChangeAvatar(); onClose(); }}
-              className="w-full flex items-center gap-4 p-4 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-xl hover:border-purple-400 transition-all"
-            >
-              <div className="w-12 h-12 rounded-full bg-purple-500/30 flex items-center justify-center">
-                <Users className="w-6 h-6 text-purple-400" />
-              </div>
-              <div className="text-left">
-                <p className="font-bold text-white">Change Avatar</p>
-                <p className="text-white/60 text-sm">Pick a different character</p>
-              </div>
-            </motion.button>
-
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
               onClick={() => setConfirmRestart(true)}
               className="w-full flex items-center gap-4 p-4 bg-gradient-to-r from-red-500/20 to-orange-500/20 border border-red-500/30 rounded-xl hover:border-red-400 transition-all"
             >
@@ -62,8 +47,8 @@ export default function AvatarMenu({
                 <RefreshCw className="w-6 h-6 text-red-400" />
               </div>
               <div className="text-left">
-                <p className="font-bold text-white">Restart Life</p>
-                <p className="text-white/60 text-sm">Start over as a 3-year-old baby</p>
+                <p className="font-bold text-white">Start New Life From Beginning</p>
+                <p className="text-white/60 text-sm">Reset everything and start fresh as a baby</p>
               </div>
             </motion.button>
           </div>
