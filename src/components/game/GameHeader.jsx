@@ -51,18 +51,15 @@ export default function GameHeader({ profile, coins, onBuyCoins }) {
             <span className="font-bold text-orange-400">{profile?.daily_streak || 0}</span>
           </motion.div>
 
-          {/* Coins */}
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            onClick={onBuyCoins}
-            className="flex items-center gap-2 bg-gradient-to-r from-yellow-500/20 to-amber-500/20 border border-yellow-500/50 rounded-xl px-4 py-2"
-          >
-            <Coins className="w-5 h-5 text-yellow-400" />
-            <span className="font-bold text-yellow-400">
-              {(coins || 0) >= 1000000 ? `${((coins || 0) / 1000000).toFixed(1)}M` : (coins || 0).toLocaleString()}
-            </span>
-            <Zap className="w-4 h-4 text-yellow-400" />
-          </motion.button>
+          {/* Backpack (replaces coins) */}
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    onClick={onBuyCoins}
+                    className="flex items-center gap-2 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/50 rounded-xl px-4 py-2"
+                  >
+                    <span className="text-lg">🎒</span>
+                    <span className="font-bold text-amber-400">My Backpack</span>
+                  </motion.button>
         </div>
       </div>
     </div>
