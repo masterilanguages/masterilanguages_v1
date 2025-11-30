@@ -705,7 +705,17 @@ export default function BabyGame({ avatarName, onCorrect, onWatchTV }) {
               animate={{ opacity: 1, scale: 1 }}
               className="mb-3 flex justify-center"
             >
-              <img src={generatedMnemonicImage} alt="Mnemonic" className="w-1/4 rounded-xl border border-white/20" />
+              <div className="relative">
+                <img src={generatedMnemonicImage} alt="Mnemonic" className="w-1/4 rounded-xl border border-white/20" />
+                <Button
+                  size="sm"
+                  onClick={() => generateMnemonicImage(customMnemonic || mnemonicSuggestions?.[0]?.imagePrompt || currentWord.meaning)}
+                  disabled={generatingImage}
+                  className="absolute bottom-2 left-2 bg-purple-500/80 hover:bg-purple-600 text-xs px-2 py-1 h-auto"
+                >
+                  {generatingImage ? <Loader2 className="w-3 h-3 animate-spin" /> : "🔄 Regenerate"}
+                </Button>
+              </div>
             </motion.div>
           )}
 
