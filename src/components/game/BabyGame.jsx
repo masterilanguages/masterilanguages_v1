@@ -706,8 +706,8 @@ export default function BabyGame({ avatarName, onCorrect, onWatchTV }) {
               animate={{ opacity: 1, scale: 1 }}
               className="mb-3 flex justify-center"
             >
-              <div className="relative">
-                <img src={generatedMnemonicImage} alt="Mnemonic" className="w-1/4 rounded-xl border border-white/20" />
+              <div className="relative inline-block">
+                <img src={generatedMnemonicImage} alt="Mnemonic" className="w-48 rounded-xl border border-white/20 mx-auto" />
                 <button
                   onClick={() => generateMnemonicImage(customMnemonic || mnemonicSuggestions?.[0]?.imagePrompt || currentWord.meaning)}
                   disabled={generatingImage}
