@@ -385,13 +385,17 @@ export default function Backpack() {
                       return (
                         <button
                           key={widx}
-                          onClick={() => wordInfo && addToNewWords(wordInfo.word, wordInfo.meaning)}
+                          onClick={() => {
+                            const cleanWord = word.replace(/[.,!?]/g, '');
+                            const meaning = wordInfo?.meaning || "";
+                            setEditingWord({ word: cleanWord, meaning, isNew: true });
+                            setEditWord(cleanWord);
+                            setEditMeaning(meaning);
+                          }}
                           className={`px-1 rounded ${
                             isQueued 
                               ? "text-green-400 bg-green-500/20" 
-                              : wordInfo 
-                              ? "text-cyan-400 hover:bg-cyan-500/20 underline decoration-dotted cursor-pointer" 
-                              : "text-white/80"
+                              : "text-cyan-400 hover:bg-cyan-500/20 underline decoration-dotted cursor-pointer"
                           }`}
                         >
                           {word}
