@@ -1,151 +1,210 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Droplets, Cookie, Moon, Bath, Gamepad2, Heart, Tv, Volume2, Sparkles, Check, X, Backpack } from "lucide-react";
+import { Droplets, Cookie, Moon, Bath, Gamepad2, Heart, Tv, Volume2, Sparkles, Check, X, Backpack, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { base44 } from "@/api/base44Client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import ClickableWord from "../learning/ClickableWord";
 
-const needs = [
-  { 
-    id: "water", 
-    icon: Droplets, 
-    color: "from-blue-400 to-cyan-400",
-    hebrew: "מים",
-    transliteration: "Mayim",
-    meaning: "Water",
-    items: [
-      { id: "water", emoji: "💧", label: "Water", correct: true },
-      { id: "milk", emoji: "🥛", label: "Milk", correct: false },
-      { id: "juice", emoji: "🧃", label: "Juice", correct: false },
-      { id: "soda", emoji: "🥤", label: "Soda", correct: false },
-    ]
-  },
-  { 
-    id: "food", 
-    icon: Cookie, 
-    color: "from-amber-400 to-orange-400",
-    hebrew: "אוכל",
-    transliteration: "Ochel",
-    meaning: "Food",
-    items: [
-      { id: "food", emoji: "🍽️", label: "Food", correct: true },
-      { id: "toy", emoji: "🧸", label: "Toy", correct: false },
-      { id: "book", emoji: "📚", label: "Book", correct: false },
-      { id: "ball", emoji: "⚽", label: "Ball", correct: false },
-    ]
-  },
-  { 
-    id: "sleep", 
-    icon: Moon, 
-    color: "from-indigo-400 to-purple-400",
-    hebrew: "לישון",
-    transliteration: "Lishon",
-    meaning: "Sleep",
-    items: [
-      { id: "bed", emoji: "🛏️", label: "Bed", correct: true },
-      { id: "chair", emoji: "🪑", label: "Chair", correct: false },
-      { id: "table", emoji: "🪑", label: "Table", correct: false },
-      { id: "sofa", emoji: "🛋️", label: "Sofa", correct: false },
-    ]
-  },
-  { 
-    id: "bathroom", 
-    icon: Bath, 
-    color: "from-teal-400 to-emerald-400",
-    hebrew: "שירותים",
-    transliteration: "Sherutim",
-    meaning: "Bathroom",
-    items: [
-      { id: "toilet", emoji: "🚽", label: "Toilet", correct: true },
-      { id: "shower", emoji: "🚿", label: "Shower", correct: false },
-      { id: "sink", emoji: "🚰", label: "Sink", correct: false },
-      { id: "bath", emoji: "🛁", label: "Bathtub", correct: false },
-    ]
-  },
-  { 
-    id: "pipi", 
-    icon: Droplets, 
-    color: "from-yellow-400 to-amber-400",
-    hebrew: "פיפי",
-    transliteration: "Pipi",
-    meaning: "Pee pee",
-    items: [
-      { id: "toilet", emoji: "🚽", label: "Toilet", correct: true },
-      { id: "bed", emoji: "🛏️", label: "Bed", correct: false },
-      { id: "kitchen", emoji: "🍳", label: "Kitchen", correct: false },
-      { id: "garden", emoji: "🌳", label: "Garden", correct: false },
-    ]
-  },
-  { 
-    id: "poop", 
-    icon: Bath, 
-    color: "from-amber-600 to-yellow-600",
-    hebrew: "קקי",
-    transliteration: "Kaki",
-    meaning: "Poop",
-    items: [
-      { id: "toilet", emoji: "🚽", label: "Toilet", correct: true },
-      { id: "diaper", emoji: "🧷", label: "Diaper", correct: false },
-      { id: "outside", emoji: "🌲", label: "Outside", correct: false },
-      { id: "floor", emoji: "🟫", label: "Floor", correct: false },
-    ]
-  },
-  { 
-    id: "play", 
-    icon: Gamepad2, 
-    color: "from-pink-400 to-rose-400",
-    hebrew: "לשחק",
-    transliteration: "Lesachek",
-    meaning: "Play",
-    items: [
-      { id: "toy", emoji: "🧸", label: "Toy", correct: true },
-      { id: "food", emoji: "🍽️", label: "Food", correct: false },
-      { id: "blanket", emoji: "🛏️", label: "Blanket", correct: false },
-      { id: "book", emoji: "📖", label: "Book", correct: false },
-    ]
-  },
-  { 
-    id: "hug", 
-    icon: Heart, 
-    color: "from-red-400 to-pink-400",
-    hebrew: "חיבוק",
-    transliteration: "Chibuk",
-    meaning: "Hug",
-    items: [
-      { id: "hug", emoji: "🤗", label: "Hug", correct: true },
-      { id: "wave", emoji: "👋", label: "Wave", correct: false },
-      { id: "clap", emoji: "👏", label: "Clap", correct: false },
-      { id: "point", emoji: "👆", label: "Point", correct: false },
-    ]
-  },
+// 100 basic Hebrew words organized by category
+const wordBank = [
+  // Water/Drinks (10)
+  { hebrew: "מים", transliteration: "Mayim", meaning: "Water", category: "drinks", icon: "💧" },
+  { hebrew: "חלב", transliteration: "Chalav", meaning: "Milk", category: "drinks", icon: "🥛" },
+  { hebrew: "מיץ", transliteration: "Mitz", meaning: "Juice", category: "drinks", icon: "🧃" },
+  { hebrew: "תה", transliteration: "Teh", meaning: "Tea", category: "drinks", icon: "🍵" },
+  { hebrew: "קפה", transliteration: "Kafeh", meaning: "Coffee", category: "drinks", icon: "☕" },
+  { hebrew: "בקבוק", transliteration: "Bakbuk", meaning: "Bottle", category: "drinks", icon: "🍼" },
+  { hebrew: "כוס", transliteration: "Kos", meaning: "Cup", category: "drinks", icon: "🥤" },
+  { hebrew: "קר", transliteration: "Kar", meaning: "Cold", category: "drinks", icon: "🧊" },
+  { hebrew: "חם", transliteration: "Cham", meaning: "Hot", category: "drinks", icon: "🔥" },
+  { hebrew: "צמא", transliteration: "Tzameh", meaning: "Thirsty", category: "drinks", icon: "😫" },
+  
+  // Food (15)
+  { hebrew: "אוכל", transliteration: "Ochel", meaning: "Food", category: "food", icon: "🍽️" },
+  { hebrew: "לחם", transliteration: "Lechem", meaning: "Bread", category: "food", icon: "🍞" },
+  { hebrew: "ביצה", transliteration: "Beitzah", meaning: "Egg", category: "food", icon: "🥚" },
+  { hebrew: "גבינה", transliteration: "Gvinah", meaning: "Cheese", category: "food", icon: "🧀" },
+  { hebrew: "תפוח", transliteration: "Tapuach", meaning: "Apple", category: "food", icon: "🍎" },
+  { hebrew: "בננה", transliteration: "Bananah", meaning: "Banana", category: "food", icon: "🍌" },
+  { hebrew: "עוגה", transliteration: "Ugah", meaning: "Cake", category: "food", icon: "🍰" },
+  { hebrew: "עוגייה", transliteration: "Ugiyah", meaning: "Cookie", category: "food", icon: "🍪" },
+  { hebrew: "רעב", transliteration: "Ra'ev", meaning: "Hungry", category: "food", icon: "😋" },
+  { hebrew: "טעים", transliteration: "Ta'im", meaning: "Delicious", category: "food", icon: "😋" },
+  { hebrew: "ירקות", transliteration: "Yerakot", meaning: "Vegetables", category: "food", icon: "🥗" },
+  { hebrew: "פירות", transliteration: "Perot", meaning: "Fruits", category: "food", icon: "🍇" },
+  { hebrew: "בשר", transliteration: "Basar", meaning: "Meat", category: "food", icon: "🥩" },
+  { hebrew: "דג", transliteration: "Dag", meaning: "Fish", category: "food", icon: "🐟" },
+  { hebrew: "אורז", transliteration: "Orez", meaning: "Rice", category: "food", icon: "🍚" },
+
+  // Sleep (10)
+  { hebrew: "לישון", transliteration: "Lishon", meaning: "To sleep", category: "sleep", icon: "😴" },
+  { hebrew: "עייף", transliteration: "Ayef", meaning: "Tired", category: "sleep", icon: "🥱" },
+  { hebrew: "מיטה", transliteration: "Mitah", meaning: "Bed", category: "sleep", icon: "🛏️" },
+  { hebrew: "כרית", transliteration: "Karit", meaning: "Pillow", category: "sleep", icon: "🛋️" },
+  { hebrew: "שמיכה", transliteration: "Smichah", meaning: "Blanket", category: "sleep", icon: "🛏️" },
+  { hebrew: "חלום", transliteration: "Chalom", meaning: "Dream", category: "sleep", icon: "💭" },
+  { hebrew: "לילה", transliteration: "Layla", meaning: "Night", category: "sleep", icon: "🌙" },
+  { hebrew: "בוקר", transliteration: "Boker", meaning: "Morning", category: "sleep", icon: "🌅" },
+  { hebrew: "לקום", transliteration: "Lakum", meaning: "To wake up", category: "sleep", icon: "⏰" },
+  { hebrew: "פיג'מה", transliteration: "Pijamah", meaning: "Pajamas", category: "sleep", icon: "👕" },
+
+  // Bathroom (10)
+  { hebrew: "שירותים", transliteration: "Sherutim", meaning: "Bathroom", category: "bathroom", icon: "🚽" },
+  { hebrew: "פיפי", transliteration: "Pipi", meaning: "Pee", category: "bathroom", icon: "💦" },
+  { hebrew: "קקי", transliteration: "Kaki", meaning: "Poop", category: "bathroom", icon: "💩" },
+  { hebrew: "חיתול", transliteration: "Chitul", meaning: "Diaper", category: "bathroom", icon: "🧒" },
+  { hebrew: "סבון", transliteration: "Sabon", meaning: "Soap", category: "bathroom", icon: "🧼" },
+  { hebrew: "מגבת", transliteration: "Magevet", meaning: "Towel", category: "bathroom", icon: "🛁" },
+  { hebrew: "מברשת שיניים", transliteration: "Mivreshet Shinayim", meaning: "Toothbrush", category: "bathroom", icon: "🪥" },
+  { hebrew: "אמבטיה", transliteration: "Ambatyah", meaning: "Bath", category: "bathroom", icon: "🛁" },
+  { hebrew: "נקי", transliteration: "Naki", meaning: "Clean", category: "bathroom", icon: "✨" },
+  { hebrew: "מלוכלך", transliteration: "Meluchlach", meaning: "Dirty", category: "bathroom", icon: "🤢" },
+
+  // Play (15)
+  { hebrew: "לשחק", transliteration: "Lesachek", meaning: "To play", category: "play", icon: "🎮" },
+  { hebrew: "צעצוע", transliteration: "Tza'atzu'a", meaning: "Toy", category: "play", icon: "🧸" },
+  { hebrew: "כדור", transliteration: "Kadur", meaning: "Ball", category: "play", icon: "⚽" },
+  { hebrew: "בובה", transliteration: "Bubah", meaning: "Doll", category: "play", icon: "🎎" },
+  { hebrew: "משחק", transliteration: "Misachak", meaning: "Game", category: "play", icon: "🎲" },
+  { hebrew: "ציור", transliteration: "Tziyur", meaning: "Drawing", category: "play", icon: "🎨" },
+  { hebrew: "ספר", transliteration: "Sefer", meaning: "Book", category: "play", icon: "📚" },
+  { hebrew: "שיר", transliteration: "Shir", meaning: "Song", category: "play", icon: "🎵" },
+  { hebrew: "ריקוד", transliteration: "Rikud", meaning: "Dance", category: "play", icon: "💃" },
+  { hebrew: "חבר", transliteration: "Chaver", meaning: "Friend", category: "play", icon: "👫" },
+  { hebrew: "לרוץ", transliteration: "Larutz", meaning: "To run", category: "play", icon: "🏃" },
+  { hebrew: "לקפוץ", transliteration: "Likpotz", meaning: "To jump", category: "play", icon: "🦘" },
+  { hebrew: "לצחוק", transliteration: "Litschok", meaning: "To laugh", category: "play", icon: "😂" },
+  { hebrew: "כיף", transliteration: "Kef", meaning: "Fun", category: "play", icon: "🎉" },
+  { hebrew: "חוץ", transliteration: "Chutz", meaning: "Outside", category: "play", icon: "🌳" },
+
+  // Emotions/Comfort (15)
+  { hebrew: "חיבוק", transliteration: "Chibuk", meaning: "Hug", category: "emotions", icon: "🤗" },
+  { hebrew: "אהבה", transliteration: "Ahavah", meaning: "Love", category: "emotions", icon: "❤️" },
+  { hebrew: "שמח", transliteration: "Same'ach", meaning: "Happy", category: "emotions", icon: "😊" },
+  { hebrew: "עצוב", transliteration: "Atzuv", meaning: "Sad", category: "emotions", icon: "😢" },
+  { hebrew: "כועס", transliteration: "Ko'es", meaning: "Angry", category: "emotions", icon: "😠" },
+  { hebrew: "מפחד", transliteration: "Mefached", meaning: "Scared", category: "emotions", icon: "😨" },
+  { hebrew: "בוכה", transliteration: "Bocheh", meaning: "Crying", category: "emotions", icon: "😭" },
+  { hebrew: "צוחק", transliteration: "Tzochek", meaning: "Laughing", category: "emotions", icon: "😄" },
+  { hebrew: "נשיקה", transliteration: "Neshikah", meaning: "Kiss", category: "emotions", icon: "😘" },
+  { hebrew: "אמא", transliteration: "Ima", meaning: "Mom", category: "emotions", icon: "👩" },
+  { hebrew: "אבא", transliteration: "Aba", meaning: "Dad", category: "emotions", icon: "👨" },
+  { hebrew: "תינוק", transliteration: "Tinok", meaning: "Baby", category: "emotions", icon: "👶" },
+  { hebrew: "משפחה", transliteration: "Mishpacha", meaning: "Family", category: "emotions", icon: "👨‍👩‍👧" },
+  { hebrew: "בבקשה", transliteration: "Bevakasha", meaning: "Please", category: "emotions", icon: "🙏" },
+  { hebrew: "תודה", transliteration: "Todah", meaning: "Thank you", category: "emotions", icon: "🙏" },
+
+  // Basic Actions (15)
+  { hebrew: "לבוא", transliteration: "Lavo", meaning: "To come", category: "actions", icon: "🚶" },
+  { hebrew: "ללכת", transliteration: "Lalechet", meaning: "To go", category: "actions", icon: "🚶" },
+  { hebrew: "לראות", transliteration: "Lirot", meaning: "To see", category: "actions", icon: "👀" },
+  { hebrew: "לשמוע", transliteration: "Lishmoa", meaning: "To hear", category: "actions", icon: "👂" },
+  { hebrew: "לדבר", transliteration: "Ledaber", meaning: "To speak", category: "actions", icon: "🗣️" },
+  { hebrew: "לאכול", transliteration: "Le'echol", meaning: "To eat", category: "actions", icon: "🍴" },
+  { hebrew: "לשתות", transliteration: "Lishtot", meaning: "To drink", category: "actions", icon: "🥤" },
+  { hebrew: "לתת", transliteration: "Latet", meaning: "To give", category: "actions", icon: "🎁" },
+  { hebrew: "לקחת", transliteration: "Lakachat", meaning: "To take", category: "actions", icon: "✋" },
+  { hebrew: "לפתוח", transliteration: "Liftoach", meaning: "To open", category: "actions", icon: "📂" },
+  { hebrew: "לסגור", transliteration: "Lisgor", meaning: "To close", category: "actions", icon: "📁" },
+  { hebrew: "לשבת", transliteration: "Lashevet", meaning: "To sit", category: "actions", icon: "🪑" },
+  { hebrew: "לעמוד", transliteration: "La'amod", meaning: "To stand", category: "actions", icon: "🧍" },
+  { hebrew: "רוצה", transliteration: "Rotzeh", meaning: "Want", category: "actions", icon: "🙋" },
+  { hebrew: "צריך", transliteration: "Tzarich", meaning: "Need", category: "actions", icon: "❗" },
+
+  // Basic Words (10)
+  { hebrew: "כן", transliteration: "Ken", meaning: "Yes", category: "basic", icon: "✅" },
+  { hebrew: "לא", transliteration: "Lo", meaning: "No", category: "basic", icon: "❌" },
+  { hebrew: "עוד", transliteration: "Od", meaning: "More", category: "basic", icon: "➕" },
+  { hebrew: "מספיק", transliteration: "Maspik", meaning: "Enough", category: "basic", icon: "✋" },
+  { hebrew: "פה", transliteration: "Po", meaning: "Here", category: "basic", icon: "📍" },
+  { hebrew: "שם", transliteration: "Sham", meaning: "There", category: "basic", icon: "👉" },
+  { hebrew: "גדול", transliteration: "Gadol", meaning: "Big", category: "basic", icon: "🐘" },
+  { hebrew: "קטן", transliteration: "Katan", meaning: "Small", category: "basic", icon: "🐜" },
+  { hebrew: "טוב", transliteration: "Tov", meaning: "Good", category: "basic", icon: "👍" },
+  { hebrew: "רע", transliteration: "Ra", meaning: "Bad", category: "basic", icon: "👎" },
 ];
 
-export default function BabyGame({ avatarName, onCorrect, correctCount = 0, onWatchTV }) {
-  const [currentNeed, setCurrentNeed] = useState(null);
+const categoryInfo = {
+  drinks: { label: "Drinks", color: "from-blue-400 to-cyan-400", icon: "💧" },
+  food: { label: "Food", color: "from-amber-400 to-orange-400", icon: "🍽️" },
+  sleep: { label: "Sleep", color: "from-indigo-400 to-purple-400", icon: "😴" },
+  bathroom: { label: "Bathroom", color: "from-teal-400 to-emerald-400", icon: "🚽" },
+  play: { label: "Play", color: "from-pink-400 to-rose-400", icon: "🎮" },
+  emotions: { label: "Emotions", color: "from-red-400 to-pink-400", icon: "❤️" },
+  actions: { label: "Actions", color: "from-green-400 to-emerald-400", icon: "🏃" },
+  basic: { label: "Basics", color: "from-gray-400 to-slate-400", icon: "📝" },
+};
+
+export default function BabyGame({ avatarName, onCorrect, onWatchTV }) {
+  const queryClient = useQueryClient();
+  const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [showTranslation, setShowTranslation] = useState(false);
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [feedback, setFeedback] = useState(null); // 'correct' | 'wrong' | null
-  const [isAsking, setIsAsking] = useState(false);
+  const [showIntro, setShowIntro] = useState(true);
 
-  // Pick a random need when component mounts or after correct answer
-  useEffect(() => {
-    if (!currentNeed && !feedback) {
-      pickRandomNeed();
-    }
-  }, [currentNeed, feedback]);
+  // Fetch word ratings from database
+  const { data: wordRatings = [] } = useQuery({
+    queryKey: ['wordRatings'],
+    queryFn: () => base44.entities.Word.filter({ category: "wordbank" }),
+  });
 
-  const pickRandomNeed = () => {
-    const randomNeed = needs[Math.floor(Math.random() * needs.length)];
-    // Shuffle items
-    const shuffledItems = [...randomNeed.items].sort(() => Math.random() - 0.5);
-    setCurrentNeed({ ...randomNeed, items: shuffledItems });
-    setShowTranslation(false);
-    setSelectedItem(null);
-    setFeedback(null);
-    setIsAsking(true);
+  const createWordMutation = useMutation({
+    mutationFn: (word) => base44.entities.Word.create(word),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['wordRatings'] }),
+  });
+
+  const updateWordMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.Word.update(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['wordRatings'] }),
+  });
+
+  // Get rating for a word
+  const getWordRating = (hebrew) => {
+    const found = wordRatings.find(w => w.word === hebrew);
+    return found?.times_practiced || 0;
   };
+
+  // Count words by rating
+  const getRatingCounts = () => {
+    const counts = { fluent: 0, learning: 0, unrated: 0, total: wordBank.length };
+    wordBank.forEach(word => {
+      const rating = getWordRating(word.hebrew);
+      if (rating >= 5) counts.fluent++;
+      else if (rating > 0) counts.learning++;
+      else counts.unrated++;
+    });
+    return counts;
+  };
+
+  const counts = getRatingCounts();
+  const totalRated = counts.fluent + counts.learning;
+  const canWatchTV = totalRated >= 100;
+
+  // Get next unrated or non-fluent word
+  const getNextWord = () => {
+    // First, try to find unrated words
+    const unratedWords = wordBank.filter(w => getWordRating(w.hebrew) === 0);
+    if (unratedWords.length > 0) {
+      return unratedWords[Math.floor(Math.random() * unratedWords.length)];
+    }
+    // Then, find words rated less than 5
+    const learningWords = wordBank.filter(w => {
+      const rating = getWordRating(w.hebrew);
+      return rating > 0 && rating < 5;
+    });
+    if (learningWords.length > 0) {
+      return learningWords[Math.floor(Math.random() * learningWords.length)];
+    }
+    // All words are fluent
+    return wordBank[Math.floor(Math.random() * wordBank.length)];
+  };
+
+  const [currentWord, setCurrentWord] = useState(() => getNextWord());
+
+  useEffect(() => {
+    setCurrentWord(getNextWord());
+  }, [wordRatings]);
 
   const playAudio = (text) => {
     const utterance = new SpeechSynthesisUtterance(text);
@@ -153,206 +212,207 @@ export default function BabyGame({ avatarName, onCorrect, correctCount = 0, onWa
     speechSynthesis.speak(utterance);
   };
 
-  const handleItemClick = (item) => {
-    setSelectedItem(item);
-    if (item.correct) {
-      setFeedback('correct');
-      playAudio("יופי!");
-      setTimeout(() => {
-        onCorrect(currentNeed);
-        setCurrentNeed(null);
-        setFeedback(null);
-      }, 1500);
+  const handleRate = async (rating) => {
+    const existingWord = wordRatings.find(w => w.word === currentWord.hebrew);
+    
+    if (existingWord) {
+      await updateWordMutation.mutateAsync({
+        id: existingWord.id,
+        data: { 
+          times_practiced: rating,
+          mastered: rating >= 5,
+        }
+      });
     } else {
-      setFeedback('wrong');
-      setTimeout(() => {
-        setFeedback(null);
-        setSelectedItem(null);
-      }, 1000);
+      await createWordMutation.mutateAsync({
+        word: currentWord.hebrew,
+        translation: currentWord.meaning,
+        phonetic: currentWord.transliteration,
+        category: "wordbank",
+        times_practiced: rating,
+        mastered: rating >= 5,
+      });
     }
+
+    if (rating >= 5) {
+      toast.success("Added to Fluent folder! 🎉");
+    } else {
+      toast.success(`Rated ${rating}/5 - Keep practicing!`);
+    }
+
+    onCorrect(currentWord);
+    setShowTranslation(false);
+    setCurrentWord(getNextWord());
   };
 
-  const canWatchTV = correctCount >= 10;
-
-  if (!currentNeed) {
+  if (showIntro) {
     return (
-      <div className="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 p-6 text-center">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="w-8 h-8 border-4 border-cyan-400 border-t-transparent rounded-full mx-auto"
-        />
+      <div className="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 p-8">
+        <div className="text-center mb-6">
+          <span className="text-6xl mb-4 block">👶</span>
+          <h2 className="text-2xl font-bold text-white mb-2">
+            Hi! I'm {avatarName}!
+          </h2>
+          <p className="text-white/80 text-lg mb-4">
+            Will you be my babysitter and learn Hebrew with me?
+          </p>
+        </div>
+
+        <div className="bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-white/20 rounded-2xl p-6 mb-6">
+          <h3 className="text-white font-bold mb-3 flex items-center gap-2">
+            <Star className="w-5 h-5 text-yellow-400" />
+            Your Mission:
+          </h3>
+          <ul className="text-white/80 space-y-2 text-sm">
+            <li>📚 Rate 100 Hebrew words based on your knowledge (1-5)</li>
+            <li>⭐ 5 = Fluent (goes to your Fluent folder)</li>
+            <li>📖 Words rated 1-4 will repeat until you master them</li>
+            <li>📺 After rating 100 words, unlock Hebrew TV shows!</li>
+          </ul>
+        </div>
+
+        <Button
+          onClick={() => setShowIntro(false)}
+          className="w-full bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-bold py-6 text-lg rounded-xl"
+        >
+          Let's Start! 🚀
+        </Button>
       </div>
     );
   }
 
   return (
     <div className="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 p-6">
-      {/* Progress & TV Reward */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
-          <div className="bg-cyan-500/20 px-3 py-1 rounded-full">
-            <span className="text-cyan-400 font-bold">{correctCount}/10</span>
-          </div>
-          <span className="text-white/60 text-sm">correct to unlock TV</span>
+      {/* Progress Bar */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-white/60 text-sm">Progress to TV Time</span>
+          <span className="text-cyan-400 font-bold">{totalRated}/100 words</span>
         </div>
-        {canWatchTV && (
-          <motion.button
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            whileHover={{ scale: 1.1 }}
-            onClick={onWatchTV}
-            className="flex items-center gap-2 bg-gradient-to-r from-purple-500 to-pink-500 px-4 py-2 rounded-xl text-white font-bold"
-          >
-            <Tv className="w-5 h-5" />
-            Watch TV! 📺
-          </motion.button>
-        )}
+        <div className="h-3 bg-white/10 rounded-full overflow-hidden">
+          <motion.div
+            className="h-full bg-gradient-to-r from-cyan-500 to-purple-500"
+            initial={{ width: 0 }}
+            animate={{ width: `${Math.min((totalRated / 100) * 100, 100)}%` }}
+          />
+        </div>
+        <div className="flex justify-between mt-2 text-xs">
+          <span className="text-green-400">⭐ Fluent: {counts.fluent}</span>
+          <span className="text-yellow-400">📚 Learning: {counts.learning}</span>
+          <span className="text-white/40">❓ Unrated: {counts.unrated}</span>
+        </div>
       </div>
+
+      {/* TV Unlock */}
+      {canWatchTV && (
+        <motion.button
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          whileHover={{ scale: 1.05 }}
+          onClick={onWatchTV}
+          className="w-full mb-6 flex items-center justify-center gap-3 bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-4 rounded-xl text-white font-bold text-lg"
+        >
+          <Tv className="w-6 h-6" />
+          🎉 Watch Hebrew TV with {avatarName}! 📺
+        </motion.button>
+      )}
 
       {/* Baby Request */}
       <div className="text-center mb-6">
         <motion.div
+          key={currentWord.hebrew}
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           className="inline-block"
         >
-          <div className="bg-white/10 rounded-2xl px-6 py-4 mb-4 relative">
-            {/* Speech bubble tail */}
-            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white/10 rotate-45" />
+          <div className="bg-white/10 rounded-2xl px-8 py-6 mb-4 relative">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-cyan-500 to-purple-500 px-3 py-1 rounded-full text-xs text-white font-bold">
+              {categoryInfo[currentWord.category]?.icon} {categoryInfo[currentWord.category]?.label}
+            </div>
             
-            <p className="text-white/60 text-sm mb-2">👶 {avatarName} says:</p>
+            <p className="text-white/60 text-sm mb-3 mt-2">👶 {avatarName} wants to know:</p>
             
-            {/* Hebrew word - clickable for translation */}
-            <div className="flex items-center justify-center gap-3">
-              <motion.p 
-                className="text-4xl font-bold cursor-pointer"
-                dir="rtl"
-                onClick={() => setShowTranslation(!showTranslation)}
-                whileHover={{ scale: 1.05 }}
-              >
+            {/* Hebrew word - clickable */}
+            <div className="flex items-center justify-center gap-3 mb-2">
+              <motion.div whileHover={{ scale: 1.05 }}>
                 <ClickableWord
-                  word={currentNeed.hebrew}
-                  transliteration={currentNeed.transliteration}
-                  translation={currentNeed.meaning}
+                  word={currentWord.hebrew}
+                  transliteration={currentWord.transliteration}
+                  translation={currentWord.meaning}
                   variant="hebrew"
-                  className="text-cyan-400"
+                  className="text-5xl font-bold text-cyan-400 cursor-pointer"
                 />
-              </motion.p>
+              </motion.div>
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => playAudio(currentNeed.hebrew)}
+                onClick={() => playAudio(currentWord.hebrew)}
                 className="text-cyan-400"
               >
-                <Volume2 className="w-5 h-5" />
+                <Volume2 className="w-6 h-6" />
               </Button>
             </div>
 
-            {/* Transliteration always shown */}
-            <p className="text-white/80 text-lg mt-1">{currentNeed.transliteration}</p>
+            {/* Transliteration */}
+            <p className="text-white/80 text-xl mb-2">{currentWord.transliteration}</p>
 
-            {/* Translation only shown on click */}
-            <AnimatePresence>
-              {showTranslation && (
-                <motion.p
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="text-green-400 text-sm mt-2"
-                >
-                  = {currentNeed.meaning}
-                </motion.p>
+            {/* Translation - click to reveal */}
+            <button
+              onClick={() => setShowTranslation(!showTranslation)}
+              className="text-white/40 text-sm hover:text-white/60 transition-colors"
+            >
+              {showTranslation ? (
+                <span className="text-green-400 text-lg font-medium">= {currentWord.meaning}</span>
+              ) : (
+                "(tap to see meaning)"
               )}
-            </AnimatePresence>
-
-            <p className="text-white/40 text-xs mt-2">
-              (tap the word to see translation)
-            </p>
+            </button>
           </div>
         </motion.div>
       </div>
 
-      {/* Item Selection */}
-      <div className="grid grid-cols-2 gap-3">
-        {currentNeed.items.map((item, idx) => (
-          <motion.button
-            key={item.id + idx}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: idx * 0.1 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => handleItemClick(item)}
-            disabled={feedback === 'correct'}
-            className={`relative bg-white/10 border-2 rounded-2xl p-4 text-center transition-all ${
-              selectedItem?.id === item.id && feedback === 'correct'
-                ? 'border-green-500 bg-green-500/20'
-                : selectedItem?.id === item.id && feedback === 'wrong'
-                ? 'border-red-500 bg-red-500/20 animate-shake'
-                : 'border-white/20 hover:border-white/40'
-            }`}
-          >
-            <span className="text-4xl">{item.emoji}</span>
-            <p className="text-white font-medium mt-2">{item.label}</p>
-
-            {/* Feedback icons */}
-            {selectedItem?.id === item.id && feedback === 'correct' && (
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="absolute -top-2 -right-2 bg-green-500 rounded-full p-1"
-              >
-                <Check className="w-4 h-4 text-white" />
-              </motion.div>
-            )}
-            {selectedItem?.id === item.id && feedback === 'wrong' && (
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="absolute -top-2 -right-2 bg-red-500 rounded-full p-1"
-              >
-                <X className="w-4 h-4 text-white" />
-              </motion.div>
-            )}
-          </motion.button>
-        ))}
+      {/* Rating Section */}
+      <div className="bg-white/5 rounded-2xl p-4 mb-4">
+        <p className="text-center text-white/60 text-sm mb-3">
+          How well do you know this word?
+        </p>
+        <div className="flex justify-center gap-2">
+          {[1, 2, 3, 4, 5].map((num) => (
+            <motion.button
+              key={num}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => handleRate(num)}
+              className={`w-14 h-14 rounded-xl font-bold text-lg transition-all ${
+                num === 5
+                  ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white"
+                  : num >= 4
+                  ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white"
+                  : num >= 3
+                  ? "bg-gradient-to-r from-yellow-500 to-amber-500 text-white"
+                  : "bg-white/20 text-white/80 hover:bg-white/30"
+              }`}
+            >
+              {num}
+              {num === 5 && <span className="block text-xs">⭐</span>}
+            </motion.button>
+          ))}
+        </div>
+        <div className="flex justify-between mt-3 text-xs text-white/40 px-2">
+          <span>Don't know</span>
+          <span>Fluent</span>
+        </div>
       </div>
 
-      {/* Feedback message */}
-      <AnimatePresence>
-        {feedback === 'correct' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className="mt-4 text-center"
-          >
-            <p className="text-green-400 font-bold text-lg">✨ Correct! +15 coins</p>
-          </motion.div>
-        )}
-        {feedback === 'wrong' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className="mt-4 text-center"
-          >
-            <p className="text-red-400 font-bold">Try again!</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* My Backpack button */}
-      <div className="mt-6 pt-4 border-t border-white/10">
-        <Button
-          variant="outline"
-          className="w-full border-amber-500/50 text-amber-400 hover:bg-amber-500/10"
-        >
-          <Backpack className="w-5 h-5 mr-2" />
-          My Backpack (Word Bank)
-        </Button>
-      </div>
+      {/* Backpack Button */}
+      <Button
+        variant="outline"
+        className="w-full border-amber-500/50 text-amber-400 hover:bg-amber-500/10"
+        onClick={() => toast.info(`Fluent: ${counts.fluent} words | Learning: ${counts.learning} words`)}
+      >
+        <Backpack className="w-5 h-5 mr-2" />
+        My Backpack ({counts.fluent} Fluent, {counts.learning} Learning)
+      </Button>
     </div>
   );
 }

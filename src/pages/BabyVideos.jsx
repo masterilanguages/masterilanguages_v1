@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play, ArrowLeft, Coins, Check, Backpack, X, Volume2 } from "lucide-react";
+import { Play, ArrowLeft, Coins, Check, Backpack, Volume2, Star } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { toast } from "sonner";
@@ -11,62 +11,67 @@ import ClickableWord from "../components/learning/ClickableWord";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-// Level 1 videos - kids cartoons and songs
+// Colors video with transcript
 const level1Videos = [
   { 
     id: 1, 
-    title: "Hebrew Alphabet Song", 
+    title: "Colors in Hebrew - לִמּוּד צְבָעִים", 
+    thumbnail: "https://img.youtube.com/vi/yBVWfDoJhXo/maxresdefault.jpg",
+    youtubeId: "yBVWfDoJhXo",
+    duration: "4:20", 
+    coins: 50,
+    category: "Colors",
+    transcript: [
+      { hebrew: "אדום", transliteration: "Adom", meaning: "Red", time: "0:15" },
+      { hebrew: "כתום", transliteration: "Katom", meaning: "Orange", time: "0:25" },
+      { hebrew: "צהוב", transliteration: "Tzahov", meaning: "Yellow", time: "0:35" },
+      { hebrew: "ירוק", transliteration: "Yarok", meaning: "Green", time: "0:45" },
+      { hebrew: "כחול", transliteration: "Kachol", meaning: "Blue", time: "0:55" },
+      { hebrew: "סגול", transliteration: "Sagol", meaning: "Purple", time: "1:05" },
+      { hebrew: "ורוד", transliteration: "Varod", meaning: "Pink", time: "1:15" },
+      { hebrew: "חום", transliteration: "Chum", meaning: "Brown", time: "1:25" },
+      { hebrew: "שחור", transliteration: "Shachor", meaning: "Black", time: "1:35" },
+      { hebrew: "לבן", transliteration: "Lavan", meaning: "White", time: "1:45" },
+      { hebrew: "אפור", transliteration: "Afor", meaning: "Gray", time: "1:55" },
+      { hebrew: "זהב", transliteration: "Zahav", meaning: "Gold", time: "2:05" },
+    ]
+  },
+  { 
+    id: 2, 
+    title: "Hebrew Alphabet Song - אלף בית", 
     thumbnail: "https://img.youtube.com/vi/UiCzoTs1AdE/maxresdefault.jpg",
     youtubeId: "UiCzoTs1AdE",
     duration: "3:45", 
-    coins: 25,
+    coins: 40,
+    category: "Alphabet",
     transcript: [
       { hebrew: "אלף", transliteration: "Alef", meaning: "First letter", time: "0:10" },
       { hebrew: "בית", transliteration: "Bet", meaning: "Second letter", time: "0:15" },
       { hebrew: "גימל", transliteration: "Gimel", meaning: "Third letter", time: "0:20" },
       { hebrew: "דלת", transliteration: "Dalet", meaning: "Fourth letter", time: "0:25" },
-    ]
-  },
-  { 
-    id: 2, 
-    title: "Colors in Hebrew for Kids", 
-    thumbnail: "https://img.youtube.com/vi/yBVWfDoJhXo/maxresdefault.jpg",
-    youtubeId: "yBVWfDoJhXo",
-    duration: "4:20", 
-    coins: 30,
-    transcript: [
-      { hebrew: "אדום", transliteration: "Adom", meaning: "Red", time: "0:30" },
-      { hebrew: "כחול", transliteration: "Kachol", meaning: "Blue", time: "0:45" },
-      { hebrew: "ירוק", transliteration: "Yarok", meaning: "Green", time: "1:00" },
-      { hebrew: "צהוב", transliteration: "Tzahov", meaning: "Yellow", time: "1:15" },
+      { hebrew: "הא", transliteration: "Hey", meaning: "Fifth letter", time: "0:30" },
+      { hebrew: "וו", transliteration: "Vav", meaning: "Sixth letter", time: "0:35" },
     ]
   },
   { 
     id: 3, 
-    title: "Hebrew Numbers 1-10", 
+    title: "Numbers 1-10 - מספרים", 
     thumbnail: "https://img.youtube.com/vi/DlF2bVpPO3o/maxresdefault.jpg",
     youtubeId: "DlF2bVpPO3o",
     duration: "5:10", 
-    coins: 35,
+    coins: 45,
+    category: "Numbers",
     transcript: [
       { hebrew: "אחת", transliteration: "Achat", meaning: "One", time: "0:20" },
       { hebrew: "שתיים", transliteration: "Shtayim", meaning: "Two", time: "0:35" },
       { hebrew: "שלוש", transliteration: "Shalosh", meaning: "Three", time: "0:50" },
       { hebrew: "ארבע", transliteration: "Arba", meaning: "Four", time: "1:05" },
-    ]
-  },
-  { 
-    id: 4, 
-    title: "Animals in Hebrew", 
-    thumbnail: "https://img.youtube.com/vi/dAv22Y9t_CU/maxresdefault.jpg",
-    youtubeId: "dAv22Y9t_CU",
-    duration: "6:30", 
-    coins: 40,
-    transcript: [
-      { hebrew: "כלב", transliteration: "Kelev", meaning: "Dog", time: "0:15" },
-      { hebrew: "חתול", transliteration: "Chatul", meaning: "Cat", time: "0:30" },
-      { hebrew: "ציפור", transliteration: "Tzipor", meaning: "Bird", time: "0:45" },
-      { hebrew: "דג", transliteration: "Dag", meaning: "Fish", time: "1:00" },
+      { hebrew: "חמש", transliteration: "Chamesh", meaning: "Five", time: "1:20" },
+      { hebrew: "שש", transliteration: "Shesh", meaning: "Six", time: "1:35" },
+      { hebrew: "שבע", transliteration: "Sheva", meaning: "Seven", time: "1:50" },
+      { hebrew: "שמונה", transliteration: "Shmoneh", meaning: "Eight", time: "2:05" },
+      { hebrew: "תשע", transliteration: "Tesha", meaning: "Nine", time: "2:20" },
+      { hebrew: "עשר", transliteration: "Eser", meaning: "Ten", time: "2:35" },
     ]
   },
 ];
@@ -76,6 +81,7 @@ export default function BabyVideos() {
   const queryClient = useQueryClient();
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [backpackOpen, setBackpackOpen] = useState(false);
+  const [showFluent, setShowFluent] = useState(false);
 
   const { data: userProfile } = useQuery({
     queryKey: ['userProfile'],
@@ -93,8 +99,8 @@ export default function BabyVideos() {
     },
   });
 
-  const { data: backpackWords = [] } = useQuery({
-    queryKey: ['backpackWords'],
+  const { data: wordRatings = [] } = useQuery({
+    queryKey: ['wordRatings'],
     queryFn: () => base44.entities.Word.filter({ category: "wordbank" }),
   });
 
@@ -103,22 +109,46 @@ export default function BabyVideos() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['userCoins'] }),
   });
 
-  const addToBackpackMutation = useMutation({
-    mutationFn: (word) => base44.entities.Word.create({
-      word: word.hebrew,
-      translation: word.meaning,
-      phonetic: word.transliteration,
-      category: "wordbank",
-      difficulty: "beginner",
-    }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['backpackWords'] });
-      toast.success("Added to My Backpack! 🎒");
-    },
+  const createWordMutation = useMutation({
+    mutationFn: (word) => base44.entities.Word.create(word),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['wordRatings'] }),
   });
 
-  const watchVideo = (video) => {
-    setSelectedVideo(video);
+  const updateWordMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.Word.update(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['wordRatings'] }),
+  });
+
+  const getWordRating = (hebrew) => {
+    const found = wordRatings.find(w => w.word === hebrew);
+    return found?.times_practiced || 0;
+  };
+
+  const handleRate = async (word, rating) => {
+    const existingWord = wordRatings.find(w => w.word === word.hebrew);
+    
+    if (existingWord) {
+      await updateWordMutation.mutateAsync({
+        id: existingWord.id,
+        data: { 
+          times_practiced: rating,
+          mastered: rating >= 5,
+        }
+      });
+    } else {
+      await createWordMutation.mutateAsync({
+        word: word.hebrew,
+        translation: word.meaning,
+        phonetic: word.transliteration,
+        category: "wordbank",
+        times_practiced: rating,
+        mastered: rating >= 5,
+      });
+    }
+
+    if (rating >= 5) {
+      toast.success("Added to Fluent! ⭐");
+    }
   };
 
   const finishVideo = () => {
@@ -129,9 +159,8 @@ export default function BabyVideos() {
     setSelectedVideo(null);
   };
 
-  const isInBackpack = (hebrew) => {
-    return backpackWords.some(w => w.word === hebrew);
-  };
+  const fluentWords = wordRatings.filter(w => w.times_practiced >= 5);
+  const learningWords = wordRatings.filter(w => w.times_practiced > 0 && w.times_practiced < 5);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
@@ -144,8 +173,8 @@ export default function BabyVideos() {
               <ArrowLeft className="w-6 h-6" />
             </Link>
             <div>
-              <h1 className="text-3xl font-bold text-white">📺 TV Time!</h1>
-              <p className="text-white/60">Watch videos & learn Hebrew words</p>
+              <h1 className="text-3xl font-bold text-white">📺 Hebrew TV</h1>
+              <p className="text-white/60">Watch videos & rate words you learn</p>
             </div>
           </div>
           <Button
@@ -153,7 +182,7 @@ export default function BabyVideos() {
             className="bg-amber-500/20 text-amber-400 border border-amber-500/50"
           >
             <Backpack className="w-5 h-5 mr-2" />
-            My Backpack ({backpackWords.length})
+            Backpack ({fluentWords.length} ⭐)
           </Button>
         </div>
 
@@ -164,7 +193,6 @@ export default function BabyVideos() {
             animate={{ opacity: 1, y: 0 }}
             className="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 overflow-hidden"
           >
-            {/* Video embed */}
             <div className="aspect-video bg-black">
               <iframe
                 width="100%"
@@ -177,50 +205,64 @@ export default function BabyVideos() {
               />
             </div>
 
-            {/* Transcript with clickable words */}
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-white font-bold text-lg">📝 Words in this video</h3>
-                <p className="text-white/60 text-sm">Click any word to learn more & add to backpack</p>
+                <h3 className="text-white font-bold text-lg">📝 Rate the words you know</h3>
+                <p className="text-white/60 text-sm">5 = Fluent ⭐</p>
               </div>
               
-              <div className="grid sm:grid-cols-2 gap-3">
-                {selectedVideo.transcript.map((item, idx) => (
-                  <motion.div
-                    key={idx}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.1 }}
-                    className="bg-white/5 border border-white/10 rounded-xl p-4 flex items-center justify-between"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-white/40 text-xs">{item.time}</span>
-                      <div>
-                        <ClickableWord
-                          word={item.hebrew}
-                          transliteration={item.transliteration}
-                          translation={item.meaning}
-                          variant="hebrew"
-                          className="text-xl text-cyan-400 font-bold"
-                        />
-                        <p className="text-white/60 text-sm">{item.transliteration}</p>
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {selectedVideo.transcript.map((item, idx) => {
+                  const currentRating = getWordRating(item.hebrew);
+                  return (
+                    <motion.div
+                      key={idx}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.05 }}
+                      className={`border rounded-xl p-4 flex items-center justify-between ${
+                        currentRating >= 5 
+                          ? "bg-green-500/10 border-green-500/30" 
+                          : "bg-white/5 border-white/10"
+                      }`}
+                    >
+                      <div className="flex items-center gap-4">
+                        <span className="text-white/40 text-xs w-12">{item.time}</span>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <ClickableWord
+                              word={item.hebrew}
+                              transliteration={item.transliteration}
+                              translation={item.meaning}
+                              variant="hebrew"
+                              className="text-2xl text-cyan-400 font-bold"
+                            />
+                            {currentRating >= 5 && <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />}
+                          </div>
+                          <p className="text-white/60 text-sm">{item.transliteration} = {item.meaning}</p>
+                        </div>
                       </div>
-                    </div>
-                    {isInBackpack(item.hebrew) ? (
-                      <div className="bg-green-500/20 text-green-400 px-2 py-1 rounded-full text-xs flex items-center gap-1">
-                        <Check className="w-3 h-3" /> Saved
+                      
+                      <div className="flex gap-1">
+                        {[1, 2, 3, 4, 5].map(num => (
+                          <button
+                            key={num}
+                            onClick={() => handleRate(item, num)}
+                            className={`w-8 h-8 rounded-lg text-sm font-bold transition-all hover:scale-110 ${
+                              currentRating >= num 
+                                ? num === 5 
+                                  ? "bg-green-500 text-white" 
+                                  : "bg-cyan-500 text-white"
+                                : "bg-white/10 text-white/50 hover:bg-white/20"
+                            }`}
+                          >
+                            {num}
+                          </button>
+                        ))}
                       </div>
-                    ) : (
-                      <Button
-                        size="sm"
-                        onClick={() => addToBackpackMutation.mutate(item)}
-                        className="bg-amber-500/20 text-amber-400 hover:bg-amber-500/30"
-                      >
-                        <Backpack className="w-4 h-4 mr-1" /> Add
-                      </Button>
-                    )}
-                  </motion.div>
-                ))}
+                    </motion.div>
+                  );
+                })}
               </div>
 
               <Button
@@ -232,15 +274,17 @@ export default function BabyVideos() {
             </div>
           </motion.div>
         ) : (
-          /* Video Grid */
           <div className="grid sm:grid-cols-2 gap-4">
             {level1Videos.map((video) => (
               <motion.div
                 key={video.id}
                 whileHover={{ scale: 1.02 }}
-                onClick={() => watchVideo(video)}
+                onClick={() => setSelectedVideo(video)}
                 className="relative bg-white/5 backdrop-blur-xl rounded-2xl border-2 border-white/10 overflow-hidden cursor-pointer hover:border-cyan-400/50 transition-all"
               >
+                <div className="absolute top-3 left-3 bg-purple-500/80 px-2 py-1 rounded-full text-xs text-white font-medium">
+                  {video.category}
+                </div>
                 <div className="aspect-video bg-black relative">
                   <img 
                     src={video.thumbnail}
@@ -257,9 +301,9 @@ export default function BabyVideos() {
                   </div>
                 </div>
                 <div className="p-4">
-                  <h3 className="text-white font-bold text-lg">{video.title}</h3>
+                  <h3 className="text-white font-bold">{video.title}</h3>
                   <div className="flex items-center justify-between mt-2">
-                    <span className="text-white/60 text-sm">{video.duration}</span>
+                    <span className="text-white/60 text-sm">{video.transcript.length} words</span>
                     <div className="flex items-center gap-1 text-yellow-400">
                       <Coins className="w-4 h-4" />
                       <span className="font-bold">+{video.coins}</span>
@@ -274,7 +318,7 @@ export default function BabyVideos() {
 
       {/* Backpack Dialog */}
       <Dialog open={backpackOpen} onOpenChange={setBackpackOpen}>
-        <DialogContent className="bg-slate-900 border-white/20 text-white max-w-md">
+        <DialogContent className="bg-slate-900 border-white/20 text-white max-w-md max-h-[80vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Backpack className="w-6 h-6 text-amber-400" />
@@ -282,33 +326,63 @@ export default function BabyVideos() {
             </DialogTitle>
           </DialogHeader>
           
-          {backpackWords.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-white/60">Your backpack is empty!</p>
-              <p className="text-white/40 text-sm mt-2">Add words from videos to save them here.</p>
-            </div>
-          ) : (
-            <div className="space-y-2 max-h-96 overflow-y-auto">
-              {backpackWords.map((word) => (
+          {/* Tabs */}
+          <div className="flex gap-2 mb-4">
+            <button
+              onClick={() => setShowFluent(true)}
+              className={`flex-1 py-2 rounded-lg font-medium transition-all ${
+                showFluent ? "bg-green-500/20 text-green-400 border border-green-500/50" : "bg-white/5 text-white/60"
+              }`}
+            >
+              ⭐ Fluent ({fluentWords.length})
+            </button>
+            <button
+              onClick={() => setShowFluent(false)}
+              className={`flex-1 py-2 rounded-lg font-medium transition-all ${
+                !showFluent ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/50" : "bg-white/5 text-white/60"
+              }`}
+            >
+              📚 Learning ({learningWords.length})
+            </button>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto space-y-2">
+            {(showFluent ? fluentWords : learningWords).length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-white/60">
+                  {showFluent ? "No fluent words yet!" : "No words in progress!"}
+                </p>
+                <p className="text-white/40 text-sm mt-2">
+                  {showFluent ? "Rate words 5/5 to add them here." : "Start rating words to track progress."}
+                </p>
+              </div>
+            ) : (
+              (showFluent ? fluentWords : learningWords).map((word) => (
                 <div
                   key={word.id}
                   className="bg-white/5 border border-white/10 rounded-xl p-3 flex items-center justify-between"
                 >
                   <div>
-                    <p className="text-cyan-400 font-bold" dir="rtl">{word.word}</p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-cyan-400 font-bold text-lg" dir="rtl">{word.word}</span>
+                      {word.times_practiced >= 5 && <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />}
+                    </div>
                     <p className="text-white/60 text-sm">{word.phonetic} - {word.translation}</p>
                   </div>
-                  <ClickableWord
-                    word={word.word}
-                    transliteration={word.phonetic}
-                    translation={word.translation}
-                    variant="hebrew"
-                    className="text-cyan-400 text-sm"
-                  />
+                  <div className="flex gap-1">
+                    {[1, 2, 3, 4, 5].map(num => (
+                      <div
+                        key={num}
+                        className={`w-4 h-4 rounded-full ${
+                          word.times_practiced >= num ? "bg-cyan-500" : "bg-white/20"
+                        }`}
+                      />
+                    ))}
+                  </div>
                 </div>
-              ))}
-            </div>
-          )}
+              ))
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>
