@@ -277,13 +277,36 @@ export default function Backpack() {
               ))}
             </div>
           ) : (
+  activeTab === "new" ? (
+            newWords.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-white/40 text-lg">No new words yet. Click on words in sentences to add them!</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {newWords.map((w, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    onClick={() => setActiveNewWord(w)}
+                    className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 cursor-pointer hover:border-amber-400 transition-all"
+                  >
+                    <p className="text-cyan-400 font-bold">{w.word}</p>
+                    <p className="text-white/60 text-sm">{w.meaning}</p>
+                  </motion.div>
+                ))}
+              </div>
+            )
+          ) : (
             getDisplayWords().map((word) => (
               <motion.div
                 key={word.id}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                className={`rounded-xl p-4 flex items-center justify-between ${
-                  activeTab === "fluent" ? "bg-green-500/10 border border-green-500/30" : "bg-yellow-500/10 border border-yellow-500/30"
+                onClick={() => handleWordClick(word)}
+                className={`rounded-xl p-4 flex items-center justify-between cursor-pointer hover:scale-[1.02] transition-all ${
+                  activeTab === "fluent" ? "bg-green-500/10 border border-green-500/30 hover:border-green-400" : "bg-yellow-500/10 border border-yellow-500/30 hover:border-yellow-400"
                 }`}
               >
                 <div className="flex items-center gap-3">
@@ -310,6 +333,7 @@ export default function Backpack() {
                 </div>
               </motion.div>
             ))
+          )
           )}
         </div>
 
