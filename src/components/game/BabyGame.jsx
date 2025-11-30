@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Droplets, Cookie, Moon, Bath, Gamepad2, Heart, Tv, Volume2, Sparkles, Check, X, Backpack, Star } from "lucide-react";
+import { Droplets, Cookie, Moon, Bath, Gamepad2, Heart, Tv, Volume2, Sparkles, Check, X, Backpack, Star, Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -142,6 +143,9 @@ export default function BabyGame({ avatarName, onCorrect, onWatchTV }) {
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [showTranslation, setShowTranslation] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
+  const [generatedSentences, setGeneratedSentences] = useState(null);
+  const [loadingSentences, setLoadingSentences] = useState(false);
+  const [backpackOpen, setBackpackOpen] = useState(false);
 
   // Fetch word ratings from database
   const { data: wordRatings = [] } = useQuery({
@@ -212,6 +216,63 @@ export default function BabyGame({ avatarName, onCorrect, onWatchTV }) {
     speechSynthesis.speak(utterance);
   };
 
+  const generateSentences = async (word) => {
+    setLoadingSentences(true);
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Create 3 simple example sentences using the Hebrew word "${word.hebrew}" (${word.transliteration}) which means "${word.meaning}".
+        Return ONLY the transliterated Hebrew (not Hebrew letters), with English translation.
+        Make sentences easy for beginners.`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            sentences: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  transliterated: { type: "string" },
+                  english: { type: "string" },
+                  words: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        word: { type: "string" },
+                        meaning: { type: "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      });
+      setGeneratedSentences(result.sentences);
+    } catch (e) {
+      console.error(e);
+    }
+    setLoadingSentences(false);
+  };
+
+  const addWordToBackpack = async (word, meaning) => {
+    const exists = wordRatings.find(w => w.phonetic?.toLowerCase() === word.toLowerCase());
+    if (exists) {
+      toast.info("Already in backpack!");
+      return;
+    }
+    await createWordMutation.mutateAsync({
+      word: word,
+      translation: meaning,
+      phonetic: word,
+      category: "wordbank",
+      times_practiced: 1,
+      mastered: false,
+    });
+    toast.success(`"${word}" added to backpack! 🎒`);
+  };
+
   const handleRate = async (rating) => {
     const existingWord = wordRatings.find(w => w.word === currentWord.hebrew);
     
@@ -236,10 +297,14 @@ export default function BabyGame({ avatarName, onCorrect, onWatchTV }) {
 
     if (rating >= 5) {
       toast.success("Added to Fluent folder! 🎉");
-    } else {
-      toast.success(`Rated ${rating}/5 - Keep practicing!`);
     }
 
+    // Generate sentences after rating
+    generateSentences(currentWord);
+  };
+
+  const moveToNextWord = () => {
+    setGeneratedSentences(null);
     onCorrect(currentWord);
     setShowTranslation(false);
     setCurrentWord(getNextWord());
@@ -372,47 +437,153 @@ export default function BabyGame({ avatarName, onCorrect, onWatchTV }) {
       </div>
 
       {/* Rating Section */}
-      <div className="bg-white/5 rounded-2xl p-4 mb-4">
-        <p className="text-center text-white/60 text-sm mb-3">
-          How well do you know this word?
-        </p>
-        <div className="flex justify-center gap-2">
-          {[1, 2, 3, 4, 5].map((num) => (
-            <motion.button
-              key={num}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => handleRate(num)}
-              className={`w-14 h-14 rounded-xl font-bold text-lg transition-all ${
-                num === 5
-                  ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white"
-                  : num >= 4
-                  ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white"
-                  : num >= 3
-                  ? "bg-gradient-to-r from-yellow-500 to-amber-500 text-white"
-                  : "bg-white/20 text-white/80 hover:bg-white/30"
-              }`}
-            >
-              {num}
-              {num === 5 && <span className="block text-xs">⭐</span>}
-            </motion.button>
-          ))}
+      {!generatedSentences && (
+        <div className="bg-white/5 rounded-2xl p-4 mb-4">
+          <p className="text-center text-white/60 text-sm mb-3">
+            How well do you know this word?
+          </p>
+          <div className="flex justify-center gap-2">
+            {[1, 2, 3, 4, 5].map((num) => (
+              <motion.button
+                key={num}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => handleRate(num)}
+                className={`w-14 h-14 rounded-xl font-bold text-lg transition-all ${
+                  num === 5
+                    ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white"
+                    : num >= 4
+                    ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white"
+                    : num >= 3
+                    ? "bg-gradient-to-r from-yellow-500 to-amber-500 text-white"
+                    : "bg-white/20 text-white/80 hover:bg-white/30"
+                }`}
+              >
+                {num}
+                {num === 5 && <span className="block text-xs">⭐</span>}
+              </motion.button>
+            ))}
+          </div>
+          <div className="flex justify-between mt-3 text-xs text-white/40 px-2">
+            <span>Don't know</span>
+            <span>Fluent</span>
+          </div>
         </div>
-        <div className="flex justify-between mt-3 text-xs text-white/40 px-2">
-          <span>Don't know</span>
-          <span>Fluent</span>
+      )}
+
+      {/* Generated Sentences */}
+      {loadingSentences && (
+        <div className="bg-white/5 rounded-2xl p-6 mb-4 text-center">
+          <Loader2 className="w-6 h-6 text-cyan-400 animate-spin mx-auto mb-2" />
+          <p className="text-white/60 text-sm">Generating example sentences...</p>
         </div>
-      </div>
+      )}
+
+      {generatedSentences && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white/5 rounded-2xl p-4 mb-4"
+        >
+          <h4 className="text-white/80 text-sm font-semibold mb-3">📝 Example Sentences (click words to add):</h4>
+          <div className="space-y-3">
+            {generatedSentences.map((sentence, idx) => (
+              <div key={idx} className="bg-white/5 rounded-xl p-3">
+                <div className="flex flex-wrap gap-1 mb-1">
+                  {sentence.transliterated.split(' ').map((word, widx) => {
+                    const wordInfo = sentence.words?.find(w => 
+                      w.word.toLowerCase() === word.toLowerCase().replace(/[.,!?]/g, '')
+                    );
+                    return (
+                      <button
+                        key={widx}
+                        onClick={() => wordInfo && addWordToBackpack(wordInfo.word, wordInfo.meaning)}
+                        className={`px-1 rounded transition-all ${
+                          wordInfo 
+                            ? "text-cyan-400 hover:bg-cyan-500/20 underline decoration-dotted cursor-pointer" 
+                            : "text-white/80"
+                        }`}
+                        title={wordInfo ? `Click to add: ${wordInfo.meaning}` : undefined}
+                      >
+                        {word}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-white/50 text-sm">{sentence.english}</p>
+              </div>
+            ))}
+          </div>
+          <Button
+            onClick={moveToNextWord}
+            className="w-full mt-4 bg-gradient-to-r from-cyan-500 to-purple-500"
+          >
+            Next Word →
+          </Button>
+        </motion.div>
+      )}
 
       {/* Backpack Button */}
       <Button
         variant="outline"
         className="w-full border-amber-500/50 text-amber-400 hover:bg-amber-500/10"
-        onClick={() => toast.info(`Fluent: ${counts.fluent} words | Learning: ${counts.learning} words`)}
+        onClick={() => setBackpackOpen(true)}
       >
         <Backpack className="w-5 h-5 mr-2" />
-        My Backpack ({counts.fluent} Fluent, {counts.learning} Learning)
+        My Backpack ({counts.fluent} ⭐ | {counts.learning} 📚)
       </Button>
+
+      {/* Backpack Dialog */}
+      <Dialog open={backpackOpen} onOpenChange={setBackpackOpen}>
+        <DialogContent className="bg-slate-900 border-white/20 text-white max-w-md max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Backpack className="w-6 h-6 text-amber-400" />
+              My Backpack
+            </DialogTitle>
+          </DialogHeader>
+          
+          {/* Words Section */}
+          <div className="mb-4">
+            <h4 className="text-sm font-semibold text-white/60 mb-2">📚 My Words ({wordRatings.length})</h4>
+            <div className="max-h-48 overflow-y-auto space-y-1">
+              {wordRatings.length === 0 ? (
+                <p className="text-white/40 text-sm">No words yet. Rate words or click on sentences to add!</p>
+              ) : (
+                wordRatings.map((word) => (
+                  <div
+                    key={word.id}
+                    className="bg-white/5 rounded-lg px-3 py-2 flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-cyan-400 font-medium">{word.phonetic || word.word}</span>
+                      <span className="text-white/40">-</span>
+                      <span className="text-white/60 text-sm">{word.translation}</span>
+                    </div>
+                    {word.times_practiced >= 5 && <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Videos Section */}
+          <div>
+            <h4 className="text-sm font-semibold text-white/60 mb-2">📺 Unlocked Videos</h4>
+            {canWatchTV ? (
+              <Button
+                onClick={() => { setBackpackOpen(false); onWatchTV(); }}
+                className="w-full bg-gradient-to-r from-purple-500 to-pink-500"
+              >
+                <Tv className="w-5 h-5 mr-2" />
+                Watch Hebrew TV! 🎬
+              </Button>
+            ) : (
+              <p className="text-white/40 text-sm">Rate {100 - totalRated} more words to unlock TV!</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
