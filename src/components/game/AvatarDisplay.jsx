@@ -2,31 +2,34 @@ import React from "react";
 import { motion } from "framer-motion";
 
 const avatarDetails = {
-  alex: { image: "🧍‍♂️", color: "from-blue-500 to-cyan-500" },
-  maya: { image: "🧍‍♀️", color: "from-pink-500 to-rose-500" },
-  jordan: { image: "🧍‍♂️", color: "from-fuchsia-500 to-pink-400", special: "pink" },
-  sam: { image: "🧍‍♂️", color: "from-violet-500 to-purple-500" },
-  zoe: { image: "🧍‍♀️", color: "from-green-500 to-emerald-500" },
-  luna: { image: "🧍‍♀️", color: "from-indigo-500 to-purple-600" },
+  alex: { image: "🧒", babyImage: "👶", color: "from-blue-500 to-cyan-500" },
+  maya: { image: "👧", babyImage: "👶", color: "from-pink-500 to-rose-500" },
+  jordan: { image: "🧒", babyImage: "👶", color: "from-fuchsia-500 to-pink-400", special: "pink" },
+  sam: { image: "🧒", babyImage: "👶", color: "from-violet-500 to-purple-500" },
+  zoe: { image: "👧", babyImage: "👶", color: "from-green-500 to-emerald-500" },
+  luna: { image: "👧", babyImage: "👶", color: "from-indigo-500 to-purple-600" },
 };
 
 const ageAppearance = (age) => {
-  if (age <= 7) return { scale: 0.6, label: "Kid" };
-  if (age <= 12) return { scale: 0.75, label: "Child" };
-  if (age <= 17) return { scale: 0.9, label: "Teen" };
-  if (age <= 21) return { scale: 1, label: "Young Adult" };
-  return { scale: 1, label: "Adult" };
+  if (age <= 4) return { scale: 0.5, label: "Baby", isBaby: true };
+  if (age <= 7) return { scale: 0.6, label: "Toddler", isBaby: false };
+  if (age <= 12) return { scale: 0.75, label: "Child", isBaby: false };
+  if (age <= 17) return { scale: 0.9, label: "Teen", isBaby: false };
+  if (age <= 21) return { scale: 1, label: "Young Adult", isBaby: false };
+  return { scale: 1, label: "Adult", isBaby: false };
 };
 
-export default function AvatarDisplay({ profile, equippedItem, className = "" }) {
+export default function AvatarDisplay({ profile, equippedItem, hasDiaper = false, onClick, className = "" }) {
   const avatar = avatarDetails[profile?.avatar_id] || avatarDetails.alex;
-  const appearance = ageAppearance(profile?.age_level || 5);
+  const age = profile?.age_level || 3;
+  const appearance = ageAppearance(age);
 
   return (
     <motion.div
       initial={{ scale: 0.8, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
-      className={`relative ${className}`}
+      onClick={onClick}
+      className={`relative cursor-pointer ${className}`}
     >
       {/* Glow effect behind avatar */}
       <motion.div
@@ -44,7 +47,16 @@ export default function AvatarDisplay({ profile, equippedItem, className = "" })
           className={`relative ${avatar.special === 'pink' ? 'hue-rotate-[320deg]' : ''}`}
           style={{ transform: `scale(${appearance.scale})`, transformOrigin: 'bottom center' }}
         >
-          <span className="text-[120px] leading-none">{avatar.image}</span>
+          <span className="text-[120px] leading-none">
+            {appearance.isBaby ? avatar.babyImage : avatar.image}
+          </span>
+          
+          {/* Diaper for baby */}
+          {appearance.isBaby && hasDiaper && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-3xl">
+              🩲
+            </div>
+          )}
         </div>
 
         {/* Equipped item */}
@@ -59,8 +71,12 @@ export default function AvatarDisplay({ profile, equippedItem, className = "" })
         )}
 
         {/* Age badge */}
-        <div className="mt-2 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full px-4 py-1 shadow-lg">
-          <span className="font-bold text-black">{profile?.age_level || 5} yrs</span>
+        <div className={`mt-2 rounded-full px-4 py-1 shadow-lg ${
+          appearance.isBaby 
+            ? 'bg-gradient-to-r from-pink-400 to-purple-500' 
+            : 'bg-gradient-to-r from-yellow-400 to-orange-500'
+        }`}>
+          <span className="font-bold text-white">{age} yrs</span>
         </div>
       </motion.div>
 
@@ -68,6 +84,9 @@ export default function AvatarDisplay({ profile, equippedItem, className = "" })
       <div className="text-center mt-4">
         <h2 className="text-2xl font-bold text-white">{profile?.avatar_name || 'Avatar'}</h2>
         <p className="text-white/60">{appearance.label}</p>
+        {onClick && (
+          <p className="text-cyan-400 text-xs mt-1">Tap for options</p>
+        )}
       </div>
     </motion.div>
   );

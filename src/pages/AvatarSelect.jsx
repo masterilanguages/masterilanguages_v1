@@ -38,7 +38,7 @@ export default function AvatarSelect() {
       createProfileMutation.mutate({
         avatar_id: selectedAvatar.id,
         avatar_name: avatarName,
-        age_level: 5,
+        age_level: 3,
         xp: 0,
         daily_streak: 0,
         badges: [],
@@ -139,7 +139,7 @@ export default function AvatarSelect() {
                 className="bg-white/10 border-white/30 text-white text-center text-xl py-6 mb-4"
               />
               <div className="text-center text-white/50 text-sm">
-                <span className="inline-block px-3 py-1 bg-white/10 rounded-full">Age: 5 years old</span>
+                <span className="inline-block px-3 py-1 bg-white/10 rounded-full">🍼 Age: 3 years old (Baby)</span>
               </div>
             </motion.div>
           )}
