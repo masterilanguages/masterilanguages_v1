@@ -719,10 +719,15 @@ const [imageApproved, setImageApproved] = useState(false);
                   {generatingImage ? <Loader2 className="w-4 h-4 text-white animate-spin" /> : <span className="text-lg">🔄</span>}
                 </button>
                 <button
-                  onClick={() => toast.success("Image saved! ✓")}
-                  className="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-green-500 hover:bg-green-600 flex items-center justify-center"
+                  onClick={() => {
+                    setImageApproved(true);
+                    toast.success("Image saved! ✓");
+                  }}
+                  className={`absolute bottom-2 right-2 w-8 h-8 rounded-full flex items-center justify-center ${
+                    imageApproved ? "bg-green-500" : "bg-white/20 hover:bg-white/30"
+                  }`}
                 >
-                  <Check className="w-4 h-4 text-white" />
+                  <Check className={`w-4 h-4 ${imageApproved ? "text-white" : "text-white/60"}`} />
                 </button>
               </div>
             </motion.div>
