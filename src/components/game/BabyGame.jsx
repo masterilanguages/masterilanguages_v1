@@ -496,15 +496,102 @@ const [imageApproved, setImageApproved] = useState(false);
       toast.info("Already in backpack!");
       return;
     }
+    // Add to new words queue instead of directly saving
+    const alreadyQueued = newWordsQueue.find(w => w.word.toLowerCase() === word.toLowerCase());
+    if (alreadyQueued) {
+      toast.info("Already added!");
+      return;
+    }
+    setNewWordsQueue(prev => [...prev, { word, meaning }]);
+    toast.success(`"${word}" added to New Words! 📝`);
+  };
+
+  const handleNewWordRate = async (rating) => {
+    if (!activeNewWord) return;
+    
     await createWordMutation.mutateAsync({
-      word: word,
-      translation: meaning,
-      phonetic: word,
+      word: activeNewWord.word,
+      translation: activeNewWord.meaning,
+      phonetic: activeNewWord.word,
       category: "wordbank",
-      times_practiced: 1,
-      mastered: false,
+      times_practiced: rating,
+      mastered: rating >= 5,
     });
-    toast.success(`"${word}" added to backpack! 🎒`);
+
+    if (rating >= 5) {
+      toast.success("Added to Fluent! ⭐");
+      finishNewWord();
+    } else {
+      // Generate mnemonics for this word
+      generateNewWordMnemonics(activeNewWord);
+    }
+  };
+
+  const generateNewWordMnemonics = async (wordObj) => {
+    setLoadingNewWordMnemonics(true);
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Create 3 very short mnemonic phrases (MAX 5 words each) to remember the word "${wordObj.word}" which means "${wordObj.meaning}".
+        Use the SOUND of the word to create memorable associations with OBJECTS or THINGS in English (not people's names).
+        Keep each phrase to 5 words or less. Only use common English objects, animals, or things - NO proper names.`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            suggestions: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  phrase: { type: "string" },
+                  imagePrompt: { type: "string" }
+                }
+              }
+            }
+          }
+        }
+      });
+      setNewWordMnemonics(result.suggestions);
+    } catch (e) {
+      console.error(e);
+    }
+    setLoadingNewWordMnemonics(false);
+  };
+
+  const generateNewWordImage = async (prompt) => {
+    setGeneratingNewWordImage(true);
+    setLastNewWordImagePrompt(prompt);
+    try {
+      const result = await base44.integrations.Core.GenerateImage({
+        prompt: `A colorful, memorable mnemonic illustration: ${prompt}. 
+        For learning the word "${activeNewWord.word}" meaning "${activeNewWord.meaning}".
+        Cartoon style, vibrant colors, educational, fun and memorable.`
+      });
+      setNewWordImage(result.url);
+      
+      // Save image to the word
+      const savedWord = wordRatings.find(w => w.phonetic?.toLowerCase() === activeNewWord.word.toLowerCase());
+      if (savedWord) {
+        await updateWordMutation.mutateAsync({
+          id: savedWord.id,
+          data: { image_url: result.url }
+        });
+      }
+      toast.success("Image saved!");
+    } catch (e) {
+      toast.error("Failed to generate image");
+    }
+    setGeneratingNewWordImage(false);
+  };
+
+  const finishNewWord = () => {
+    // Remove from queue and reset
+    setNewWordsQueue(prev => prev.filter(w => w.word !== activeNewWord.word));
+    setActiveNewWord(null);
+    setNewWordMnemonics(null);
+    setNewWordImage(null);
+    setNewWordImageApproved(false);
+    setNewWordCustomMnemonic("");
+    setLastNewWordImagePrompt("");
   };
 
   const moveToNextWord = () => {
