@@ -3,12 +3,11 @@ import { motion } from "framer-motion";
 import { Baby, School, Briefcase, Heart, Trophy, GraduationCap, Lock, Check } from "lucide-react";
 
 const milestones = [
-  { age: 3, label: "Baby", icon: Baby, color: "bg-pink-500" },
-  { age: 5, label: "School", icon: School, color: "bg-blue-500" },
-  { age: 13, label: "Bar/Bat Mitzvah", icon: GraduationCap, color: "bg-purple-500" },
-  { age: 18, label: "Adult", icon: Briefcase, color: "bg-green-500" },
-  { age: 21, label: "Independence", icon: Heart, color: "bg-red-500" },
-  { age: 25, label: "Success", icon: Trophy, color: "bg-yellow-500" },
+  { age: 3, endAge: 5, level: 1, label: "Baby", icon: Baby, color: "bg-pink-500" },
+  { age: 5, endAge: 13, level: 2, label: "School", icon: School, color: "bg-blue-500" },
+  { age: 13, endAge: 18, level: 3, label: "Teen", icon: GraduationCap, color: "bg-purple-500" },
+  { age: 18, endAge: 21, level: 4, label: "Adult", icon: Briefcase, color: "bg-green-500" },
+  { age: 21, endAge: 25, level: 5, label: "Independence", icon: Heart, color: "bg-yellow-500" },
 ];
 
 export default function TimelineBar({ currentAge = 3 }) {
@@ -49,11 +48,11 @@ export default function TimelineBar({ currentAge = 3 }) {
                       <Lock className="w-3 h-3 text-white/40" />
                     )}
                   </motion.div>
-                  <span className={`text-xs mt-1 ${isReached ? 'text-white' : 'text-white/40'}`}>
-                    {milestone.age}
+                  <span className={`text-xs mt-1 font-bold ${isReached ? 'text-white' : 'text-white/40'}`}>
+                    Lv{milestone.level}
                   </span>
                   <span className={`text-xs hidden sm:block ${isReached ? 'text-white/80' : 'text-white/30'}`}>
-                    {milestone.label}
+                    {milestone.age}-{milestone.endAge}
                   </span>
                 </div>
               );
