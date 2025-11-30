@@ -2,16 +2,15 @@ import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { ArrowLeft, Star, BookOpen, Image, Gamepad2, X } from "lucide-react";
+import { ArrowLeft, Star, Gamepad2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import GameHeader from "../components/game/GameHeader";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 export default function Backpack() {
   const [activeTab, setActiveTab] = useState("fluent");
-  const [selectedWord, setSelectedWord] = useState(null);
+  const [expandedId, setExpandedId] = useState(null);
 
   const { data: userProfile } = useQuery({
     queryKey: ['userProfile'],
@@ -88,12 +87,21 @@ export default function Backpack() {
                   key={word.id}
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  onClick={() => setSelectedWord(word)}
+                  onClick={() => setExpandedId(expandedId === word.id ? null : word.id)}
                   className="bg-white/5 border border-white/10 rounded-xl overflow-hidden cursor-pointer hover:border-cyan-400/50 transition-all"
                 >
                   <img src={word.image_url} alt={word.phonetic} className="w-full aspect-square object-cover" />
                   <div className="p-2 text-center">
                     <p className="text-cyan-400 font-medium">{word.phonetic || word.word}</p>
+                    {expandedId === word.id && (
+                      <motion.p
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        className="text-green-400 font-medium mt-1"
+                      >
+                        = {word.translation}
+                      </motion.p>
+                    )}
                   </div>
                 </motion.div>
               ))}
@@ -134,26 +142,6 @@ export default function Backpack() {
             ))
           )}
         </div>
-
-        {/* Word Detail Dialog */}
-        <Dialog open={!!selectedWord} onOpenChange={() => setSelectedWord(null)}>
-          <DialogContent className="bg-slate-900 border-white/20 text-white max-w-sm">
-            {selectedWord && (
-              <div className="text-center">
-                {selectedWord.image_url && (
-                  <img src={selectedWord.image_url} alt="" className="w-full rounded-xl mb-4" />
-                )}
-                <p className="text-2xl font-bold text-cyan-400 mb-2">{selectedWord.phonetic || selectedWord.word}</p>
-                <p className="text-xl text-green-400">{selectedWord.translation}</p>
-                {selectedWord.times_practiced >= 5 && (
-                  <div className="flex items-center justify-center gap-1 mt-3 text-yellow-400">
-                    <Star className="w-5 h-5 fill-yellow-400" /> Fluent
-                  </div>
-                )}
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
 
         {/* Quick Actions */}
         <div className="mt-8 grid grid-cols-2 gap-4">
