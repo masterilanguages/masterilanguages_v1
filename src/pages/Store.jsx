@@ -11,18 +11,22 @@ import GameHeader from "../components/game/GameHeader";
 import AvatarDisplay from "../components/game/AvatarDisplay";
 
 const storeItems = [
-  { id: "tennis_racquet", name: "Tennis Racquet", emoji: "🎾", price: 100 },
-  { id: "soccer_ball", name: "Soccer Ball", emoji: "⚽", price: 100 },
-  { id: "basketball", name: "Basketball", emoji: "🏀", price: 100 },
-  { id: "hat", name: "Cool Hat", emoji: "🎩", price: 150 },
-  { id: "sunglasses", name: "Sunglasses", emoji: "🕶️", price: 120 },
-  { id: "crown", name: "Golden Crown", emoji: "👑", price: 300 },
-  { id: "guitar", name: "Guitar", emoji: "🎸", price: 200 },
-  { id: "magic_wand", name: "Magic Wand", emoji: "🪄", price: 250 },
-  { id: "skateboard", name: "Skateboard", emoji: "🛹", price: 180 },
-  { id: "trophy", name: "Trophy", emoji: "🏆", price: 500 },
-  { id: "tuxedo", name: "Tuxedo", emoji: "🤵", price: 300 },
-  { id: "dress", name: "Dress", emoji: "👗", price: 300 },
+  { id: "diaper", name: "Diapers", emoji: "🩲", price: 50, category: "baby" },
+  { id: "glasses", name: "Glasses", emoji: "👓", price: 80, category: "accessories" },
+  { id: "sunglasses", name: "Sunglasses", emoji: "🕶️", price: 120, category: "accessories" },
+  { id: "hat", name: "Cool Hat", emoji: "🎩", price: 150, category: "accessories" },
+  { id: "cap", name: "Baseball Cap", emoji: "🧢", price: 100, category: "accessories" },
+  { id: "backpack", name: "Backpack", emoji: "🎒", price: 120, category: "accessories" },
+  { id: "tennis_racquet", name: "Tennis Racquet", emoji: "🎾", price: 100, category: "sports" },
+  { id: "soccer_ball", name: "Soccer Ball", emoji: "⚽", price: 100, category: "sports" },
+  { id: "basketball", name: "Basketball", emoji: "🏀", price: 100, category: "sports" },
+  { id: "guitar", name: "Guitar", emoji: "🎸", price: 200, category: "hobbies" },
+  { id: "skateboard", name: "Skateboard", emoji: "🛹", price: 180, category: "hobbies" },
+  { id: "crown", name: "Golden Crown", emoji: "👑", price: 300, category: "premium" },
+  { id: "trophy", name: "Trophy", emoji: "🏆", price: 500, category: "premium" },
+  { id: "tuxedo", name: "Tuxedo", emoji: "🤵", price: 300, category: "clothing" },
+  { id: "dress", name: "Dress", emoji: "👗", price: 300, category: "clothing" },
+  { id: "shirt", name: "Cool Shirt", emoji: "👕", price: 150, category: "clothing" },
 ];
 
 export default function Store() {
