@@ -130,10 +130,11 @@ const needPhrases = {
 
 export default function BabyGame({ avatarName, onCorrect, onWatchTV }) {
   const queryClient = useQueryClient();
-  const [gamePhase, setGamePhase] = useState("intro"); // intro, needs, wordgame
+  const [gamePhase, setGamePhase] = useState("intro"); // intro, instructions, rating, picking, wordgame
   const [currentWord, setCurrentWord] = useState(null);
   const [showTranslation, setShowTranslation] = useState(false);
   const [wrongChoices, setWrongChoices] = useState([]);
+  const [correctChoice, setCorrectChoice] = useState(null);
   const [generatedSentences, setGeneratedSentences] = useState(null);
   const [loadingSentences, setLoadingSentences] = useState(false);
   const [backpackOpen, setBackpackOpen] = useState(false);
@@ -223,43 +224,37 @@ export default function BabyGame({ avatarName, onCorrect, onWatchTV }) {
   const handleChoiceClick = async (choice) => {
     if (choice.hebrew === currentWord.hebrew) {
       // Correct!
-      toast.success(`Correct! ${choice.icon} ${choice.meaning}`);
+      setCorrectChoice(choice.hebrew);
       
-      // Save/update rating
+      // Save word as practiced
       const existingWord = wordRatings.find(w => w.word === currentWord.hebrew);
-      const newRating = (existingWord?.times_practiced || 0) + 1;
-      
       if (existingWord) {
         await updateWordMutation.mutateAsync({
           id: existingWord.id,
-          data: { times_practiced: Math.min(newRating, 5), mastered: newRating >= 5 }
-        });
-      } else {
-        await createWordMutation.mutateAsync({
-          word: currentWord.hebrew,
-          translation: currentWord.meaning,
-          phonetic: currentWord.transliteration,
-          category: "wordbank",
-          times_practiced: 1,
-          mastered: false,
+          data: { times_practiced: Math.min((existingWord.times_practiced || 0) + 1, 5), mastered: false }
         });
       }
 
       onCorrect && onCorrect(currentWord);
       
-      // Next word
+      // Next word after delay
       setTimeout(() => {
-        const nextWord = getNextWord();
-        setCurrentWord(nextWord);
-        setChoices(generateChoices(nextWord));
-        setShowTranslation(false);
-        setWrongChoices([]);
-      }, 1000);
+        goToNextWord();
+      }, 800);
     } else {
       // Wrong
       setWrongChoices([...wrongChoices, choice.hebrew]);
-      toast.error("Try again!");
     }
+  };
+
+  const goToNextWord = () => {
+    const nextWord = getNextWord();
+    setCurrentWord(nextWord);
+    setChoices(generateChoices(nextWord));
+    setShowTranslation(false);
+    setWrongChoices([]);
+    setCorrectChoice(null);
+    setGamePhase("rating");
   };
 
   const handleRate = async (rating) => {
@@ -281,10 +276,15 @@ export default function BabyGame({ avatarName, onCorrect, onWatchTV }) {
       });
     }
 
-    if (rating >= 5) toast.success("Added to Fluent folder! 🎉");
-    
-    // Generate sentences
-    generateSentences(currentWord);
+    if (rating >= 5) {
+      // Fluent - go to next word
+      toast.success("Fluent! ⭐");
+      onCorrect && onCorrect(currentWord);
+      goToNextWord();
+    } else {
+      // Not fluent - must pick correct picture
+      setGamePhase("picking");
+    }
   };
 
   const generateSentences = async (word) => {
@@ -355,63 +355,58 @@ export default function BabyGame({ avatarName, onCorrect, onWatchTV }) {
 
   const needPhrase = currentWord ? needPhrases[currentWord.category] : null;
 
-  // INTRO SCREEN
+  // INTRO SCREEN - Just the question
   if (gamePhase === "intro") {
     return (
-      <div className="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 p-8">
-        <div className="text-center mb-6">
-          <motion.span 
-            className="text-8xl mb-4 block"
-            animate={{ scale: [1, 1.1, 1] }}
-            transition={{ duration: 2, repeat: Infinity }}
-          >
-            👶
-          </motion.span>
-          <h2 className="text-3xl font-bold text-white mb-2">
-            Hi! I'm {avatarName}!
-          </h2>
-          <p className="text-white/80 text-xl mb-4">
-            Will you be my babysitter and learn Hebrew with me? 🍼
-          </p>
-        </div>
-
-        <div className="bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-white/20 rounded-2xl p-6 mb-6">
-          <h3 className="text-white font-bold mb-4 flex items-center gap-2 text-lg">
-            <Star className="w-6 h-6 text-yellow-400" />
-            Your Mission:
-          </h3>
-          <ul className="text-white/80 space-y-3">
-            <li className="flex items-start gap-2">
-              <span className="text-2xl">📚</span>
-              <span>Rate <strong>100 Hebrew words</strong> from 1-5 based on your knowledge</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-2xl">👶</span>
-              <span>I'll ask for things (water, food, sleep, play, bathroom) - choose the right picture!</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-2xl">⭐</span>
-              <span>Rate 5 = <strong>Fluent</strong> (word goes to your Fluent folder)</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-2xl">📺</span>
-              <span>After 100 words, unlock <strong>Hebrew TV</strong> and word games!</span>
-            </li>
-          </ul>
-        </div>
-
-        <Button
-          onClick={() => setGamePhase("needs")}
-          className="w-full bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-bold py-6 text-xl rounded-xl"
+      <div className="text-center py-12">
+        <motion.span 
+          className="text-8xl mb-6 block"
+          animate={{ scale: [1, 1.1, 1] }}
+          transition={{ duration: 2, repeat: Infinity }}
         >
-          Let's Start Babysitting! 🚀
+          👶
+        </motion.span>
+        <h2 className="text-3xl font-bold text-white mb-3">
+          Hi! I'm {avatarName}!
+        </h2>
+        <p className="text-white/80 text-xl mb-8">
+          Will you be my babysitter and learn Hebrew with me? 🍼
+        </p>
+        <Button
+          onClick={() => setGamePhase("instructions")}
+          className="bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-bold py-4 px-12 text-xl rounded-xl"
+        >
+          Yes! 🎉
         </Button>
       </div>
     );
   }
 
-  // WORD GAME PHASE (after 100 words)
-  if (gamePhase === "wordgame") {
+  // INSTRUCTIONS SCREEN
+  if (gamePhase === "instructions") {
+    return (
+      <div className="text-center py-12">
+        <span className="text-6xl mb-6 block">👶</span>
+        <p className="text-white text-xl mb-8">
+          I'll ask for things (water, food, sleep, play, bathroom) - choose the right picture!
+        </p>
+        <Button
+          onClick={() => {
+            const nextWord = getNextWord();
+            setCurrentWord(nextWord);
+            setChoices(generateChoices(nextWord));
+            setGamePhase("rating");
+          }}
+          className="bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-bold py-4 px-12 text-xl rounded-xl"
+        >
+          OK, Let's Go! 🚀
+        </Button>
+      </div>
+    );
+  }
+
+  // Fallback / WORD GAME PHASE (after 100 words)
+  if (gamePhase === "wordgame" || gamePhase === "needs") {
     return (
       <div className="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 p-6">
         <div className="flex items-center justify-between mb-4">
@@ -519,121 +514,139 @@ export default function BabyGame({ avatarName, onCorrect, onWatchTV }) {
     );
   }
 
-  // NEEDS PHASE (main game)
-  return (
-    <div className="p-4">
-      {/* Compact Progress Bar */}
-      <div className="mb-4">
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-white/60 text-xs">{totalRated}/100</span>
-          <div className="flex gap-2 text-xs">
-            <span className="text-green-400">⭐{counts.fluent}</span>
-            <span className="text-yellow-400">📚{counts.learning}</span>
+  // RATING PHASE - Rate 1-5
+  if (gamePhase === "rating" && currentWord) {
+    return (
+      <div className="p-4">
+        {/* Compact Progress */}
+        <div className="flex items-center justify-between mb-4 text-xs">
+          <span className="text-white/60">{totalRated}/100</span>
+          <div className="flex-1 mx-3 h-2 bg-white/10 rounded-full overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-cyan-500 to-purple-500" style={{ width: `${Math.min((totalRated / 100) * 100, 100)}%` }} />
           </div>
+          <span className="text-green-400">⭐{counts.fluent}</span>
         </div>
-        <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-          <motion.div
-            className="h-full bg-gradient-to-r from-cyan-500 to-purple-500"
-            animate={{ width: `${Math.min((totalRated / 100) * 100, 100)}%` }}
-          />
-        </div>
-      </div>
 
-      {/* Unlock Buttons */}
-      {canWatchTV && (
-        <div className="grid grid-cols-2 gap-2 mb-4">
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            onClick={onWatchTV}
-            className="flex items-center justify-center gap-1 bg-gradient-to-r from-purple-500 to-pink-500 px-3 py-2 rounded-lg text-white text-sm font-bold"
-          >
-            <Tv className="w-4 h-4" /> TV
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            onClick={() => { setCurrentWord(getNextWord()); setGamePhase("wordgame"); }}
-            className="flex items-center justify-center gap-1 bg-gradient-to-r from-green-500 to-emerald-500 px-3 py-2 rounded-lg text-white text-sm font-bold"
-          >
-            <Gamepad2 className="w-4 h-4" /> Game
-          </motion.button>
+        {/* Word to rate */}
+        <div className="text-center mb-6">
+          <span className="text-5xl mb-3 block">👶</span>
+          <p className="text-2xl font-bold text-yellow-400 mb-1">{currentWord.transliteration}</p>
+          <button onClick={() => setShowTranslation(!showTranslation)} className="text-white/40 text-sm">
+            {showTranslation ? <span className="text-green-400">= {currentWord.meaning}</span> : "(tap for meaning)"}
+          </button>
         </div>
-      )}
 
-      {/* Baby Need */}
-      {currentWord && needPhrase && (
-        <div className="text-center mb-4">
-          <motion.div
-            key={currentWord.hebrew}
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="flex items-center justify-center gap-4"
-          >
-            <span className="text-5xl">👶</span>
-            <div className="text-left">
-              <div className="flex items-center gap-2">
-                <p className="text-xl font-bold text-cyan-400">{needPhrase.transliteration}</p>
-                <Button variant="ghost" size="sm" onClick={() => playAudio(needPhrase.hebrew)} className="text-cyan-400 p-1 h-auto">
-                  <Volume2 className="w-4 h-4" />
-                </Button>
-                <button
-                  onClick={() => setShowTranslation(!showTranslation)}
-                  className="text-white/40 text-xs"
-                >
-                  {showTranslation ? <span className="text-green-400">({needPhrase.meaning})</span> : "(?)" }
-                </button>
-              </div>
-              <p className="text-yellow-400 font-bold text-lg">
-                {currentWord.transliteration}
-                <button
-                  onClick={() => setShowTranslation(!showTranslation)}
-                  className="text-white/40 text-sm ml-2"
-                >
-                  {showTranslation && <span className="text-white/60">= {currentWord.meaning}</span>}
-                </button>
-              </p>
+        {/* Rating buttons */}
+        <p className="text-center text-white/60 text-sm mb-3">How well do you know this word?</p>
+        <div className="flex justify-center gap-2 mb-6">
+          {[1, 2, 3, 4, 5].map((num) => (
+            <motion.button
+              key={num}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => handleRate(num)}
+              className={`w-12 h-12 rounded-xl font-bold text-lg ${
+                num === 5 ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white"
+                : num >= 4 ? "bg-blue-500/50 text-white"
+                : num >= 3 ? "bg-yellow-500/50 text-white"
+                : "bg-white/20 text-white/80"
+              }`}
+            >
+              {num}
+            </motion.button>
+          ))}
+        </div>
+        <p className="text-center text-xs text-white/40">5 = Fluent (skip) | 1-4 = Pick the picture</p>
+
+        {/* Quick Links */}
+        <div className="flex gap-2 mt-6 text-xs">
+          <a href={createPageUrl("Practice")} className="flex-1 py-2 bg-white/5 rounded-lg text-cyan-400 text-center">📚</a>
+          <a href={createPageUrl("Videos")} className="flex-1 py-2 bg-white/5 rounded-lg text-purple-400 text-center">📺</a>
+          <a href={createPageUrl("Progress")} className="flex-1 py-2 bg-white/5 rounded-lg text-blue-400 text-center">📖</a>
+          <a href={createPageUrl("Store")} className="flex-1 py-2 bg-white/5 rounded-lg text-yellow-400 text-center">🏪</a>
+          <button onClick={() => setBackpackOpen(true)} className="flex-1 py-2 bg-white/5 rounded-lg text-amber-400 text-center">🎒</button>
+        </div>
+
+        {/* Backpack Dialog */}
+        <Dialog open={backpackOpen} onOpenChange={setBackpackOpen}>
+          <DialogContent className="bg-slate-900 border-white/20 text-white max-w-md">
+            <DialogHeader>
+              <DialogTitle>🎒 My Backpack</DialogTitle>
+            </DialogHeader>
+            <div className="max-h-60 overflow-y-auto space-y-1">
+              {wordRatings.map((word) => (
+                <div key={word.id} className="bg-white/5 rounded-lg px-3 py-2 flex items-center justify-between">
+                  <span className="text-cyan-400">{word.phonetic || word.word}</span>
+                  <span className="text-white/60 text-sm">{word.translation}</span>
+                  {word.times_practiced >= 5 && <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />}
+                </div>
+              ))}
             </div>
-          </motion.div>
-        </div>
-      )}
+          </DialogContent>
+        </Dialog>
+      </div>
+    );
+  }
 
-      {/* Picture Choices */}
-      {choices.length > 0 && (
+  // PICKING PHASE - Choose correct picture
+  if (gamePhase === "picking" && currentWord) {
+    return (
+      <div className="p-4">
+        {/* Progress */}
+        <div className="flex items-center justify-between mb-4 text-xs">
+          <span className="text-white/60">{totalRated}/100</span>
+          <div className="flex-1 mx-3 h-2 bg-white/10 rounded-full overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-cyan-500 to-purple-500" style={{ width: `${Math.min((totalRated / 100) * 100, 100)}%` }} />
+          </div>
+          <span className="text-green-400">⭐{counts.fluent}</span>
+        </div>
+
+        {/* Baby asking */}
+        <div className="text-center mb-4">
+          <span className="text-4xl">👶</span>
+          <p className="text-xl font-bold text-yellow-400 mt-2">{currentWord.transliteration}</p>
+          <p className="text-white/50 text-sm">Choose the correct picture!</p>
+        </div>
+
+        {/* Picture Choices */}
         <div className="grid grid-cols-4 gap-2 mb-4">
           {choices.map((choice) => {
             const isWrong = wrongChoices.includes(choice.hebrew);
+            const isCorrect = correctChoice === choice.hebrew;
             return (
               <motion.button
                 key={choice.hebrew}
-                whileHover={{ scale: isWrong ? 1 : 1.05 }}
+                whileHover={{ scale: (isWrong || isCorrect) ? 1 : 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => !isWrong && handleChoiceClick(choice)}
-                disabled={isWrong}
-                className={`relative p-3 rounded-xl border transition-all ${
-                  isWrong 
-                    ? "bg-red-500/20 border-red-500/50 opacity-50" 
+                onClick={() => !isWrong && !correctChoice && handleChoiceClick(choice)}
+                disabled={isWrong || !!correctChoice}
+                className={`relative p-3 rounded-xl border-2 transition-all ${
+                  isCorrect 
+                    ? "bg-green-500/30 border-green-500" 
+                    : isWrong 
+                    ? "bg-red-500/30 border-red-500" 
                     : "bg-white/5 border-white/20 hover:border-cyan-400/50"
                 }`}
               >
                 <span className="text-4xl block">{choice.icon}</span>
-                {isWrong && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <X className="w-8 h-8 text-red-500" />
-                  </div>
-                )}
+                {isCorrect && <Check className="absolute top-1 right-1 w-5 h-5 text-green-400" />}
+                {isWrong && <X className="absolute top-1 right-1 w-5 h-5 text-red-400" />}
               </motion.button>
             );
           })}
         </div>
-      )}
 
-      {/* Quick Links */}
-      <div className="flex gap-2 mb-3 text-xs">
-        <a href={createPageUrl("Practice")} className="flex-1 py-2 bg-white/5 rounded-lg text-cyan-400 text-center hover:bg-white/10">📚 Words</a>
-        <a href={createPageUrl("Videos")} className="flex-1 py-2 bg-white/5 rounded-lg text-purple-400 text-center hover:bg-white/10">📺 Videos</a>
-        <a href={createPageUrl("Progress")} className="flex-1 py-2 bg-white/5 rounded-lg text-blue-400 text-center hover:bg-white/10">📖 Lessons</a>
-        <a href={createPageUrl("Store")} className="flex-1 py-2 bg-white/5 rounded-lg text-yellow-400 text-center hover:bg-white/10">🏪 Store</a>
-        <button onClick={() => setBackpackOpen(true)} className="flex-1 py-2 bg-white/5 rounded-lg text-amber-400 text-center hover:bg-white/10">🎒</button>
+        {/* Quick Links */}
+        <div className="flex gap-2 text-xs">
+          <a href={createPageUrl("Practice")} className="flex-1 py-2 bg-white/5 rounded-lg text-cyan-400 text-center">📚</a>
+          <a href={createPageUrl("Videos")} className="flex-1 py-2 bg-white/5 rounded-lg text-purple-400 text-center">📺</a>
+          <a href={createPageUrl("Progress")} className="flex-1 py-2 bg-white/5 rounded-lg text-blue-400 text-center">📖</a>
+          <a href={createPageUrl("Store")} className="flex-1 py-2 bg-white/5 rounded-lg text-yellow-400 text-center">🏪</a>
+          <button onClick={() => setBackpackOpen(true)} className="flex-1 py-2 bg-white/5 rounded-lg text-amber-400 text-center">🎒</button>
+        </div>
       </div>
+    );
+  }
 
       {/* Backpack Dialog */}
       <Dialog open={backpackOpen} onOpenChange={setBackpackOpen}>
