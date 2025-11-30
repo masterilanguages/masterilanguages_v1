@@ -536,7 +536,11 @@ export default function BabyGame({ avatarName, onCorrect, onWatchTV }) {
             <div className="h-full bg-gradient-to-r from-cyan-500 to-purple-500" style={{ width: `${Math.min((totalRated / 100) * 100, 100)}%` }} />
           </div>
           <span className="text-green-400">⭐{counts.fluent}</span>
+          <button onClick={() => setBackpackOpen(true)} className="ml-2 text-xl">🎒</button>
         </div>
+
+        {/* Instructions */}
+        <p className="text-center text-white/60 text-sm mb-4">Rate 1-5 how well you know this word</p>
 
         {/* Word with inline rating */}
         <div className="text-center mb-6">
@@ -550,12 +554,7 @@ export default function BabyGame({ avatarName, onCorrect, onWatchTV }) {
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => handleRate(num)}
-                  className={`w-8 h-8 rounded-lg font-bold text-sm ${
-                    num === 5 ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white"
-                    : num >= 4 ? "bg-blue-500/50 text-white"
-                    : num >= 3 ? "bg-yellow-500/50 text-white"
-                    : "bg-white/20 text-white/80"
-                  }`}
+                  className="w-8 h-8 rounded-lg font-bold text-sm bg-white/20 text-white/80 hover:bg-white/30"
                 >
                   {num}
                 </motion.button>
@@ -565,7 +564,7 @@ export default function BabyGame({ avatarName, onCorrect, onWatchTV }) {
         </div>
 
         {/* Picture choices */}
-        <div className="grid grid-cols-5 gap-2 mb-6">
+        <div className="grid grid-cols-5 gap-2">
           {choices.map((choice) => (
             <div
               key={choice.hebrew}
@@ -574,15 +573,6 @@ export default function BabyGame({ avatarName, onCorrect, onWatchTV }) {
               <span className="text-3xl">{choice.icon}</span>
             </div>
           ))}
-        </div>
-
-        {/* Quick Links */}
-        <div className="flex gap-2 text-xs">
-          <a href={createPageUrl("Practice")} className="flex-1 py-2 bg-white/5 rounded-lg text-cyan-400 text-center">📚</a>
-          <a href={createPageUrl("Videos")} className="flex-1 py-2 bg-white/5 rounded-lg text-purple-400 text-center">📺</a>
-          <a href={createPageUrl("Progress")} className="flex-1 py-2 bg-white/5 rounded-lg text-blue-400 text-center">📖</a>
-          <a href={createPageUrl("Store")} className="flex-1 py-2 bg-white/5 rounded-lg text-yellow-400 text-center">🏪</a>
-          <button onClick={() => setBackpackOpen(true)} className="flex-1 py-2 bg-white/5 rounded-lg text-amber-400 text-center">🎒</button>
         </div>
 
         {/* Backpack Dialog */}
@@ -650,6 +640,17 @@ export default function BabyGame({ avatarName, onCorrect, onWatchTV }) {
                 ) : (
                   <p className="text-white/40 text-sm">Rate {100 - totalRated} more words to unlock TV & games!</p>
                 )}
+              </div>
+
+              {/* Quick Links */}
+              <div className="border-t border-white/10 pt-4">
+                <h4 className="text-sm font-semibold text-white/60 mb-2">📍 Quick Links</h4>
+                <div className="grid grid-cols-4 gap-2">
+                  <a href={createPageUrl("Practice")} className="py-2 bg-white/5 rounded-lg text-cyan-400 text-center text-sm hover:bg-white/10">📚 Words</a>
+                  <a href={createPageUrl("Videos")} className="py-2 bg-white/5 rounded-lg text-purple-400 text-center text-sm hover:bg-white/10">📺 Videos</a>
+                  <a href={createPageUrl("Progress")} className="py-2 bg-white/5 rounded-lg text-blue-400 text-center text-sm hover:bg-white/10">📖 Lessons</a>
+                  <a href={createPageUrl("Store")} className="py-2 bg-white/5 rounded-lg text-yellow-400 text-center text-sm hover:bg-white/10">🏪 Store</a>
+                </div>
               </div>
             </div>
           </DialogContent>
