@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { toast } from "sonner";
 import GameHeader from "../components/game/GameHeader";
 import AvatarDisplay from "../components/game/AvatarDisplay";
-import BadgeDisplay from "../components/game/BadgeDisplay";
+
 import ActivityCard from "../components/game/ActivityCard";
 import TimelineBar from "../components/game/TimelineBar";
 import BabyGame from "../components/game/BabyGame";
@@ -201,10 +201,7 @@ export default function Home() {
                 className="mx-auto" 
               />
               
-              <div className="mt-8">
-                <h3 className="text-white/80 text-sm font-semibold mb-3">BADGES</h3>
-                <BadgeDisplay earnedBadges={userProfile?.badges || []} size="sm" />
-              </div>
+
 
               <div className="mt-6 grid grid-cols-2 gap-3">
                 <Link

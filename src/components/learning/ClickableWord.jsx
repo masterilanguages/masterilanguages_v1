@@ -209,81 +209,78 @@ export default function ClickableWord({
           {/* Mnemonic Tab */}
           {activeTab === "mnemonic" && (
             <div className="space-y-4">
+              {/* Custom Description - ON TOP */}
+              <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-xl p-4">
+                <h4 className="text-sm font-semibold text-white/80 mb-2">✨ Describe your own mnemonic:</h4>
+                <Textarea
+                  value={customDescription}
+                  onChange={(e) => setCustomDescription(e.target.value)}
+                  placeholder="Describe the image you want... e.g., 'A cat sitting on a chair eating shalom-shaped cookies'"
+                  className="bg-white/5 border-white/20 text-white placeholder:text-white/40 mb-3"
+                  rows={3}
+                />
+                <Button
+                  onClick={() => generateMnemonicImage(customDescription)}
+                  disabled={!customDescription.trim() || generatingCustom}
+                  className="w-full bg-gradient-to-r from-purple-500 to-pink-500"
+                >
+                  {generatingCustom ? (
+                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating...</>
+                  ) : (
+                    <><Wand2 className="w-4 h-4 mr-2" /> Generate My Mnemonic</>
+                  )}
+                </Button>
+              </div>
+
+              {/* Generated Image */}
+              {generatedImage && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                >
+                  <h4 className="text-sm font-semibold text-green-400 mb-2">✓ Your Mnemonic Image:</h4>
+                  <img
+                    src={generatedImage}
+                    alt="Mnemonic"
+                    className="w-full rounded-xl shadow-lg border border-white/20"
+                  />
+                </motion.div>
+              )}
+
+              {/* 3 AI Suggestions */}
               {loading && !mnemonicSuggestions ? (
                 <div className="flex flex-col items-center py-8">
                   <Loader2 className="w-8 h-8 text-purple-400 animate-spin mb-3" />
                   <p className="text-white/60">Generating mnemonic ideas...</p>
                 </div>
-              ) : (
-                <>
-                  {/* 3 Suggestions */}
-                  <div className="space-y-3">
-                    <h4 className="text-sm font-semibold text-white/80">Choose a mnemonic idea:</h4>
-                    {mnemonicSuggestions?.map((suggestion, i) => (
-                      <motion.div
-                        key={i}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: i * 0.1 }}
-                        className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-4"
-                      >
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <h5 className="font-bold text-purple-300 mb-1">{suggestion.title}</h5>
-                            <p className="text-white/70 text-sm">{suggestion.description}</p>
-                          </div>
-                          <Button
-                            size="sm"
-                            onClick={() => generateMnemonicImage(suggestion.imagePrompt)}
-                            disabled={generatingCustom}
-                            className="bg-purple-500 hover:bg-purple-600 ml-3"
-                          >
-                            {generatingCustom ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
-                          </Button>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-
-                  {/* Custom Description */}
-                  <div className="border-t border-white/10 pt-4">
-                    <h4 className="text-sm font-semibold text-white/80 mb-2">Or describe your own mnemonic:</h4>
-                    <Textarea
-                      value={customDescription}
-                      onChange={(e) => setCustomDescription(e.target.value)}
-                      placeholder="Describe the image you want... e.g., 'A cat sitting on a chair eating shalom-shaped cookies'"
-                      className="bg-white/5 border-white/20 text-white placeholder:text-white/40 mb-3"
-                      rows={3}
-                    />
-                    <Button
-                      onClick={() => generateMnemonicImage(customDescription)}
-                      disabled={!customDescription.trim() || generatingCustom}
-                      className="w-full bg-gradient-to-r from-purple-500 to-pink-500"
-                    >
-                      {generatingCustom ? (
-                        <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating...</>
-                      ) : (
-                        <><Wand2 className="w-4 h-4 mr-2" /> Generate My Mnemonic</>
-                      )}
-                    </Button>
-                  </div>
-
-                  {/* Generated Image */}
-                  {generatedImage && (
+              ) : mnemonicSuggestions && (
+                <div className="space-y-3">
+                  <h4 className="text-sm font-semibold text-white/60">Or choose from AI suggestions:</h4>
+                  {mnemonicSuggestions.map((suggestion, i) => (
                     <motion.div
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="mt-4"
+                      key={i}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.1 }}
+                      className="bg-white/5 border border-white/10 rounded-xl p-4"
                     >
-                      <h4 className="text-sm font-semibold text-green-400 mb-2">✓ Your Mnemonic Image:</h4>
-                      <img
-                        src={generatedImage}
-                        alt="Mnemonic"
-                        className="w-full rounded-xl shadow-lg border border-white/20"
-                      />
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <h5 className="font-bold text-purple-300 mb-1">{suggestion.title}</h5>
+                          <p className="text-white/70 text-sm">{suggestion.description}</p>
+                        </div>
+                        <Button
+                          size="sm"
+                          onClick={() => generateMnemonicImage(suggestion.imagePrompt)}
+                          disabled={generatingCustom}
+                          className="bg-purple-500 hover:bg-purple-600 ml-3"
+                        >
+                          {generatingCustom ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
+                        </Button>
+                      </div>
                     </motion.div>
-                  )}
-                </>
+                  ))}
+                </div>
               )}
             </div>
           )}
