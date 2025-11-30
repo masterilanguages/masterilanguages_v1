@@ -58,6 +58,7 @@ export default function Backpack() {
     { id: "fluent", label: "⭐ Fluent", count: fluentWords.length, color: "green" },
     { id: "learning", label: "📚 Learning", count: learningWords.length, color: "yellow" },
     { id: "pictures", label: "🖼️ Pictures", count: wordRatings.filter(w => w.image_url).length, color: "purple" },
+    { id: "new", label: "📝 New", count: newWords.length, color: "amber" },
   ];
 
   const getDisplayWords = () => {
