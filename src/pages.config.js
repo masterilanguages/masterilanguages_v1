@@ -14,6 +14,7 @@ import Home from './pages/Home';
 import Store from './pages/Store';
 import Activities from './pages/Activities';
 import AvatarSelect from './pages/AvatarSelect';
+import BabyVideos from './pages/BabyVideos';
 import __Layout from './Layout.jsx';
 
 
@@ -34,6 +35,7 @@ export const PAGES = {
     "Store": Store,
     "Activities": Activities,
     "AvatarSelect": AvatarSelect,
+    "BabyVideos": BabyVideos,
 }
 
 export const pagesConfig = {
