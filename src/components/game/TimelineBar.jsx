@@ -1,10 +1,9 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Baby, School, Briefcase, Heart, Trophy, GraduationCap, Lock, Check, Star } from "lucide-react";
+import { Baby, School, Briefcase, Heart, Trophy, GraduationCap, Lock, Check } from "lucide-react";
 
 const milestones = [
   { age: 3, label: "Baby", icon: Baby, color: "bg-pink-500" },
-  { age: 4, label: "Level 1", icon: Star, color: "bg-yellow-500" },
   { age: 5, label: "School", icon: School, color: "bg-blue-500" },
   { age: 13, label: "Bar/Bat Mitzvah", icon: GraduationCap, color: "bg-purple-500" },
   { age: 18, label: "Adult", icon: Briefcase, color: "bg-green-500" },
