@@ -27,9 +27,6 @@ export default function Backpack() {
   const [newWordCustomMnemonic, setNewWordCustomMnemonic] = useState("");
   const [lastImagePrompt, setLastImagePrompt] = useState("");
   const [imageApproved, setImageApproved] = useState(false);
-  const [editingWord, setEditingWord] = useState(null);
-  const [editWord, setEditWord] = useState("");
-  const [editMeaning, setEditMeaning] = useState("");
 
   const { data: userProfile } = useQuery({
     queryKey: ['userProfile'],
