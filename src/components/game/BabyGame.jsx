@@ -139,6 +139,7 @@ export default function BabyGame({ avatarName, onCorrect, onWatchTV }) {
   const [loadingSentences, setLoadingSentences] = useState(false);
   const [backpackOpen, setBackpackOpen] = useState(false);
   const [sentenceChecks, setSentenceChecks] = useState({});
+  const [pendingRating, setPendingRating] = useState(null); // When 1-4 is rated, wait for image pick
 
   // Fetch word ratings from database
   const { data: wordRatings = [] } = useQuery({
@@ -265,6 +266,7 @@ export default function BabyGame({ avatarName, onCorrect, onWatchTV }) {
     setShowTranslation(false);
     setWrongChoices([]);
     setCorrectChoice(null);
+    setPendingRating(null);
     setGamePhase("rating");
   };
 
@@ -288,13 +290,29 @@ export default function BabyGame({ avatarName, onCorrect, onWatchTV }) {
     }
 
     if (rating >= 5) {
-      // Fluent - go to next word
-      toast.success("Fluent! ⭐");
+      // Fluent - go to next word immediately
+      toast.success("Added to Fluent! ⭐");
       onCorrect && onCorrect(currentWord);
       goToNextWord();
     } else {
-      // Not fluent - must pick correct picture
-      setGamePhase("picking");
+      // Rating 1-4: stay on same screen, let user pick image
+      setPendingRating(rating);
+    }
+  };
+
+  const handleImagePick = (choice) => {
+    if (choice.hebrew === currentWord.hebrew) {
+      setCorrectChoice(choice.hebrew);
+      toast.success("Correct! ✓");
+      setTimeout(() => {
+        setPendingRating(null);
+        setCorrectChoice(null);
+        setWrongChoices([]);
+        goToNextWord();
+      }, 600);
+    } else {
+      setWrongChoices([...wrongChoices, choice.hebrew]);
+      toast.error(`That's ${choice.meaning}`);
     }
   };
 
@@ -560,20 +578,42 @@ export default function BabyGame({ avatarName, onCorrect, onWatchTV }) {
           </div>
         </div>
 
-        {/* Picture choices */}
+        {/* Picture choices - clickable after rating 1-4 */}
         <div className="grid grid-cols-5 gap-2">
-          {choices.map((choice) => (
-            <div
-              key={choice.hebrew}
-              className="bg-white/5 border border-white/10 rounded-xl p-3 flex items-center justify-center"
-            >
-              <span className="text-3xl">{choice.icon}</span>
-            </div>
-          ))}
+          {choices.map((choice) => {
+            const isWrong = wrongChoices.includes(choice.hebrew);
+            const isCorrect = correctChoice === choice.hebrew;
+            return (
+              <motion.button
+                key={choice.hebrew}
+                whileHover={{ scale: pendingRating && !isWrong && !isCorrect ? 1.05 : 1 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => pendingRating && !isWrong && !correctChoice && handleImagePick(choice)}
+                disabled={!pendingRating || isWrong || !!correctChoice}
+                className={`p-3 rounded-xl border-2 transition-all relative ${
+                  isCorrect 
+                    ? "bg-green-500/30 border-green-500" 
+                    : isWrong 
+                    ? "bg-red-500/30 border-red-500" 
+                    : pendingRating 
+                    ? "bg-white/5 border-cyan-400/50 cursor-pointer hover:border-cyan-400"
+                    : "bg-white/5 border-white/10"
+                }`}
+              >
+                <span className="text-3xl block">{choice.icon}</span>
+                {isCorrect && <Check className="absolute top-1 right-1 w-4 h-4 text-green-400" />}
+                {isWrong && <X className="absolute top-1 right-1 w-4 h-4 text-red-400" />}
+              </motion.button>
+            );
+          })}
         </div>
 
         {/* Instructions */}
-        <p className="text-center text-white/60 text-sm mt-4">Rate 1-5 how well you know this word. Then choose the correct image.</p>
+        <p className="text-center text-white/60 text-sm mt-4">
+          {pendingRating 
+            ? "Now choose the correct image! 👆" 
+            : "Rate 1-5 how well you know this word. Then choose the correct image."}
+        </p>
 
         {/* Backpack Dialog */}
         <Dialog open={backpackOpen} onOpenChange={setBackpackOpen}>
