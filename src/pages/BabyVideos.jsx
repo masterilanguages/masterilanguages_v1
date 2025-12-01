@@ -873,28 +873,34 @@ Create about 15-20 conversational lines that naturally introduce and use these v
                   </div>
                 </div>
 
-                {/* Always show buttons below the card */}
-                <div className="p-4 border-t border-white/10 space-y-3">
+                {/* Buttons Section - ALWAYS VISIBLE */}
+                <div className="p-4 bg-slate-800/50 border-t border-white/20 space-y-3">
                   {/* Generate Transcript Button */}
-                  {!fullTranscripts[video.id] ? (
-                    <Button
-                      onClick={(e) => { e.stopPropagation(); generateFullTranscript(video); }}
-                      disabled={loadingTranscript === video.id}
-                      className="w-full bg-gradient-to-r from-purple-500 to-pink-500 py-3"
-                    >
-                      {loadingTranscript === video.id ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Generating transcript...
-                        </>
-                      ) : (
-                        <>
-                          <FileText className="w-4 h-4 mr-2" />
-                          📝 Generate Full Transcript
-                        </>
-                      )}
-                    </Button>
-                  ) : (
+                  <Button
+                    onClick={(e) => { e.stopPropagation(); generateFullTranscript(video); }}
+                    disabled={loadingTranscript === video.id}
+                    className="w-full bg-gradient-to-r from-purple-500 to-pink-500 py-4 text-base font-bold"
+                  >
+                    {loadingTranscript === video.id ? (
+                      <>
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        Generating transcript...
+                      </>
+                    ) : fullTranscripts[video.id] ? (
+                      <>
+                        <FileText className="w-5 h-5 mr-2" />
+                        ✓ Transcript Ready (tap to regenerate)
+                      </>
+                    ) : (
+                      <>
+                        <FileText className="w-5 h-5 mr-2" />
+                        📝 Generate Full Transcript
+                      </>
+                    )}
+                  </Button>
+
+                  {/* Show Transcript if generated */}
+                  {fullTranscripts[video.id] && (
                     <div className="space-y-1 max-h-48 overflow-y-auto bg-white/5 rounded-xl p-3">
                       <p className="text-white/50 text-xs font-medium mb-2">📝 Full Transcript:</p>
                       {fullTranscripts[video.id].map((line, idx) => (
@@ -907,8 +913,8 @@ Create about 15-20 conversational lines that naturally introduce and use these v
                   )}
 
                   {/* Vocabulary Words */}
-                  <div className="pt-2">
-                    <p className="text-white/50 text-xs mb-2">📚 Vocabulary ({video.transcript.length} words):</p>
+                  <div className="bg-white/5 rounded-xl p-3">
+                    <p className="text-white/70 text-sm font-medium mb-2">📚 Vocabulary ({video.transcript.length} words):</p>
                     <div className="flex flex-wrap gap-1">
                       {video.transcript.map((item, idx) => {
                         const inBackpack = wordRatings.find(w => w.word === item.hebrew);
@@ -919,11 +925,11 @@ Create about 15-20 conversational lines that naturally introduce and use these v
                             className={`px-2 py-1 rounded text-xs transition-all ${
                               inBackpack 
                                 ? "bg-green-500/20 border border-green-500/50" 
-                                : "bg-white/5 border border-white/20 hover:border-cyan-400"
+                                : "bg-white/10 border border-white/30 hover:border-cyan-400"
                             }`}
                           >
                             <span className="text-cyan-400 font-bold" dir="rtl">{item.hebrew}</span>
-                            <span className="text-white/40 ml-1">= {item.meaning}</span>
+                            <span className="text-white/50 ml-1">= {item.meaning}</span>
                             {inBackpack && <span className="ml-1 text-green-400">✓</span>}
                           </button>
                         );
@@ -934,9 +940,9 @@ Create about 15-20 conversational lines that naturally introduce and use these v
                   {/* Watch Video Button */}
                   <Button
                     onClick={(e) => { e.stopPropagation(); setSelectedVideo(video); }}
-                    className="w-full bg-gradient-to-r from-green-500 to-emerald-500 py-3"
+                    className="w-full bg-gradient-to-r from-green-500 to-emerald-500 py-4 text-base font-bold"
                   >
-                    <Play className="w-4 h-4 mr-2" />
+                    <Play className="w-5 h-5 mr-2" />
                     ▶️ Watch Full Video
                   </Button>
                 </div>
