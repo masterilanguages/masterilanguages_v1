@@ -39,11 +39,14 @@ export default function BodyPartsLesson() {
   const [viewed, setViewed] = useState(new Set());
   
   // Matching game state
-  const [matchPairs, setMatchPairs] = useState([]);
-  const [selectedEmoji, setSelectedEmoji] = useState(null);
-  const [selectedWord, setSelectedWord] = useState(null);
-  const [matched, setMatched] = useState(new Set());
-  const [score, setScore] = useState(0);
+  const [questionQueue, setQuestionQueue] = useState([]); // Queue of questions to answer
+  const [currentQuestion, setCurrentQuestion] = useState(null);
+  const [wordScores, setWordScores] = useState({}); // Track correct answers per word (0-5)
+  const [wordAttempts, setWordAttempts] = useState({}); // Track attempts per word
+  const [options, setOptions] = useState([]);
+  const [answered, setAnswered] = useState(false);
+  const [lastAnswer, setLastAnswer] = useState(null); // 'correct' or 'wrong'
+  const [gameComplete, setGameComplete] = useState(false);
 
   const current = bodyParts[currentIndex];
 
