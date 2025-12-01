@@ -882,16 +882,19 @@ Create about 15-20 conversational lines that naturally introduce and use these v
               }}
             >
               <p className="text-white/60 mb-3">🎬 Drag a YouTube link here or paste below</p>
-              <div className="flex gap-2">
+              <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                 <input
-                  type="text"
+                  type="url"
                   value={customVideoUrl}
                   onChange={(e) => setCustomVideoUrl(e.target.value)}
-                  placeholder="Paste YouTube URL..."
-                  className="flex-1 px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-white/40 outline-none focus:border-cyan-400"
+                  onKeyDown={(e) => e.stopPropagation()}
+                  placeholder="https://www.youtube.com/watch?v=..."
+                  className="flex-1 px-3 py-2 rounded-lg bg-slate-800 border border-white/30 text-white placeholder:text-white/40 outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/50"
+                  autoComplete="off"
                 />
                 <button
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     const ytId = extractYouTubeId(customVideoUrl);
                     if (ytId) {
                       toast.success("Video added! Feature coming soon.");
