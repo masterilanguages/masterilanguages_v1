@@ -369,7 +369,7 @@ export default function ColorsLesson() {
             </div>
           </motion.div>
         ) : (
-          <>
+          <div>
             {/* Progress */}
             <div className="mb-6">
               <div className="flex justify-between text-white/60 text-sm mb-2">
@@ -390,76 +390,76 @@ export default function ColorsLesson() {
             </div>
 
             {/* Color Grid */}
-        <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-          {colors.map((color) => {
-            const isExpanded = selectedColor?.meaning === color.meaning;
-            const isRated = colorRatings[color.meaning] !== undefined;
-            const rating = colorRatings[color.meaning];
-            const isDark = !['white', 'yellow', 'gold'].includes(color.meaning);
-            
-            return (
-              <div
-                key={color.meaning}
-                onClick={() => setSelectedColor(isExpanded ? null : color)}
-                className={`relative rounded-2xl p-3 border-2 cursor-pointer min-h-[140px] flex flex-col justify-between ${
-                  isRated 
-                    ? "border-green-500/50" 
-                    : isExpanded
-                      ? "border-cyan-400"
-                      : "border-white/10 hover:border-cyan-400/50"
-                }`}
-                style={{ backgroundColor: color.color }}
-              >
-                <p className={`text-center font-bold capitalize text-lg ${isDark ? 'text-white' : 'text-gray-800'}`}>
-                  {color.meaning}
-                </p>
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+              {colors.map((color) => {
+                const isExpanded = selectedColor?.meaning === color.meaning;
+                const isRated = colorRatings[color.meaning] !== undefined;
+                const rating = colorRatings[color.meaning];
+                const isDark = !['white', 'yellow', 'gold'].includes(color.meaning);
                 
-                {/* Always reserve space, show content when expanded */}
-                <div className="flex-1 flex flex-col justify-center">
-                  {isExpanded ? (
-                    <>
-                      <p className={`text-xl font-bold text-center ${isDark ? 'text-cyan-300' : 'text-purple-700'}`} dir="rtl">
-                        {color.hebrew}
-                      </p>
-                      <p className={`text-xs text-center ${isDark ? 'text-white/80' : 'text-gray-600'}`}>
-                        {color.transliteration}
-                      </p>
-                      
-                      {/* Rating buttons */}
-                      <div className="flex gap-1 justify-center mt-2">
-                        {[1, 2, 3, 4, 5].map((num) => (
-                          <button
-                            key={num}
-                            onClick={(e) => { e.stopPropagation(); handleRating(color, num); }}
-                            className={`w-6 h-6 rounded text-xs font-bold transition-all ${
-                              rating === num
-                                ? num === 5 
-                                  ? "bg-green-500 text-white" 
-                                  : "bg-cyan-500 text-white"
-                                : isDark
-                                  ? "bg-white/20 text-white hover:bg-white/30"
-                                  : "bg-black/20 text-gray-800 hover:bg-black/30"
-                            }`}
-                          >
-                            {num}
-                          </button>
-                        ))}
+                return (
+                  <div
+                    key={color.meaning}
+                    onClick={() => setSelectedColor(isExpanded ? null : color)}
+                    className={`relative rounded-2xl p-3 border-2 cursor-pointer min-h-[140px] flex flex-col justify-between ${
+                      isRated 
+                        ? "border-green-500/50" 
+                        : isExpanded
+                          ? "border-cyan-400"
+                          : "border-white/10 hover:border-cyan-400/50"
+                    }`}
+                    style={{ backgroundColor: color.color }}
+                  >
+                    <p className={`text-center font-bold capitalize text-lg ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                      {color.meaning}
+                    </p>
+                    
+                    {/* Always reserve space, show content when expanded */}
+                    <div className="flex-1 flex flex-col justify-center">
+                      {isExpanded ? (
+                        <div>
+                          <p className={`text-xl font-bold text-center ${isDark ? 'text-cyan-300' : 'text-purple-700'}`} dir="rtl">
+                            {color.hebrew}
+                          </p>
+                          <p className={`text-xs text-center ${isDark ? 'text-white/80' : 'text-gray-600'}`}>
+                            {color.transliteration}
+                          </p>
+                          
+                          {/* Rating buttons */}
+                          <div className="flex gap-1 justify-center mt-2">
+                            {[1, 2, 3, 4, 5].map((num) => (
+                              <button
+                                key={num}
+                                onClick={(e) => { e.stopPropagation(); handleRating(color, num); }}
+                                className={`w-6 h-6 rounded text-xs font-bold transition-all ${
+                                  rating === num
+                                    ? num === 5 
+                                      ? "bg-green-500 text-white" 
+                                      : "bg-cyan-500 text-white"
+                                    : isDark
+                                      ? "bg-white/20 text-white hover:bg-white/30"
+                                      : "bg-black/20 text-gray-800 hover:bg-black/30"
+                                }`}
+                              >
+                                {num}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="h-12" /> 
+                      )}
+                    </div>
+                    
+                    {isRated && (
+                      <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-white text-xs font-bold">
+                        {rating}
                       </div>
-                    </>
-                  ) : (
-                    <div className="h-12" /> 
-                  )}
-                </div>
-                
-                {isRated && (
-                  <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-white text-xs font-bold">
-                    {rating}
+                    )}
                   </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+                );
+              })}
+            </div>
 
             {/* Complete button */}
             {ratedCount === colors.length && (
@@ -476,7 +476,7 @@ export default function ColorsLesson() {
                 </Button>
               </motion.div>
             )}
-          </>
+          </div>
         )}
       </div>
 
