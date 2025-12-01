@@ -372,7 +372,8 @@ export default function Backpack() {
                                                   onClick={() => {
                                                     const cleanWord = word.replace(/[.,!?]/g, '');
                                                     const meaning = wordInfo?.meaning || "";
-                                                    addToNewWords(cleanWord, meaning);
+                                                    const hebrew = wordInfo?.hebrew || "";
+                                                    addToNewWords(cleanWord, meaning, hebrew);
                                                   }}
                                                   className={`flex flex-col items-center px-1 rounded ${
                                                     isQueued 
