@@ -258,16 +258,18 @@ export default function Backpack() {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   onClick={() => setExpandedId(expandedId === word.id ? null : word.id)}
-                  className="bg-white/5 border border-white/10 rounded-xl overflow-hidden cursor-pointer hover:border-cyan-400/50 transition-all"
+                  className="bg-white/5 border border-white/10 rounded-xl overflow-hidden cursor-pointer hover:border-cyan-400/50 transition-all h-48 flex flex-col"
                 >
-                  <img src={word.image_url} alt={word.phonetic} className="w-full aspect-square object-cover" />
-                  <div className="p-2 text-center">
-                    <p className="text-cyan-400 font-medium">{word.phonetic || word.word}</p>
+                  <div className="flex-1 overflow-hidden">
+                    <img src={word.image_url} alt={word.phonetic} className="w-full h-full object-cover" />
+                  </div>
+                  <div className="p-2 text-center h-16 flex flex-col justify-center">
+                    <p className="text-cyan-400 font-medium truncate">{word.phonetic || word.word}</p>
                     {expandedId === word.id && (
                       <motion.p
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
-                        className="text-green-400 font-medium mt-1"
+                        className="text-green-400 font-medium text-sm truncate"
                       >
                         = {word.translation}
                       </motion.p>
