@@ -12,71 +12,10 @@ import ClickableWord from "../components/learning/ClickableWord";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-// Videos with transcripts
+// Videos with transcripts - Piece of Hebrew channel
 const level1Videos = [
   { 
     id: 1, 
-    title: "Colors in Hebrew - לִמּוּד צְבָעִים", 
-    thumbnail: "https://img.youtube.com/vi/yBVWfDoJhXo/maxresdefault.jpg",
-    youtubeId: "yBVWfDoJhXo",
-    duration: "4:20", 
-    coins: 50,
-    category: "Colors",
-    transcript: [
-      { hebrew: "אָדוֹם", transliteration: "Adom", meaning: "Red", time: "0:15" },
-      { hebrew: "כָּתוֹם", transliteration: "Katom", meaning: "Orange", time: "0:25" },
-      { hebrew: "צָהוֹב", transliteration: "Tzahov", meaning: "Yellow", time: "0:35" },
-      { hebrew: "יָרוֹק", transliteration: "Yarok", meaning: "Green", time: "0:45" },
-      { hebrew: "כָּחוֹל", transliteration: "Kachol", meaning: "Blue", time: "0:55" },
-      { hebrew: "סָגוֹל", transliteration: "Sagol", meaning: "Purple", time: "1:05" },
-      { hebrew: "וָרוֹד", transliteration: "Varod", meaning: "Pink", time: "1:15" },
-      { hebrew: "חוּם", transliteration: "Chum", meaning: "Brown", time: "1:25" },
-      { hebrew: "שָׁחוֹר", transliteration: "Shachor", meaning: "Black", time: "1:35" },
-      { hebrew: "לָבָן", transliteration: "Lavan", meaning: "White", time: "1:45" },
-      { hebrew: "אָפוֹר", transliteration: "Afor", meaning: "Gray", time: "1:55" },
-      { hebrew: "זָהָב", transliteration: "Zahav", meaning: "Gold", time: "2:05" },
-    ]
-  },
-  { 
-    id: 2, 
-    title: "Hebrew Alphabet Song - אלף בית", 
-    thumbnail: "https://img.youtube.com/vi/UiCzoTs1AdE/maxresdefault.jpg",
-    youtubeId: "UiCzoTs1AdE",
-    duration: "3:45", 
-    coins: 40,
-    category: "Alphabet",
-    transcript: [
-      { hebrew: "אָלֶף", transliteration: "Alef", meaning: "First letter", time: "0:10" },
-      { hebrew: "בֵּית", transliteration: "Bet", meaning: "Second letter", time: "0:15" },
-      { hebrew: "גִּימֶל", transliteration: "Gimel", meaning: "Third letter", time: "0:20" },
-      { hebrew: "דָּלֶת", transliteration: "Dalet", meaning: "Fourth letter", time: "0:25" },
-      { hebrew: "הֵא", transliteration: "Hey", meaning: "Fifth letter", time: "0:30" },
-      { hebrew: "וָו", transliteration: "Vav", meaning: "Sixth letter", time: "0:35" },
-    ]
-  },
-  { 
-    id: 3, 
-    title: "Numbers 1-10 - מספרים", 
-    thumbnail: "https://img.youtube.com/vi/DlF2bVpPO3o/maxresdefault.jpg",
-    youtubeId: "DlF2bVpPO3o",
-    duration: "5:10", 
-    coins: 45,
-    category: "Numbers",
-    transcript: [
-      { hebrew: "אַחַת", transliteration: "Achat", meaning: "One", time: "0:20" },
-      { hebrew: "שְׁתַּיִם", transliteration: "Shtayim", meaning: "Two", time: "0:35" },
-      { hebrew: "שָׁלוֹשׁ", transliteration: "Shalosh", meaning: "Three", time: "0:50" },
-      { hebrew: "אַרְבַּע", transliteration: "Arba", meaning: "Four", time: "1:05" },
-      { hebrew: "חָמֵשׁ", transliteration: "Chamesh", meaning: "Five", time: "1:20" },
-      { hebrew: "שֵׁשׁ", transliteration: "Shesh", meaning: "Six", time: "1:35" },
-      { hebrew: "שֶׁבַע", transliteration: "Sheva", meaning: "Seven", time: "1:50" },
-      { hebrew: "שְׁמוֹנֶה", transliteration: "Shmoneh", meaning: "Eight", time: "2:05" },
-      { hebrew: "תֵּשַׁע", transliteration: "Tesha", meaning: "Nine", time: "2:20" },
-      { hebrew: "עֶשֶׂר", transliteration: "Eser", meaning: "Ten", time: "2:35" },
-    ]
-  },
-  { 
-    id: 4, 
     title: "Learn Hebrew Every Day - הַרְגָלִים", 
     thumbnail: "https://img.youtube.com/vi/n8XvkVp6CfQ/maxresdefault.jpg",
     youtubeId: "n8XvkVp6CfQ",
@@ -102,8 +41,6 @@ const level1Videos = [
       { hebrew: "לִקְרוֹא", transliteration: "Likro", meaning: "To read", time: "8:00" },
       { hebrew: "לִכְתּוֹב", transliteration: "Lichtov", meaning: "To write", time: "8:30" },
       { hebrew: "לִשְׁמוֹעַ", transliteration: "Lishmoa", meaning: "To listen", time: "9:00" },
-      { hebrew: "סְרָטוֹן", transliteration: "Sirton", meaning: "Video", time: "9:30" },
-      { hebrew: "טִיפִּים", transliteration: "Tipim", meaning: "Tips", time: "10:00" },
     ],
     exercises: [
       {
@@ -119,22 +56,224 @@ const level1Videos = [
         correct: 0
       },
       {
-        type: "fill_blank",
-        question: "Complete: '___ levater' means 'Don't give up'",
-        answer: "Lo",
-        hebrew: "לֹא לְוַתֵּר"
-      },
-      {
         type: "multiple_choice",
         question: "What is the opposite of 'קָשֶׁה' (Kashe - Hard)?",
         options: ["Asuk", "Kal", "Zman", "Hergel"],
         correct: 1
       },
+    ]
+  },
+  { 
+    id: 2, 
+    title: "Israeli School System 🎒", 
+    thumbnail: "https://img.youtube.com/vi/L93zseSWcsg/maxresdefault.jpg",
+    youtubeId: "L93zseSWcsg",
+    duration: "14:53", 
+    coins: 80,
+    category: "School",
+    transcript: [
+      { hebrew: "בֵּית סֵפֶר", transliteration: "Beit sefer", meaning: "School", time: "0:30" },
+      { hebrew: "גַּן יְלָדִים", transliteration: "Gan yeladim", meaning: "Kindergarten", time: "1:00" },
+      { hebrew: "תִּיכוֹן", transliteration: "Tichon", meaning: "High school", time: "1:30" },
+      { hebrew: "תַּלְמִיד", transliteration: "Talmid", meaning: "Student (m)", time: "2:00" },
+      { hebrew: "תַּלְמִידָה", transliteration: "Talmida", meaning: "Student (f)", time: "2:15" },
+      { hebrew: "מוֹרֶה", transliteration: "Moreh", meaning: "Teacher (m)", time: "2:30" },
+      { hebrew: "מוֹרָה", transliteration: "Mora", meaning: "Teacher (f)", time: "2:45" },
+      { hebrew: "שִׁעוּר", transliteration: "Shiur", meaning: "Lesson", time: "3:00" },
+      { hebrew: "הַפְסָקָה", transliteration: "Hafsaka", meaning: "Break", time: "3:30" },
+      { hebrew: "שִׁעוּרֵי בַּיִת", transliteration: "Shiurei bayit", meaning: "Homework", time: "4:00" },
+      { hebrew: "מִבְחָן", transliteration: "Mivchan", meaning: "Test/Exam", time: "4:30" },
+      { hebrew: "צִיּוּן", transliteration: "Tziun", meaning: "Grade", time: "5:00" },
+    ],
+    exercises: [
       {
-        type: "translate",
-        question: "Translate to English: לִלְמוֹד עִבְרִית כָּל יוֹם",
-        answer: "To learn Hebrew every day"
-      }
+        type: "multiple_choice",
+        question: "What does 'בֵּית סֵפֶר' mean?",
+        options: ["House", "School", "Library", "Office"],
+        correct: 1
+      },
+      {
+        type: "multiple_choice",
+        question: "How do you say 'homework' in Hebrew?",
+        options: ["Mivchan", "Shiurei bayit", "Hafsaka", "Tziun"],
+        correct: 1
+      },
+    ]
+  },
+  { 
+    id: 3, 
+    title: "Public Transportation 🚌", 
+    thumbnail: "https://img.youtube.com/vi/IS11NMk9sW8/maxresdefault.jpg",
+    youtubeId: "IS11NMk9sW8",
+    duration: "13:44", 
+    coins: 70,
+    category: "Travel",
+    transcript: [
+      { hebrew: "אוֹטוֹבּוּס", transliteration: "Otobus", meaning: "Bus", time: "0:30" },
+      { hebrew: "רַכֶּבֶת", transliteration: "Rakevet", meaning: "Train", time: "1:00" },
+      { hebrew: "תַּחֲנָה", transliteration: "Tachana", meaning: "Station", time: "1:30" },
+      { hebrew: "מוֹנִית", transliteration: "Monit", meaning: "Taxi", time: "2:00" },
+      { hebrew: "כַּרְטִיס", transliteration: "Kartis", meaning: "Ticket", time: "2:30" },
+      { hebrew: "נוֹסֵעַ", transliteration: "Nosea", meaning: "Passenger/Traveling", time: "3:00" },
+      { hebrew: "לַעֲלוֹת", transliteration: "La'alot", meaning: "To get on", time: "3:30" },
+      { hebrew: "לָרֶדֶת", transliteration: "Laredet", meaning: "To get off", time: "4:00" },
+      { hebrew: "עוֹצֵר", transliteration: "Otzer", meaning: "Stops", time: "4:30" },
+      { hebrew: "קַו", transliteration: "Kav", meaning: "Line/Route", time: "5:00" },
+    ],
+    exercises: [
+      {
+        type: "multiple_choice",
+        question: "What does 'רַכֶּבֶת' mean?",
+        options: ["Bus", "Taxi", "Train", "Plane"],
+        correct: 2
+      },
+      {
+        type: "multiple_choice",
+        question: "How do you say 'ticket' in Hebrew?",
+        options: ["Tachana", "Kartis", "Monit", "Kav"],
+        correct: 1
+      },
+    ]
+  },
+  { 
+    id: 4, 
+    title: "Van Life Day in Hebrew 🚐", 
+    thumbnail: "https://img.youtube.com/vi/Q2TToSUWbAw/maxresdefault.jpg",
+    youtubeId: "Q2TToSUWbAw",
+    duration: "9:42", 
+    coins: 55,
+    category: "Daily Life",
+    transcript: [
+      { hebrew: "בֹּקֶר", transliteration: "Boker", meaning: "Morning", time: "0:30" },
+      { hebrew: "לְהִתְעוֹרֵר", transliteration: "Lehit'orer", meaning: "To wake up", time: "1:00" },
+      { hebrew: "לְבַשֵּׁל", transliteration: "Levashel", meaning: "To cook", time: "1:30" },
+      { hebrew: "אֹכֶל", transliteration: "Ochel", meaning: "Food", time: "2:00" },
+      { hebrew: "עֲבוֹדָה", transliteration: "Avoda", meaning: "Work", time: "2:30" },
+      { hebrew: "מַחְשֵׁב", transliteration: "Machshev", meaning: "Computer", time: "3:00" },
+      { hebrew: "טֶבַע", transliteration: "Teva", meaning: "Nature", time: "3:30" },
+      { hebrew: "חוֹפֶשׁ", transliteration: "Chofesh", meaning: "Freedom", time: "4:00" },
+      { hebrew: "לָנוּחַ", transliteration: "Lanuach", meaning: "To rest", time: "4:30" },
+      { hebrew: "לַיְלָה", transliteration: "Layla", meaning: "Night", time: "5:00" },
+    ],
+  },
+  { 
+    id: 5, 
+    title: "Travel Vocabulary - Packing ✈️", 
+    thumbnail: "https://img.youtube.com/vi/Lfj52BSoFq0/maxresdefault.jpg",
+    youtubeId: "Lfj52BSoFq0",
+    duration: "13:11", 
+    coins: 70,
+    category: "Travel",
+    transcript: [
+      { hebrew: "מִזְוָדָה", transliteration: "Mizvada", meaning: "Suitcase", time: "0:30" },
+      { hebrew: "לֶאֱרוֹז", transliteration: "Le'eroz", meaning: "To pack", time: "1:00" },
+      { hebrew: "בְּגָדִים", transliteration: "Begadim", meaning: "Clothes", time: "1:30" },
+      { hebrew: "דַּרְכּוֹן", transliteration: "Darkon", meaning: "Passport", time: "2:00" },
+      { hebrew: "טִיסָה", transliteration: "Tisa", meaning: "Flight", time: "2:30" },
+      { hebrew: "שָׂדֶה תְּעוּפָה", transliteration: "Sdeh te'ufa", meaning: "Airport", time: "3:00" },
+      { hebrew: "לִנְסֹעַ", transliteration: "Linsoa", meaning: "To travel", time: "3:30" },
+      { hebrew: "חֻפְשָׁה", transliteration: "Chufsha", meaning: "Vacation", time: "4:00" },
+      { hebrew: "מָלוֹן", transliteration: "Malon", meaning: "Hotel", time: "4:30" },
+      { hebrew: "תַּיָּר", transliteration: "Tayar", meaning: "Tourist", time: "5:00" },
+    ],
+    exercises: [
+      {
+        type: "multiple_choice",
+        question: "What does 'מִזְוָדָה' mean?",
+        options: ["Passport", "Ticket", "Suitcase", "Hotel"],
+        correct: 2
+      },
+      {
+        type: "multiple_choice",
+        question: "How do you say 'airport' in Hebrew?",
+        options: ["Tisa", "Malon", "Darkon", "Sdeh te'ufa"],
+        correct: 3
+      },
+    ]
+  },
+  { 
+    id: 6, 
+    title: "Winter Day in Israel ☕❄️", 
+    thumbnail: "https://img.youtube.com/vi/owShOrwDC-c/maxresdefault.jpg",
+    youtubeId: "owShOrwDC-c",
+    duration: "13:00", 
+    coins: 65,
+    category: "Seasons",
+    transcript: [
+      { hebrew: "חֹרֶף", transliteration: "Choref", meaning: "Winter", time: "0:30" },
+      { hebrew: "קַר", transliteration: "Kar", meaning: "Cold", time: "1:00" },
+      { hebrew: "גֶּשֶׁם", transliteration: "Geshem", meaning: "Rain", time: "1:30" },
+      { hebrew: "מִטְרִיָּה", transliteration: "Mitriya", meaning: "Umbrella", time: "2:00" },
+      { hebrew: "מְעִיל", transliteration: "Me'il", meaning: "Coat", time: "2:30" },
+      { hebrew: "חַם", transliteration: "Cham", meaning: "Hot/Warm", time: "3:00" },
+      { hebrew: "קָפֶה", transliteration: "Kafe", meaning: "Coffee", time: "3:30" },
+      { hebrew: "תֵּה", transliteration: "Te", meaning: "Tea", time: "4:00" },
+      { hebrew: "בַּיִת", transliteration: "Bayit", meaning: "Home", time: "4:30" },
+      { hebrew: "נָעִים", transliteration: "Na'im", meaning: "Pleasant/Cozy", time: "5:00" },
+    ],
+  },
+  { 
+    id: 7, 
+    title: "Hebrew Learning Tips 📚", 
+    thumbnail: "https://img.youtube.com/vi/gUmuuDHg2vM/maxresdefault.jpg",
+    youtubeId: "gUmuuDHg2vM",
+    duration: "12:12", 
+    coins: 60,
+    category: "Learning",
+    transcript: [
+      { hebrew: "טִיפ", transliteration: "Tip", meaning: "Tip", time: "0:30" },
+      { hebrew: "עֵצָה", transliteration: "Etza", meaning: "Advice", time: "1:00" },
+      { hebrew: "תַּרְגּוּל", transliteration: "Tirgul", meaning: "Practice", time: "1:30" },
+      { hebrew: "שִׁנּוּן", transliteration: "Shinun", meaning: "Memorization", time: "2:00" },
+      { hebrew: "הֲבָנָה", transliteration: "Havana", meaning: "Understanding", time: "2:30" },
+      { hebrew: "אוֹצַר מִלִּים", transliteration: "Otzar milim", meaning: "Vocabulary", time: "3:00" },
+      { hebrew: "דִּקְדּוּק", transliteration: "Dikduk", meaning: "Grammar", time: "3:30" },
+      { hebrew: "הִגּוּי", transliteration: "Higui", meaning: "Pronunciation", time: "4:00" },
+      { hebrew: "שִׂיחָה", transliteration: "Sicha", meaning: "Conversation", time: "4:30" },
+      { hebrew: "בִּטָּחוֹן", transliteration: "Bitachon", meaning: "Confidence", time: "5:00" },
+    ],
+    exercises: [
+      {
+        type: "multiple_choice",
+        question: "What does 'אוֹצַר מִלִּים' mean?",
+        options: ["Grammar", "Vocabulary", "Pronunciation", "Practice"],
+        correct: 1
+      },
+    ]
+  },
+  { 
+    id: 8, 
+    title: "Adult Independence 🏠", 
+    thumbnail: "https://img.youtube.com/vi/bAmh4Acx9jI/maxresdefault.jpg",
+    youtubeId: "bAmh4Acx9jI",
+    duration: "14:01", 
+    coins: 75,
+    category: "Adult Life",
+    transcript: [
+      { hebrew: "עַצְמָאוּת", transliteration: "Atzma'ut", meaning: "Independence", time: "0:30" },
+      { hebrew: "דִּירָה", transliteration: "Dira", meaning: "Apartment", time: "1:00" },
+      { hebrew: "שְׂכִירוּת", transliteration: "Sechirut", meaning: "Rent", time: "1:30" },
+      { hebrew: "חֶשְׁבּוֹנוֹת", transliteration: "Cheshbonot", meaning: "Bills", time: "2:00" },
+      { hebrew: "מַשְׂכּוֹרֶת", transliteration: "Maskoret", meaning: "Salary", time: "2:30" },
+      { hebrew: "חִסָּכוֹן", transliteration: "Chisayon", meaning: "Savings", time: "3:00" },
+      { hebrew: "אַחְרָיוּת", transliteration: "Achrayut", meaning: "Responsibility", time: "3:30" },
+      { hebrew: "בּוֹגֵר", transliteration: "Boger", meaning: "Adult/Graduate", time: "4:00" },
+      { hebrew: "הַצְלָחָה", transliteration: "Hatzlacha", meaning: "Success", time: "4:30" },
+      { hebrew: "עָתִיד", transliteration: "Atid", meaning: "Future", time: "5:00" },
+    ],
+    exercises: [
+      {
+        type: "multiple_choice",
+        question: "What does 'עַצְמָאוּת' mean?",
+        options: ["Apartment", "Independence", "Success", "Future"],
+        correct: 1
+      },
+      {
+        type: "multiple_choice",
+        question: "How do you say 'salary' in Hebrew?",
+        options: ["Sechirut", "Chisayon", "Maskoret", "Cheshbonot"],
+        correct: 2
+      },
     ]
   },
 ];
