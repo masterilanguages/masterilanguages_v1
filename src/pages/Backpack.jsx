@@ -145,35 +145,7 @@ export default function Backpack() {
     }
   };
 
-  const generateMnemonics = async (wordObj) => {
-    setLoadingMnemonics(true);
-    try {
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Create 3 very short mnemonic phrases (MAX 5 words each) to remember the word "${wordObj.word}" which means "${wordObj.meaning}".
-        Use the SOUND of the word to create memorable associations with OBJECTS or THINGS in English (not people's names).
-        Keep each phrase to 5 words or less.`,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            suggestions: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  phrase: { type: "string" },
-                  imagePrompt: { type: "string" }
-                }
-              }
-            }
-          }
-        }
-      });
-      setNewWordMnemonics(result.suggestions);
-    } catch (e) {
-      console.error(e);
-    }
-    setLoadingMnemonics(false);
-  };
+
 
   const generateImage = async (prompt) => {
     setGeneratingImage(true);
