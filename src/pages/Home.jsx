@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import GameHeader from "../components/game/GameHeader";
-
+import TranslatorWidget from "../components/TranslatorWidget";
 
 import ActivityCard from "../components/game/ActivityCard";
 import TimelineBar from "../components/game/TimelineBar";
@@ -61,6 +61,8 @@ const levels = [
   { id: 5, name: "Level 5", subtitle: "Master", icon: Star, gradient: "from-purple-500 to-violet-500", activities: [] },
 ];
 
+const MASTER_EMAILS = ["master@example.com", "admin@base44.com"]; // Add master user emails here
+
 export default function Home() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -71,6 +73,20 @@ export default function Home() {
   const [timer, setTimer] = useState(0);
   const [timerRunning, setTimerRunning] = useState(false);
   const [timerSpeed, setTimerSpeed] = useState(1);
+  const [currentUserEmail, setCurrentUserEmail] = useState(null);
+
+  // Get current user email
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const user = await base44.auth.me();
+        setCurrentUserEmail(user?.email);
+      } catch (e) {}
+    };
+    fetchUser();
+  }, []);
+
+  const isMasterUser = MASTER_EMAILS.includes(currentUserEmail);
 
   const { data: userProfile, isLoading: profileLoading } = useQuery({
     queryKey: ['userProfile'],
@@ -378,6 +394,11 @@ export default function Home() {
 
             {selectedLevel.activities?.length > 0 ? (
               <div className="space-y-3">
+                {isMasterUser && (
+                  <div className="bg-yellow-500/20 border border-yellow-500/50 rounded-xl p-3 mb-4">
+                    <p className="text-yellow-400 text-sm font-medium">👑 Master Mode: All levels unlocked</p>
+                  </div>
+                )}
                 {selectedLevel.activities.map((activity) => {
                   // Check if lesson is completed
                   const lessonName = activity.page;
@@ -439,27 +460,50 @@ export default function Home() {
             {/* 5 Levels */}
             <div className="mb-8">
               <h2 className="text-2xl font-bold text-white mb-6 text-center">Choose Your Level</h2>
+              {isMasterUser && (
+                <div className="bg-yellow-500/20 border border-yellow-500/50 rounded-xl p-3 mb-4 text-center">
+                  <p className="text-yellow-400 text-sm font-medium">👑 Master Mode: All levels unlocked</p>
+                </div>
+              )}
               <div className="flex justify-center gap-4 flex-wrap">
                 {levels.map((level, idx) => {
                   const Icon = level.icon;
+                  // Check if level is unlocked (master users have all unlocked)
+                  const previousLevelCompleted = level.id === 1 || isMasterUser || 
+                    lessonProgress.some(lp => lp.lesson_name?.includes(`Level${level.id - 1}`) && lp.completed);
+                  const isLevelUnlocked = isMasterUser || level.id === 1 || previousLevelCompleted;
+                  
                   return (
                     <motion.button
                       key={level.id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.1 }}
-                      whileHover={{ scale: 1.1, y: -5 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setSelectedLevel(level)}
-                      className={`relative w-20 h-20 rounded-2xl bg-gradient-to-br ${level.gradient} shadow-lg flex flex-col items-center justify-center cursor-pointer border-2 border-white/20 hover:border-white/50 transition-all`}
+                      whileHover={isLevelUnlocked ? { scale: 1.1, y: -5 } : {}}
+                      whileTap={isLevelUnlocked ? { scale: 0.95 } : {}}
+                      onClick={() => {
+                        if (isLevelUnlocked) {
+                          setSelectedLevel(level);
+                        } else {
+                          toast.error(`Complete Level ${level.id - 1} first to unlock this!`);
+                        }
+                      }}
+                      className={`relative w-20 h-20 rounded-2xl bg-gradient-to-br ${level.gradient} shadow-lg flex flex-col items-center justify-center cursor-pointer border-2 ${isLevelUnlocked ? 'border-white/20 hover:border-white/50' : 'border-white/10 opacity-50'} transition-all`}
                     >
                       <Icon className="w-8 h-8 text-white mb-1" />
                       <span className="text-white font-bold text-sm">{level.id}</span>
-                      <motion.div
-                        className="absolute -inset-1 rounded-2xl bg-white/20"
-                        animate={{ opacity: [0, 0.5, 0] }}
-                        transition={{ duration: 2, repeat: Infinity, delay: idx * 0.2 }}
-                      />
+                      {!isLevelUnlocked && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-2xl">
+                          <span className="text-2xl">🔒</span>
+                        </div>
+                      )}
+                      {isLevelUnlocked && (
+                        <motion.div
+                          className="absolute -inset-1 rounded-2xl bg-white/20"
+                          animate={{ opacity: [0, 0.5, 0] }}
+                          transition={{ duration: 2, repeat: Infinity, delay: idx * 0.2 }}
+                        />
+                      )}
                     </motion.button>
                   );
                 })}
@@ -506,6 +550,9 @@ export default function Home() {
         onRestartLife={handleRestartLife}
         avatarName={userProfile?.avatar_name || 'Avatar'}
       />
+
+      {/* Translator Widget */}
+      <TranslatorWidget />
     </div>
   );
 }
