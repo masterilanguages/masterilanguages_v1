@@ -28,6 +28,12 @@ const colors = [
 export default function ColorsLesson() {
   const [selectedColor, setSelectedColor] = useState(null);
   const [colorRatings, setColorRatings] = useState({});
+  const [gameMode, setGameMode] = useState(false);
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [gameQuestions, setGameQuestions] = useState([]);
+  const [colorScores, setColorScores] = useState({}); // tracks correct answers per color
+  const [showResult, setShowResult] = useState(null);
+  const [gameComplete, setGameComplete] = useState(false);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
