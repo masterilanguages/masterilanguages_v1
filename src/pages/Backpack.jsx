@@ -359,31 +359,32 @@ export default function Backpack() {
               <p className="text-white/60 text-sm">Tap words to add to New Words:</p>
               {sentences.map((sentence, idx) => (
                 <div key={idx} className="bg-white/5 border border-white/10 rounded-xl p-3">
-                  <div className="flex flex-wrap gap-1 mb-1">
-                    {sentence.transliterated.split(' ').map((word, widx) => {
-                      const wordInfo = sentence.words?.find(w => 
-                        w.word.toLowerCase() === word.toLowerCase().replace(/[.,!?]/g, '')
-                      );
-                      const isQueued = newWords.find(w => w.word.toLowerCase() === wordInfo?.word?.toLowerCase());
-                      return (
-                        <button
-                          key={widx}
-                          onClick={() => {
-                            const cleanWord = word.replace(/[.,!?]/g, '');
-                            const meaning = wordInfo?.meaning || "";
-                            addToNewWords(cleanWord, meaning);
-                          }}
-                          className={`px-1 rounded ${
-                            isQueued 
-                              ? "text-green-400 bg-green-500/20" 
-                              : "text-cyan-400 hover:bg-cyan-500/20 underline decoration-dotted cursor-pointer"
-                          }`}
-                        >
-                          {word}
-                        </button>
-                      );
-                    })}
-                  </div>
+                  <div className="flex flex-wrap gap-2 mb-1">
+                                            {sentence.transliterated.split(' ').map((word, widx) => {
+                                              const wordInfo = sentence.words?.find(w => 
+                                                w.word.toLowerCase() === word.toLowerCase().replace(/[.,!?]/g, '')
+                                              );
+                                              const isQueued = newWords.find(w => w.word.toLowerCase() === wordInfo?.word?.toLowerCase());
+                                              return (
+                                                <button
+                                                  key={widx}
+                                                  onClick={() => {
+                                                    const cleanWord = word.replace(/[.,!?]/g, '');
+                                                    const meaning = wordInfo?.meaning || "";
+                                                    addToNewWords(cleanWord, meaning);
+                                                  }}
+                                                  className={`flex flex-col items-center px-1 rounded ${
+                                                    isQueued 
+                                                      ? "text-green-400 bg-green-500/20" 
+                                                      : "hover:bg-cyan-500/20 cursor-pointer"
+                                                  }`}
+                                                >
+                                                  <span className="text-white/70 text-sm" dir="rtl">{wordInfo?.hebrew || ""}</span>
+                                                  <span className={`text-cyan-400 ${isQueued ? "" : "underline decoration-dotted"}`}>{word}</span>
+                                                </button>
+                                              );
+                                            })}
+                                          </div>
                   <p className="text-white/50 text-sm">{sentence.english}</p>
                 </div>
               ))}
