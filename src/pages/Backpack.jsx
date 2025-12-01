@@ -177,7 +177,6 @@ export default function Backpack() {
   const finishNewWord = () => {
     setNewWords(prev => prev.filter(w => w.word !== activeNewWord.word));
     setActiveNewWord(null);
-    setNewWordMnemonics(null);
     setNewWordImage(null);
     setImageApproved(false);
     setNewWordCustomMnemonic("");
