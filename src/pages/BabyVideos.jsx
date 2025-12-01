@@ -368,6 +368,7 @@ const level1Videos = [
 export default function BabyVideos() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [expandedVideoId, setExpandedVideoId] = useState(null);
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [backpackOpen, setBackpackOpen] = useState(false);
   const [showFluent, setShowFluent] = useState(false);
@@ -833,7 +834,7 @@ Create about 15-20 conversational lines that naturally introduce and use these v
               >
                 {/* Video Header */}
                 <div 
-                  onClick={() => setSelectedVideo(selectedVideo?.id === video.id ? null : video)}
+                  onClick={() => setExpandedVideoId(expandedVideoId === video.id ? null : video.id)}
                   className="cursor-pointer hover:bg-white/5 transition-all"
                 >
                   <div className="flex gap-4 p-4">
@@ -868,13 +869,13 @@ Create about 15-20 conversational lines that naturally introduce and use these v
                         </div>
                       </div>
                     </div>
-                    <ChevronRight className={`w-5 h-5 text-white/40 transition-transform ${selectedVideo?.id === video.id ? 'rotate-90' : ''}`} />
+                    <ChevronRight className={`w-5 h-5 text-white/40 transition-transform ${expandedVideoId === video.id ? 'rotate-90' : ''}`} />
                   </div>
                 </div>
 
                 {/* Expanded Content - Only show when clicked */}
                 <AnimatePresence>
-                {selectedVideo?.id === video.id && (
+                {expandedVideoId === video.id && (
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
