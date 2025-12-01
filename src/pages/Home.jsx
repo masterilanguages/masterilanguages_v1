@@ -213,44 +213,123 @@ export default function Home() {
       <TimelineBar currentAge={currentAge} />
 
       <div className="relative z-10 max-w-4xl mx-auto px-4 py-8">
-        {/* 5 Levels */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-white mb-6 text-center">Choose Your Level</h2>
-          <div className="flex justify-center gap-4 flex-wrap">
-            {levels.map((level, idx) => {
-              const Icon = level.icon;
-              return (
-                <motion.button
-                  key={level.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.1 }}
-                  whileHover={{ scale: 1.1, y: -5 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setSelectedLevel(level)}
-                  className={`relative w-20 h-20 rounded-2xl bg-gradient-to-br ${level.gradient} shadow-lg flex flex-col items-center justify-center cursor-pointer border-2 border-white/20 hover:border-white/50 transition-all`}
-                >
-                  <Icon className="w-8 h-8 text-white mb-1" />
-                  <span className="text-white font-bold text-sm">{level.id}</span>
-                  <motion.div
-                    className="absolute -inset-1 rounded-2xl bg-white/20"
-                    animate={{ opacity: [0, 0.5, 0] }}
-                    transition={{ duration: 2, repeat: Infinity, delay: idx * 0.2 }}
-                  />
-                </motion.button>
-              );
-            })}
-          </div>
-        </div>
+        {/* Show activity content OR levels */}
+        {selectedActivity ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center"
+          >
+            <button 
+              onClick={() => setSelectedActivity(null)}
+              className="mb-6 text-white/60 hover:text-white flex items-center gap-2 mx-auto"
+            >
+              <ArrowRight className="w-4 h-4 rotate-180" /> Back to levels
+            </button>
 
-        {/* Baby Stage: Baby Game */}
-        {isBaby && (
-          <BabyGame 
-            avatarName={userProfile?.avatar_name || 'Baby'}
-            correctCount={userProfile?.toddler_needs_completed || 0}
-            onCorrect={handleToddlerNeedComplete}
-            onWatchTV={() => navigate(createPageUrl("BabyVideos"))}
-          />
+            <div className="text-6xl mb-4">👶</div>
+            <h2 className="text-2xl font-bold text-white mb-4">
+              Will you be my babysitter and learn Hebrew with me? 🍼
+            </h2>
+
+            <BabyGame 
+              avatarName={userProfile?.avatar_name || 'Baby'}
+              correctCount={userProfile?.toddler_needs_completed || 0}
+              onCorrect={handleToddlerNeedComplete}
+              onWatchTV={() => navigate(createPageUrl("BabyVideos"))}
+            />
+          </motion.div>
+        ) : selectedLevel ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <button 
+              onClick={() => setSelectedLevel(null)}
+              className="mb-6 text-white/60 hover:text-white flex items-center gap-2"
+            >
+              <ArrowRight className="w-4 h-4 rotate-180" /> Back to levels
+            </button>
+
+            <div className="flex items-center gap-4 mb-6">
+              <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${selectedLevel.gradient} flex items-center justify-center`}>
+                {selectedLevel.icon && <selectedLevel.icon className="w-7 h-7 text-white" />}
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-white">{selectedLevel.name}</h2>
+                <p className="text-white/60">{selectedLevel.subtitle}</p>
+              </div>
+            </div>
+
+            {selectedLevel.activities?.length > 0 ? (
+              <div className="space-y-3">
+                {selectedLevel.activities.map((activity) => (
+                  <motion.button
+                    key={activity.id}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => {
+                      if (activity.id === "baby_words") {
+                        setSelectedActivity(activity);
+                      } else {
+                        navigate(createPageUrl(activity.page));
+                      }
+                    }}
+                    className="w-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-cyan-400/50 rounded-xl p-4 text-left transition-all"
+                  >
+                    <div className="flex items-start gap-3">
+                      <span className="text-2xl">{activity.icon}</span>
+                      <div className="flex-1">
+                        <p className="text-white font-medium">{activity.name}</p>
+                        <div className="flex items-center gap-2 mt-1 text-white/60 text-sm">
+                          <Clock className="w-3 h-3" />
+                          <span>{activity.duration}</span>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-white/40" />
+                    </div>
+                  </motion.button>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 bg-white/5 rounded-xl border border-white/10">
+                <p className="text-white/60">Coming soon!</p>
+                <p className="text-white/40 text-sm mt-2">This level is being prepared for you.</p>
+              </div>
+            )}
+          </motion.div>
+        ) : (
+          <>
+            {/* 5 Levels */}
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold text-white mb-6 text-center">Choose Your Level</h2>
+              <div className="flex justify-center gap-4 flex-wrap">
+                {levels.map((level, idx) => {
+                  const Icon = level.icon;
+                  return (
+                    <motion.button
+                      key={level.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.1 }}
+                      whileHover={{ scale: 1.1, y: -5 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setSelectedLevel(level)}
+                      className={`relative w-20 h-20 rounded-2xl bg-gradient-to-br ${level.gradient} shadow-lg flex flex-col items-center justify-center cursor-pointer border-2 border-white/20 hover:border-white/50 transition-all`}
+                    >
+                      <Icon className="w-8 h-8 text-white mb-1" />
+                      <span className="text-white font-bold text-sm">{level.id}</span>
+                      <motion.div
+                        className="absolute -inset-1 rounded-2xl bg-white/20"
+                        animate={{ opacity: [0, 0.5, 0] }}
+                        transition={{ duration: 2, repeat: Infinity, delay: idx * 0.2 }}
+                      />
+                    </motion.button>
+                  );
+                })}
+              </div>
+            </div>
+          </>
         )}
       </div>
 
