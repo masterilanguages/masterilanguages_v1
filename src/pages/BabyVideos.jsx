@@ -226,6 +226,56 @@ export default function BabyVideos() {
       toast.success(`+${selectedVideo.coins} coins earned! 🪙`);
     }
     setSelectedVideo(null);
+    setShowExercises(false);
+    setCurrentExercise(0);
+    setExerciseAnswers({});
+    setExerciseResults(null);
+  };
+
+  const addToBackpack = async (item) => {
+    const existingWord = wordRatings.find(w => w.word === item.hebrew);
+    if (existingWord) {
+      toast.info("Already in backpack!");
+      return;
+    }
+    await createWordMutation.mutateAsync({
+      word: item.hebrew,
+      translation: item.meaning,
+      phonetic: item.transliteration,
+      category: "wordbank",
+      times_practiced: 1,
+      mastered: false,
+    });
+    toast.success(`Added "${item.transliteration}" to backpack! 🎒`);
+  };
+
+  const checkExercise = (exerciseIdx, answer) => {
+    const exercise = selectedVideo?.exercises?.[exerciseIdx];
+    if (!exercise) return;
+    
+    let isCorrect = false;
+    if (exercise.type === "multiple_choice") {
+      isCorrect = answer === exercise.correct;
+    } else if (exercise.type === "fill_blank") {
+      isCorrect = answer.toLowerCase().trim() === exercise.answer.toLowerCase();
+    } else if (exercise.type === "translate") {
+      isCorrect = answer.toLowerCase().trim().includes(exercise.answer.toLowerCase().substring(0, 10));
+    }
+    
+    setExerciseAnswers(prev => ({ ...prev, [exerciseIdx]: { answer, isCorrect } }));
+  };
+
+  const finishExercises = () => {
+    const correct = Object.values(exerciseAnswers).filter(a => a.isCorrect).length;
+    const total = selectedVideo?.exercises?.length || 0;
+    setExerciseResults({ correct, total });
+    if (correct === total) {
+      updateCoinsMutation.mutate({ coins: (userCoins?.coins || 0) + 25 });
+      toast.success("Perfect score! +25 bonus coins! 🎉");
+    } else if (correct > 0) {
+      updateCoinsMutation.mutate({ coins: (userCoins?.coins || 0) + (correct * 5) });
+      toast.success(`+${correct * 5} coins for ${correct}/${total} correct!`);
+    }
   };
 
   const fluentWords = wordRatings.filter(w => w.times_practiced >= 5);
