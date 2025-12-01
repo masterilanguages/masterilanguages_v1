@@ -63,6 +63,7 @@ export default function Home() {
   const [buyCoinsDialog, setBuyCoinsDialog] = useState(false);
   const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState(null);
+  const [selectedActivity, setSelectedActivity] = useState(null);
 
   const { data: userProfile, isLoading: profileLoading } = useQuery({
     queryKey: ['userProfile'],
