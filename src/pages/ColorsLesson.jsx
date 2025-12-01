@@ -461,20 +461,22 @@ export default function ColorsLesson() {
           })}
         </div>
 
-        {/* Complete button */}
-        {ratedCount === colors.length && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mt-6"
-          >
-            <Button
-              onClick={() => navigate(createPageUrl("ColorsTest"))}
-              className="w-full bg-gradient-to-r from-green-500 to-emerald-500 py-6 text-lg"
-            >
-              <CheckCircle className="w-5 h-5 mr-2" /> Take the Test
-            </Button>
-          </motion.div>
+            {/* Complete button */}
+            {ratedCount === colors.length && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-6"
+              >
+                <Button
+                  onClick={startGame}
+                  className="w-full bg-gradient-to-r from-green-500 to-emerald-500 py-6 text-lg"
+                >
+                  🎮 Play Game to Test Knowledge
+                </Button>
+              </motion.div>
+            )}
+          </>
         )}
       </div>
 
