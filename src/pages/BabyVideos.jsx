@@ -865,36 +865,18 @@ Create about 15-20 conversational lines that naturally introduce and use these v
         ) : (
           <div className="space-y-4">
             {/* Add Custom Video Section */}
-            <div 
-              className={`bg-white/5 backdrop-blur-xl rounded-2xl border-2 border-dashed ${isDragging ? 'border-cyan-400 bg-cyan-500/10' : 'border-white/20'} p-6 text-center transition-all`}
-              onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }}
-              onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }}
-              onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false); }}
-              onDrop={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setIsDragging(false);
-                const text = e.dataTransfer.getData('text/plain') || e.dataTransfer.getData('text/uri-list') || e.dataTransfer.getData('text');
-                if (text) {
-                  setCustomVideoUrl(text);
-                  toast.success("Link dropped! Click + to add.");
-                }
-              }}
-            >
-              <p className="text-white/60 mb-3">🎬 Drag a YouTube link here or paste below</p>
-              <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+            <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/20 p-6">
+              <p className="text-white/60 mb-3 text-center">🎬 Add a YouTube video</p>
+              <div className="flex gap-2">
                 <input
-                  type="url"
+                  type="text"
                   value={customVideoUrl}
                   onChange={(e) => setCustomVideoUrl(e.target.value)}
-                  onKeyDown={(e) => e.stopPropagation()}
-                  placeholder="https://www.youtube.com/watch?v=..."
-                  className="flex-1 px-3 py-2 rounded-lg bg-slate-800 border border-white/30 text-white placeholder:text-white/40 outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/50"
-                  autoComplete="off"
+                  placeholder="Paste YouTube URL here..."
+                  className="flex-1 px-4 py-3 rounded-lg bg-slate-800 border border-white/30 text-white placeholder:text-white/50 outline-none focus:border-cyan-400"
                 />
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
+                  onClick={() => {
                     const ytId = extractYouTubeId(customVideoUrl);
                     if (ytId) {
                       toast.success("Video added! Feature coming soon.");
@@ -903,9 +885,9 @@ Create about 15-20 conversational lines that naturally introduce and use these v
                       toast.error("Invalid YouTube URL");
                     }
                   }}
-                  className="px-4 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600"
+                  className="px-5 py-3 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 font-medium"
                 >
-                  <Plus className="w-4 h-4" />
+                  Add
                 </button>
               </div>
             </div>
