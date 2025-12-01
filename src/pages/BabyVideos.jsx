@@ -144,6 +144,12 @@ export default function BabyVideos() {
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [backpackOpen, setBackpackOpen] = useState(false);
   const [showFluent, setShowFluent] = useState(false);
+  const [showExercises, setShowExercises] = useState(false);
+  const [currentExercise, setCurrentExercise] = useState(0);
+  const [exerciseAnswers, setExerciseAnswers] = useState({});
+  const [fillBlankAnswer, setFillBlankAnswer] = useState("");
+  const [translateAnswer, setTranslateAnswer] = useState("");
+  const [exerciseResults, setExerciseResults] = useState(null);
 
   const { data: userProfile } = useQuery({
     queryKey: ['userProfile'],
