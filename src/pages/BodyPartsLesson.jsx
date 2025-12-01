@@ -386,6 +386,8 @@ export default function BodyPartsLesson() {
           </div>
         )}
       </div>
+      
+      <QuickAddWordWidget />
     </div>
   );
 }
