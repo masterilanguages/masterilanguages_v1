@@ -824,18 +824,30 @@ Create about 15-20 conversational lines that naturally introduce and use these v
             </div>
           </motion.div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-4">
             {level1Videos.map((video) => {
+              const isExpanded = expandedVideoId === video.id;
               const hasTranscript = fullTranscripts[video.id];
               const isLoading = loadingTranscript === video.id;
+              const [showVocab, setShowVocab] = React.useState(false);
               
               return (
                 <div
                   key={video.id}
                   className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden"
                 >
-                  {/* Video Header */}
-                  <div className="flex gap-4 p-4">
+                  {/* Video Header - Clickable */}
+                  <div 
+                    onClick={() => {
+                      const newExpanded = expandedVideoId === video.id ? null : video.id;
+                      setExpandedVideoId(newExpanded);
+                      // Auto-generate transcript when expanding
+                      if (newExpanded && !fullTranscripts[video.id] && loadingTranscript !== video.id) {
+                        generateFullTranscript(video);
+                      }
+                    }}
+                    className="flex gap-4 p-4 cursor-pointer hover:bg-white/5 transition-all"
+                  >
                     <div className="relative w-40 h-24 flex-shrink-0 rounded-xl overflow-hidden bg-black">
                       <img 
                         src={video.thumbnail}
@@ -867,81 +879,87 @@ Create about 15-20 conversational lines that naturally introduce and use these v
                         </div>
                       </div>
                     </div>
+                    <ChevronRight className={`w-5 h-5 text-white/40 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
                   </div>
 
-                  {/* Buttons Section */}
-                  <div className="p-4 bg-slate-800/50 border-t border-white/20 space-y-3">
-                    {/* Generate Transcript Button */}
-                    <button
-                      onClick={() => generateFullTranscript(video)}
-                      disabled={isLoading}
-                      className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white py-4 rounded-xl text-base font-bold disabled:opacity-50"
-                    >
-                      {isLoading ? (
-                        <>
+                  {/* Expanded Content */}
+                  {isExpanded && (
+                    <div className="p-4 bg-slate-800/50 border-t border-white/20 space-y-4">
+                      {/* Video Player */}
+                      <div className="aspect-video bg-black rounded-xl overflow-hidden">
+                        <iframe
+                          width="100%"
+                          height="100%"
+                          src={`https://www.youtube.com/embed/${video.youtubeId}`}
+                          title={video.title}
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
+                      </div>
+
+                      {/* Transcript Loading/Display */}
+                      {isLoading && (
+                        <div className="flex items-center justify-center gap-2 py-4 text-white/60">
                           <Loader2 className="w-5 h-5 animate-spin" />
                           Generating transcript...
-                        </>
-                      ) : hasTranscript ? (
-                        <>
-                          <FileText className="w-5 h-5" />
-                          ✓ Transcript Ready
-                        </>
-                      ) : (
-                        <>
-                          <FileText className="w-5 h-5" />
-                          📝 Generate Full Transcript
-                        </>
+                        </div>
                       )}
-                    </button>
 
-                    {/* Show Transcript if generated */}
-                    {hasTranscript && (
-                      <div className="space-y-1 max-h-48 overflow-y-auto bg-white/5 rounded-xl p-3">
-                        <p className="text-white/50 text-xs font-medium mb-2">📝 Full Transcript:</p>
-                        {fullTranscripts[video.id].map((line, idx) => (
-                          <div key={idx} className="bg-white/5 rounded-lg p-2">
-                            <p className="text-cyan-400 font-bold" dir="rtl">{line.hebrew}</p>
-                            <p className="text-white/60 text-xs">{line.transliteration} — {line.english}</p>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                      {hasTranscript && (
+                        <div className="space-y-2 max-h-64 overflow-y-auto bg-white/5 rounded-xl p-3">
+                          <p className="text-white/50 text-xs font-medium mb-2">📝 Full Transcript:</p>
+                          {fullTranscripts[video.id].map((line, idx) => (
+                            <div key={idx} className="bg-white/5 rounded-lg p-2">
+                              <p className="text-cyan-400 font-bold" dir="rtl">{line.hebrew}</p>
+                              <p className="text-white/60 text-xs">{line.transliteration} — {line.english}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
 
-                    {/* Vocabulary Words */}
-                    <div className="bg-white/5 rounded-xl p-3">
-                      <p className="text-white/70 text-sm font-medium mb-2">📚 Vocabulary ({video.transcript.length} words):</p>
-                      <div className="flex flex-wrap gap-1">
-                        {video.transcript.map((item, idx) => {
-                          const inBackpack = wordRatings.find(w => w.word === item.hebrew);
-                          return (
-                            <button
-                              key={idx}
-                              onClick={() => !inBackpack && addToBackpack(item)}
-                              className={`px-2 py-1 rounded text-xs transition-all ${
-                                inBackpack 
-                                  ? "bg-green-500/20 border border-green-500/50" 
-                                  : "bg-white/10 border border-white/30 hover:border-cyan-400"
-                              }`}
-                            >
-                              <span className="text-cyan-400 font-bold" dir="rtl">{item.hebrew}</span>
-                              <span className="text-white/50 ml-1">= {item.meaning}</span>
-                              {inBackpack && <span className="ml-1 text-green-400">✓</span>}
-                            </button>
-                          );
-                        })}
-                      </div>
+                      {/* Vocab Button */}
+                      <button
+                        onClick={() => setExpandedVideoId(expandedVideoId === `vocab-${video.id}` ? video.id : `vocab-${video.id}`)}
+                        className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white py-3 rounded-xl font-bold"
+                      >
+                        <BookOpen className="w-5 h-5" />
+                        📚 Show Vocabulary ({video.transcript.length} words)
+                      </button>
+
+                      {/* Vocabulary Words - Inline */}
+                      {expandedVideoId === `vocab-${video.id}` && (
+                        <div className="bg-white/5 rounded-xl p-4 space-y-2">
+                          {video.transcript.map((item, idx) => {
+                            const inBackpack = wordRatings.find(w => w.word === item.hebrew);
+                            return (
+                              <div
+                                key={idx}
+                                className={`flex items-center justify-between p-3 rounded-lg ${
+                                  inBackpack ? "bg-green-500/10 border border-green-500/30" : "bg-white/5 border border-white/10"
+                                }`}
+                              >
+                                <div>
+                                  <span className="text-cyan-400 font-bold text-lg" dir="rtl">{item.hebrew}</span>
+                                  <p className="text-white/60 text-sm">{item.transliteration} = {item.meaning}</p>
+                                </div>
+                                {!inBackpack ? (
+                                  <button
+                                    onClick={() => addToBackpack(item)}
+                                    className="px-3 py-1 bg-amber-500/20 text-amber-400 rounded-lg text-sm hover:bg-amber-500/30"
+                                  >
+                                    + Add
+                                  </button>
+                                ) : (
+                                  <span className="text-green-400 text-sm">✓ Added</span>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
-
-                    {/* Watch Video Button */}
-                    <button
-                      onClick={() => setSelectedVideo(video)}
-                      className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white py-4 rounded-xl text-base font-bold"
-                    >
-                      <Play className="w-5 h-5" />
-                      ▶️ Watch Full Video
-                    </button>
-                  </div>
+                  )}
                 </div>
               );
             })}
