@@ -262,15 +262,41 @@ export default function BodyPartsLesson() {
           </>
         ) : (
           <div className="space-y-6">
-            {matched.size === matchPairs.length ? (
+            {gameComplete ? (
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 className="bg-green-500/20 border border-green-500/50 rounded-2xl p-8 text-center"
               >
                 <Trophy className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
-                <h2 className="text-2xl font-bold text-white mb-2">Perfect Match!</h2>
-                <p className="text-white/60 mb-6">You matched all body parts correctly!</p>
+                <h2 className="text-2xl font-bold text-white mb-2">Quiz Complete!</h2>
+                <p className="text-white/60 mb-4">Here's how well you know each word:</p>
+                
+                {/* Word scores */}
+                <div className="grid grid-cols-2 gap-2 mb-6 max-h-60 overflow-y-auto">
+                  {bodyParts.map(word => {
+                    const score = wordScores[word.hebrew] || 0;
+                    return (
+                      <div key={word.hebrew} className="flex items-center justify-between bg-white/5 rounded-lg px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          <span>{word.emoji}</span>
+                          <span className="text-cyan-400 text-sm" dir="rtl">{word.hebrew}</span>
+                        </div>
+                        <div className="flex gap-0.5">
+                          {[1, 2, 3, 4, 5].map(n => (
+                            <div
+                              key={n}
+                              className={`w-2 h-2 rounded-full ${
+                                score >= n ? "bg-green-500" : "bg-white/20"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                
                 <div className="flex gap-3 justify-center">
                   <Button onClick={() => { setMode("learn"); setCurrentIndex(0); }} variant="outline" className="border-white/20 text-white">
                     <RotateCcw className="w-4 h-4 mr-2" /> Learn Again
@@ -280,53 +306,81 @@ export default function BodyPartsLesson() {
                   </Button>
                 </div>
               </motion.div>
-            ) : (
+            ) : currentQuestion ? (
               <>
-                {/* Emojis row */}
-                <div className="grid grid-cols-3 gap-3">
-                  {matchPairs.map((item) => (
-                    <motion.button
-                      key={`emoji-${item.hebrew}`}
-                      whileHover={{ scale: matched.has(item.hebrew) ? 1 : 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => handleEmojiClick(item)}
-                      className={`h-20 rounded-xl text-4xl flex items-center justify-center transition-all ${
-                        matched.has(item.hebrew)
-                          ? "bg-green-500/20 border-green-500/50 opacity-50"
-                          : selectedEmoji?.hebrew === item.hebrew
-                            ? "bg-cyan-500/30 border-cyan-400 border-2"
-                            : "bg-white/10 border border-white/20 hover:border-cyan-400/50"
-                      }`}
-                    >
-                      {item.emoji}
-                    </motion.button>
-                  ))}
+                {/* Progress bar */}
+                <div className="bg-white/10 rounded-full h-2 overflow-hidden">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-cyan-500 to-purple-500"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${getTotalProgress()}%` }}
+                  />
                 </div>
+                <p className="text-center text-white/40 text-sm">
+                  Each word appears 5 times • Score based on correct answers
+                </p>
 
-                <div className="text-center text-white/40 text-sm">Match emoji to Hebrew word</div>
-
-                {/* Words row */}
-                <div className="grid grid-cols-3 gap-3">
-                  {[...matchPairs].sort(() => 0.5 - Math.random()).map((item) => (
-                    <motion.button
-                      key={`word-${item.hebrew}`}
-                      whileHover={{ scale: matched.has(item.hebrew) ? 1 : 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => handleWordClick(item)}
-                      className={`h-20 rounded-xl flex flex-col items-center justify-center transition-all ${
-                        matched.has(item.hebrew)
-                          ? "bg-green-500/20 border-green-500/50 opacity-50"
-                          : selectedWord?.hebrew === item.hebrew
-                            ? "bg-purple-500/30 border-purple-400 border-2"
-                            : "bg-white/10 border border-white/20 hover:border-purple-400/50"
-                      }`}
+                {/* Question: Show emoji, pick the Hebrew word */}
+                <motion.div
+                  key={currentQuestion.hebrew + currentQuestion.attemptNum}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-8 text-center"
+                >
+                  <p className="text-white/60 mb-2">What is this body part called?</p>
+                  <div className="text-7xl mb-4">{currentQuestion.emoji}</div>
+                  <p className="text-white/40 text-sm mb-6">{currentQuestion.meaning}</p>
+                  
+                  {/* Answer options */}
+                  <div className="grid grid-cols-2 gap-3">
+                    {options.map((option) => {
+                      const isCorrect = option.hebrew === currentQuestion.hebrew;
+                      const isSelected = answered && (
+                        (isCorrect) || 
+                        (lastAnswer === 'wrong' && option.hebrew === currentQuestion.hebrew)
+                      );
+                      
+                      return (
+                        <motion.button
+                          key={option.hebrew}
+                          whileHover={{ scale: answered ? 1 : 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => handleAnswer(option)}
+                          disabled={answered}
+                          className={`p-4 rounded-xl border-2 transition-all ${
+                            answered
+                              ? isCorrect
+                                ? "bg-green-500/30 border-green-500"
+                                : "bg-white/5 border-white/10 opacity-50"
+                              : "bg-white/10 border-white/20 hover:border-cyan-400/50"
+                          }`}
+                        >
+                          <span className="text-cyan-400 font-bold text-xl" dir="rtl">{option.hebrew}</span>
+                          <p className="text-white/60 text-sm mt-1">{option.transliteration}</p>
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                  
+                  {answered && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className={`mt-4 text-lg font-bold ${lastAnswer === 'correct' ? 'text-green-400' : 'text-red-400'}`}
                     >
-                      <span className="text-cyan-400 font-bold text-lg" dir="rtl">{item.hebrew}</span>
-                      <span className="text-white/60 text-xs">{item.transliteration}</span>
-                    </motion.button>
-                  ))}
+                      {lastAnswer === 'correct' ? '✓ Correct!' : `✗ It was: ${currentQuestion.transliteration}`}
+                    </motion.div>
+                  )}
+                </motion.div>
+                
+                {/* Current word progress */}
+                <div className="text-center text-white/40 text-sm">
+                  "{currentQuestion.transliteration}" - Attempt {(wordAttempts[currentQuestion.hebrew] || 0) + 1}/5 
+                  • Score: {wordScores[currentQuestion.hebrew] || 0}/5
                 </div>
               </>
+            ) : (
+              <div className="text-center text-white/60">Loading...</div>
             )}
           </div>
         )}
