@@ -874,14 +874,8 @@ Create about 15-20 conversational lines that naturally introduce and use these v
                 </div>
 
                 {/* Expanded Content - Only show when clicked */}
-                <AnimatePresence>
                 {expandedVideoId === video.id && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="border-t border-white/10"
-                  >
+                  <div className="border-t border-white/10">
                     {/* Video Player */}
                     <div className="aspect-video bg-black">
                       <iframe
@@ -902,7 +896,7 @@ Create about 15-20 conversational lines that naturally introduce and use these v
                           <Button
                             onClick={(e) => { e.stopPropagation(); generateFullTranscript(video); }}
                             disabled={loadingTranscript === video.id}
-                            className="w-full bg-gradient-to-r from-purple-500 to-pink-500"
+                            className="w-full bg-gradient-to-r from-purple-500 to-pink-500 py-4 text-base"
                           >
                             {loadingTranscript === video.id ? (
                               <>
@@ -956,9 +950,8 @@ Create about 15-20 conversational lines that naturally introduce and use these v
                         </div>
                       </div>
                     </div>
-                  </motion.div>
+                  </div>
                 )}
-                </AnimatePresence>
               </motion.div>
             ))}
           </div>
