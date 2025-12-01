@@ -689,40 +689,80 @@ export default function BabyVideos() {
             </div>
           </motion.div>
         ) : (
-          <div className="grid sm:grid-cols-2 gap-4">
+          <div className="space-y-6">
             {level1Videos.map((video) => (
               <motion.div
                 key={video.id}
-                whileHover={{ scale: 1.02 }}
-                onClick={() => setSelectedVideo(video)}
-                className="relative bg-white/5 backdrop-blur-xl rounded-2xl border-2 border-white/10 overflow-hidden cursor-pointer hover:border-cyan-400/50 transition-all"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden"
               >
-                <div className="absolute top-3 left-3 bg-purple-500/80 px-2 py-1 rounded-full text-xs text-white font-medium">
-                  {video.category}
-                </div>
-                <div className="aspect-video bg-black relative">
-                  <img 
-                    src={video.thumbnail}
-                    alt={video.title}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.target.src = `https://via.placeholder.com/480x360/1e1b4b/ffffff?text=${encodeURIComponent(video.title)}`;
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                    <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                      <Play className="w-8 h-8 text-white fill-white" />
+                {/* Video Header */}
+                <div 
+                  onClick={() => setSelectedVideo(video)}
+                  className="cursor-pointer hover:bg-white/5 transition-all"
+                >
+                  <div className="flex gap-4 p-4">
+                    <div className="relative w-40 h-24 flex-shrink-0 rounded-xl overflow-hidden bg-black">
+                      <img 
+                        src={video.thumbnail}
+                        alt={video.title}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.src = `https://via.placeholder.com/160x90/1e1b4b/ffffff?text=Video`;
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                          <Play className="w-5 h-5 text-white fill-white" />
+                        </div>
+                      </div>
+                      <span className="absolute bottom-1 right-1 bg-black/70 text-white text-xs px-1 rounded">
+                        {video.duration}
+                      </span>
+                    </div>
+                    <div className="flex-1">
+                      <span className="bg-purple-500/80 px-2 py-0.5 rounded-full text-xs text-white font-medium">
+                        {video.category}
+                      </span>
+                      <h3 className="text-white font-bold mt-1">{video.title}</h3>
+                      <div className="flex items-center gap-3 mt-2 text-sm">
+                        <span className="text-white/60">{video.transcript.length} words</span>
+                        <div className="flex items-center gap-1 text-yellow-400">
+                          <Coins className="w-4 h-4" />
+                          <span className="font-bold">+{video.coins}</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
-                <div className="p-4">
-                  <h3 className="text-white font-bold">{video.title}</h3>
-                  <div className="flex items-center justify-between mt-2">
-                    <span className="text-white/60 text-sm">{video.transcript.length} words</span>
-                    <div className="flex items-center gap-1 text-yellow-400">
-                      <Coins className="w-4 h-4" />
-                      <span className="font-bold">+{video.coins}</span>
-                    </div>
+
+                {/* Transcript Preview */}
+                <div className="border-t border-white/10 p-4">
+                  <p className="text-white/50 text-xs mb-2">📝 Tap words to add to backpack:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {video.transcript.slice(0, 8).map((item, idx) => {
+                      const inBackpack = wordRatings.find(w => w.word === item.hebrew);
+                      return (
+                        <button
+                          key={idx}
+                          onClick={() => !inBackpack && addToBackpack(item)}
+                          className={`px-2 py-1 rounded-lg text-sm transition-all ${
+                            inBackpack 
+                              ? "bg-green-500/20 border border-green-500/50 cursor-default" 
+                              : "bg-white/5 border border-white/20 hover:border-cyan-400 hover:bg-cyan-500/10"
+                          }`}
+                        >
+                          <span className="text-cyan-400 font-bold" dir="rtl">{item.hebrew}</span>
+                          <span className="text-white/50 text-xs ml-1">({item.transliteration})</span>
+                          <span className="text-white/40 text-xs ml-1">= {item.meaning}</span>
+                          {inBackpack && <span className="ml-1 text-green-400">✓</span>}
+                        </button>
+                      );
+                    })}
+                    {video.transcript.length > 8 && (
+                      <span className="text-white/40 text-xs self-center">+{video.transcript.length - 8} more</span>
+                    )}
                   </div>
                 </div>
               </motion.div>
