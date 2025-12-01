@@ -1,105 +1,201 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { ArrowLeft, CheckCircle } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { motion, AnimatePresence } from "framer-motion";
-import AnimatedParrot from "../components/mascot/AnimatedParrot";
+import { motion } from "framer-motion";
+import { base44 } from "@/api/base44Client";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import GameHeader from "../components/game/GameHeader";
+import QuickAddWordWidget from "../components/QuickAddWordWidget";
 
 const months = [
-  { hebrew: "ינואר", transliteration: "yanuar", meaning: "January" },
-  { hebrew: "פברואר", transliteration: "februar", meaning: "February" },
-  { hebrew: "מרץ", transliteration: "merts", meaning: "March" },
-  { hebrew: "אפריל", transliteration: "april", meaning: "April" },
-  { hebrew: "מאי", transliteration: "mai", meaning: "May" },
-  { hebrew: "יוני", transliteration: "yuni", meaning: "June" },
-  { hebrew: "יולי", transliteration: "yuli", meaning: "July" },
-  { hebrew: "אוגוסט", transliteration: "ogust", meaning: "August" },
-  { hebrew: "ספטמבר", transliteration: "september", meaning: "September" },
-  { hebrew: "אוקטובר", transliteration: "oktober", meaning: "October" },
-  { hebrew: "נובמבר", transliteration: "november", meaning: "November" },
-  { hebrew: "דצמבר", transliteration: "detsember", meaning: "December" },
+  { hebrew: "ינואר", transliteration: "yanuar", meaning: "January", emoji: "❄️" },
+  { hebrew: "פברואר", transliteration: "februar", meaning: "February", emoji: "💕" },
+  { hebrew: "מרץ", transliteration: "merts", meaning: "March", emoji: "🌱" },
+  { hebrew: "אפריל", transliteration: "april", meaning: "April", emoji: "🌸" },
+  { hebrew: "מאי", transliteration: "mai", meaning: "May", emoji: "🌺" },
+  { hebrew: "יוני", transliteration: "yuni", meaning: "June", emoji: "☀️" },
+  { hebrew: "יולי", transliteration: "yuli", meaning: "July", emoji: "🏖️" },
+  { hebrew: "אוגוסט", transliteration: "ogust", meaning: "August", emoji: "🌻" },
+  { hebrew: "ספטמבר", transliteration: "september", meaning: "September", emoji: "🍂" },
+  { hebrew: "אוקטובר", transliteration: "oktober", meaning: "October", emoji: "🎃" },
+  { hebrew: "נובמבר", transliteration: "november", meaning: "November", emoji: "🍁" },
+  { hebrew: "דצמבר", transliteration: "detsember", meaning: "December", emoji: "🎄" },
 ];
 
 export default function MonthsLesson() {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [showAnswer, setShowAnswer] = useState(false);
-  const [trigger, setTrigger] = useState(0);
+  const [selectedMonth, setSelectedMonth] = useState(null);
+  const [monthRatings, setMonthRatings] = useState({});
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  const current = months[currentIndex];
+  const { data: userProfile } = useQuery({
+    queryKey: ['userProfile'],
+    queryFn: async () => {
+      const profiles = await base44.entities.UserProfile.list();
+      return profiles[0] || null;
+    },
+  });
 
-  const next = () => {
-    setShowAnswer(false);
-    setCurrentIndex((prev) => (prev + 1) % months.length);
-    setTrigger(t => t + 1);
+  const { data: userCoins } = useQuery({
+    queryKey: ['userCoins'],
+    queryFn: async () => {
+      const coins = await base44.entities.UserCoins.list();
+      return coins[0] || { coins: 0 };
+    },
+  });
+
+  const createWordMutation = useMutation({
+    mutationFn: (wordData) => base44.entities.Word.create(wordData),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['wordRatings'] }),
+  });
+
+  const completeLessonMutation = useMutation({
+    mutationFn: async () => {
+      const existing = await base44.entities.LessonProgress.filter({ lesson_name: "MonthsLesson" });
+      if (existing.length > 0) {
+        return base44.entities.LessonProgress.update(existing[0].id, { completed: true });
+      }
+      return base44.entities.LessonProgress.create({ lesson_name: "MonthsLesson", completed: true });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['lessonProgress'] });
+      toast.success("Months lesson completed! ✓");
+    }
+  });
+
+  const handleRating = async (month, rating) => {
+    setMonthRatings(prev => ({ ...prev, [month.meaning]: rating }));
+    
+    await createWordMutation.mutateAsync({
+      word: month.hebrew,
+      translation: month.meaning,
+      phonetic: month.transliteration,
+      category: "wordbank",
+      times_practiced: rating,
+      mastered: rating >= 5,
+    });
+    
+    toast.success(`Saved "${month.meaning}" with rating ${rating}!`);
+    
+    const newRatings = { ...monthRatings, [month.meaning]: rating };
+    if (Object.keys(newRatings).length === months.length) {
+      completeLessonMutation.mutate();
+    }
   };
 
-  const prev = () => {
-    setShowAnswer(false);
-    setCurrentIndex((prev) => (prev - 1 + months.length) % months.length);
-  };
+  const ratedCount = Object.keys(monthRatings).length;
 
   return (
-    <div className="min-h-screen p-4 md:p-8">
-      <div className="max-w-2xl mx-auto">
-        <Link to={createPageUrl("Progress")} className="text-violet-600 hover:text-violet-700 mb-4 inline-flex items-center gap-2">
-          <ArrowLeft className="w-4 h-4" /> Back to Schedule
-        </Link>
-
-        <div className="flex items-center gap-4 mb-8">
-          <AnimatedParrot trigger={trigger} size="sm" />
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      <GameHeader profile={userProfile} coins={userCoins?.coins} onBuyCoins={() => {}} />
+      
+      <div className="max-w-4xl mx-auto px-4 py-6">
+        <div className="flex items-center gap-4 mb-6">
+          <Link to={createPageUrl("Home")} className="text-white/60 hover:text-white">
+            <ArrowLeft className="w-6 h-6" />
+          </Link>
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">Months of the Year</h1>
-            <p className="text-gray-500">{currentIndex + 1} of {months.length}</p>
+            <h1 className="text-3xl font-bold text-white">🗓️ Months of the Year</h1>
+            <p className="text-white/60">Tap a month to see Hebrew • Rate 1-5 to save</p>
           </div>
         </div>
 
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentIndex}
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -50 }}
-            className="bg-white rounded-2xl shadow-xl p-8 border-2 border-amber-100"
-          >
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-amber-400 to-orange-400 mx-auto mb-6 flex items-center justify-center">
-              <span className="text-4xl">🗓️</span>
-            </div>
-            
-            <div className="text-center">
-              <p className="text-4xl font-bold text-gray-800 mb-2" dir="rtl">{current.hebrew}</p>
-              <p className="text-xl text-amber-600 mb-2">{current.transliteration}</p>
-              
-              <Button
-                variant="outline"
-                onClick={() => setShowAnswer(!showAnswer)}
-                className="mt-4"
-              >
-                {showAnswer ? "Hide" : "Show"} Meaning
-              </Button>
-
-              {showAnswer && (
-                <motion.p
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-2xl text-gray-600 mt-4 font-medium"
-                >
-                  {current.meaning}
-                </motion.p>
-              )}
-            </div>
-          </motion.div>
-        </AnimatePresence>
-
-        <div className="flex justify-between mt-6">
-          <Button onClick={prev} variant="outline" className="rounded-xl">
-            <ArrowLeft className="w-4 h-4 mr-2" /> Previous
-          </Button>
-          <Button onClick={next} className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl">
-            Next <ArrowRight className="w-4 h-4 ml-2" />
-          </Button>
+        {/* Progress */}
+        <div className="mb-6">
+          <div className="flex justify-between text-white/60 text-sm mb-2">
+            <span>{ratedCount} of {months.length} rated</span>
+            {ratedCount === months.length && (
+              <span className="text-green-400 flex items-center gap-1">
+                <CheckCircle className="w-4 h-4" /> Complete!
+              </span>
+            )}
+          </div>
+          <div className="bg-white/10 rounded-full h-2 overflow-hidden">
+            <motion.div
+              className="h-full bg-gradient-to-r from-cyan-500 to-purple-500"
+              initial={{ width: 0 }}
+              animate={{ width: `${(ratedCount / months.length) * 100}%` }}
+            />
+          </div>
         </div>
+
+        {/* Months Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {months.map((month, idx) => {
+            const isExpanded = selectedMonth?.meaning === month.meaning;
+            const isRated = monthRatings[month.meaning] !== undefined;
+            const rating = monthRatings[month.meaning];
+            
+            return (
+              <motion.div
+                key={month.meaning}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: idx * 0.03 }}
+                onClick={() => setSelectedMonth(isExpanded ? null : month)}
+                className={`relative rounded-2xl p-4 border-2 cursor-pointer transition-all min-h-[120px] flex flex-col ${
+                  isRated 
+                    ? "border-green-500/50 bg-green-500/10" 
+                    : isExpanded
+                      ? "border-cyan-400 bg-white/10"
+                      : "border-white/10 bg-white/5 hover:border-cyan-400/50"
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-2xl">{month.emoji}</span>
+                  <p className="text-white font-bold">{month.meaning}</p>
+                </div>
+                
+                {isExpanded ? (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex-1 flex flex-col"
+                  >
+                    <p className="text-cyan-400 text-xl font-bold" dir="rtl">{month.hebrew}</p>
+                    <p className="text-white/60 text-sm mb-2">{month.transliteration}</p>
+                    
+                    {/* Rating buttons */}
+                    <div className="flex gap-1 justify-center mt-auto">
+                      {[1, 2, 3, 4, 5].map((num) => (
+                        <button
+                          key={num}
+                          onClick={(e) => { e.stopPropagation(); handleRating(month, num); }}
+                          className={`w-7 h-7 rounded text-xs font-bold transition-all ${
+                            rating === num
+                              ? num === 5 ? "bg-green-500 text-white" : "bg-cyan-500 text-white"
+                              : "bg-white/20 text-white hover:bg-white/30"
+                          }`}
+                        >
+                          {num}
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                ) : (
+                  <div className="flex-1" />
+                )}
+                
+                {isRated && !isExpanded && (
+                  <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-white text-xs font-bold">
+                    {rating}
+                  </div>
+                )}
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {/* Tip */}
+        <p className="text-center text-white/40 text-sm mt-6">
+          💡 Hebrew months are similar to English - they're borrowed from the Gregorian calendar
+        </p>
       </div>
+      
+      <QuickAddWordWidget />
     </div>
   );
 }

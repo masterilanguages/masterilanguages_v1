@@ -1,100 +1,209 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { ArrowLeft, CheckCircle } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { motion, AnimatePresence } from "framer-motion";
-import AnimatedParrot from "../components/mascot/AnimatedParrot";
+import { motion } from "framer-motion";
+import { base44 } from "@/api/base44Client";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import GameHeader from "../components/game/GameHeader";
+import QuickAddWordWidget from "../components/QuickAddWordWidget";
 
 const days = [
-  { hebrew: "יום ראשון", transliteration: "yom rishon", meaning: "Sunday (first day)" },
-  { hebrew: "יום שני", transliteration: "yom sheni", meaning: "Monday (second day)" },
-  { hebrew: "יום שלישי", transliteration: "yom shlishi", meaning: "Tuesday (third day)" },
-  { hebrew: "יום רביעי", transliteration: "yom revi'i", meaning: "Wednesday (fourth day)" },
-  { hebrew: "יום חמישי", transliteration: "yom chamishi", meaning: "Thursday (fifth day)" },
-  { hebrew: "יום שישי", transliteration: "yom shishi", meaning: "Friday (sixth day)" },
-  { hebrew: "שבת", transliteration: "Shabbat", meaning: "Saturday (Sabbath)" },
+  { hebrew: "יום ראשון", transliteration: "yom rishon", meaning: "Sunday", number: "1st" },
+  { hebrew: "יום שני", transliteration: "yom sheni", meaning: "Monday", number: "2nd" },
+  { hebrew: "יום שלישי", transliteration: "yom shlishi", meaning: "Tuesday", number: "3rd" },
+  { hebrew: "יום רביעי", transliteration: "yom revi'i", meaning: "Wednesday", number: "4th" },
+  { hebrew: "יום חמישי", transliteration: "yom chamishi", meaning: "Thursday", number: "5th" },
+  { hebrew: "יום שישי", transliteration: "yom shishi", meaning: "Friday", number: "6th" },
+  { hebrew: "שבת", transliteration: "Shabbat", meaning: "Saturday", number: "7th" },
 ];
 
 export default function DaysLesson() {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [showAnswer, setShowAnswer] = useState(false);
-  const [trigger, setTrigger] = useState(0);
+  const [selectedDay, setSelectedDay] = useState(null);
+  const [dayRatings, setDayRatings] = useState({});
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  const current = days[currentIndex];
+  const { data: userProfile } = useQuery({
+    queryKey: ['userProfile'],
+    queryFn: async () => {
+      const profiles = await base44.entities.UserProfile.list();
+      return profiles[0] || null;
+    },
+  });
 
-  const next = () => {
-    setShowAnswer(false);
-    setCurrentIndex((prev) => (prev + 1) % days.length);
-    setTrigger(t => t + 1);
+  const { data: userCoins } = useQuery({
+    queryKey: ['userCoins'],
+    queryFn: async () => {
+      const coins = await base44.entities.UserCoins.list();
+      return coins[0] || { coins: 0 };
+    },
+  });
+
+  const createWordMutation = useMutation({
+    mutationFn: (wordData) => base44.entities.Word.create(wordData),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['wordRatings'] }),
+  });
+
+  const completeLessonMutation = useMutation({
+    mutationFn: async () => {
+      const existing = await base44.entities.LessonProgress.filter({ lesson_name: "DaysLesson" });
+      if (existing.length > 0) {
+        return base44.entities.LessonProgress.update(existing[0].id, { completed: true });
+      }
+      return base44.entities.LessonProgress.create({ lesson_name: "DaysLesson", completed: true });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['lessonProgress'] });
+      toast.success("Days lesson completed! ✓");
+    }
+  });
+
+  const handleRating = async (day, rating) => {
+    setDayRatings(prev => ({ ...prev, [day.meaning]: rating }));
+    
+    await createWordMutation.mutateAsync({
+      word: day.hebrew,
+      translation: day.meaning,
+      phonetic: day.transliteration,
+      category: "wordbank",
+      times_practiced: rating,
+      mastered: rating >= 5,
+    });
+    
+    toast.success(`Saved "${day.meaning}" with rating ${rating}!`);
+    
+    const newRatings = { ...dayRatings, [day.meaning]: rating };
+    if (Object.keys(newRatings).length === days.length) {
+      completeLessonMutation.mutate();
+    }
   };
 
-  const prev = () => {
-    setShowAnswer(false);
-    setCurrentIndex((prev) => (prev - 1 + days.length) % days.length);
-  };
+  const ratedCount = Object.keys(dayRatings).length;
 
   return (
-    <div className="min-h-screen p-4 md:p-8">
-      <div className="max-w-2xl mx-auto">
-        <Link to={createPageUrl("Progress")} className="text-violet-600 hover:text-violet-700 mb-4 inline-flex items-center gap-2">
-          <ArrowLeft className="w-4 h-4" /> Back to Schedule
-        </Link>
-
-        <div className="flex items-center gap-4 mb-8">
-          <AnimatedParrot trigger={trigger} size="sm" />
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      <GameHeader profile={userProfile} coins={userCoins?.coins} onBuyCoins={() => {}} />
+      
+      <div className="max-w-4xl mx-auto px-4 py-6">
+        <div className="flex items-center gap-4 mb-6">
+          <Link to={createPageUrl("Home")} className="text-white/60 hover:text-white">
+            <ArrowLeft className="w-6 h-6" />
+          </Link>
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-violet-500 to-purple-500 bg-clip-text text-transparent">Days of the Week</h1>
-            <p className="text-gray-500">{currentIndex + 1} of {days.length}</p>
+            <h1 className="text-3xl font-bold text-white">📅 Days of the Week</h1>
+            <p className="text-white/60">Tap a day to see Hebrew • Rate 1-5 to save</p>
           </div>
         </div>
 
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentIndex}
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -50 }}
-            className="bg-white rounded-2xl shadow-xl p-8 border-2 border-violet-100"
-          >
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-violet-400 to-purple-400 mx-auto mb-6 flex items-center justify-center">
-              <span className="text-4xl">📅</span>
-            </div>
-            
-            <div className="text-center">
-              <p className="text-4xl font-bold text-gray-800 mb-2" dir="rtl">{current.hebrew}</p>
-              <p className="text-xl text-violet-600 mb-2">{current.transliteration}</p>
-              
-              <Button
-                variant="outline"
-                onClick={() => setShowAnswer(!showAnswer)}
-                className="mt-4"
-              >
-                {showAnswer ? "Hide" : "Show"} Meaning
-              </Button>
-
-              {showAnswer && (
-                <motion.p
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-2xl text-gray-600 mt-4 font-medium"
-                >
-                  {current.meaning}
-                </motion.p>
-              )}
-            </div>
-          </motion.div>
-        </AnimatePresence>
-
-        <div className="flex justify-between mt-6">
-          <Button onClick={prev} variant="outline" className="rounded-xl">
-            <ArrowLeft className="w-4 h-4 mr-2" /> Previous
-          </Button>
-          <Button onClick={next} className="bg-gradient-to-r from-violet-500 to-purple-500 rounded-xl">
-            Next <ArrowRight className="w-4 h-4 ml-2" />
-          </Button>
+        {/* Progress */}
+        <div className="mb-6">
+          <div className="flex justify-between text-white/60 text-sm mb-2">
+            <span>{ratedCount} of {days.length} rated</span>
+            {ratedCount === days.length && (
+              <span className="text-green-400 flex items-center gap-1">
+                <CheckCircle className="w-4 h-4" /> Complete!
+              </span>
+            )}
+          </div>
+          <div className="bg-white/10 rounded-full h-2 overflow-hidden">
+            <motion.div
+              className="h-full bg-gradient-to-r from-cyan-500 to-purple-500"
+              initial={{ width: 0 }}
+              animate={{ width: `${(ratedCount / days.length) * 100}%` }}
+            />
+          </div>
         </div>
+
+        {/* Days Grid */}
+        <div className="space-y-3">
+          {days.map((day, idx) => {
+            const isExpanded = selectedDay?.meaning === day.meaning;
+            const isRated = dayRatings[day.meaning] !== undefined;
+            const rating = dayRatings[day.meaning];
+            const isShabbat = day.meaning === "Saturday";
+            
+            return (
+              <motion.div
+                key={day.meaning}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.05 }}
+                onClick={() => setSelectedDay(isExpanded ? null : day)}
+                className={`relative rounded-2xl p-4 border-2 cursor-pointer transition-all ${
+                  isRated 
+                    ? "border-green-500/50 bg-green-500/10" 
+                    : isExpanded
+                      ? "border-cyan-400 bg-white/10"
+                      : "border-white/10 bg-white/5 hover:border-cyan-400/50"
+                } ${isShabbat ? "bg-gradient-to-r from-yellow-500/10 to-amber-500/10" : ""}`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${
+                      isShabbat 
+                        ? "bg-gradient-to-br from-yellow-400 to-amber-500 text-black"
+                        : "bg-gradient-to-br from-violet-500 to-purple-500 text-white"
+                    }`}>
+                      {day.number}
+                    </div>
+                    <div>
+                      <p className="text-white font-bold text-lg">{day.meaning}</p>
+                      {isExpanded && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                        >
+                          <p className="text-cyan-400 text-xl font-bold mt-1" dir="rtl">{day.hebrew}</p>
+                          <p className="text-white/60 text-sm">{day.transliteration}</p>
+                        </motion.div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {isRated && !isExpanded && (
+                    <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white font-bold">
+                      {rating}
+                    </div>
+                  )}
+                </div>
+
+                {/* Rating buttons */}
+                {isExpanded && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex gap-2 justify-center mt-4"
+                  >
+                    {[1, 2, 3, 4, 5].map((num) => (
+                      <button
+                        key={num}
+                        onClick={(e) => { e.stopPropagation(); handleRating(day, num); }}
+                        className={`w-10 h-10 rounded-xl text-sm font-bold transition-all ${
+                          rating === num
+                            ? num === 5 ? "bg-green-500 text-white" : "bg-cyan-500 text-white"
+                            : "bg-white/20 text-white hover:bg-white/30"
+                        }`}
+                      >
+                        {num}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {/* Tip */}
+        <p className="text-center text-white/40 text-sm mt-6">
+          💡 In Hebrew, days are numbered - "yom" means "day"
+        </p>
       </div>
+      
+      <QuickAddWordWidget />
     </div>
   );
 }
