@@ -333,61 +333,6 @@ export default function Home() {
         )}
       </div>
 
-      {/* Level Activities Dialog */}
-      <Dialog open={!!selectedLevel} onOpenChange={() => setSelectedLevel(null)}>
-        <DialogContent className="bg-slate-900 border-white/20 text-white max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-3">
-              {selectedLevel && (
-                <>
-                  <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${selectedLevel.gradient} flex items-center justify-center`}>
-                    {selectedLevel.icon && <selectedLevel.icon className="w-5 h-5 text-white" />}
-                  </div>
-                  <div>
-                    <span className="text-xl">{selectedLevel.name}</span>
-                    <p className="text-white/60 text-sm font-normal">{selectedLevel.subtitle}</p>
-                  </div>
-                </>
-              )}
-            </DialogTitle>
-          </DialogHeader>
-
-          {selectedLevel?.activities?.length > 0 ? (
-            <div className="space-y-3 mt-4">
-              {selectedLevel.activities.map((activity) => (
-                <motion.button
-                  key={activity.id}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => {
-                    setSelectedLevel(null);
-                    navigate(createPageUrl(activity.page));
-                  }}
-                  className="w-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-cyan-400/50 rounded-xl p-4 text-left transition-all"
-                >
-                  <div className="flex items-start gap-3">
-                    <span className="text-2xl">{activity.icon}</span>
-                    <div className="flex-1">
-                      <p className="text-white font-medium">{activity.name}</p>
-                      <div className="flex items-center gap-2 mt-1 text-white/60 text-sm">
-                        <Clock className="w-3 h-3" />
-                        <span>{activity.duration}</span>
-                      </div>
-                    </div>
-                    <ChevronRight className="w-5 h-5 text-white/40" />
-                  </div>
-                </motion.button>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-white/60">Coming soon!</p>
-              <p className="text-white/40 text-sm mt-2">This level is being prepared for you.</p>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
       {/* Buy Coins Dialog */}
       <Dialog open={buyCoinsDialog} onOpenChange={setBuyCoinsDialog}>
         <DialogContent className="bg-slate-900 border-white/20 text-white">
