@@ -64,6 +64,9 @@ export default function Home() {
   const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState(null);
   const [selectedActivity, setSelectedActivity] = useState(null);
+  const [timer, setTimer] = useState(0);
+  const [timerRunning, setTimerRunning] = useState(false);
+  const [timerSpeed, setTimerSpeed] = useState(1);
 
   const { data: userProfile, isLoading: profileLoading } = useQuery({
     queryKey: ['userProfile'],
