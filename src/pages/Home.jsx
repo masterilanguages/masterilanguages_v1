@@ -248,6 +248,46 @@ export default function Home() {
       
       <TimelineBar currentAge={currentAge} />
 
+      {/* Timer display */}
+      {timer > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="fixed top-20 right-4 z-50 bg-slate-800/90 backdrop-blur-sm border border-white/20 rounded-xl p-3 shadow-lg"
+        >
+          <div className="text-center">
+            <p className="text-white/60 text-xs mb-1">Time Left</p>
+            <p className="text-2xl font-bold text-cyan-400">{formatTime(timer)}</p>
+            <div className="flex gap-1 mt-2">
+              <button
+                onClick={() => setTimerSpeed(1)}
+                className={`px-2 py-1 rounded text-xs ${timerSpeed === 1 ? 'bg-cyan-500 text-white' : 'bg-white/10 text-white/60'}`}
+              >
+                1x
+              </button>
+              <button
+                onClick={() => setTimerSpeed(2)}
+                className={`px-2 py-1 rounded text-xs ${timerSpeed === 2 ? 'bg-cyan-500 text-white' : 'bg-white/10 text-white/60'}`}
+              >
+                2x
+              </button>
+              <button
+                onClick={() => setTimerSpeed(10)}
+                className={`px-2 py-1 rounded text-xs ${timerSpeed === 10 ? 'bg-cyan-500 text-white' : 'bg-white/10 text-white/60'}`}
+              >
+                10x
+              </button>
+              <button
+                onClick={() => { setTimer(0); setTimerRunning(false); }}
+                className="px-2 py-1 rounded text-xs bg-red-500/20 text-red-400"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       <div className="relative z-10 max-w-4xl mx-auto px-4 py-8">
         {/* Show activity content OR levels */}
         {selectedActivity ? (
@@ -257,7 +297,7 @@ export default function Home() {
             className="text-center"
           >
             <button 
-              onClick={() => setSelectedActivity(null)}
+              onClick={() => { setSelectedActivity(null); setTimer(0); setTimerRunning(false); }}
               className="mb-6 text-white/60 hover:text-white flex items-center gap-2 mx-auto"
             >
               <ArrowRight className="w-4 h-4 rotate-180" /> Back to levels
