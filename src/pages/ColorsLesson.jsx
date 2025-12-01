@@ -101,6 +101,104 @@ export default function ColorsLesson() {
 
   const ratedCount = Object.keys(colorRatings).length;
 
+  // Generate 5 questions per color (60 total), shuffled
+  const startGame = () => {
+    const questions = [];
+    colors.forEach(color => {
+      for (let i = 0; i < 5; i++) {
+        // Mix question types
+        const type = i % 3; // 0: hebrew->english, 1: english->hebrew, 2: color swatch->hebrew
+        const wrongAnswers = colors.filter(c => c.meaning !== color.meaning);
+        const shuffledWrong = wrongAnswers.sort(() => Math.random() - 0.5).slice(0, 3);
+        
+        if (type === 0) {
+          // Show Hebrew, pick English
+          questions.push({
+            type: 'hebrew_to_english',
+            colorKey: color.meaning,
+            question: color.hebrew,
+            questionSub: color.transliteration,
+            options: [color, ...shuffledWrong].sort(() => Math.random() - 0.5),
+            correctAnswer: color.meaning,
+            answerField: 'meaning'
+          });
+        } else if (type === 1) {
+          // Show English, pick Hebrew
+          questions.push({
+            type: 'english_to_hebrew',
+            colorKey: color.meaning,
+            question: color.meaning,
+            questionColor: color.color,
+            options: [color, ...shuffledWrong].sort(() => Math.random() - 0.5),
+            correctAnswer: color.hebrew,
+            answerField: 'hebrew'
+          });
+        } else {
+          // Show color swatch, pick Hebrew
+          questions.push({
+            type: 'swatch_to_hebrew',
+            colorKey: color.meaning,
+            questionColor: color.color,
+            options: [color, ...shuffledWrong].sort(() => Math.random() - 0.5),
+            correctAnswer: color.hebrew,
+            answerField: 'hebrew'
+          });
+        }
+      }
+    });
+    
+    // Shuffle all questions
+    const shuffled = questions.sort(() => Math.random() - 0.5);
+    setGameQuestions(shuffled);
+    setColorScores({});
+    setCurrentQuestion(0);
+    setGameMode(true);
+    setGameComplete(false);
+  };
+
+  const handleAnswer = async (answer) => {
+    const q = gameQuestions[currentQuestion];
+    const isCorrect = answer === q.correctAnswer;
+    
+    // Update score for this color
+    setColorScores(prev => ({
+      ...prev,
+      [q.colorKey]: (prev[q.colorKey] || 0) + (isCorrect ? 1 : 0)
+    }));
+    
+    setShowResult(isCorrect ? 'correct' : 'wrong');
+    
+    setTimeout(async () => {
+      setShowResult(null);
+      
+      if (currentQuestion + 1 >= gameQuestions.length) {
+        // Game complete - save all scores to backpack
+        setGameComplete(true);
+        
+        const finalScores = { ...colorScores, [q.colorKey]: (colorScores[q.colorKey] || 0) + (isCorrect ? 1 : 0) };
+        
+        // Save each color rating based on score (out of 5)
+        for (const color of colors) {
+          const score = finalScores[color.meaning] || 0;
+          await createWordMutation.mutateAsync({
+            word: color.hebrew,
+            translation: color.meaning,
+            phonetic: color.transliteration,
+            category: "wordbank",
+            times_practiced: score,
+            mastered: score >= 5,
+          });
+        }
+        
+        setColorRatings(finalScores);
+        completeLessonMutation.mutate();
+        toast.success("Game complete! Scores saved to backpack!");
+      } else {
+        setCurrentQuestion(prev => prev + 1);
+      }
+    }, 800);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
       <GameHeader profile={userProfile} coins={userCoins?.coins} onBuyCoins={() => {}} />
