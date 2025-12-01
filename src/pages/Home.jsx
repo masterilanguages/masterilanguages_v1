@@ -257,6 +257,36 @@ export default function Home() {
       
       <TimelineBar currentAge={currentAge} />
 
+      {/* Quick Navigation */}
+      <div className="max-w-4xl mx-auto px-4 pt-4">
+        <div className="grid grid-cols-4 gap-2">
+          <Link to={createPageUrl("Home")}>
+            <Button variant="outline" className="w-full bg-white border-gray-200 text-black hover:bg-gray-100 h-auto py-2 flex-col">
+              <HomeIcon className="w-4 h-4 mb-1 text-black" />
+              <span className="text-xs text-black">Home</span>
+            </Button>
+          </Link>
+          <Link to={createPageUrl("BabyVideos")}>
+            <Button variant="outline" className="w-full bg-white border-gray-200 text-black hover:bg-gray-100 h-auto py-2 flex-col">
+              <span className="text-sm mb-1">📺</span>
+              <span className="text-xs text-black">Videos</span>
+            </Button>
+          </Link>
+          <Link to={createPageUrl("Practice")}>
+            <Button variant="outline" className="w-full bg-white border-gray-200 text-black hover:bg-gray-100 h-auto py-2 flex-col">
+              <span className="text-sm mb-1">📚</span>
+              <span className="text-xs text-black">Practice</span>
+            </Button>
+          </Link>
+          <Link to={createPageUrl("Library")}>
+            <Button variant="outline" className="w-full bg-white border-gray-200 text-black hover:bg-gray-100 h-auto py-2 flex-col">
+              <span className="text-sm mb-1">📖</span>
+              <span className="text-xs text-black">Library</span>
+            </Button>
+          </Link>
+        </div>
+      </div>
+
       {/* Timer display */}
       {timer > 0 && (
         <motion.div
