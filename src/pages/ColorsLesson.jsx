@@ -208,32 +208,188 @@ export default function ColorsLesson() {
           <Link to={createPageUrl("Home")} className="text-white/60 hover:text-white">
             <ArrowLeft className="w-6 h-6" />
           </Link>
-          <div>
+          <div className="flex-1">
             <h1 className="text-3xl font-bold text-white">🎨 Learn Colors</h1>
-            <p className="text-white/60">Tap a color to see Hebrew • Rate 1-5 to save</p>
+            <p className="text-white/60">{gameMode ? "Answer questions to rate your knowledge" : "Tap a color to see Hebrew"}</p>
           </div>
+          {!gameMode && (
+            <Button
+              onClick={startGame}
+              className="bg-gradient-to-r from-cyan-500 to-purple-500"
+            >
+              🎮 Start Game
+            </Button>
+          )}
         </div>
 
-        {/* Progress */}
-        <div className="mb-6">
-          <div className="flex justify-between text-white/60 text-sm mb-2">
-            <span>{ratedCount} of {colors.length} rated</span>
-            {ratedCount === colors.length && (
-              <span className="text-green-400 flex items-center gap-1">
-                <CheckCircle className="w-4 h-4" /> Complete!
-              </span>
+        {/* Game Mode */}
+        {gameMode && !gameComplete ? (
+          <div className="space-y-6">
+            {/* Progress */}
+            <div>
+              <div className="flex justify-between text-white/60 text-sm mb-2">
+                <span>Question {currentQuestion + 1} of {gameQuestions.length}</span>
+                <span>{Math.round(((currentQuestion) / gameQuestions.length) * 100)}%</span>
+              </div>
+              <div className="bg-white/10 rounded-full h-2 overflow-hidden">
+                <motion.div
+                  className="h-full bg-gradient-to-r from-cyan-500 to-purple-500"
+                  animate={{ width: `${((currentQuestion) / gameQuestions.length) * 100}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Question Card */}
+            {gameQuestions[currentQuestion] && (
+              <motion.div
+                key={currentQuestion}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className={`bg-white/10 backdrop-blur-sm rounded-2xl p-6 border-2 ${
+                  showResult === 'correct' ? 'border-green-500 bg-green-500/20' :
+                  showResult === 'wrong' ? 'border-red-500 bg-red-500/20' :
+                  'border-white/20'
+                }`}
+              >
+                {/* Question */}
+                <div className="text-center mb-6">
+                  {gameQuestions[currentQuestion].type === 'swatch_to_hebrew' ? (
+                    <div 
+                      className="w-24 h-24 rounded-2xl mx-auto mb-4 shadow-lg"
+                      style={{ backgroundColor: gameQuestions[currentQuestion].questionColor }}
+                    />
+                  ) : gameQuestions[currentQuestion].type === 'english_to_hebrew' ? (
+                    <>
+                      <div 
+                        className="w-16 h-16 rounded-xl mx-auto mb-3 shadow-lg"
+                        style={{ backgroundColor: gameQuestions[currentQuestion].questionColor }}
+                      />
+                      <p className="text-3xl font-bold text-white capitalize">
+                        {gameQuestions[currentQuestion].question}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-4xl font-bold text-cyan-400 mb-2" dir="rtl">
+                        {gameQuestions[currentQuestion].question}
+                      </p>
+                      <p className="text-white/60">{gameQuestions[currentQuestion].questionSub}</p>
+                    </>
+                  )}
+                  
+                  <p className="text-white/60 mt-4 text-sm">
+                    {gameQuestions[currentQuestion].type === 'hebrew_to_english' 
+                      ? "What color is this?" 
+                      : "What is this in Hebrew?"}
+                  </p>
+                </div>
+
+                {/* Options */}
+                <div className="grid grid-cols-2 gap-3">
+                  {gameQuestions[currentQuestion].options.map((opt, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => !showResult && handleAnswer(opt[gameQuestions[currentQuestion].answerField])}
+                      disabled={!!showResult}
+                      className={`p-4 rounded-xl border-2 transition-all ${
+                        showResult && opt[gameQuestions[currentQuestion].answerField] === gameQuestions[currentQuestion].correctAnswer
+                          ? 'border-green-500 bg-green-500/20'
+                          : 'border-white/20 hover:border-cyan-400 bg-white/5 hover:bg-white/10'
+                      }`}
+                    >
+                      {gameQuestions[currentQuestion].answerField === 'meaning' ? (
+                        <span className="text-white font-medium capitalize">{opt.meaning}</span>
+                      ) : (
+                        <>
+                          <span className="text-cyan-400 font-bold text-lg" dir="rtl">{opt.hebrew}</span>
+                          <span className="text-white/60 text-sm block">{opt.transliteration}</span>
+                        </>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
             )}
-          </div>
-          <div className="bg-white/10 rounded-full h-2 overflow-hidden">
-            <motion.div
-              className="h-full bg-gradient-to-r from-cyan-500 to-purple-500"
-              initial={{ width: 0 }}
-              animate={{ width: `${(ratedCount / colors.length) * 100}%` }}
-            />
-          </div>
-        </div>
 
-        {/* Color Grid */}
+            <Button
+              onClick={() => { setGameMode(false); setGameComplete(false); }}
+              variant="outline"
+              className="w-full border-white/20 text-white"
+            >
+              Exit Game
+            </Button>
+          </div>
+        ) : gameComplete ? (
+          /* Results Screen */
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20"
+          >
+            <div className="text-center mb-6">
+              <div className="text-6xl mb-4">🎉</div>
+              <h2 className="text-2xl font-bold text-white">Game Complete!</h2>
+              <p className="text-white/60">Your scores have been saved to your backpack</p>
+            </div>
+            
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-6">
+              {colors.map(color => {
+                const score = colorScores[color.meaning] || 0;
+                return (
+                  <div
+                    key={color.meaning}
+                    className="rounded-xl p-2 text-center"
+                    style={{ backgroundColor: color.color }}
+                  >
+                    <p className={`text-sm font-bold capitalize ${!['white', 'yellow', 'gold'].includes(color.meaning) ? 'text-white' : 'text-gray-800'}`}>
+                      {color.meaning}
+                    </p>
+                    <p className={`text-lg font-bold ${score >= 4 ? 'text-green-300' : score >= 2 ? 'text-yellow-300' : 'text-red-300'}`}>
+                      {score}/5
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                onClick={startGame}
+                className="flex-1 bg-gradient-to-r from-cyan-500 to-purple-500"
+              >
+                🔄 Play Again
+              </Button>
+              <Button
+                onClick={() => { setGameMode(false); setGameComplete(false); }}
+                variant="outline"
+                className="flex-1 border-white/20 text-white"
+              >
+                Back to Colors
+              </Button>
+            </div>
+          </motion.div>
+        ) : (
+          <>
+            {/* Progress */}
+            <div className="mb-6">
+              <div className="flex justify-between text-white/60 text-sm mb-2">
+                <span>{ratedCount} of {colors.length} rated</span>
+                {ratedCount === colors.length && (
+                  <span className="text-green-400 flex items-center gap-1">
+                    <CheckCircle className="w-4 h-4" /> Complete!
+                  </span>
+                )}
+              </div>
+              <div className="bg-white/10 rounded-full h-2 overflow-hidden">
+                <motion.div
+                  className="h-full bg-gradient-to-r from-cyan-500 to-purple-500"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${(ratedCount / colors.length) * 100}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Color Grid */}
         <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
           {colors.map((color) => {
             const isExpanded = selectedColor?.meaning === color.meaning;
