@@ -138,11 +138,10 @@ export default function ColorsLesson() {
             const isDark = !['white', 'yellow', 'gold'].includes(color.meaning);
             
             return (
-              <motion.div
+              <div
                 key={color.meaning}
-                layout
                 onClick={() => setSelectedColor(isExpanded ? null : color)}
-                className={`relative rounded-2xl p-4 transition-all border-2 cursor-pointer ${
+                className={`relative rounded-2xl p-3 border-2 cursor-pointer min-h-[140px] flex flex-col justify-between ${
                   isRated 
                     ? "border-green-500/50" 
                     : isExpanded
@@ -155,30 +154,24 @@ export default function ColorsLesson() {
                   {color.meaning}
                 </p>
                 
-                {/* Show Hebrew when expanded */}
-                <AnimatePresence>
-                  {isExpanded && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="mt-2"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <p className={`text-2xl font-bold text-center ${isDark ? 'text-cyan-300' : 'text-purple-700'}`} dir="rtl">
+                {/* Always reserve space, show content when expanded */}
+                <div className="flex-1 flex flex-col justify-center" onClick={(e) => e.stopPropagation()}>
+                  {isExpanded ? (
+                    <>
+                      <p className={`text-xl font-bold text-center ${isDark ? 'text-cyan-300' : 'text-purple-700'}`} dir="rtl">
                         {color.hebrew}
                       </p>
-                      <p className={`text-sm text-center ${isDark ? 'text-white/80' : 'text-gray-600'}`}>
+                      <p className={`text-xs text-center ${isDark ? 'text-white/80' : 'text-gray-600'}`}>
                         {color.transliteration}
                       </p>
                       
                       {/* Rating buttons */}
-                      <div className="flex gap-1 justify-center mt-3">
+                      <div className="flex gap-1 justify-center mt-2">
                         {[1, 2, 3, 4, 5].map((num) => (
                           <button
                             key={num}
                             onClick={(e) => { e.stopPropagation(); handleRating(color, num); }}
-                            className={`w-8 h-8 rounded-lg font-bold text-sm transition-all ${
+                            className={`w-6 h-6 rounded text-xs font-bold transition-all ${
                               rating === num
                                 ? num === 5 
                                   ? "bg-green-500 text-white" 
@@ -192,16 +185,18 @@ export default function ColorsLesson() {
                           </button>
                         ))}
                       </div>
-                    </motion.div>
+                    </>
+                  ) : (
+                    <div className="h-12" /> 
                   )}
-                </AnimatePresence>
+                </div>
                 
-                {isRated && !isExpanded && (
+                {isRated && (
                   <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-white text-xs font-bold">
                     {rating}
                   </div>
                 )}
-              </motion.div>
+              </div>
             );
           })}
         </div>
