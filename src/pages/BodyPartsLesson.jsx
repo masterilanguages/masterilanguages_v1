@@ -1,30 +1,33 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { ArrowLeft, ArrowRight, RotateCcw, Trophy } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { base44 } from "@/api/base44Client";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import AnimatedParrot from "../components/mascot/AnimatedParrot";
+import { toast } from "sonner";
+import GameHeader from "../components/game/GameHeader";
 
 const bodyParts = [
-  { hebrew: "ראש", transliteration: "rosh", meaning: "head" },
-  { hebrew: "עין", transliteration: "ayin", meaning: "eye" },
-  { hebrew: "עיניים", transliteration: "einayim", meaning: "eyes" },
-  { hebrew: "אוזן", transliteration: "ozen", meaning: "ear" },
-  { hebrew: "אף", transliteration: "af", meaning: "nose" },
-  { hebrew: "פה", transliteration: "peh", meaning: "mouth" },
-  { hebrew: "שן", transliteration: "shen", meaning: "tooth" },
-  { hebrew: "לשון", transliteration: "lashon", meaning: "tongue" },
-  { hebrew: "צוואר", transliteration: "tzavar", meaning: "neck" },
-  { hebrew: "כתף", transliteration: "katef", meaning: "shoulder" },
-  { hebrew: "יד", transliteration: "yad", meaning: "hand/arm" },
-  { hebrew: "אצבע", transliteration: "etzba", meaning: "finger" },
-  { hebrew: "רגל", transliteration: "regel", meaning: "leg/foot" },
-  { hebrew: "ברך", transliteration: "berech", meaning: "knee" },
-  { hebrew: "בטן", transliteration: "beten", meaning: "stomach" },
-  { hebrew: "גב", transliteration: "gav", meaning: "back" },
-  { hebrew: "לב", transliteration: "lev", meaning: "heart" },
-  { hebrew: "שיער", transliteration: "se'ar", meaning: "hair" },
+  { hebrew: "ראש", transliteration: "rosh", meaning: "head", emoji: "🧠" },
+  { hebrew: "עין", transliteration: "ayin", meaning: "eye", emoji: "👁️" },
+  { hebrew: "עיניים", transliteration: "einayim", meaning: "eyes", emoji: "👀" },
+  { hebrew: "אוזן", transliteration: "ozen", meaning: "ear", emoji: "👂" },
+  { hebrew: "אף", transliteration: "af", meaning: "nose", emoji: "👃" },
+  { hebrew: "פה", transliteration: "peh", meaning: "mouth", emoji: "👄" },
+  { hebrew: "שן", transliteration: "shen", meaning: "tooth", emoji: "🦷" },
+  { hebrew: "לשון", transliteration: "lashon", meaning: "tongue", emoji: "👅" },
+  { hebrew: "צוואר", transliteration: "tzavar", meaning: "neck", emoji: "🦒" },
+  { hebrew: "כתף", transliteration: "katef", meaning: "shoulder", emoji: "💪" },
+  { hebrew: "יד", transliteration: "yad", meaning: "hand/arm", emoji: "🤚" },
+  { hebrew: "אצבע", transliteration: "etzba", meaning: "finger", emoji: "☝️" },
+  { hebrew: "רגל", transliteration: "regel", meaning: "leg/foot", emoji: "🦶" },
+  { hebrew: "ברך", transliteration: "berech", meaning: "knee", emoji: "🦵" },
+  { hebrew: "בטן", transliteration: "beten", meaning: "stomach", emoji: "🫃" },
+  { hebrew: "גב", transliteration: "gav", meaning: "back", emoji: "🔙" },
+  { hebrew: "לב", transliteration: "lev", meaning: "heart", emoji: "❤️" },
+  { hebrew: "שיער", transliteration: "se'ar", meaning: "hair", emoji: "💇" },
 ];
 
 export default function BodyPartsLesson() {
