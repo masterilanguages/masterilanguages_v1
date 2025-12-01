@@ -117,6 +117,39 @@ export default function Home() {
     }
   }, [userProfile, profileLoading, navigate]);
 
+  // Timer logic
+  useEffect(() => {
+    let interval;
+    if (timerRunning && timer > 0) {
+      interval = setInterval(() => {
+        setTimer(prev => {
+          if (prev <= timerSpeed) {
+            setTimerRunning(false);
+            // Play baby song when timer ends
+            const audio = new Audio("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3");
+            audio.play().catch(() => {});
+            toast.success("Time's up! 🎵 Great job learning!");
+            return 0;
+          }
+          return prev - timerSpeed;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [timerRunning, timer, timerSpeed]);
+
+  const startTimer = (minutes) => {
+    setTimer(minutes * 60);
+    setTimerRunning(true);
+    setTimerSpeed(1);
+  };
+
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
   const getProgress = (activityId) => activityProgress.find(p => p.activity_id === activityId);
   const coins = userCoins?.coins || 0;
   const unlockedItems = userCoins?.unlocked_items || [];
