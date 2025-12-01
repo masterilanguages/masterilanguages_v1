@@ -348,42 +348,54 @@ export default function Home() {
 
             {selectedLevel.activities?.length > 0 ? (
               <div className="space-y-3">
-                {selectedLevel.activities.map((activity) => (
-                  <motion.button
-                    key={activity.id}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => {
-                      // Parse duration to get minutes
-                      const durationMatch = activity.duration.match(/(\d+)\s*(minute|hour)/i);
-                      if (durationMatch) {
-                        const amount = parseInt(durationMatch[1]);
-                        const unit = durationMatch[2].toLowerCase();
-                        const minutes = unit === 'hour' ? amount * 60 : amount;
-                        startTimer(minutes);
-                      }
-                      
-                      if (activity.id === "baby_words") {
-                        setSelectedActivity(activity);
-                      } else {
-                        navigate(createPageUrl(activity.page));
-                      }
-                    }}
-                    className="w-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-cyan-400/50 rounded-xl p-4 text-left transition-all"
-                  >
-                    <div className="flex items-start gap-3">
-                      <span className="text-2xl">{activity.icon}</span>
-                      <div className="flex-1">
-                        <p className="text-white font-medium">{activity.name}</p>
-                        <div className="flex items-center gap-2 mt-1 text-white/60 text-sm">
-                          <Clock className="w-3 h-3" />
-                          <span>{activity.duration}</span>
+                {selectedLevel.activities.map((activity) => {
+                  // Check if lesson is completed
+                  const lessonName = activity.page;
+                  const isCompleted = lessonProgress.find(lp => lp.lesson_name === lessonName && lp.completed);
+                  
+                  return (
+                    <motion.button
+                      key={activity.id}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => {
+                        // Parse duration to get minutes
+                        const durationMatch = activity.duration.match(/(\d+)\s*(minute|hour)/i);
+                        if (durationMatch) {
+                          const amount = parseInt(durationMatch[1]);
+                          const unit = durationMatch[2].toLowerCase();
+                          const minutes = unit === 'hour' ? amount * 60 : amount;
+                          startTimer(minutes);
+                        }
+                        
+                        if (activity.id === "baby_words") {
+                          setSelectedActivity(activity);
+                        } else {
+                          navigate(createPageUrl(activity.page));
+                        }
+                      }}
+                      className={`w-full ${isCompleted ? 'bg-green-500/10 border-green-500/30' : 'bg-white/5 border-white/10'} hover:bg-white/10 border hover:border-cyan-400/50 rounded-xl p-4 text-left transition-all`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <span className="text-2xl">{activity.icon}</span>
+                        <div className="flex-1">
+                          <p className="text-white font-medium">{activity.name}</p>
+                          <div className="flex items-center gap-2 mt-1 text-white/60 text-sm">
+                            <Clock className="w-3 h-3" />
+                            <span>{activity.duration}</span>
+                          </div>
                         </div>
+                        {isCompleted ? (
+                          <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+                            <span className="text-white text-sm">✓</span>
+                          </div>
+                        ) : (
+                          <ChevronRight className="w-5 h-5 text-white/40" />
+                        )}
                       </div>
-                      <ChevronRight className="w-5 h-5 text-white/40" />
-                    </div>
-                  </motion.button>
-                ))}
+                    </motion.button>
+                  );
+                })}
               </div>
             ) : (
               <div className="text-center py-8 bg-white/5 rounded-xl border border-white/10">
