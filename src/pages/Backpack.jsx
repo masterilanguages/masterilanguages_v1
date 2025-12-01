@@ -365,33 +365,7 @@ export default function Backpack() {
           )}
         </div>
 
-        {/* Quick Actions */}
-        <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <Link to={createPageUrl("Home")}>
-            <Button className="w-full bg-gradient-to-r from-cyan-500 to-purple-500 h-auto py-3 flex-col">
-              <Gamepad2 className="w-5 h-5 mb-1" />
-              <span className="text-xs">Home</span>
-            </Button>
-          </Link>
-          <Link to={createPageUrl("BabyVideos")}>
-            <Button className="w-full bg-gradient-to-r from-purple-500 to-pink-500 h-auto py-3 flex-col">
-              <span className="text-lg mb-1">📺</span>
-              <span className="text-xs">Videos</span>
-            </Button>
-          </Link>
-          <Link to={createPageUrl("Practice")}>
-            <Button className="w-full bg-gradient-to-r from-green-500 to-emerald-500 h-auto py-3 flex-col">
-              <span className="text-lg mb-1">📚</span>
-              <span className="text-xs">Practice</span>
-            </Button>
-          </Link>
-          <Link to={createPageUrl("Library")}>
-            <Button className="w-full bg-gradient-to-r from-amber-500 to-orange-500 h-auto py-3 flex-col">
-              <span className="text-lg mb-1">📖</span>
-              <span className="text-xs">Library</span>
-            </Button>
-          </Link>
-        </div>
+
       </div>
 
       {/* Word Sentences Dialog */}
