@@ -13,6 +13,7 @@ import { createPageUrl } from "@/utils";
 import WordCard from "../components/practice/WordCard";
 import GameHeader from "../components/game/GameHeader";
 import ClickableWord from "../components/learning/ClickableWord";
+import TranslatorWidget from "../components/TranslatorWidget";
 import { toast } from "sonner";
 
 export default function Practice() {
@@ -552,6 +553,9 @@ export default function Practice() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Translator Widget */}
+      <TranslatorWidget />
     </div>
   );
 }

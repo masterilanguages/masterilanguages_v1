@@ -9,6 +9,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import GameHeader from "../components/game/GameHeader";
 import QuickAddWordWidget from "../components/QuickAddWordWidget";
+import TranslatorWidget from "../components/TranslatorWidget";
 import { Input } from "@/components/ui/input";
 
 const colors = [
@@ -762,6 +763,7 @@ export default function ColorsLesson() {
       </div>
 
       <QuickAddWordWidget />
+      <TranslatorWidget />
     </div>
   );
 }
