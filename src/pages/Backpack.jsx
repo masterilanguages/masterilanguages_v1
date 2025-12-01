@@ -75,33 +75,34 @@ export default function Backpack() {
     try {
       const result = await base44.integrations.Core.InvokeLLM({
         prompt: `Create 3 simple sentences using the word "${word.phonetic || word.word}" which means "${word.translation}".
-        For each sentence provide the transliterated version (not Hebrew letters) and English translation.
-        List each word separately with its meaning.`,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            sentences: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  transliterated: { type: "string" },
-                  english: { type: "string" },
-                  words: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        word: { type: "string" },
-                        meaning: { type: "string" }
+                      For each sentence provide the transliterated version (not Hebrew letters) and English translation.
+                      List each word separately with its Hebrew (with vowels/nikkud), transliteration, and meaning.`,
+                      response_json_schema: {
+                        type: "object",
+                        properties: {
+                          sentences: {
+                            type: "array",
+                            items: {
+                              type: "object",
+                              properties: {
+                                transliterated: { type: "string" },
+                                english: { type: "string" },
+                                words: {
+                                  type: "array",
+                                  items: {
+                                    type: "object",
+                                    properties: {
+                                      hebrew: { type: "string", description: "Hebrew word with vowels/nikkud" },
+                                      word: { type: "string", description: "Transliteration" },
+                                      meaning: { type: "string" }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
                       }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
       });
       setSentences(result.sentences);
     } catch (e) {
