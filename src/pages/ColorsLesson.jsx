@@ -288,128 +288,8 @@ export default function ColorsLesson() {
           )}
         </div>
 
-        {/* Game Mode */}
-        {gameMode && !gameComplete ? (
-          <div className="space-y-6">
-            {/* Show Color Sentences Game button while playing */}
-            <div className="bg-white/5 border border-white/10 rounded-xl p-3">
-              <Button
-                onClick={() => {
-                  if (!canSeeSentences) {
-                    toast.error("Complete the Color Game first to unlock this!");
-                  } else {
-                    generateSentences();
-                  }
-                }}
-                disabled={loadingSentences}
-                className={`w-full py-3 ${
-                  canSeeSentences 
-                    ? "bg-gradient-to-r from-purple-500 to-pink-500" 
-                    : "bg-white/10 text-white/40"
-                }`}
-              >
-                {loadingSentences ? (
-                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                ) : (
-                  <>📝 Color Sentences Game {!canSeeSentences && "🔒"}</>
-                )}
-              </Button>
-            </div>
-            {/* Progress */}
-            <div>
-              <div className="flex justify-between text-white/60 text-sm mb-2">
-                <span>Question {currentQuestion + 1} of {gameQuestions.length}</span>
-                <span>{Math.round(((currentQuestion) / gameQuestions.length) * 100)}%</span>
-              </div>
-              <div className="bg-white/10 rounded-full h-2 overflow-hidden">
-                <motion.div
-                  className="h-full bg-gradient-to-r from-cyan-500 to-purple-500"
-                  animate={{ width: `${((currentQuestion) / gameQuestions.length) * 100}%` }}
-                />
-              </div>
-            </div>
-
-            {/* Question Card */}
-            {gameQuestions[currentQuestion] && (
-              <motion.div
-                key={currentQuestion}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className={`bg-white/10 backdrop-blur-sm rounded-2xl p-6 border-2 ${
-                  showResult === 'correct' ? 'border-green-500 bg-green-500/20' :
-                  showResult === 'wrong' ? 'border-red-500 bg-red-500/20' :
-                  'border-white/20'
-                }`}
-              >
-                {/* Question */}
-                <div className="text-center mb-6">
-                  {gameQuestions[currentQuestion].type === 'swatch_to_hebrew' ? (
-                    <div 
-                      className="w-24 h-24 rounded-2xl mx-auto mb-4 shadow-lg"
-                      style={{ backgroundColor: gameQuestions[currentQuestion].questionColor }}
-                    />
-                  ) : gameQuestions[currentQuestion].type === 'english_to_hebrew' ? (
-                    <>
-                      <div 
-                        className="w-16 h-16 rounded-xl mx-auto mb-3 shadow-lg"
-                        style={{ backgroundColor: gameQuestions[currentQuestion].questionColor }}
-                      />
-                      <p className="text-3xl font-bold text-white capitalize">
-                        {gameQuestions[currentQuestion].question}
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <p className="text-4xl font-bold text-cyan-400 mb-2" dir="rtl">
-                        {gameQuestions[currentQuestion].question}
-                      </p>
-                      <p className="text-white/60">{gameQuestions[currentQuestion].questionSub}</p>
-                    </>
-                  )}
-                  
-                  <p className="text-white/60 mt-4 text-sm">
-                    {gameQuestions[currentQuestion].type === 'hebrew_to_english' 
-                      ? "What color is this?" 
-                      : "What is this in Hebrew?"}
-                  </p>
-                </div>
-
-                {/* Options */}
-                <div className="grid grid-cols-2 gap-3">
-                  {gameQuestions[currentQuestion].options.map((opt, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => !showResult && handleAnswer(opt[gameQuestions[currentQuestion].answerField])}
-                      disabled={!!showResult}
-                      className={`p-4 rounded-xl border-2 transition-all ${
-                        showResult && opt[gameQuestions[currentQuestion].answerField] === gameQuestions[currentQuestion].correctAnswer
-                          ? 'border-green-500 bg-green-500/20'
-                          : 'border-white/20 hover:border-cyan-400 bg-white/5 hover:bg-white/10'
-                      }`}
-                    >
-                      {gameQuestions[currentQuestion].answerField === 'meaning' ? (
-                        <span className="text-white font-medium capitalize">{opt.meaning}</span>
-                      ) : (
-                        <>
-                          <span className="text-cyan-400 font-bold text-lg" dir="rtl">{opt.hebrew}</span>
-                          <span className="text-white/60 text-sm block">{opt.transliteration}</span>
-                        </>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-
-            <Button
-              onClick={() => { setGameMode(false); setGameComplete(false); }}
-              variant="outline"
-              className="w-full border-white/20 text-white"
-            >
-              Exit Game
-            </Button>
-          </div>
-        ) : gameComplete ? (
+        {/* Game Complete Results */}
+        {gameComplete ? (
           /* Results Screen */
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
@@ -700,6 +580,109 @@ export default function ColorsLesson() {
               >
                 🎮 Color Game {!canPlayGame && "🔒"}
               </Button>
+
+              {/* Game Mode - Inline */}
+              {gameMode && !gameComplete && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="space-y-4 pt-4 border-t border-white/10"
+                >
+                  {/* Progress */}
+                  <div>
+                    <div className="flex justify-between text-white/60 text-sm mb-2">
+                      <span>Question {currentQuestion + 1} of {gameQuestions.length}</span>
+                      <span>{Math.round(((currentQuestion) / gameQuestions.length) * 100)}%</span>
+                    </div>
+                    <div className="bg-white/10 rounded-full h-2 overflow-hidden">
+                      <motion.div
+                        className="h-full bg-gradient-to-r from-cyan-500 to-purple-500"
+                        animate={{ width: `${((currentQuestion) / gameQuestions.length) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Question Card */}
+                  {gameQuestions[currentQuestion] && (
+                    <motion.div
+                      key={currentQuestion}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      className={`bg-white/10 backdrop-blur-sm rounded-2xl p-6 border-2 ${
+                        showResult === 'correct' ? 'border-green-500 bg-green-500/20' :
+                        showResult === 'wrong' ? 'border-red-500 bg-red-500/20' :
+                        'border-white/20'
+                      }`}
+                    >
+                      {/* Question */}
+                      <div className="text-center mb-6">
+                        {gameQuestions[currentQuestion].type === 'swatch_to_hebrew' ? (
+                          <div 
+                            className="w-24 h-24 rounded-2xl mx-auto mb-4 shadow-lg"
+                            style={{ backgroundColor: gameQuestions[currentQuestion].questionColor }}
+                          />
+                        ) : gameQuestions[currentQuestion].type === 'english_to_hebrew' ? (
+                          <>
+                            <div 
+                              className="w-16 h-16 rounded-xl mx-auto mb-3 shadow-lg"
+                              style={{ backgroundColor: gameQuestions[currentQuestion].questionColor }}
+                            />
+                            <p className="text-3xl font-bold text-white capitalize">
+                              {gameQuestions[currentQuestion].question}
+                            </p>
+                          </>
+                        ) : (
+                          <>
+                            <p className="text-4xl font-bold text-cyan-400 mb-2" dir="rtl">
+                              {gameQuestions[currentQuestion].question}
+                            </p>
+                            <p className="text-white/60">{gameQuestions[currentQuestion].questionSub}</p>
+                          </>
+                        )}
+                        
+                        <p className="text-white/60 mt-4 text-sm">
+                          {gameQuestions[currentQuestion].type === 'hebrew_to_english' 
+                            ? "What color is this?" 
+                            : "What is this in Hebrew?"}
+                        </p>
+                      </div>
+
+                      {/* Options */}
+                      <div className="grid grid-cols-2 gap-3">
+                        {gameQuestions[currentQuestion].options.map((opt, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => !showResult && handleAnswer(opt[gameQuestions[currentQuestion].answerField])}
+                            disabled={!!showResult}
+                            className={`p-4 rounded-xl border-2 transition-all ${
+                              showResult && opt[gameQuestions[currentQuestion].answerField] === gameQuestions[currentQuestion].correctAnswer
+                                ? 'border-green-500 bg-green-500/20'
+                                : 'border-white/20 hover:border-cyan-400 bg-white/5 hover:bg-white/10'
+                            }`}
+                          >
+                            {gameQuestions[currentQuestion].answerField === 'meaning' ? (
+                              <span className="text-white font-medium capitalize">{opt.meaning}</span>
+                            ) : (
+                              <>
+                                <span className="text-cyan-400 font-bold text-lg" dir="rtl">{opt.hebrew}</span>
+                                <span className="text-white/60 text-sm block">{opt.transliteration}</span>
+                              </>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+
+                  <Button
+                    onClick={() => { setGameMode(false); setGameComplete(false); }}
+                    variant="outline"
+                    className="w-full border-white/20 text-white"
+                  >
+                    Exit Game
+                  </Button>
+                </motion.div>
+              )}
 
               {/* Color Sentences Game */}
               <Button
