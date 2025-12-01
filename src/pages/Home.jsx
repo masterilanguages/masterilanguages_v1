@@ -38,11 +38,31 @@ const storeItems = [
   { id: "crown", name: "Golden Crown", emoji: "👑", price: 300 },
 ];
 
+const levels = [
+  { 
+    id: 1, 
+    name: "Level 1", 
+    subtitle: "Baby Steps",
+    icon: Baby, 
+    gradient: "from-pink-500 to-rose-500",
+    activities: [
+      { id: "baby_words", name: "Help baby learn 50 first words and learn sentences", duration: "10 minutes", icon: "👶", page: "BabyVideos" },
+      { id: "blessing", name: "Learn a Jewish blessing in Hebrew", duration: "5 minutes", icon: "✡️", page: "Progress" },
+      { id: "youtube", name: "Watch Youtube video", duration: "1 hour", icon: "📺", page: "BabyVideos" },
+    ]
+  },
+  { id: 2, name: "Level 2", subtitle: "Growing Up", icon: Star, gradient: "from-amber-500 to-orange-500", activities: [] },
+  { id: 3, name: "Level 3", subtitle: "Explorer", icon: Sparkles, gradient: "from-green-500 to-emerald-500", activities: [] },
+  { id: 4, name: "Level 4", subtitle: "Adventurer", icon: Trophy, gradient: "from-blue-500 to-indigo-500", activities: [] },
+  { id: 5, name: "Level 5", subtitle: "Master", icon: Star, gradient: "from-purple-500 to-violet-500", activities: [] },
+];
+
 export default function Home() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [buyCoinsDialog, setBuyCoinsDialog] = useState(false);
   const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
+  const [selectedLevel, setSelectedLevel] = useState(null);
 
   const { data: userProfile, isLoading: profileLoading } = useQuery({
     queryKey: ['userProfile'],
