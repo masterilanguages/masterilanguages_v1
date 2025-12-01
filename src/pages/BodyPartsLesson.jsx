@@ -81,42 +81,118 @@ export default function BodyPartsLesson() {
   };
 
   const startMatchingGame = () => {
-    const shuffledWords = [...bodyParts].sort(() => Math.random() - 0.5).slice(0, 6);
-    const shuffledEmojis = [...shuffledWords].sort(() => Math.random() - 0.5);
-    setMatchPairs(shuffledWords);
-    setSelectedEmoji(null);
-    setSelectedWord(null);
-    setMatched(new Set());
-    setScore(0);
+    // Each word needs to be answered 5 times
+    // Create a queue with each word appearing 5 times, shuffled
+    const queue = [];
+    bodyParts.forEach(word => {
+      for (let i = 0; i < 5; i++) {
+        queue.push({ ...word, attemptNum: i });
+      }
+    });
+    
+    // Shuffle but ensure no immediate repeats
+    const shuffled = shuffleNoRepeats(queue);
+    
+    setQuestionQueue(shuffled);
+    setWordScores({});
+    setWordAttempts({});
+    setGameComplete(false);
+    setAnswered(false);
+    setLastAnswer(null);
     setMode("match");
+    
+    // Load first question
+    loadQuestion(shuffled, {});
   };
 
-  const handleEmojiClick = (item) => {
-    if (matched.has(item.hebrew)) return;
-    setSelectedEmoji(item);
-    if (selectedWord && selectedWord.hebrew === item.hebrew) {
-      setMatched(prev => new Set([...prev, item.hebrew]));
-      setScore(prev => prev + 1);
-      setSelectedEmoji(null);
-      setSelectedWord(null);
-      if (matched.size + 1 === matchPairs.length) {
-        completeLessonMutation.mutate();
+  // Shuffle array ensuring no consecutive items have the same hebrew word
+  const shuffleNoRepeats = (arr) => {
+    const result = [];
+    const remaining = [...arr].sort(() => Math.random() - 0.5);
+    
+    while (remaining.length > 0) {
+      let placed = false;
+      for (let i = 0; i < remaining.length; i++) {
+        if (result.length === 0 || result[result.length - 1].hebrew !== remaining[i].hebrew) {
+          result.push(remaining.splice(i, 1)[0]);
+          placed = true;
+          break;
+        }
+      }
+      // If no valid placement found (rare edge case), just add anyway
+      if (!placed && remaining.length > 0) {
+        result.push(remaining.shift());
       }
     }
+    return result;
   };
 
-  const handleWordClick = (item) => {
-    if (matched.has(item.hebrew)) return;
-    setSelectedWord(item);
-    if (selectedEmoji && selectedEmoji.hebrew === item.hebrew) {
-      setMatched(prev => new Set([...prev, item.hebrew]));
-      setScore(prev => prev + 1);
-      setSelectedEmoji(null);
-      setSelectedWord(null);
-      if (matched.size + 1 === matchPairs.length) {
-        completeLessonMutation.mutate();
-      }
+  const loadQuestion = (queue, attempts) => {
+    // Find next question that hasn't been attempted 5 times yet
+    const nextQ = queue.find(q => (attempts[q.hebrew] || 0) < 5);
+    
+    if (!nextQ) {
+      // All words have been attempted 5 times
+      setGameComplete(true);
+      completeLessonMutation.mutate();
+      return;
     }
+
+    setCurrentQuestion(nextQ);
+    
+    // Generate 4 options (including correct answer)
+    const wrongOptions = bodyParts
+      .filter(w => w.hebrew !== nextQ.hebrew)
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 3);
+    
+    const allOptions = [nextQ, ...wrongOptions].sort(() => Math.random() - 0.5);
+    setOptions(allOptions);
+    setAnswered(false);
+    setLastAnswer(null);
+  };
+
+  const handleAnswer = (selected) => {
+    if (answered) return;
+    
+    const isCorrect = selected.hebrew === currentQuestion.hebrew;
+    setAnswered(true);
+    setLastAnswer(isCorrect ? 'correct' : 'wrong');
+    
+    // Update attempts
+    const newAttempts = {
+      ...wordAttempts,
+      [currentQuestion.hebrew]: (wordAttempts[currentQuestion.hebrew] || 0) + 1
+    };
+    setWordAttempts(newAttempts);
+    
+    // Update scores if correct
+    if (isCorrect) {
+      setWordScores(prev => ({
+        ...prev,
+        [currentQuestion.hebrew]: (prev[currentQuestion.hebrew] || 0) + 1
+      }));
+    }
+    
+    // Move to next question after delay
+    setTimeout(() => {
+      // Remove this question from queue and add back if not yet attempted 5 times
+      const newQueue = questionQueue.filter(q => 
+        !(q.hebrew === currentQuestion.hebrew && q.attemptNum === currentQuestion.attemptNum)
+      );
+      setQuestionQueue(newQueue);
+      loadQuestion(newQueue, newAttempts);
+    }, 1000);
+  };
+
+  const getQualification = (score) => {
+    return score; // 0-5 based on correct answers
+  };
+
+  const getTotalProgress = () => {
+    const totalAttempts = Object.values(wordAttempts).reduce((a, b) => a + b, 0);
+    const totalNeeded = bodyParts.length * 5;
+    return Math.round((totalAttempts / totalNeeded) * 100);
   };
 
   return (
