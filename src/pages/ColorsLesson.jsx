@@ -39,6 +39,9 @@ export default function ColorsLesson() {
   const [mnemonicText, setMnemonicText] = useState("");
   const [mnemonicImages, setMnemonicImages] = useState({}); // store generated images per color
   const [generatingImage, setGeneratingImage] = useState(false);
+  const [gameCompleted, setGameCompleted] = useState(false); // track if game was completed
+  const [sentences, setSentences] = useState(null);
+  const [loadingSentences, setLoadingSentences] = useState(false);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -105,6 +108,9 @@ export default function ColorsLesson() {
   };
 
   const ratedCount = Object.keys(colorRatings).length;
+  const allRated = ratedCount === colors.length;
+  const canPlayGame = allRated;
+  const canSeeSentences = gameCompleted;
 
   const generateMnemonic = async (color) => {
     if (!mnemonicText.trim()) return;
@@ -124,6 +130,37 @@ export default function ColorsLesson() {
       toast.error("Failed to generate image");
     }
     setGeneratingImage(false);
+  };
+
+  const generateSentences = async () => {
+    setLoadingSentences(true);
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Create 5 very simple Hebrew sentences using color words. Use these colors: red (adom), blue (kachol), green (yarok), yellow (tsahov), white (lavan), black (shachor).
+        Each sentence should be very basic like "The apple is red" or "The sky is blue".
+        Provide Hebrew with vowels, transliteration, and English translation.`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            sentences: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  hebrew: { type: "string" },
+                  transliteration: { type: "string" },
+                  english: { type: "string" }
+                }
+              }
+            }
+          }
+        }
+      });
+      setSentences(result.sentences);
+    } catch (e) {
+      toast.error("Failed to generate sentences");
+    }
+    setLoadingSentences(false);
   };
 
   // Generate 5 questions per color (60 total), shuffled
@@ -216,6 +253,7 @@ export default function ColorsLesson() {
         }
         
         setColorRatings(finalScores);
+        setGameCompleted(true);
         completeLessonMutation.mutate();
         toast.success("Game complete! Scores saved to backpack!");
       } else {
@@ -395,11 +433,20 @@ export default function ColorsLesson() {
           </motion.div>
         ) : (
           <div>
+            {/* Instructions */}
+            <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-6">
+              <p className="text-white/80 text-sm">
+                <span className="text-cyan-400 font-bold">1.</span> Tap each color to see Hebrew and rate how well you know it (1-5)<br/>
+                <span className="text-cyan-400 font-bold">2.</span> Tap the 🖼️ button to describe a picture that helps you remember<br/>
+                <span className="text-cyan-400 font-bold">3.</span> After rating all colors, play the game to test yourself
+              </p>
+            </div>
+
             {/* Progress */}
             <div className="mb-6">
               <div className="flex justify-between text-white/60 text-sm mb-2">
                 <span>{ratedCount} of {colors.length} rated</span>
-                {ratedCount === colors.length && (
+                {allRated && (
                   <span className="text-green-400 flex items-center gap-1">
                     <CheckCircle className="w-4 h-4" /> Complete!
                   </span>
@@ -551,19 +598,66 @@ export default function ColorsLesson() {
               })}
             </div>
 
-            {/* Complete button */}
-            {ratedCount === colors.length && (
+            {/* Start Game Button - Unlocks after all rated */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-6"
+            >
+              <Button
+                onClick={startGame}
+                disabled={!canPlayGame}
+                className={`w-full py-6 text-lg ${
+                  canPlayGame 
+                    ? "bg-gradient-to-r from-green-500 to-emerald-500" 
+                    : "bg-white/10 text-white/40 cursor-not-allowed"
+                }`}
+              >
+                {canPlayGame ? "🎮 Play Game to Test Knowledge" : "🔒 Rate all colors to unlock game"}
+              </Button>
+            </motion.div>
+
+            {/* Easy Sentences Button - Unlocks after game completed */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="mt-3"
+            >
+              <Button
+                onClick={generateSentences}
+                disabled={!canSeeSentences || loadingSentences}
+                className={`w-full py-6 text-lg ${
+                  canSeeSentences 
+                    ? "bg-gradient-to-r from-purple-500 to-pink-500" 
+                    : "bg-white/10 text-white/40 cursor-not-allowed"
+                }`}
+              >
+                {loadingSentences ? (
+                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                ) : canSeeSentences ? (
+                  "📝 Easy Sentences with Colors"
+                ) : (
+                  "🔒 Complete game to unlock sentences"
+                )}
+              </Button>
+            </motion.div>
+
+            {/* Sentences Display */}
+            {sentences && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mt-6"
+                className="mt-6 space-y-3"
               >
-                <Button
-                  onClick={startGame}
-                  className="w-full bg-gradient-to-r from-green-500 to-emerald-500 py-6 text-lg"
-                >
-                  🎮 Play Game to Test Knowledge
-                </Button>
+                <h3 className="text-white font-bold text-lg">📝 Practice Sentences:</h3>
+                {sentences.map((s, idx) => (
+                  <div key={idx} className="bg-white/5 border border-white/10 rounded-xl p-4">
+                    <p className="text-cyan-400 text-xl font-bold mb-1" dir="rtl">{s.hebrew}</p>
+                    <p className="text-white/70">{s.transliteration}</p>
+                    <p className="text-white/50 text-sm">{s.english}</p>
+                  </div>
+                ))}
               </motion.div>
             )}
           </div>
