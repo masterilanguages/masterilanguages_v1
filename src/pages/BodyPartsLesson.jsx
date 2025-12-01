@@ -8,6 +8,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import GameHeader from "../components/game/GameHeader";
+import QuickAddWordWidget from "../components/QuickAddWordWidget";
 
 const bodyParts = [
   { hebrew: "ראש", transliteration: "rosh", meaning: "head", emoji: "🧠" },
