@@ -430,6 +430,13 @@ export default function ColorsLesson() {
                 Back to Colors
               </Button>
             </div>
+
+            {/* Next Lesson Button */}
+            <Link to={createPageUrl("BodyPartsLesson")} className="block mt-4">
+              <Button className="w-full py-6 text-lg bg-gradient-to-r from-green-500 to-emerald-500">
+                ✓ Next: Body Parts Lesson →
+              </Button>
+            </Link>
           </motion.div>
         ) : (
           <div>
