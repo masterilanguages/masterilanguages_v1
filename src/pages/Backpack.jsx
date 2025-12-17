@@ -79,6 +79,14 @@ export default function Backpack() {
     },
   });
 
+  const deleteWordMutation = useMutation({
+    mutationFn: (id) => base44.entities.Word.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['wordRatings'] });
+      toast.success("Word deleted!");
+    },
+  });
+
   const handleRateWord = async (wordId, rating, event) => {
     event.stopPropagation();
     await updateWordMutation.mutateAsync({
@@ -401,13 +409,22 @@ export default function Backpack() {
                         onClick={() => setFlippedCards(prev => ({ ...prev, [word.id]: !prev[word.id] }))}
                         className="p-3 cursor-pointer hover:bg-white/5 transition-all h-28 flex flex-col justify-center items-center text-center"
                       >
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setPictureWordId(pictureWordId === word.id ? null : word.id); }}
-                          className="absolute top-1 right-1 w-6 h-6 rounded-full bg-purple-500/20 hover:bg-purple-500/40 flex items-center justify-center text-xs transition-all z-10"
-                          title="Create picture"
-                        >
-                          🎨
-                        </button>
+                        <div className="absolute top-1 right-1 flex gap-1 z-10">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); deleteWordMutation.mutate(word.id); }}
+                            className="w-6 h-6 rounded-full bg-white/5 hover:bg-red-500/20 flex items-center justify-center text-xs transition-all"
+                            title="Delete word"
+                          >
+                            🗑️
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setPictureWordId(pictureWordId === word.id ? null : word.id); }}
+                            className="w-6 h-6 rounded-full bg-white/5 hover:bg-purple-500/20 flex items-center justify-center text-xs transition-all"
+                            title="Create picture"
+                          >
+                            🎨
+                          </button>
+                        </div>
                         <p className="text-cyan-400 font-bold text-lg mb-0.5" dir="rtl">{word.word}</p>
                         <p className="text-white/60 text-xs mb-1">{word.phonetic}</p>
                         {isFlipped && (
