@@ -33,6 +33,7 @@ export default function Practice() {
   const [generatedContent, setGeneratedContent] = useState(null);
   const [wordWithSentences, setWordWithSentences] = useState(null);
   const [loadingSentences, setLoadingSentences] = useState(false);
+  const [savedSentences, setSavedSentences] = useState({});
 
   const queryClient = useQueryClient();
 
@@ -135,7 +136,8 @@ export default function Practice() {
       category: "sentences",
       difficulty: "beginner",
     });
-    toast.success("Sentence saved to backpack!");
+    setSavedSentences(prev => ({ ...prev, [word.id]: true }));
+    toast.success("Saved!");
     queryClient.invalidateQueries({ queryKey: ['words'] });
   };
 
@@ -440,15 +442,19 @@ export default function Practice() {
                                     <div className="flex gap-2">
                                       <button
                                         onClick={() => saveToBackpack(word, wordWithSentences.sentence)}
-                                        className="px-2 py-1 bg-green-500/20 hover:bg-green-500/30 text-green-400 text-xs rounded flex items-center gap-1"
+                                        className={`px-2 py-1 text-xs rounded flex items-center gap-1 ${
+                                          savedSentences[word.id]
+                                            ? "bg-green-500 text-white"
+                                            : "bg-green-500/20 hover:bg-green-500/30 text-green-400"
+                                        }`}
                                       >
-                                        <Check className="w-3 h-3" /> Save to Backpack
+                                        <Check className="w-3 h-3" /> Save
                                       </button>
                                       <button
-                                        onClick={() => generateSentence(word)}
+                                        onClick={() => { generateSentence(word); setSavedSentences(prev => ({ ...prev, [word.id]: false })); }}
                                         className="px-2 py-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 text-xs rounded flex items-center gap-1"
                                       >
-                                        <RotateCcw className="w-3 h-3" /> Different Sentence
+                                        <RotateCcw className="w-3 h-3" /> Different
                                       </button>
                                     </div>
                                   </>
