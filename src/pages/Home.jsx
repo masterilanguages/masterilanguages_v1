@@ -286,6 +286,7 @@ export default function Home() {
         profile={userProfile} 
         coins={coins} 
         onBuyCoins={() => setBuyCoinsDialog(true)} 
+        onSelectLevel={setSelectedLevel}
       />
       
       <TimelineBar currentAge={currentAge} />
@@ -501,7 +502,9 @@ export default function Home() {
               <DailySongCard />
             </div>
 
-            {/* Dashboard Boxes */}
+            {/* Dashboard Boxes - Only show when no level is selected */}
+            {!selectedLevel && (
+              <>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
                   {/* Calendar Box */}
                   <motion.div
@@ -623,60 +626,9 @@ export default function Home() {
                       )}
                     </div>
                   </motion.div>
-                </div>
-
-            {/* 5 Levels */}
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold text-white mb-6 text-center">Choose Your Level</h2>
-              {isMasterUser && (
-                <div className="bg-yellow-500/20 border border-yellow-500/50 rounded-xl p-3 mb-4 text-center">
-                  <p className="text-yellow-400 text-sm font-medium">👑 Master Mode: All levels unlocked</p>
-                </div>
-              )}
-              <div className="flex justify-center gap-4 flex-wrap">
-                {levels.map((level, idx) => {
-                  const Icon = level.icon;
-                  // Check if level is unlocked (master users have all unlocked)
-                  const previousLevelCompleted = level.id === 1 || isMasterUser || 
-                    lessonProgress.some(lp => lp.lesson_name?.includes(`Level${level.id - 1}`) && lp.completed);
-                  const isLevelUnlocked = isMasterUser || level.id === 1 || previousLevelCompleted;
-                  
-                  return (
-                    <motion.button
-                      key={level.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: idx * 0.1 }}
-                      whileHover={isLevelUnlocked ? { scale: 1.1, y: -5 } : {}}
-                      whileTap={isLevelUnlocked ? { scale: 0.95 } : {}}
-                      onClick={() => {
-                        if (isLevelUnlocked) {
-                          setSelectedLevel(level);
-                        } else {
-                          toast.error(`Complete Level ${level.id - 1} first to unlock this!`);
-                        }
-                      }}
-                      className={`relative w-20 h-20 rounded-2xl bg-gradient-to-br ${level.gradient} shadow-lg flex flex-col items-center justify-center cursor-pointer border-2 ${isLevelUnlocked ? 'border-white/20 hover:border-white/50' : 'border-white/10 opacity-50'} transition-all`}
-                    >
-                      <Icon className="w-8 h-8 text-white mb-1" />
-                      <span className="text-white font-bold text-sm">{level.id}</span>
-                      {!isLevelUnlocked && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-2xl">
-                          <span className="text-2xl">🔒</span>
-                        </div>
-                      )}
-                      {isLevelUnlocked && (
-                        <motion.div
-                          className="absolute -inset-1 rounded-2xl bg-white/20"
-                          animate={{ opacity: [0, 0.5, 0] }}
-                          transition={{ duration: 2, repeat: Infinity, delay: idx * 0.2 }}
-                        />
-                      )}
-                    </motion.button>
-                  );
-                })}
-              </div>
-            </div>
+                  </div>
+                  </>
+                  )}
           </>
         )}
       </div>
