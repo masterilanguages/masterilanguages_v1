@@ -19,6 +19,7 @@ const avatars = [
 export default function AvatarSelect() {
   const [selectedAvatar, setSelectedAvatar] = useState(null);
   const [avatarName, setAvatarName] = useState("");
+  const [difficultyLevel, setDifficultyLevel] = useState(null);
   const [step, setStep] = useState(1);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -35,6 +36,8 @@ export default function AvatarSelect() {
     if (step === 1 && selectedAvatar) {
       setStep(2);
     } else if (step === 2 && avatarName.trim()) {
+      setStep(3);
+    } else if (step === 3 && difficultyLevel) {
       createProfileMutation.mutate({
         avatar_id: selectedAvatar.id,
         avatar_name: avatarName,
@@ -43,7 +46,7 @@ export default function AvatarSelect() {
         daily_streak: 0,
         badges: [],
         interests: selectedAvatar.traits,
-        difficulty_level: "beginner",
+        difficulty_level: difficultyLevel,
         total_words_learned: 0,
       });
     }
@@ -119,7 +122,7 @@ export default function AvatarSelect() {
                 ))}
               </div>
             </motion.div>
-          ) : (
+          ) : step === 2 ? (
             <motion.div
               key="step2"
               initial={{ opacity: 0, scale: 0.9 }}
@@ -142,6 +145,79 @@ export default function AvatarSelect() {
                 <span className="inline-block px-3 py-1 bg-white/10 rounded-full">🍼 Age: 3 years old (Baby)</span>
               </div>
             </motion.div>
+          ) : (
+            <motion.div
+              key="step3"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+            >
+              <h2 className="text-2xl font-bold text-white text-center mb-6">Choose Your Level</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                <motion.button
+                  whileHover={{ scale: 1.05, y: -5 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setDifficultyLevel("beginner")}
+                  className={`relative p-6 rounded-2xl border-2 transition-all ${
+                    difficultyLevel === "beginner"
+                      ? 'border-green-400 bg-white/20 shadow-lg shadow-green-500/30'
+                      : 'border-white/20 bg-white/5 hover:bg-white/10'
+                  }`}
+                >
+                  {difficultyLevel === "beginner" && (
+                    <motion.div
+                      layoutId="difficulty"
+                      className="absolute inset-0 rounded-2xl border-2 border-green-400"
+                    />
+                  )}
+                  <div className="text-5xl mb-3">🌱</div>
+                  <h3 className="text-white font-bold text-lg mb-2">Beginner</h3>
+                  <p className="text-white/60 text-sm">Start from scratch with simple words and phrases</p>
+                </motion.button>
+
+                <motion.button
+                  whileHover={{ scale: 1.05, y: -5 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setDifficultyLevel("intermediate")}
+                  className={`relative p-6 rounded-2xl border-2 transition-all ${
+                    difficultyLevel === "intermediate"
+                      ? 'border-yellow-400 bg-white/20 shadow-lg shadow-yellow-500/30'
+                      : 'border-white/20 bg-white/5 hover:bg-white/10'
+                  }`}
+                >
+                  {difficultyLevel === "intermediate" && (
+                    <motion.div
+                      layoutId="difficulty"
+                      className="absolute inset-0 rounded-2xl border-2 border-yellow-400"
+                    />
+                  )}
+                  <div className="text-5xl mb-3">🌿</div>
+                  <h3 className="text-white font-bold text-lg mb-2">Intermediate</h3>
+                  <p className="text-white/60 text-sm">Build on basics with conversations and grammar</p>
+                </motion.button>
+
+                <motion.button
+                  whileHover={{ scale: 1.05, y: -5 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setDifficultyLevel("advanced")}
+                  className={`relative p-6 rounded-2xl border-2 transition-all ${
+                    difficultyLevel === "advanced"
+                      ? 'border-purple-400 bg-white/20 shadow-lg shadow-purple-500/30'
+                      : 'border-white/20 bg-white/5 hover:bg-white/10'
+                  }`}
+                >
+                  {difficultyLevel === "advanced" && (
+                    <motion.div
+                      layoutId="difficulty"
+                      className="absolute inset-0 rounded-2xl border-2 border-purple-400"
+                    />
+                  )}
+                  <div className="text-5xl mb-3">🌳</div>
+                  <h3 className="text-white font-bold text-lg mb-2">Advanced</h3>
+                  <p className="text-white/60 text-sm">Master fluency with complex topics and nuances</p>
+                </motion.button>
+              </div>
+            </motion.div>
           )}
         </AnimatePresence>
 
@@ -151,9 +227,9 @@ export default function AvatarSelect() {
           transition={{ delay: 0.3 }}
           className="flex justify-center gap-4 mt-8"
         >
-          {step === 2 && (
+          {step > 1 && (
             <Button
-              onClick={() => setStep(1)}
+              onClick={() => setStep(step - 1)}
               className="bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 text-white px-8 py-6 text-lg font-bold rounded-xl shadow-lg shadow-purple-500/30"
             >
               ← Back
@@ -161,10 +237,14 @@ export default function AvatarSelect() {
           )}
           <Button
             onClick={handleContinue}
-            disabled={step === 1 ? !selectedAvatar : !avatarName.trim()}
+            disabled={
+              (step === 1 && !selectedAvatar) || 
+              (step === 2 && !avatarName.trim()) || 
+              (step === 3 && !difficultyLevel)
+            }
             className="bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 text-white px-8 py-6 text-lg font-bold rounded-xl shadow-lg shadow-purple-500/30"
           >
-            {step === 1 ? "Continue" : "Start Journey"}
+            {step === 3 ? "Start Journey" : "Continue"}
           </Button>
         </motion.div>
       </div>
