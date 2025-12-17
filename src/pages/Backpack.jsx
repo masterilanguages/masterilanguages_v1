@@ -32,6 +32,17 @@ export default function Backpack() {
   const [lastImagePrompt, setLastImagePrompt] = useState("");
   const [imageApproved, setImageApproved] = useState(false);
 
+  // Auto-generate image after user stops typing
+  useEffect(() => {
+    if (!activeNewWord || !newWordCustomMnemonic.trim() || newWordCustomMnemonic === lastImagePrompt) return;
+    
+    const timer = setTimeout(() => {
+      generateImage(newWordCustomMnemonic);
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [newWordCustomMnemonic, activeNewWord]);
+
   const { data: userProfile } = useQuery({
     queryKey: ['userProfile'],
     queryFn: async () => {
@@ -543,20 +554,19 @@ export default function Backpack() {
           <p className="text-white/60 text-sm mb-2">Describe your own picture to remember this word:</p>
 
           {/* Custom input */}
-          <div className="flex gap-2 mb-3">
+          <div className="mb-3">
             <Textarea
               value={newWordCustomMnemonic}
               onChange={(e) => setNewWordCustomMnemonic(e.target.value)}
               placeholder="e.g. A dog eating an apple..."
-              className="bg-white/5 border-white/20 text-white text-sm resize-none h-16 flex-1"
+              className="bg-white/5 border-white/20 text-white text-sm resize-none h-16 w-full"
             />
-            <Button
-              onClick={() => generateImage(newWordCustomMnemonic)}
-              disabled={!newWordCustomMnemonic.trim() || generatingImage}
-              className="bg-gradient-to-r from-purple-500 to-pink-500"
-            >
-              {generatingImage ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
-            </Button>
+            {generatingImage && (
+              <div className="flex items-center justify-center gap-2 mt-2 text-white/60 text-sm">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Generating picture...
+              </div>
+            )}
           </div>
 
           {/* Generated Image */}
