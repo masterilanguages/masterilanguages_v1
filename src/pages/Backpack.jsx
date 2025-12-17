@@ -124,7 +124,8 @@ export default function Backpack() {
       const result = await base44.integrations.Core.InvokeLLM({
         prompt: `Create 3 simple sentences using the word "${word.phonetic || word.word}" which means "${word.translation}".
                       For each sentence provide the transliterated version (not Hebrew letters) and English translation.
-                      List each word separately with its Hebrew (with vowels/nikkud), transliteration, and meaning.`,
+                      List each word separately with its Hebrew WITH FULL VOWELS/NIKKUD (nikud marks), transliteration, and meaning.
+                      CRITICAL: All Hebrew words MUST include vowel points (nikkud).`,
                       response_json_schema: {
                         type: "object",
                         properties: {
@@ -140,7 +141,7 @@ export default function Backpack() {
                                   items: {
                                     type: "object",
                                     properties: {
-                                      hebrew: { type: "string", description: "Hebrew word with vowels/nikkud" },
+                                      hebrew: { type: "string", description: "Hebrew word WITH FULL vowels/nikkud marks" },
                                       word: { type: "string", description: "Transliteration" },
                                       meaning: { type: "string" }
                                     }
@@ -425,7 +426,7 @@ export default function Backpack() {
 
       {/* Word Sentences Dialog */}
       <Dialog open={!!selectedWord} onOpenChange={() => setSelectedWord(null)}>
-        <DialogContent className="bg-slate-900 border-white/20 text-white max-w-md max-h-[80vh] overflow-y-auto">
+        <DialogContent className="bg-slate-900 border-white/20 text-white max-w-sm max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <span className="text-cyan-400">{selectedWord?.phonetic || selectedWord?.word}</span>
@@ -458,14 +459,14 @@ export default function Backpack() {
                                                     const hebrew = wordInfo?.hebrew || "";
                                                     addToNewWords(cleanWord, meaning, hebrew);
                                                   }}
-                                                  className={`flex flex-col items-center px-1 rounded leading-none ${
+                                                  className={`flex flex-col items-end px-1 rounded leading-none ${
                                                     isQueued 
                                                       ? "text-green-400 bg-green-500/20" 
                                                       : "hover:bg-cyan-500/20 cursor-pointer"
                                                   }`}
                                                 >
-                                                  <span className="text-white/70 text-sm leading-tight" dir="rtl">{wordInfo?.hebrew || ""}</span>
-                                                  <span className={`text-cyan-400 leading-tight ${isQueued ? "" : "underline decoration-dotted"}`}>{word}</span>
+                                                  <span className="text-white/70 text-sm leading-none mb-0.5" dir="rtl">{wordInfo?.hebrew || ""}</span>
+                                                  <span className={`text-cyan-400 leading-none ${isQueued ? "" : "underline decoration-dotted"}`}>{word}</span>
                                                 </button>
                                               );
                                             })}
