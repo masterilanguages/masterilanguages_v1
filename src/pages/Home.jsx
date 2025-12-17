@@ -318,11 +318,11 @@ export default function Home() {
               </Button>
             </motion.div>
           </Link>
-          <Link to={createPageUrl("Backpack")}>
+          <Link to={createPageUrl("Library")}>
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Button variant="outline" className="w-full bg-gradient-to-br from-amber-500/20 to-orange-500/20 border-amber-500/50 text-white hover:from-amber-500/30 hover:to-orange-500/30 h-auto py-3 flex-col backdrop-blur-sm">
-                <span className="text-xl mb-1">🎒</span>
-                <span className="text-xs font-medium">Backpack</span>
+                <Library className="w-5 h-5 mb-1" />
+                <span className="text-xs font-medium">Library</span>
               </Button>
             </motion.div>
           </Link>

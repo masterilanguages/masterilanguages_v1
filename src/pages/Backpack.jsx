@@ -117,11 +117,11 @@ export default function Backpack() {
   const level5Words = wordRatings.filter(w => w.times_practiced >= 5);
 
   const tabs = [
-    { id: "level1", label: "⚡ Flashcards 1", color: "orange" },
-    { id: "level2", label: "⚡ Flashcards 2", color: "yellow" },
-    { id: "level3", label: "⚡ Flashcards 3", color: "purple" },
-    { id: "level4", label: "⚡ Flashcards 4", color: "blue" },
-    { id: "level5", label: "⚡ Flashcards 5", color: "green" },
+    { id: "level1", label: "Level 1", color: "orange" },
+    { id: "level2", label: "Level 2", color: "yellow" },
+    { id: "level3", label: "Level 3", color: "purple" },
+    { id: "level4", label: "Level 4", color: "blue" },
+    { id: "level5", label: "Level 5", color: "green" },
     { id: "pictures", label: "🖼️ Pictures", color: "pink" },
     { id: "new", label: "📝 New", color: "amber" },
   ];
@@ -266,7 +266,7 @@ export default function Backpack() {
         </div>
 
         {/* Quick Actions - Top */}
-        <div className="grid grid-cols-3 gap-2 mb-6">
+        <div className="grid grid-cols-4 gap-2 mb-6">
           <Link to={createPageUrl("Home")}>
             <Button variant="outline" className="w-full bg-white border-gray-200 text-black hover:bg-gray-100 h-auto py-2 flex-col">
               <Gamepad2 className="w-4 h-4 mb-1 text-black" />
@@ -279,10 +279,16 @@ export default function Backpack() {
               <span className="text-xs text-black">Videos</span>
             </Button>
           </Link>
-          <Link to={createPageUrl("Backpack")}>
+          <Link to={createPageUrl("Practice")}>
             <Button variant="outline" className="w-full bg-white border-gray-200 text-black hover:bg-gray-100 h-auto py-2 flex-col">
-              <span className="text-sm mb-1">🎒</span>
-              <span className="text-xs text-black">Backpack</span>
+              <span className="text-sm mb-1">📚</span>
+              <span className="text-xs text-black">Practice</span>
+            </Button>
+          </Link>
+          <Link to={createPageUrl("Library")}>
+            <Button variant="outline" className="w-full bg-white border-gray-200 text-black hover:bg-gray-100 h-auto py-2 flex-col">
+              <span className="text-sm mb-1">📖</span>
+              <span className="text-xs text-black">Library</span>
             </Button>
           </Link>
         </div>
@@ -392,20 +398,60 @@ export default function Backpack() {
                   >
                     <div className="relative">
                       <div
-                        onClick={() => handleWordClick(word)}
-                        className="p-3 cursor-pointer hover:bg-white/5 transition-all min-h-32 flex flex-col justify-center items-center text-center"
+                        onClick={() => setFlippedCards(prev => ({ ...prev, [word.id]: !prev[word.id] }))}
+                        className="p-3 cursor-pointer hover:bg-white/5 transition-all h-28 flex flex-col justify-center items-center text-center"
                       >
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setPictureWordId(pictureWordId === word.id ? null : word.id); }}
+                          className="absolute top-1 right-1 w-6 h-6 rounded-full bg-purple-500/20 hover:bg-purple-500/40 flex items-center justify-center text-xs transition-all z-10"
+                          title="Create picture"
+                        >
+                          🎨
+                        </button>
                         <p className="text-cyan-400 font-bold text-lg mb-0.5" dir="rtl">{word.word}</p>
                         <p className="text-white/60 text-xs mb-1">{word.phonetic}</p>
-                        <p className="text-green-400 font-medium text-sm">= {word.translation}</p>
-                        {word.example_sentence && (
-                          <div className="mt-2 text-xs space-y-0.5">
-                            <p className="text-cyan-300" dir="rtl">{word.example_sentence}</p>
-                            <p className="text-white/50">{word.phonetic}</p>
-                            <p className="text-white/70">{word.translation}</p>
-                          </div>
+                        {isFlipped && (
+                          <motion.p
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="text-green-400 font-medium text-sm"
+                          >
+                            = {word.translation}
+                          </motion.p>
                         )}
                       </div>
+                      
+                      {/* Inline picture generation */}
+                      {pictureWordId === word.id && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          className="px-3 pb-3"
+                        >
+                          {word.image_url && (
+                            <img src={word.image_url} alt="" className="w-full h-24 object-cover rounded-lg mb-2" />
+                          )}
+                          <Textarea
+                            value={mnemonicDescription}
+                            onChange={(e) => setMnemonicDescription(e.target.value)}
+                            placeholder="Describe a picture..."
+                            className="bg-white/5 border-white/20 text-white text-xs mb-2 resize-none h-12"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                          <Button
+                            onClick={(e) => { e.stopPropagation(); generateMnemonicForWord(word); }}
+                            disabled={!mnemonicDescription.trim() || generatingMnemonic}
+                            size="sm"
+                            className="w-full bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 h-7 text-xs"
+                          >
+                            {generatingMnemonic ? (
+                              <><Loader2 className="w-3 h-3 mr-1 animate-spin" /> Generating...</>
+                            ) : (
+                              <><Wand2 className="w-3 h-3 mr-1" /> Generate</>
+                            )}
+                          </Button>
+                        </motion.div>
+                      )}
                     </div>
                     {/* Rating buttons always visible */}
                     <div className="flex gap-0.5 px-2 pb-2">
