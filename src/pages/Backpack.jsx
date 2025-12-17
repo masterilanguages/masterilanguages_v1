@@ -79,6 +79,14 @@ export default function Backpack() {
     },
   });
 
+  const deleteWordMutation = useMutation({
+    mutationFn: (id) => base44.entities.Word.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['wordRatings'] });
+      toast.success("Word deleted!");
+    },
+  });
+
   const handleRateWord = async (wordId, rating, event) => {
     event.stopPropagation();
     await updateWordMutation.mutateAsync({
@@ -407,6 +415,13 @@ export default function Backpack() {
                           title="Create picture"
                         >
                           🎨
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); deleteWordMutation.mutate(word.id); }}
+                          className="absolute top-1 left-1 w-6 h-6 rounded-full bg-red-500/20 hover:bg-red-500/40 flex items-center justify-center text-xs transition-all z-10"
+                          title="Delete word"
+                        >
+                          🗑️
                         </button>
                         <p className="text-cyan-400 font-bold text-lg mb-0.5" dir="rtl">{word.word}</p>
                         <p className="text-white/60 text-xs mb-1">{word.phonetic}</p>
