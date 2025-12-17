@@ -22,6 +22,9 @@ export default function Backpack() {
   const [activeNewWord, setActiveNewWord] = useState(null);
   const [showAllEnglish, setShowAllEnglish] = useState(false);
   const [flippedCards, setFlippedCards] = useState({});
+  const [mnemonicWord, setMnemonicWord] = useState(null);
+  const [mnemonicDescription, setMnemonicDescription] = useState("");
+  const [generatingMnemonic, setGeneratingMnemonic] = useState(false);
 
   const [newWordImage, setNewWordImage] = useState(null);
   const [generatingImage, setGeneratingImage] = useState(false);
@@ -61,6 +64,28 @@ export default function Backpack() {
       id: wordId,
       data: { times_practiced: rating, mastered: rating >= 5 }
     });
+  };
+
+  const generateMnemonicForWord = async () => {
+    if (!mnemonicWord || !mnemonicDescription.trim()) return;
+    setGeneratingMnemonic(true);
+    try {
+      const result = await base44.integrations.Core.GenerateImage({
+        prompt: `A colorful, memorable mnemonic illustration: ${mnemonicDescription}. 
+        For learning Hebrew word "${mnemonicWord.phonetic}" meaning "${mnemonicWord.translation}".
+        Cartoon style, vibrant colors, educational, fun and memorable.`
+      });
+      await updateWordMutation.mutateAsync({
+        id: mnemonicWord.id,
+        data: { image_url: result.url }
+      });
+      toast.success("Picture saved!");
+      setMnemonicWord(null);
+      setMnemonicDescription("");
+    } catch (e) {
+      toast.error("Failed to generate picture");
+    }
+    setGeneratingMnemonic(false);
   };
 
   const level1Words = wordRatings.filter(w => w.times_practiced === 1);
@@ -338,7 +363,7 @@ export default function Backpack() {
               </div>
             )
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
               {getDisplayWords().map((word) => {
                 const isFlipped = flippedCards[word.id] || showAllEnglish;
                 return (
@@ -346,12 +371,19 @@ export default function Backpack() {
                     key={word.id}
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="relative group"
+                    className="bg-white/5 border border-white/10 rounded-lg overflow-hidden"
                   >
                     <div
                       onClick={() => setFlippedCards(prev => ({ ...prev, [word.id]: !prev[word.id] }))}
-                      className="bg-white/5 border border-white/10 rounded-lg p-3 cursor-pointer hover:border-cyan-400/50 transition-all h-24 flex flex-col justify-center items-center text-center"
+                      className="p-3 cursor-pointer hover:bg-white/5 transition-all h-28 flex flex-col justify-center items-center text-center relative"
                     >
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setMnemonicWord(word); }}
+                        className="absolute top-1 right-1 w-6 h-6 rounded-full bg-purple-500/20 hover:bg-purple-500/40 flex items-center justify-center text-xs transition-all"
+                        title="Create picture"
+                      >
+                        🎨
+                      </button>
                       <p className="text-cyan-400 font-bold text-lg mb-0.5" dir="rtl">{word.word}</p>
                       <p className="text-white/60 text-xs mb-1">{word.phonetic}</p>
                       {isFlipped && (
@@ -364,16 +396,16 @@ export default function Backpack() {
                         </motion.p>
                       )}
                     </div>
-                    {/* Rating buttons on hover */}
-                    <div className="absolute bottom-1 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                    {/* Rating buttons always visible */}
+                    <div className="flex gap-0.5 px-2 pb-2">
                       {[1, 2, 3, 4, 5].map((num) => (
                         <button
                           key={num}
                           onClick={(e) => handleRateWord(word.id, num, e)}
-                          className={`w-6 h-6 rounded text-xs font-bold transition-all ${
+                          className={`flex-1 h-6 rounded text-xs font-bold transition-all ${
                             word.times_practiced === num
                               ? num === 5 ? "bg-green-500 text-white" : "bg-cyan-500 text-white"
-                              : "bg-white/20 text-white/60 hover:bg-white/30"
+                              : "bg-white/10 text-white/40 hover:bg-white/20"
                           }`}
                         >
                           {num}
@@ -454,6 +486,43 @@ export default function Backpack() {
               )}
             </div>
           ) : null}
+        </DialogContent>
+      </Dialog>
+
+      {/* Mnemonic Creation Dialog */}
+      <Dialog open={!!mnemonicWord} onOpenChange={() => { setMnemonicWord(null); setMnemonicDescription(""); }}>
+        <DialogContent className="bg-slate-900 border-white/20 text-white max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              <span className="text-cyan-400 text-xl">{mnemonicWord?.phonetic}</span>
+              <span className="text-white/60 ml-2">= {mnemonicWord?.translation}</span>
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-white/60 text-sm mb-2">Describe a picture to help you remember this word:</p>
+          <Textarea
+            value={mnemonicDescription}
+            onChange={(e) => setMnemonicDescription(e.target.value)}
+            placeholder="e.g., A dog jumping over a rainbow..."
+            className="bg-white/5 border-white/20 text-white mb-3"
+            rows={4}
+          />
+          {mnemonicWord?.image_url && (
+            <div className="mb-3">
+              <p className="text-xs text-white/60 mb-1">Current picture:</p>
+              <img src={mnemonicWord.image_url} alt="" className="w-full rounded-lg" />
+            </div>
+          )}
+          <Button
+            onClick={generateMnemonicForWord}
+            disabled={!mnemonicDescription.trim() || generatingMnemonic}
+            className="w-full bg-gradient-to-r from-purple-500 to-pink-500"
+          >
+            {generatingMnemonic ? (
+              <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating...</>
+            ) : (
+              <><Wand2 className="w-4 h-4 mr-2" /> Generate Picture</>
+            )}
+          </Button>
         </DialogContent>
       </Dialog>
 
