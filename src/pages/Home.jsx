@@ -15,6 +15,7 @@ import ActivityCard from "../components/game/ActivityCard";
 import TimelineBar from "../components/game/TimelineBar";
 import BabyGame from "../components/game/BabyGame";
 import AvatarMenu from "../components/game/AvatarMenu";
+import HebrewChatWidget from "../components/home/HebrewChatWidget";
 
 
 const activities = [
@@ -484,6 +485,16 @@ export default function Home() {
           </motion.div>
         ) : (
           <>
+            {/* Hebrew Chat Widget */}
+            <div className="mb-6">
+              <HebrewChatWidget 
+                onComplete={() => {
+                  updateCoinsMutation.mutate({ coins: coins + 50 });
+                  toast.success("+50 coins! 🎉");
+                }}
+              />
+            </div>
+
             {/* Dashboard Boxes */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
               {/* Calendar Box */}
