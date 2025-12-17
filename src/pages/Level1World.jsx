@@ -52,6 +52,7 @@ export default function Level1World() {
   const [selectedZone, setSelectedZone] = useState(null);
   const [sessionStartTime, setSessionStartTime] = useState(null);
   const [sessionDuration, setSessionDuration] = useState(0);
+  const [sessionEnding, setSessionEnding] = useState(false);
 
   const { data: userProfile } = useQuery({
     queryKey: ['userProfile'],
@@ -72,21 +73,26 @@ export default function Level1World() {
     },
   });
 
+  const updateProfileMutation = useMutation({
+    mutationFn: (data) => base44.entities.UserProfile.update(userProfile?.id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['userProfile'] }),
+  });
+
   // Session timer
   useEffect(() => {
-    if (sessionStartTime) {
+    if (sessionStartTime && !sessionEnding) {
       const interval = setInterval(() => {
         const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
         setSessionDuration(elapsed);
 
-        // Auto-end session after 7 minutes
-        if (elapsed >= 420) {
+        // Auto-end session after 3 minutes
+        if (elapsed >= 180) {
           handleEndSession();
         }
       }, 1000);
       return () => clearInterval(interval);
     }
-  }, [sessionStartTime]);
+  }, [sessionStartTime, sessionEnding]);
 
   useEffect(() => {
     if (!sessionStartTime) {
@@ -94,9 +100,28 @@ export default function Level1World() {
     }
   }, []);
 
-  const handleEndSession = () => {
-    toast.success("You did great today. See you tomorrow 🧡", { duration: 5000 });
-    // Could navigate away or show completion screen
+  const handleEndSession = async () => {
+    if (sessionEnding) return;
+    setSessionEnding(true);
+
+    // Save progress silently
+    const currentXp = userProfile?.xp || 0;
+    const sessionXp = Math.floor(sessionDuration / 30); // 1 XP per 30 seconds
+    await updateProfileMutation.mutateAsync({ 
+      xp: currentXp + sessionXp,
+      last_active_date: new Date().toISOString().split('T')[0]
+    });
+
+    // Show friendly exit message
+    toast.success("You did great today. See you tomorrow 🧡", { 
+      duration: 5000,
+      description: `+${sessionXp} XP earned!`
+    });
+
+    // Return to home after 2 seconds
+    setTimeout(() => {
+      window.location.href = createPageUrl("Home");
+    }, 2000);
   };
 
   const formatSessionTime = (seconds) => {
@@ -125,8 +150,8 @@ export default function Level1World() {
             <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
             <span className="text-white/60 text-sm">Session time: {formatSessionTime(sessionDuration)}</span>
           </div>
-          {sessionDuration >= 180 && (
-            <span className="text-amber-400 text-xs">Take a break soon 💛</span>
+          {sessionDuration >= 150 && sessionDuration < 180 && (
+            <span className="text-amber-400 text-xs animate-pulse">30 seconds left! 💛</span>
           )}
         </div>
       </div>
