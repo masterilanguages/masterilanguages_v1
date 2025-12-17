@@ -117,13 +117,13 @@ export default function Backpack() {
   const level5Words = wordRatings.filter(w => w.times_practiced >= 5);
 
   const tabs = [
-    { id: "level5", label: "⭐ Level 5 (Fluent)", count: level5Words.length, color: "green" },
-    { id: "level4", label: "Level 4", count: level4Words.length, color: "blue" },
-    { id: "level3", label: "Level 3", count: level3Words.length, color: "purple" },
-    { id: "level2", label: "Level 2", count: level2Words.length, color: "yellow" },
-    { id: "level1", label: "Level 1", count: level1Words.length, color: "orange" },
-    { id: "pictures", label: "🖼️ Pictures", count: wordRatings.filter(w => w.image_url).length, color: "pink" },
-    { id: "new", label: "📝 New", count: newWords.length, color: "amber" },
+    { id: "level5", label: "Level 5", color: "green" },
+    { id: "level4", label: "Level 4", color: "blue" },
+    { id: "level3", label: "Level 3", color: "purple" },
+    { id: "level2", label: "Level 2", color: "yellow" },
+    { id: "level1", label: "Level 1", color: "orange" },
+    { id: "pictures", label: "🖼️ Pictures", color: "pink" },
+    { id: "new", label: "📝 New", color: "amber" },
   ];
 
   const getDisplayWords = () => {
@@ -305,7 +305,7 @@ export default function Backpack() {
                   : "bg-white/5 text-white/60 hover:bg-white/10"
               }`}
             >
-              {tab.label} ({tab.count})
+              {tab.label}
             </button>
           ))}
         </div>
