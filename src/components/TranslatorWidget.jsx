@@ -30,23 +30,93 @@ export default function TranslatorWidget() {
     
     setIsTranslating(true);
     try {
-      const isHebrew = /[\u0590-\u05FF]/.test(inputText);
+      // Detect if input is English or Hebrew/transliteration
+      const isEnglish = /^[a-zA-Z\s\.,!?'-]+$/.test(inputText.trim());
       
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt: isHebrew 
-          ? `Translate this Hebrew text to English and provide transliteration: "${inputText}"`
-          : `Translate this English text to Hebrew with vowels (nikkud), and provide transliteration: "${inputText}"`,
-        response_json_schema: {
+      let prompt, schema;
+      
+      if (isEnglish) {
+        // English to Hebrew
+        prompt = `You are an expert English→Israeli Hebrew translator for a language-learning app.
+Output MUST be valid JSON only (no markdown, no extra text).
+Translate naturally (modern Israeli Hebrew), not biblical.
+Prefer the most common everyday translation.
+If the English is ambiguous, choose the most likely meaning and include 1–3 alternatives.
+
+Transliteration scheme (must be consistent):
+- א silent unless needed; use apostrophe only when it disambiguates (e.g., ra'ayon)
+- ע use apostrophe only when needed to disambiguate
+- ח = kh (e.g., khalom)
+- כ (as "kh") = kh, כ (as "k") = k (choose by pronunciation)
+- ק = k
+- צ = tz
+- ש = sh
+- ת = t
+- ר = r
+- ו as "v" = v, as vowel "oo" = u, as "o" = o (context)
+- י as consonant = y, as vowel = i (context)
+
+Input: "${inputText}"
+
+Provide:
+- "hebrew" in Hebrew script (RTL)
+- "transliteration" in Latin letters using the scheme above
+- "alternatives" as a list of Hebrew strings (may be empty)
+- "notes" only if ambiguity is meaningful (otherwise empty string)`;
+        
+        schema = {
           type: "object",
           properties: {
-            hebrew: { type: "string", description: "Hebrew text with vowels/nikkud" },
-            english: { type: "string", description: "English meaning" },
-            transliteration: { type: "string", description: "How to pronounce it" }
+            hebrew: { type: "string" },
+            transliteration: { type: "string" },
+            alternatives: { type: "array", items: { type: "string" } },
+            notes: { type: "string" }
           }
-        }
+        };
+      } else {
+        // Hebrew/transliteration to English
+        prompt = `You are an expert transliterated-Hebrew→English interpreter for a language-learning app.
+Input is Hebrew written in Latin letters (transliteration), possibly with inconsistent spelling.
+Your job:
+1. Normalize transliteration to the app's scheme
+2. Reconstruct the most likely Hebrew spelling
+3. Translate to natural English
+
+Output MUST be valid JSON only (no markdown, no extra text).
+If ambiguous, choose the most likely and include 1–3 alternatives (as Hebrew strings).
+
+Transliteration scheme: kh/ tz/ sh, etc. Normalize common variants:
+- ch → kh
+- ts → tz
+- w → v (often)
+- "ee" → i, "oo" → u
+- double letters simplified unless needed
+
+Input: "${inputText}"
+
+Provide:
+- "english" translation
+- "hebrew" reconstructed Hebrew text
+- "transliteration" normalized transliteration
+- "alternatives" as Hebrew strings if ambiguous`;
+        
+        schema = {
+          type: "object",
+          properties: {
+            english: { type: "string" },
+            hebrew: { type: "string" },
+            transliteration: { type: "string" },
+            alternatives: { type: "array", items: { type: "string" } }
+          }
+        };
+      }
+      
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt,
+        response_json_schema: schema
       });
       
-      setTranslation(result);
+      setTranslation({ ...result, direction: isEnglish ? 'en-he' : 'tr-en' });
     } catch (e) {
       toast.error("Translation failed");
     }
@@ -105,10 +175,65 @@ export default function TranslatorWidget() {
 
             {translation && (
               <>
-                <div className="bg-white/5 rounded-xl p-3 mb-3 text-center">
-                  <p className="text-cyan-400 text-xl font-bold" dir="rtl">{translation.hebrew}</p>
-                  <p className="text-white/60 text-sm">{translation.transliteration}</p>
-                  <p className="text-green-400 mt-1">{translation.english}</p>
+                <div className="space-y-2 mb-3">
+                  {translation.direction === 'en-he' ? (
+                    <>
+                      <div className="bg-white/5 rounded-lg p-3">
+                        <p className="text-white/60 text-[10px] mb-1">HEBREW</p>
+                        <p className="text-cyan-400 text-lg font-bold" dir="rtl">{translation.hebrew}</p>
+                      </div>
+                      
+                      <div className="bg-white/5 rounded-lg p-3">
+                        <p className="text-white/60 text-[10px] mb-1">PRONUNCIATION</p>
+                        <p className="text-white">{translation.transliteration}</p>
+                      </div>
+                      
+                      {translation.alternatives?.length > 0 && (
+                        <div className="bg-amber-500/10 rounded-lg p-2">
+                          <p className="text-amber-400 text-[10px] mb-1">ALTERNATIVES</p>
+                          <div className="flex flex-wrap gap-1">
+                            {translation.alternatives.map((alt, idx) => (
+                              <span key={idx} className="text-white/70 text-xs" dir="rtl">{alt}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {translation.notes && (
+                        <div className="bg-blue-500/10 rounded-lg p-2">
+                          <p className="text-blue-300 text-xs">{translation.notes}</p>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <div className="bg-white/5 rounded-lg p-3">
+                        <p className="text-white/60 text-[10px] mb-1">ENGLISH</p>
+                        <p className="text-green-400 text-lg font-bold">{translation.english}</p>
+                      </div>
+                      
+                      <div className="bg-white/5 rounded-lg p-3">
+                        <p className="text-white/60 text-[10px] mb-1">HEBREW</p>
+                        <p className="text-cyan-400 font-bold" dir="rtl">{translation.hebrew}</p>
+                      </div>
+                      
+                      <div className="bg-white/5 rounded-lg p-3">
+                        <p className="text-white/60 text-[10px] mb-1">PRONUNCIATION</p>
+                        <p className="text-white">{translation.transliteration}</p>
+                      </div>
+                      
+                      {translation.alternatives?.length > 0 && (
+                        <div className="bg-amber-500/10 rounded-lg p-2">
+                          <p className="text-amber-400 text-[10px] mb-1">ALTERNATIVES</p>
+                          <div className="flex flex-wrap gap-1">
+                            {translation.alternatives.map((alt, idx) => (
+                              <span key={idx} className="text-white/70 text-xs" dir="rtl">{alt}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
 
                 <Button
