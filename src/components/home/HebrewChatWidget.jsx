@@ -214,6 +214,25 @@ export default function HebrewChatWidget({ onComplete }) {
     setPlayingAudio(null);
   };
 
+  const addWordToBackpack = (hebrewWord, transliteration, meaning = "") => {
+    const existing = JSON.parse(localStorage.getItem('pendingBackpackWords') || '[]');
+    const alreadyExists = existing.find(w => w.word?.toLowerCase() === transliteration?.toLowerCase());
+    if (alreadyExists) {
+      toast.info("Already in your list!");
+      return;
+    }
+    existing.push({ word: transliteration, meaning, hebrew: hebrewWord });
+    localStorage.setItem('pendingBackpackWords', JSON.stringify(existing));
+    toast.success(`"${transliteration}" added to backpack! 🎒`);
+  };
+
+  const addSentenceToBackpack = (hebrewText, transliteration) => {
+    const existing = JSON.parse(localStorage.getItem('pendingBackpackWords') || '[]');
+    existing.push({ word: transliteration || hebrewText, meaning: "Full sentence", hebrew: hebrewText });
+    localStorage.setItem('pendingBackpackWords', JSON.stringify(existing));
+    toast.success("Sentence added to backpack! 🎒");
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -287,10 +306,26 @@ export default function HebrewChatWidget({ onComplete }) {
                     <Volume2 className={`w-4 h-4 text-blue-300 ${playingAudio === currentTurn.reply ? 'animate-pulse' : ''}`} />
                   </button>
                   <div className="flex-1 text-right">
-                    <p className="text-white" dir="rtl">{currentTurn.reply}</p>
+                    <div className="flex flex-wrap gap-1 justify-end" dir="rtl">
+                      {currentTurn.reply.split(' ').map((word, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => addWordToBackpack(word, currentTurn.reply_transliteration?.split(' ')[idx] || word)}
+                          className="hover:bg-blue-500/30 px-1 rounded transition-colors"
+                        >
+                          {word}
+                        </button>
+                      ))}
+                    </div>
                     {showTransliteration && currentTurn.reply_transliteration && (
                       <p className="text-blue-300/60 text-xs mt-1">{currentTurn.reply_transliteration}</p>
                     )}
+                    <button
+                      onClick={() => addSentenceToBackpack(currentTurn.reply, currentTurn.reply_transliteration)}
+                      className="text-blue-400 text-[10px] hover:underline mt-1"
+                    >
+                      + Save full sentence
+                    </button>
                   </div>
                 </div>
               </motion.div>
@@ -310,10 +345,26 @@ export default function HebrewChatWidget({ onComplete }) {
                   <Volume2 className={`w-4 h-4 text-cyan-300 ${playingAudio === currentTurn.prompt ? 'animate-pulse' : ''}`} />
                 </button>
                 <div className="flex-1 text-right">
-                  <p className="text-white font-medium" dir="rtl">{currentTurn.prompt}</p>
+                  <div className="flex flex-wrap gap-1 justify-end" dir="rtl">
+                    {currentTurn.prompt.split(' ').map((word, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => addWordToBackpack(word, currentTurn.prompt_transliteration?.split(' ')[idx] || word)}
+                        className="hover:bg-white/20 px-1 rounded transition-colors font-medium"
+                      >
+                        {word}
+                      </button>
+                    ))}
+                  </div>
                   {showTransliteration && currentTurn.prompt_transliteration && (
                     <p className="text-white/40 text-xs mt-1">{currentTurn.prompt_transliteration}</p>
                   )}
+                  <button
+                    onClick={() => addSentenceToBackpack(currentTurn.prompt, currentTurn.prompt_transliteration)}
+                    className="text-cyan-400 text-[10px] hover:underline mt-1"
+                  >
+                    + Save full sentence
+                  </button>
                 </div>
               </div>
             </motion.div>

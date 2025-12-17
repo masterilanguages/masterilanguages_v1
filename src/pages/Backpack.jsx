@@ -32,6 +32,16 @@ export default function Backpack() {
   const [lastImagePrompt, setLastImagePrompt] = useState("");
   const [imageApproved, setImageApproved] = useState(false);
 
+  // Load pending words from localStorage on mount
+  useEffect(() => {
+    const pending = JSON.parse(localStorage.getItem('pendingBackpackWords') || '[]');
+    if (pending.length > 0) {
+      setNewWords(prev => [...prev, ...pending]);
+      localStorage.removeItem('pendingBackpackWords');
+      toast.success(`${pending.length} word(s) loaded from chat!`);
+    }
+  }, []);
+
   // Auto-generate image after user stops typing
   useEffect(() => {
     if (!activeNewWord || !newWordCustomMnemonic.trim() || newWordCustomMnemonic === lastImagePrompt) return;
