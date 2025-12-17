@@ -29,11 +29,9 @@ export default function DailySongCard() {
     queryKey: ['wordsLearnedToday', today],
     queryFn: async () => {
       const allWords = await base44.entities.Word.list();
-      const todayWords = allWords.filter(w => {
-        const createdDate = new Date(w.created_date).toISOString().split('T')[0];
-        return createdDate === today && w.times_practiced >= 1;
-      });
-      return todayWords.slice(0, 8); // Max 8 words for song
+      // Get any words that have been practiced at least once
+      const learnedWords = allWords.filter(w => w.times_practiced >= 1);
+      return learnedWords.slice(0, 8); // Max 8 words for song
     },
   });
 
