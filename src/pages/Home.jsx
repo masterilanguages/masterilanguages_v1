@@ -422,11 +422,14 @@ export default function Home() {
                     <p className="text-yellow-400 text-sm font-medium">👑 Master Mode: All levels unlocked</p>
                   </div>
                 )}
-                {selectedLevel.activities.map((activity) => {
-                  // Check if lesson is completed
-                  const lessonName = activity.page;
-                  const isCompleted = lessonProgress.find(lp => lp.lesson_name === lessonName && lp.completed);
-                  
+                {selectedLevel.activities
+                  .map((activity) => ({
+                    ...activity,
+                    isCompleted: lessonProgress.find(lp => lp.lesson_name === activity.page && lp.completed)
+                  }))
+                  .sort((a, b) => (b.isCompleted ? 1 : 0) - (a.isCompleted ? 1 : 0))
+                  .map((activity) => {
+
                   return (
                     <motion.button
                       key={activity.id}
@@ -441,16 +444,23 @@ export default function Home() {
                           const minutes = unit === 'hour' ? amount * 60 : amount;
                           startTimer(minutes);
                         }
-                        
+
                         if (activity.id === "baby_words") {
                           setSelectedActivity(activity);
                         } else {
                           navigate(createPageUrl(activity.page));
                         }
                       }}
-                      className={`w-full ${isCompleted ? 'bg-green-500/10 border-green-500/30' : 'bg-white/5 border-white/10'} hover:bg-white/10 border hover:border-cyan-400/50 rounded-xl p-4 text-left transition-all`}
+                      className={`w-full ${activity.isCompleted ? 'bg-green-500/10 border-green-500/30' : 'bg-white/5 border-white/10'} hover:bg-white/10 border hover:border-cyan-400/50 rounded-xl p-4 text-left transition-all`}
                     >
                       <div className="flex items-start gap-3">
+                        {activity.isCompleted ? (
+                          <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+                            <span className="text-white text-sm">✓</span>
+                          </div>
+                        ) : (
+                          <div className="w-6 h-6 rounded-full border-2 border-white/20 flex-shrink-0" />
+                        )}
                         <span className="text-2xl">{activity.icon}</span>
                         <div className="flex-1">
                           <p className="text-white font-medium">{activity.name}</p>
@@ -459,13 +469,7 @@ export default function Home() {
                             <span>{activity.duration}</span>
                           </div>
                         </div>
-                        {isCompleted ? (
-                          <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
-                            <span className="text-white text-sm">✓</span>
-                          </div>
-                        ) : (
-                          <ChevronRight className="w-5 h-5 text-white/40" />
-                        )}
+                        <ChevronRight className="w-5 h-5 text-white/40" />
                       </div>
                     </motion.button>
                   );
