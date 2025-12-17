@@ -374,6 +374,13 @@ export default function HebrewChatWidget({ onComplete }) {
               {currentTurn.options.map((option, idx) => {
                 const optionText = typeof option === 'string' ? option : option.text;
                 const optionTranslit = typeof option === 'string' ? '' : option.transliteration;
+                
+                // Extract only first emoji and first word
+                const firstEmoji = optionText.match(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/u)?.[0] || '';
+                const textWithoutEmoji = optionText.replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, '').trim();
+                const firstWord = textWithoutEmoji.split(/\s+/)[0] || textWithoutEmoji;
+                const simplifiedText = (firstEmoji + ' ' + firstWord).trim();
+                
                 return (
                   <motion.button
                     key={idx}
@@ -392,10 +399,7 @@ export default function HebrewChatWidget({ onComplete }) {
                         <Volume2 className={`w-4 h-4 text-white/60 ${playingAudio === optionText ? 'animate-pulse' : ''}`} />
                       </button>
                       <div className="flex-1 text-right">
-                        <span className="text-white">{optionText}</span>
-                        {showTransliteration && optionTranslit && (
-                          <p className="text-white/40 text-xs mt-0.5">{optionTranslit}</p>
-                        )}
+                        <span className="text-white text-lg">{simplifiedText}</span>
                       </div>
                     </div>
                   </motion.button>

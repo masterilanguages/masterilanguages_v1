@@ -49,9 +49,6 @@ export default function TimelineBar({ currentAge = 3 }) {
                       <Lock className="w-3 h-3 text-white/40" />
                     )}
                   </motion.div>
-                  <span className={`text-xs mt-1 ${isReached ? 'text-white' : 'text-white/40'}`}>
-                    {milestone.age}
-                  </span>
                   <span className={`text-xs hidden sm:block ${isReached ? 'text-white/80' : 'text-white/30'}`}>
                     {milestone.label}
                   </span>
