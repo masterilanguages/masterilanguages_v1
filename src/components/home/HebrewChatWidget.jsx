@@ -14,6 +14,7 @@ export default function HebrewChatWidget({ onComplete }) {
   const [currentTurn, setCurrentTurn] = useState(null);
   const [loading, setLoading] = useState(false);
   const [playingAudio, setPlayingAudio] = useState(null);
+  const [showTransliteration, setShowTransliteration] = useState(false);
   const audioRef = useRef(null);
   const timerRef = useRef(null);
 
@@ -79,8 +80,21 @@ export default function HebrewChatWidget({ onComplete }) {
 
   const generateTurn = async (previousChoice) => {
     const prompt = previousChoice 
-      ? `The user chose: "${previousChoice}". Generate a brief Hebrew reply (1 short sentence), then ask a new Hebrew question with 3 different Hebrew response options. Make it conversational and natural.`
-      : `Start a casual Hebrew conversation. Ask a simple Hebrew question with 3 different Hebrew response options.`;
+      ? `The user chose: "${previousChoice}". 
+      
+      Analyze the emotional context of their choice and respond with appropriate subtle emotion.
+      Generate a brief Hebrew reply (1 short sentence) matching the emotion, then ask a new Hebrew question with 3 different Hebrew response options.
+      
+      Emotion guidelines:
+      - warm: positive sharing, friendly topic
+      - excited: interesting news, achievement
+      - curious: thought-provoking response
+      - empathetic: difficulty, challenge mentioned
+      - neutral: factual, straightforward
+      - amused: lighthearted, funny
+      
+      Keep it conversational and natural.`
+      : `Start a casual Hebrew conversation with warm, welcoming tone. Ask a simple Hebrew question with 3 different Hebrew response options.`;
 
     const result = await base44.integrations.Core.InvokeLLM({
       prompt: `${prompt}
@@ -89,15 +103,38 @@ export default function HebrewChatWidget({ onComplete }) {
       Response must be valid JSON with this exact structure:
       {
         "reply": "brief Hebrew response to user's choice (empty string if first turn)",
+        "reply_transliteration": "transliteration of reply (empty if first turn)",
+        "emotion": "warm | excited | curious | empathetic | neutral | amused",
         "prompt": "Hebrew question",
-        "options": ["Hebrew option 1", "Hebrew option 2", "Hebrew option 3"]
-      }`,
+        "prompt_transliteration": "transliteration of question",
+        "options": [
+          {"text": "Hebrew option 1", "transliteration": "transliteration 1"},
+          {"text": "Hebrew option 2", "transliteration": "transliteration 2"},
+          {"text": "Hebrew option 3", "transliteration": "transliteration 3"}
+        ]
+      }
+      
+      Emotion must match the conversational context. Be subtle, adult, natural.`,
       response_json_schema: {
         type: "object",
         properties: {
           reply: { type: "string" },
+          reply_transliteration: { type: "string" },
+          emotion: { type: "string", enum: ["warm", "excited", "curious", "empathetic", "neutral", "amused"] },
           prompt: { type: "string" },
-          options: { type: "array", items: { type: "string" }, minItems: 3, maxItems: 3 }
+          prompt_transliteration: { type: "string" },
+          options: { 
+            type: "array", 
+            items: { 
+              type: "object",
+              properties: {
+                text: { type: "string" },
+                transliteration: { type: "string" }
+              }
+            }, 
+            minItems: 3, 
+            maxItems: 3 
+          }
         }
       }
     });
@@ -108,7 +145,8 @@ export default function HebrewChatWidget({ onComplete }) {
   const handleChoice = async (option) => {
     setLoading(true);
     try {
-      const result = await generateTurn(option);
+      const selectedText = typeof option === 'string' ? option : option.text;
+      const result = await generateTurn(selectedText);
       setCurrentTurn(result);
       saveSession({ currentTurn: result });
     } catch (e) {
@@ -124,20 +162,38 @@ export default function HebrewChatWidget({ onComplete }) {
     if (onComplete) onComplete();
   };
 
-  const playAudio = async (text) => {
+  const playAudio = async (text, emotion = 'neutral') => {
     if (playingAudio === text) {
-      audioRef.current?.pause();
+      window.speechSynthesis.cancel();
       setPlayingAudio(null);
       return;
     }
 
     setPlayingAudio(text);
     try {
-      // Generate speech using browser's TTS as fallback
+      window.speechSynthesis.cancel();
+      
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'he-IL';
-      utterance.rate = 0.9;
+      
+      // Apply emotion-based prosody adjustments
+      const emotionStyles = {
+        warm: { rate: 0.9, pitch: 1.1, volume: 0.9 },
+        excited: { rate: 1.1, pitch: 1.2, volume: 1.0 },
+        curious: { rate: 0.95, pitch: 1.15, volume: 0.95 },
+        empathetic: { rate: 0.8, pitch: 0.95, volume: 0.85 },
+        neutral: { rate: 0.9, pitch: 1.0, volume: 0.9 },
+        amused: { rate: 1.0, pitch: 1.1, volume: 0.95 }
+      };
+      
+      const style = emotionStyles[emotion] || emotionStyles.neutral;
+      utterance.rate = style.rate;
+      utterance.pitch = style.pitch;
+      utterance.volume = style.volume;
+      
       utterance.onend = () => setPlayingAudio(null);
+      utterance.onerror = () => setPlayingAudio(null);
+      
       window.speechSynthesis.speak(utterance);
     } catch (e) {
       setPlayingAudio(null);
@@ -199,8 +255,20 @@ export default function HebrewChatWidget({ onComplete }) {
           >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-white font-bold text-lg">Hebrew Chat</h3>
-              <div className="text-white/60 text-sm">
-                {formatTime(timeRemaining)} left
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setShowTransliteration(!showTransliteration)}
+                  className={`text-xs px-2 py-1 rounded-full transition-all ${
+                    showTransliteration 
+                      ? "bg-cyan-500/30 text-cyan-300" 
+                      : "bg-white/10 text-white/50 hover:bg-white/20"
+                  }`}
+                >
+                  ABC
+                </button>
+                <div className="text-white/60 text-sm">
+                  {formatTime(timeRemaining)}
+                </div>
               </div>
             </div>
 
@@ -209,15 +277,22 @@ export default function HebrewChatWidget({ onComplete }) {
               <motion.div
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="bg-blue-500/20 border border-blue-500/30 rounded-xl p-3 mb-3 flex items-start gap-2"
+                className="bg-blue-500/20 border border-blue-500/30 rounded-xl p-3 mb-3"
               >
-                <button
-                  onClick={() => playAudio(currentTurn.reply)}
-                  className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-500/30 hover:bg-blue-500/50 flex-shrink-0"
-                >
-                  <Volume2 className={`w-4 h-4 text-blue-300 ${playingAudio === currentTurn.reply ? 'animate-pulse' : ''}`} />
-                </button>
-                <p className="text-white text-right flex-1" dir="rtl">{currentTurn.reply}</p>
+                <div className="flex items-start gap-2">
+                  <button
+                    onClick={() => playAudio(currentTurn.reply, currentTurn.emotion)}
+                    className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-500/30 hover:bg-blue-500/50 flex-shrink-0"
+                  >
+                    <Volume2 className={`w-4 h-4 text-blue-300 ${playingAudio === currentTurn.reply ? 'animate-pulse' : ''}`} />
+                  </button>
+                  <div className="flex-1 text-right">
+                    <p className="text-white" dir="rtl">{currentTurn.reply}</p>
+                    {showTransliteration && currentTurn.reply_transliteration && (
+                      <p className="text-blue-300/60 text-xs mt-1">{currentTurn.reply_transliteration}</p>
+                    )}
+                  </div>
+                </div>
               </motion.div>
             )}
 
@@ -225,39 +300,56 @@ export default function HebrewChatWidget({ onComplete }) {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white/10 border border-white/20 rounded-xl p-3 mb-3 flex items-start gap-2"
+              className="bg-white/10 border border-white/20 rounded-xl p-3 mb-3"
             >
-              <button
-                onClick={() => playAudio(currentTurn.prompt)}
-                className="w-8 h-8 flex items-center justify-center rounded-full bg-cyan-500/30 hover:bg-cyan-500/50 flex-shrink-0"
-              >
-                <Volume2 className={`w-4 h-4 text-cyan-300 ${playingAudio === currentTurn.prompt ? 'animate-pulse' : ''}`} />
-              </button>
-              <p className="text-white font-medium text-right flex-1" dir="rtl">{currentTurn.prompt}</p>
+              <div className="flex items-start gap-2">
+                <button
+                  onClick={() => playAudio(currentTurn.prompt, 'curious')}
+                  className="w-8 h-8 flex items-center justify-center rounded-full bg-cyan-500/30 hover:bg-cyan-500/50 flex-shrink-0"
+                >
+                  <Volume2 className={`w-4 h-4 text-cyan-300 ${playingAudio === currentTurn.prompt ? 'animate-pulse' : ''}`} />
+                </button>
+                <div className="flex-1 text-right">
+                  <p className="text-white font-medium" dir="rtl">{currentTurn.prompt}</p>
+                  {showTransliteration && currentTurn.prompt_transliteration && (
+                    <p className="text-white/40 text-xs mt-1">{currentTurn.prompt_transliteration}</p>
+                  )}
+                </div>
+              </div>
             </motion.div>
 
             {/* Options */}
             <div className="space-y-2">
-              {currentTurn.options.map((option, idx) => (
-                <motion.button
-                  key={idx}
-                  initial={{ opacity: 0, x: 10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: idx * 0.1 }}
-                  onClick={() => handleChoice(option)}
-                  disabled={loading}
-                  className="w-full bg-white/5 hover:bg-white/10 border border-white/20 hover:border-cyan-400/50 rounded-xl p-3 text-right transition-all flex items-center gap-2"
-                  dir="rtl"
-                >
-                  <button
-                    onClick={(e) => { e.stopPropagation(); playAudio(option); }}
-                    className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 flex-shrink-0"
+              {currentTurn.options.map((option, idx) => {
+                const optionText = typeof option === 'string' ? option : option.text;
+                const optionTranslit = typeof option === 'string' ? '' : option.transliteration;
+                return (
+                  <motion.button
+                    key={idx}
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.1 }}
+                    onClick={() => handleChoice(option)}
+                    disabled={loading}
+                    className="w-full bg-white/5 hover:bg-white/10 border border-white/20 hover:border-cyan-400/50 rounded-xl p-3 transition-all"
                   >
-                    <Volume2 className={`w-4 h-4 text-white/60 ${playingAudio === option ? 'animate-pulse' : ''}`} />
-                  </button>
-                  <span className="text-white flex-1">{option}</span>
-                </motion.button>
-              ))}
+                    <div className="flex items-center gap-2" dir="rtl">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); playAudio(optionText); }}
+                        className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 flex-shrink-0"
+                      >
+                        <Volume2 className={`w-4 h-4 text-white/60 ${playingAudio === optionText ? 'animate-pulse' : ''}`} />
+                      </button>
+                      <div className="flex-1 text-right">
+                        <span className="text-white">{optionText}</span>
+                        {showTransliteration && optionTranslit && (
+                          <p className="text-white/40 text-xs mt-0.5">{optionTranslit}</p>
+                        )}
+                      </div>
+                    </div>
+                  </motion.button>
+                );
+              })}
             </div>
 
             {loading && (
