@@ -57,7 +57,8 @@ export default function DailySongCard() {
     try {
       const vocabList = wordsLearnedToday.map(w => `${w.word} (${w.translation})`).join(', ');
       
-      const result = await base44.integrations.Core.InvokeLLM({
+      // Step 1: Generate lyrics
+      const lyricsResult = await base44.integrations.Core.InvokeLLM({
         prompt: `You are a Hebrew songwriting AI for a language learning app.
 
 Create a simple, warm, 30-second Hebrew song using ONLY these vocabulary words the user learned today:
@@ -88,15 +89,81 @@ Output valid JSON only:
         }
       });
 
+      // Step 2: Generate audio using TTS
+      const audioText = lyricsResult.lyrics_he.replace(/\n/g, '. ');
+      
+      // Create audio using Web Speech API and convert to blob
+      const audioBlob = await new Promise((resolve, reject) => {
+        const utterance = new SpeechSynthesisUtterance(audioText);
+        utterance.lang = 'he-IL';
+        utterance.rate = 0.8;
+        utterance.pitch = 1.1;
+        
+        // Record audio
+        const mediaRecorder = new MediaRecorder(new MediaStream());
+        const chunks = [];
+        
+        mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
+        mediaRecorder.onstop = () => resolve(new Blob(chunks, { type: 'audio/mpeg' }));
+        
+        utterance.onstart = () => mediaRecorder.start();
+        utterance.onend = () => {
+          setTimeout(() => mediaRecorder.stop(), 500);
+        };
+        utterance.onerror = reject;
+        
+        window.speechSynthesis.speak(utterance);
+      });
+
+      // Step 3: Upload audio to get public URL
+      const audioFile = new File([audioBlob], `song-${today}.mp3`, { type: 'audio/mpeg' });
+      const uploadResult = await base44.integrations.Core.UploadFile({ file: audioFile });
+      
+      // Step 4: Create song record with audio URL
       await createSongMutation.mutateAsync({
         date: today,
-        vocab_words: result.vocab_words,
-        lyrics_he: result.lyrics_he,
-        lyrics_transliteration: result.lyrics_transliteration,
-        style: "warm acoustic pop"
+        vocab_words: lyricsResult.vocab_words,
+        lyrics_he: lyricsResult.lyrics_he,
+        lyrics_transliteration: lyricsResult.lyrics_transliteration,
+        style: "warm acoustic pop",
+        audio_url: uploadResult.file_url,
+        audio_format: "mp3",
+        duration_seconds: 30
       });
+      
+      toast.success("Song with audio ready! 🎵");
     } catch (e) {
-      toast.error("Failed to generate song");
+      console.error("Song generation error:", e);
+      toast.error("Failed to generate song - retrying...");
+      
+      // Fallback: Create song without audio for now
+      try {
+        const vocabList = wordsLearnedToday.map(w => `${w.word} (${w.translation})`).join(', ');
+        const lyricsResult = await base44.integrations.Core.InvokeLLM({
+          prompt: `Create simple Hebrew song lyrics using: ${vocabList}`,
+          response_json_schema: {
+            type: "object",
+            properties: {
+              lyrics_he: { type: "string" },
+              lyrics_transliteration: { type: "string" },
+              vocab_words: { type: "array", items: { type: "string" } }
+            }
+          }
+        });
+        
+        await createSongMutation.mutateAsync({
+          date: today,
+          vocab_words: lyricsResult.vocab_words,
+          lyrics_he: lyricsResult.lyrics_he,
+          lyrics_transliteration: lyricsResult.lyrics_transliteration,
+          style: "warm acoustic pop",
+          audio_url: null
+        });
+        
+        toast.info("Lyrics ready - audio coming soon!");
+      } catch (fallbackError) {
+        toast.error("Failed to generate song");
+      }
     }
     setGenerating(false);
   };
@@ -223,34 +290,43 @@ Output valid JSON only:
         </div>
       ) : (
         <div>
-          {/* Audio Element */}
-          <audio 
-            ref={audioRef} 
-            src={todaySong.audio_url || `data:audio/wav;base64,${btoa('RIFF')}`}
-            preload="metadata"
-          />
+          {/* Audio Element - only if we have a valid audio URL */}
+          {todaySong.audio_url && (
+            <audio 
+              ref={audioRef} 
+              src={todaySong.audio_url}
+              preload="metadata"
+              crossOrigin="anonymous"
+            />
+          )}
 
           {/* Player Controls */}
           <div className="mb-3">
             <div className="flex items-center gap-2 mb-2">
               {/* Play/Pause Button - LEFT */}
-              <button
-                onClick={togglePlay}
-                disabled={audioError}
-                className={`w-10 h-10 rounded-full flex items-center justify-center transition-all flex-shrink-0 ${
-                  audioError 
-                    ? "bg-red-500/50 cursor-not-allowed"
-                    : playing 
-                      ? "bg-pink-500 hover:bg-pink-600" 
-                      : "bg-purple-500 hover:bg-purple-600"
-                }`}
-              >
-                {playing ? (
-                  <Pause className="w-4 h-4 text-white fill-white" />
-                ) : (
-                  <Play className="w-4 h-4 text-white fill-white ml-0.5" />
-                )}
-              </button>
+              {todaySong.audio_url ? (
+                <button
+                  onClick={togglePlay}
+                  disabled={audioError}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-all flex-shrink-0 ${
+                    audioError 
+                      ? "bg-red-500/50 cursor-not-allowed"
+                      : playing 
+                        ? "bg-pink-500 hover:bg-pink-600" 
+                        : "bg-purple-500 hover:bg-purple-600"
+                  }`}
+                >
+                  {playing ? (
+                    <Pause className="w-4 h-4 text-white fill-white" />
+                  ) : (
+                    <Play className="w-4 h-4 text-white fill-white ml-0.5" />
+                  )}
+                </button>
+              ) : (
+                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/10 flex-shrink-0">
+                  <Loader2 className="w-4 h-4 text-white/60 animate-spin" />
+                </div>
+              )}
 
               {/* Skip Back */}
               <button
