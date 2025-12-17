@@ -49,8 +49,19 @@ export default function Backpack() {
 
   const updateWordMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Word.update(id, data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['wordRatings'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['wordRatings'] });
+      toast.success("Word rating updated!");
+    },
   });
+
+  const handleRateWord = async (wordId, rating, event) => {
+    event.stopPropagation();
+    await updateWordMutation.mutateAsync({
+      id: wordId,
+      data: { times_practiced: rating, mastered: rating >= 5 }
+    });
+  };
 
   const level1Words = wordRatings.filter(w => w.times_practiced === 1);
   const level2Words = wordRatings.filter(w => w.times_practiced === 2);
@@ -335,20 +346,40 @@ export default function Backpack() {
                     key={word.id}
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    onClick={() => setFlippedCards(prev => ({ ...prev, [word.id]: !prev[word.id] }))}
-                    className="bg-white/5 border border-white/10 rounded-lg p-3 cursor-pointer hover:border-cyan-400/50 transition-all h-24 flex flex-col justify-center items-center text-center"
+                    className="relative group"
                   >
-                    <p className="text-cyan-400 font-bold text-lg mb-0.5" dir="rtl">{word.word}</p>
-                    <p className="text-white/60 text-xs mb-1">{word.phonetic}</p>
-                    {isFlipped && (
-                      <motion.p
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="text-green-400 font-medium text-sm"
-                      >
-                        = {word.translation}
-                      </motion.p>
-                    )}
+                    <div
+                      onClick={() => setFlippedCards(prev => ({ ...prev, [word.id]: !prev[word.id] }))}
+                      className="bg-white/5 border border-white/10 rounded-lg p-3 cursor-pointer hover:border-cyan-400/50 transition-all h-24 flex flex-col justify-center items-center text-center"
+                    >
+                      <p className="text-cyan-400 font-bold text-lg mb-0.5" dir="rtl">{word.word}</p>
+                      <p className="text-white/60 text-xs mb-1">{word.phonetic}</p>
+                      {isFlipped && (
+                        <motion.p
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className="text-green-400 font-medium text-sm"
+                        >
+                          = {word.translation}
+                        </motion.p>
+                      )}
+                    </div>
+                    {/* Rating buttons on hover */}
+                    <div className="absolute bottom-1 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                      {[1, 2, 3, 4, 5].map((num) => (
+                        <button
+                          key={num}
+                          onClick={(e) => handleRateWord(word.id, num, e)}
+                          className={`w-6 h-6 rounded text-xs font-bold transition-all ${
+                            word.times_practiced === num
+                              ? num === 5 ? "bg-green-500 text-white" : "bg-cyan-500 text-white"
+                              : "bg-white/20 text-white/60 hover:bg-white/30"
+                          }`}
+                        >
+                          {num}
+                        </button>
+                      ))}
+                    </div>
                   </motion.div>
                 );
               })}
