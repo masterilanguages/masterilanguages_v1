@@ -13,13 +13,15 @@ import { toast } from "sonner";
 
 export default function Backpack() {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState("fluent");
+  const [activeTab, setActiveTab] = useState("level5");
   const [expandedId, setExpandedId] = useState(null);
   const [selectedWord, setSelectedWord] = useState(null);
   const [sentences, setSentences] = useState(null);
   const [loadingSentences, setLoadingSentences] = useState(false);
   const [newWords, setNewWords] = useState([]);
   const [activeNewWord, setActiveNewWord] = useState(null);
+  const [showAllEnglish, setShowAllEnglish] = useState(false);
+  const [flippedCards, setFlippedCards] = useState({});
 
   const [newWordImage, setNewWordImage] = useState(null);
   const [generatingImage, setGeneratingImage] = useState(false);
@@ -50,19 +52,28 @@ export default function Backpack() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['wordRatings'] }),
   });
 
-  const fluentWords = wordRatings.filter(w => w.times_practiced >= 5);
-  const learningWords = wordRatings.filter(w => w.times_practiced > 0 && w.times_practiced < 5);
+  const level1Words = wordRatings.filter(w => w.times_practiced === 1);
+  const level2Words = wordRatings.filter(w => w.times_practiced === 2);
+  const level3Words = wordRatings.filter(w => w.times_practiced === 3);
+  const level4Words = wordRatings.filter(w => w.times_practiced === 4);
+  const level5Words = wordRatings.filter(w => w.times_practiced >= 5);
 
   const tabs = [
-    { id: "fluent", label: "⭐ Fluent", count: fluentWords.length, color: "green" },
-    { id: "learning", label: "📚 Learning", count: learningWords.length, color: "yellow" },
-    { id: "pictures", label: "🖼️ Pictures", count: wordRatings.filter(w => w.image_url).length, color: "purple" },
+    { id: "level5", label: "⭐ Level 5 (Fluent)", count: level5Words.length, color: "green" },
+    { id: "level4", label: "Level 4", count: level4Words.length, color: "blue" },
+    { id: "level3", label: "Level 3", count: level3Words.length, color: "purple" },
+    { id: "level2", label: "Level 2", count: level2Words.length, color: "yellow" },
+    { id: "level1", label: "Level 1", count: level1Words.length, color: "orange" },
+    { id: "pictures", label: "🖼️ Pictures", count: wordRatings.filter(w => w.image_url).length, color: "pink" },
     { id: "new", label: "📝 New", count: newWords.length, color: "amber" },
   ];
 
   const getDisplayWords = () => {
-    if (activeTab === "fluent") return fluentWords;
-    if (activeTab === "learning") return learningWords;
+    if (activeTab === "level5") return level5Words;
+    if (activeTab === "level4") return level4Words;
+    if (activeTab === "level3") return level3Words;
+    if (activeTab === "level2") return level2Words;
+    if (activeTab === "level1") return level1Words;
     if (activeTab === "pictures") return wordRatings.filter(w => w.image_url);
     if (activeTab === "new") return newWords;
     return [];
@@ -224,7 +235,7 @@ export default function Backpack() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6 overflow-x-auto">
+        <div className="flex gap-2 mb-4 overflow-x-auto">
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -240,14 +251,30 @@ export default function Backpack() {
           ))}
         </div>
 
+        {/* Show All English Toggle */}
+        {!["pictures", "new"].includes(activeTab) && (
+          <div className="mb-4 flex justify-end">
+            <button
+              onClick={() => setShowAllEnglish(!showAllEnglish)}
+              className={`px-4 py-2 rounded-xl font-medium transition-all ${
+                showAllEnglish 
+                  ? "bg-green-500/20 text-green-400 border border-green-500/50" 
+                  : "bg-white/5 text-white/60 hover:bg-white/10"
+              }`}
+            >
+              {showAllEnglish ? "✓ Show English" : "Show English"}
+            </button>
+          </div>
+        )}
+
         {/* Content */}
-        <div className="space-y-3">
+        <div>
           {getDisplayWords().length === 0 ? (
             <div className="text-center py-12">
               <p className="text-white/40 text-lg">
-                {activeTab === "fluent" && "No fluent words yet. Rate words 5/5 to add them here!"}
-                {activeTab === "learning" && "No words in progress. Start rating words!"}
+                {activeTab.startsWith("level") && "No words at this level yet!"}
                 {activeTab === "pictures" && "No mnemonic pictures yet. Generate some while learning!"}
+                {activeTab === "new" && "No new words yet. Click on words in sentences to add them!"}
               </p>
             </div>
           ) : activeTab === "pictures" ? (
@@ -278,8 +305,7 @@ export default function Backpack() {
                 </motion.div>
               ))}
             </div>
-          ) : (
-  activeTab === "new" ? (
+          ) : activeTab === "new" ? (
             newWords.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-white/40 text-lg">No new words yet. Click on words in sentences to add them!</p>
@@ -301,41 +327,32 @@ export default function Backpack() {
               </div>
             )
           ) : (
-            getDisplayWords().map((word) => (
-              <motion.div
-                key={word.id}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                onClick={() => handleWordClick(word)}
-                className={`rounded-xl p-4 flex items-center justify-between cursor-pointer hover:scale-[1.02] transition-all ${
-                  activeTab === "fluent" ? "bg-green-500/10 border border-green-500/30 hover:border-green-400" : "bg-yellow-500/10 border border-yellow-500/30 hover:border-yellow-400"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  {word.image_url && (
-                    <img src={word.image_url} alt="" className="w-10 h-10 rounded-lg object-cover" />
-                  )}
-                  <div>
-                    <p className="text-cyan-400 font-bold">{word.phonetic || word.word}</p>
-                    <p className="text-white/60 text-sm">{word.translation}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  {word.times_practiced >= 5 && <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />}
-                  <div className="flex gap-0.5">
-                    {[1, 2, 3, 4, 5].map(n => (
-                      <div
-                        key={n}
-                        className={`w-2 h-2 rounded-full ${
-                          word.times_practiced >= n ? "bg-cyan-500" : "bg-white/20"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </motion.div>
-            ))
-          )
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+              {getDisplayWords().map((word) => {
+                const isFlipped = flippedCards[word.id] || showAllEnglish;
+                return (
+                  <motion.div
+                    key={word.id}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    onClick={() => setFlippedCards(prev => ({ ...prev, [word.id]: !prev[word.id] }))}
+                    className="bg-white/5 border border-white/10 rounded-lg p-3 cursor-pointer hover:border-cyan-400/50 transition-all h-24 flex flex-col justify-center items-center text-center"
+                  >
+                    <p className="text-cyan-400 font-bold text-lg mb-0.5" dir="rtl">{word.word}</p>
+                    <p className="text-white/60 text-xs mb-1">{word.phonetic}</p>
+                    {isFlipped && (
+                      <motion.p
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="text-green-400 font-medium text-sm"
+                      >
+                        = {word.translation}
+                      </motion.p>
+                    )}
+                  </motion.div>
+                );
+              })}
+            </div>
           )}
         </div>
 
