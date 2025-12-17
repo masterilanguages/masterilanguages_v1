@@ -16,6 +16,7 @@ import Activities from './pages/Activities';
 import AvatarSelect from './pages/AvatarSelect';
 import BabyVideos from './pages/BabyVideos';
 import Backpack from './pages/Backpack';
+import AnimalsZone from './pages/AnimalsZone';
 import __Layout from './Layout.jsx';
 
 
@@ -38,6 +39,7 @@ export const PAGES = {
     "AvatarSelect": AvatarSelect,
     "BabyVideos": BabyVideos,
     "Backpack": Backpack,
+    "AnimalsZone": AnimalsZone,
 }
 
 export const pagesConfig = {

@@ -47,6 +47,7 @@ const levels = [
     gradient: "from-pink-500 to-rose-500",
     activities: [
       { id: "baby_words", name: "Help baby learn 50 first words and learn sentences", duration: "10 minutes", icon: "👶", page: "BabyVideos" },
+      { id: "animals", name: "Play with Animal Friends", duration: "5 minutes", icon: "🐾", page: "AnimalsZone" },
       { id: "colors", name: "Learn the colors", duration: "5 minutes", icon: "🎨", page: "ColorsLesson" },
       { id: "body_parts", name: "Learn body parts", duration: "5 minutes", icon: "🦵", page: "BodyPartsLesson" },
       { id: "days", name: "Learn days of the week", duration: "5 minutes", icon: "📅", page: "DaysLesson" },
