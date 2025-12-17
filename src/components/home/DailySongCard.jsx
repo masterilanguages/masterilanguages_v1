@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Volume2, Loader2, ChevronDown, ChevronUp, Sparkles } from "lucide-react";
+import { Volume2, Loader2, ChevronDown, ChevronUp, Sparkles, Play, Pause, SkipForward, SkipBack } from "lucide-react";
 import { toast } from "sonner";
 
 export default function DailySongCard() {
@@ -12,7 +12,11 @@ export default function DailySongCard() {
   const [showTranslit, setShowTranslit] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [generating, setGenerating] = useState(false);
-
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [audioError, setAudioError] = useState(false);
+  
+  const audioRef = useRef(null);
   const today = new Date().toISOString().split('T')[0];
 
   // Fetch today's song
@@ -97,38 +101,77 @@ Output valid JSON only:
     setGenerating(false);
   };
 
-  const playSong = () => {
-    if (!todaySong) return;
-    
-    setPlaying(true);
-    
-    // Use browser TTS for now (can be replaced with music generation API)
-    const lines = todaySong.lyrics_he.split('\n').filter(l => l.trim());
-    let lineIndex = 0;
-    
-    const speakNextLine = () => {
-      if (lineIndex >= lines.length) {
-        setPlaying(false);
-        return;
-      }
-      
-      const utterance = new SpeechSynthesisUtterance(lines[lineIndex]);
-      utterance.lang = 'he-IL';
-      utterance.rate = 0.8;
-      utterance.pitch = 1.1;
-      utterance.onend = () => {
-        lineIndex++;
-        setTimeout(speakNextLine, 500); // Pause between lines
-      };
-      window.speechSynthesis.speak(utterance);
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const updateTime = () => setCurrentTime(audio.currentTime);
+    const updateDuration = () => setDuration(audio.duration);
+    const handleEnded = () => setPlaying(false);
+    const handleError = () => {
+      setAudioError(true);
+      setPlaying(false);
+      toast.error("Audio unavailable—tap to retry");
     };
-    
-    speakNextLine();
+
+    audio.addEventListener('timeupdate', updateTime);
+    audio.addEventListener('loadedmetadata', updateDuration);
+    audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('error', handleError);
+
+    return () => {
+      audio.removeEventListener('timeupdate', updateTime);
+      audio.removeEventListener('loadedmetadata', updateDuration);
+      audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('error', handleError);
+    };
+  }, [todaySong]);
+
+  const togglePlay = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    if (playing) {
+      audio.pause();
+      setPlaying(false);
+    } else {
+      setAudioError(false);
+      audio.play().then(() => {
+        setPlaying(true);
+      }).catch(() => {
+        setAudioError(true);
+        toast.error("Audio unavailable—tap to retry");
+      });
+    }
   };
 
-  const stopSong = () => {
-    window.speechSynthesis.cancel();
-    setPlaying(false);
+  const skip = (seconds) => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.currentTime = Math.max(0, Math.min(duration, audio.currentTime + seconds));
+  };
+
+  const handleSeek = (e) => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const percentage = x / rect.width;
+    audio.currentTime = percentage * duration;
+  };
+
+  const formatTime = (seconds) => {
+    if (!seconds || isNaN(seconds)) return "0:00";
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const speakWord = (word) => {
+    const utterance = new SpeechSynthesisUtterance(word);
+    utterance.lang = 'he-IL';
+    utterance.rate = 0.7;
+    window.speechSynthesis.speak(utterance);
   };
 
   if (isLoading) {
@@ -180,32 +223,80 @@ Output valid JSON only:
         </div>
       ) : (
         <div>
-          {/* Play Button */}
-          <div className="flex items-center gap-3 mb-3">
-            <button
-              onClick={playing ? stopSong : playSong}
-              className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
-                playing 
-                  ? "bg-pink-500 hover:bg-pink-600" 
-                  : "bg-purple-500 hover:bg-purple-600"
-              }`}
-            >
-              {playing ? (
-                <span className="text-white text-xl">⏸</span>
-              ) : (
-                <Volume2 className="w-5 h-5 text-white" />
-              )}
-            </button>
-            <div className="flex-1">
-              <p className="text-white font-medium">Today's Song</p>
-              <p className="text-white/60 text-xs">{todaySong.vocab_words.length} vocabulary words</p>
+          {/* Audio Element */}
+          <audio 
+            ref={audioRef} 
+            src={todaySong.audio_url || `data:audio/wav;base64,${btoa('RIFF')}`}
+            preload="metadata"
+          />
+
+          {/* Player Controls */}
+          <div className="mb-3">
+            <div className="flex items-center gap-2 mb-2">
+              {/* Play/Pause Button - LEFT */}
+              <button
+                onClick={togglePlay}
+                disabled={audioError}
+                className={`w-10 h-10 rounded-full flex items-center justify-center transition-all flex-shrink-0 ${
+                  audioError 
+                    ? "bg-red-500/50 cursor-not-allowed"
+                    : playing 
+                      ? "bg-pink-500 hover:bg-pink-600" 
+                      : "bg-purple-500 hover:bg-purple-600"
+                }`}
+              >
+                {playing ? (
+                  <Pause className="w-4 h-4 text-white fill-white" />
+                ) : (
+                  <Play className="w-4 h-4 text-white fill-white ml-0.5" />
+                )}
+              </button>
+
+              {/* Skip Back */}
+              <button
+                onClick={() => skip(-10)}
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all"
+              >
+                <SkipBack className="w-3 h-3 text-white" />
+              </button>
+
+              {/* Progress Bar */}
+              <div className="flex-1">
+                <div 
+                  onClick={handleSeek}
+                  className="h-2 bg-white/20 rounded-full cursor-pointer relative overflow-hidden"
+                >
+                  <div 
+                    className="absolute top-0 left-0 h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all"
+                    style={{ width: `${duration ? (currentTime / duration) * 100 : 0}%` }}
+                  />
+                </div>
+                <div className="flex justify-between mt-1">
+                  <span className="text-white/40 text-[10px]">{formatTime(currentTime)}</span>
+                  <span className="text-white/40 text-[10px]">{formatTime(duration)}</span>
+                </div>
+              </div>
+
+              {/* Skip Forward */}
+              <button
+                onClick={() => skip(10)}
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all"
+              >
+                <SkipForward className="w-3 h-3 text-white" />
+              </button>
+
+              {/* Expand Button */}
+              <button
+                onClick={() => setExpanded(!expanded)}
+                className="text-white/60 hover:text-white"
+              >
+                {expanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+              </button>
             </div>
-            <button
-              onClick={() => setExpanded(!expanded)}
-              className="text-white/60 hover:text-white"
-            >
-              {expanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-            </button>
+
+            <div className="flex items-center gap-2 px-2">
+              <p className="text-white/60 text-xs flex-1">{todaySong.vocab_words.length} vocabulary words</p>
+            </div>
           </div>
 
           {/* Expanded Lyrics */}
@@ -256,6 +347,23 @@ Output valid JSON only:
                           </p>
                         )}
                       </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Tap-to-Hear Vocab Words */}
+                <div className="bg-white/5 rounded-xl p-3 mb-3">
+                  <p className="text-white/60 text-xs mb-2">Tap to hear:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {todaySong.vocab_words.map((word, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => speakWord(word)}
+                        className="flex items-center gap-1 px-2 py-1 bg-purple-500/20 hover:bg-purple-500/30 rounded-lg transition-all"
+                      >
+                        <Volume2 className="w-3 h-3 text-purple-300" />
+                        <span className="text-white text-sm" dir="rtl">{word}</span>
+                      </button>
                     ))}
                   </div>
                 </div>
