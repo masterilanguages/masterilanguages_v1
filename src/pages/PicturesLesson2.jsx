@@ -84,7 +84,7 @@ export default function PicturesLesson2() {
   });
 
   const rateMutation = useMutation({
-    mutationFn: async ({ wordId, confidence }) => {
+    mutationFn: async ({ wordId, confidence, card }) => {
       const existing = ratings.find(r => r.word_id === wordId);
       if (existing) {
         return base44.entities.PictureWord.update(existing.id, { confidence });
@@ -92,12 +92,48 @@ export default function PicturesLesson2() {
         return base44.entities.PictureWord.create({ 
           word_id: wordId, 
           hebrew_word: wordId,
+          transliteration: card.transliteration,
+          meaning: card.meaning,
+          hint: card.hint,
+          mnemonic: card.mnemonic,
+          image_url: card.image,
           confidence 
         });
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pictureWordRatings'] });
+    },
+  });
+
+  const updateWordMutation = useMutation({
+    mutationFn: async ({ wordId, updatedCard }) => {
+      const existing = ratings.find(r => r.word_id === wordId);
+      if (existing) {
+        await base44.entities.PictureWord.update(existing.id, {
+          hebrew_word: updatedCard.hebrewWord,
+          transliteration: updatedCard.transliteration,
+          meaning: updatedCard.meaning,
+          hint: updatedCard.hint,
+          mnemonic: updatedCard.mnemonic
+        });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pictureWordRatings'] });
+    },
+  });
+
+  const deleteCardMutation = useMutation({
+    mutationFn: async (wordId) => {
+      const existing = ratings.find(r => r.word_id === wordId);
+      if (existing) {
+        await base44.entities.PictureWord.delete(existing.id);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pictureWordRatings'] });
+      handleNext();
     },
   });
 
@@ -174,8 +210,11 @@ export default function PicturesLesson2() {
             total={filteredCards.length}
             onNext={handleNext}
             onPrev={handlePrev}
-            onRate={(wordId, confidence) => rateMutation.mutate({ wordId, confidence })}
+            onRate={(wordId, confidence) => rateMutation.mutate({ wordId, confidence, card: currentCard })}
             currentRating={getRating(currentCard?.hebrewWord)}
+            onDelete={() => deleteCardMutation.mutate(currentCard.hebrewWord)}
+            onUpdateWord={(updatedCard) => updateWordMutation.mutate({ wordId: currentCard.hebrewWord, updatedCard })}
+            canEdit={true}
           />
         )}
       </div>
