@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import EditableWord from "../learning/EditableWord";
 import ClickableWord from "../learning/ClickableWord";
 
-export default function VideoTranscript({ videoId, videoUrl, onPauseVideo }) {
+export default function VideoTranscript({ videoId, videoUrl, onPauseVideo, onSeekVideo }) {
   const [expanded, setExpanded] = useState(false);
   const [video, setVideo] = useState(null);
   const [transcribing, setTranscribing] = useState(false);
@@ -291,10 +291,20 @@ export default function VideoTranscript({ videoId, videoUrl, onPauseVideo }) {
                   if (lines.length >= 3) {
                     const [hebrew, transliteration, english] = lines;
                     return (
-                      <div key={blockIdx} className="group relative space-y-1 p-2 rounded-lg hover:bg-white/5 transition-all">
+                      <div key={blockIdx} className="group relative space-y-1 p-2 rounded-lg hover:bg-white/5 transition-all flex gap-2">
+                        {onSeekVideo && (
+                          <button
+                            onClick={() => onSeekVideo(blockIdx * 3)}
+                            className="flex-shrink-0 w-8 h-8 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/40 flex items-center justify-center transition-all mt-1"
+                            title="Play from here"
+                          >
+                            <Play className="w-4 h-4 text-cyan-400 fill-cyan-400" />
+                          </button>
+                        )}
+                        <div className="flex-1 relative">
                         <button
                           onClick={() => addSentenceToBackpack(hebrew, transliteration, english)}
-                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity w-7 h-7 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 flex items-center justify-center"
+                          className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity w-7 h-7 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 flex items-center justify-center"
                           title="Add to backpack"
                         >
                           <Plus className="w-4 h-4 text-amber-400" />
@@ -316,14 +326,15 @@ export default function VideoTranscript({ videoId, videoUrl, onPauseVideo }) {
                           ))}
                         </p>
                         <p className="text-white/70 text-base leading-tight">
-                          {english.split(/\s+/).map((word, wordIdx) => (
-                            <span key={wordIdx}>
-                              <ClickableWord word={word} onBeforeOpen={onPauseVideo} />
-                              {wordIdx < english.split(/\s+/).length - 1 ? ' ' : ''}
-                            </span>
-                          ))}
+                        {english.split(/\s+/).map((word, wordIdx) => (
+                        <span key={wordIdx}>
+                        <ClickableWord word={word} onBeforeOpen={onPauseVideo} />
+                        {wordIdx < english.split(/\s+/).length - 1 ? ' ' : ''}
+                        </span>
+                        ))}
                         </p>
-                      </div>
+                        </div>
+                        </div>
                     );
                   }
                   

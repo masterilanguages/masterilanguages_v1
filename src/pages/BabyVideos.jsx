@@ -1096,6 +1096,13 @@ Create about 15-20 conversational lines that naturally introduce and use these v
                                 iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
                               }
                             }}
+                            onSeekVideo={(seconds) => {
+                              const iframe = document.getElementById(`youtube-player-${video.id}`);
+                              if (iframe && iframe.contentWindow) {
+                                iframe.contentWindow.postMessage(`{"event":"command","func":"seekTo","args":[${seconds}, true]}`, '*');
+                                iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+                              }
+                            }}
                           />
                         </motion.div>
                       )}
