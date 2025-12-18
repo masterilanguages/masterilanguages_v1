@@ -24,7 +24,7 @@ export default function VideoTranscript({ videoId, videoUrl }) {
 
   const checkYouTubeAuth = async () => {
     try {
-      const response = await fetch('/api/oauth/youtube/status');
+      const response = await fetch('/api/oauth-youtube-status');
       const data = await response.json();
       setYoutubeConnected(data.connected && !data.expired);
     } catch (e) {
@@ -35,7 +35,7 @@ export default function VideoTranscript({ videoId, videoUrl }) {
   };
 
   const connectYouTube = () => {
-    window.location.href = '/api/oauth/youtube/start';
+    window.location.href = '/api/oauth-youtube-start';
   };
 
   const loadVideo = async () => {
@@ -74,7 +74,7 @@ export default function VideoTranscript({ videoId, videoUrl }) {
       }
 
       // Call backend function to list available captions
-      const listResponse = await fetch('/api/youtube/captions/list', {
+      const listResponse = await fetch('/api/youtubeCaptionsList', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -118,7 +118,7 @@ export default function VideoTranscript({ videoId, videoUrl }) {
       const selectedTrack = tracks[0];
 
       // Download the caption track
-      const downloadResponse = await fetch('/api/youtube/captions/download', {
+      const downloadResponse = await fetch('/api/youtubeCaptionsDownload', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
