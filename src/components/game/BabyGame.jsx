@@ -1193,10 +1193,17 @@ const [imageApproved, setImageApproved] = useState(false);
                   {wordRatings.filter(w => w.times_practiced >= 5).length === 0 ? (
                     <p className="text-white/40 text-sm">No fluent words yet</p>
                   ) : wordRatings.filter(w => w.times_practiced >= 5).map((word) => (
-                    <div key={word.id} className="bg-green-500/10 rounded-lg px-3 py-2 flex items-center justify-between">
-                      <span className="text-cyan-400">{word.phonetic || word.word}</span>
-                      <span className="text-white/60 text-sm">{word.translation}</span>
-                    </div>
+                   <div key={word.id} className="bg-green-500/10 rounded-lg px-3 py-2 flex items-center justify-between">
+                     <span className="text-cyan-400">{word.phonetic || word.word}</span>
+                     <span className="text-white/60 text-sm">
+                       <EditableWord
+                         text={word.translation}
+                         editable={false}
+                         onSave={() => {}}
+                         className="text-white/60 text-sm"
+                       />
+                     </span>
+                   </div>
                   ))}
                 </div>
               </div>
@@ -1211,10 +1218,17 @@ const [imageApproved, setImageApproved] = useState(false);
                   {wordRatings.filter(w => w.times_practiced > 0 && w.times_practiced < 5).length === 0 ? (
                     <p className="text-white/40 text-sm">No words in progress</p>
                   ) : wordRatings.filter(w => w.times_practiced > 0 && w.times_practiced < 5).map((word) => (
-                    <div key={word.id} className="bg-yellow-500/10 rounded-lg px-3 py-2 flex items-center justify-between">
-                      <span className="text-cyan-400">{word.phonetic || word.word}</span>
-                      <span className="text-white/60 text-sm">{word.translation}</span>
-                    </div>
+                   <div key={word.id} className="bg-yellow-500/10 rounded-lg px-3 py-2 flex items-center justify-between">
+                     <span className="text-cyan-400">{word.phonetic || word.word}</span>
+                     <span className="text-white/60 text-sm">
+                       <EditableWord
+                         text={word.translation}
+                         editable={false}
+                         onSave={() => {}}
+                         className="text-white/60 text-sm"
+                       />
+                     </span>
+                   </div>
                   ))}
                 </div>
               </div>
