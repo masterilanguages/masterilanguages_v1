@@ -12,7 +12,8 @@ export default function ClickableWord({
   transliteration, // phonetic/transliteration
   translation, // English meaning
   className = "",
-  variant = "hebrew" // "hebrew" | "transliteration" | "both"
+  variant = "hebrew", // "hebrew" | "transliteration" | "both"
+  onBeforeOpen // callback to pause video
 }) {
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("sentences"); // "sentences" | "mnemonic"
@@ -24,6 +25,9 @@ export default function ClickableWord({
   const [generatingCustom, setGeneratingCustom] = useState(false);
 
   const handleClick = () => {
+    if (onBeforeOpen) {
+      onBeforeOpen();
+    }
     setOpen(true);
     if (!sentences) {
       generateSentences();

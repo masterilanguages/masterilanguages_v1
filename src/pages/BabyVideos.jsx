@@ -1076,19 +1076,26 @@ Create about 15-20 conversational lines that naturally introduce and use these v
                         >
                           <div className="aspect-video bg-black rounded-xl overflow-hidden">
                             <iframe
+                              id={`youtube-player-${video.id}`}
                               width="100%"
                               height="100%"
-                              src={`https://www.youtube.com/embed/${ytId}?autoplay=1`}
+                              src={`https://www.youtube.com/embed/${ytId}?autoplay=1&enablejsapi=1`}
                               title={video.title}
                               frameBorder="0"
                               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                               allowFullScreen
                             />
                           </div>
-                          
+
                           <VideoTranscript 
                             videoId={video.id}
                             videoUrl={video.video_url}
+                            onPauseVideo={() => {
+                              const iframe = document.getElementById(`youtube-player-${video.id}`);
+                              if (iframe && iframe.contentWindow) {
+                                iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+                              }
+                            }}
                           />
                         </motion.div>
                       )}

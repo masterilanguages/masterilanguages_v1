@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import EditableWord from "../learning/EditableWord";
 import ClickableWord from "../learning/ClickableWord";
 
-export default function VideoTranscript({ videoId, videoUrl }) {
+export default function VideoTranscript({ videoId, videoUrl, onPauseVideo }) {
   const [expanded, setExpanded] = useState(false);
   const [video, setVideo] = useState(null);
   const [transcribing, setTranscribing] = useState(false);
@@ -302,7 +302,7 @@ export default function VideoTranscript({ videoId, videoUrl }) {
                         <p className="text-cyan-400 text-2xl font-bold leading-tight" dir="rtl" style={{ textAlign: 'left' }}>
                           {hebrew.split(/\s+/).map((word, wordIdx) => (
                             <span key={wordIdx}>
-                              <ClickableWord word={word} />
+                              <ClickableWord word={word} onBeforeOpen={onPauseVideo} />
                               {wordIdx < hebrew.split(/\s+/).length - 1 ? ' ' : ''}
                             </span>
                           ))}
@@ -310,7 +310,7 @@ export default function VideoTranscript({ videoId, videoUrl }) {
                         <p className="text-white/90 text-lg leading-tight" dir="rtl" style={{ textAlign: 'left' }}>
                           {transliteration.split(/\s+/).map((word, wordIdx) => (
                             <span key={wordIdx}>
-                              <ClickableWord word={word} />
+                              <ClickableWord word={word} onBeforeOpen={onPauseVideo} />
                               {wordIdx < transliteration.split(/\s+/).length - 1 ? ' ' : ''}
                             </span>
                           ))}
@@ -318,7 +318,7 @@ export default function VideoTranscript({ videoId, videoUrl }) {
                         <p className="text-white/70 text-base leading-tight">
                           {english.split(/\s+/).map((word, wordIdx) => (
                             <span key={wordIdx}>
-                              <ClickableWord word={word} />
+                              <ClickableWord word={word} onBeforeOpen={onPauseVideo} />
                               {wordIdx < english.split(/\s+/).length - 1 ? ' ' : ''}
                             </span>
                           ))}
