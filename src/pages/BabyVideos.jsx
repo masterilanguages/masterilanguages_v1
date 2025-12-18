@@ -467,16 +467,15 @@ export default function BabyVideos() {
   useEffect(() => {
     const videoId = searchParams.get('videoId');
     if (videoId) {
-      // Parse as number if it's a numeric string (for hardcoded videos)
-      const parsedId = isNaN(videoId) ? videoId : parseInt(videoId, 10);
-      setExpandedVideoId(parsedId);
+      // Set the ID as-is (string or number)
+      setExpandedVideoId(videoId);
       // Scroll to video after a short delay
       setTimeout(() => {
-        const videoElement = document.getElementById(`video-${parsedId}`);
+        const videoElement = document.getElementById(`video-${videoId}`);
         if (videoElement) {
           videoElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
-      }, 100);
+      }, 300);
     }
   }, [searchParams]);
 
