@@ -394,6 +394,8 @@ export default function BabyVideos() {
       const profiles = await base44.entities.UserProfile.list();
       return profiles[0] || null;
     },
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: userCoins } = useQuery({
@@ -402,11 +404,15 @@ export default function BabyVideos() {
       const coins = await base44.entities.UserCoins.list();
       return coins[0] || { coins: 0 };
     },
+    staleTime: 2 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: wordRatings = [] } = useQuery({
     queryKey: ['wordRatings'],
     queryFn: () => base44.entities.Word.filter({ category: "wordbank" }),
+    staleTime: 3 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: customVideos = [] } = useQuery({
@@ -416,6 +422,8 @@ export default function BabyVideos() {
       // Filter out deleted videos for non-admin users
       return videos.filter(v => !v.deleted_at || currentUser?.role === 'admin');
     },
+    staleTime: 2 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   // Check if current user is admin
