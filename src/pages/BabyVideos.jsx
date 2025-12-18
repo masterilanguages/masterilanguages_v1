@@ -467,7 +467,16 @@ export default function BabyVideos() {
   useEffect(() => {
     const videoId = searchParams.get('videoId');
     if (videoId) {
-      setExpandedVideoId(videoId);
+      // Parse as number if it's a numeric string (for hardcoded videos)
+      const parsedId = isNaN(videoId) ? videoId : parseInt(videoId, 10);
+      setExpandedVideoId(parsedId);
+      // Scroll to video after a short delay
+      setTimeout(() => {
+        const videoElement = document.getElementById(`video-${parsedId}`);
+        if (videoElement) {
+          videoElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
     }
   }, [searchParams]);
 
@@ -1034,6 +1043,7 @@ Create about 15-20 conversational lines that naturally introduce and use these v
               return (
                 <div
                   key={video.id}
+                  id={`video-${video.id}`}
                   className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden"
                 >
                   {/* Video Header - Clickable */}
