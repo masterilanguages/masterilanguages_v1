@@ -122,6 +122,19 @@ export default function ClickableWord({
     toast.success("Sentence saved to Word Bank!");
   };
 
+  const saveWord = async () => {
+    await base44.entities.Word.create({
+      word: word,
+      translation: translation,
+      phonetic: transliteration,
+      category: "wordbank",
+      times_practiced: 1,
+      mastered: false,
+    });
+    toast.success("Word added to backpack! 🎒");
+    setOpen(false);
+  };
+
   const displayText = variant === "hebrew" ? word : 
                       variant === "transliteration" ? transliteration : 
                       `${word} (${transliteration})`;
@@ -138,13 +151,23 @@ export default function ClickableWord({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="bg-slate-900 border-white/20 text-white max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-3">
-              <Sparkles className="w-6 h-6 text-cyan-400" />
-              <div>
-                <span className="text-2xl" dir="rtl">{word}</span>
-                <span className="text-white/60 ml-3">/{transliteration}/</span>
-                <span className="text-cyan-400 ml-3">{translation}</span>
+            <DialogTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Sparkles className="w-6 h-6 text-cyan-400" />
+                <div>
+                  <span className="text-2xl" dir="rtl">{word}</span>
+                  <span className="text-white/60 ml-3">/{transliteration}/</span>
+                  <span className="text-cyan-400 ml-3">{translation}</span>
+                </div>
               </div>
+              <Button
+                onClick={saveWord}
+                className="bg-amber-500 hover:bg-amber-600 flex-shrink-0"
+                size="sm"
+              >
+                <BookOpen className="w-4 h-4 mr-2" />
+                Add to Backpack
+              </Button>
             </DialogTitle>
           </DialogHeader>
 
