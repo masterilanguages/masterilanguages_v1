@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import EditableWord from "../learning/EditableWord";
+import ClickableWord from "../learning/ClickableWord";
 
 export default function VideoTranscript({ videoId, videoUrl }) {
   const [expanded, setExpanded] = useState(false);
@@ -299,12 +300,12 @@ export default function VideoTranscript({ videoId, videoUrl }) {
                           <Plus className="w-4 h-4 text-amber-400" />
                         </button>
                         <p className="text-cyan-400 text-2xl font-bold leading-tight" dir="rtl" style={{ textAlign: 'left' }}>
-                          <EditableWord
-                            text={hebrew}
-                            onSave={(val) => updateTranscriptLine(blockIdx, 'hebrew', val)}
-                            language="he"
-                            className="text-cyan-400 text-2xl font-bold"
-                          />
+                          {hebrew.split(/\s+/).map((word, wordIdx) => (
+                            <span key={wordIdx}>
+                              <ClickableWord word={word} />
+                              {wordIdx < hebrew.split(/\s+/).length - 1 ? ' ' : ''}
+                            </span>
+                          ))}
                         </p>
                         <p className="text-white/90 text-lg leading-tight" dir="rtl" style={{ textAlign: 'left' }}>
                           <EditableWord
