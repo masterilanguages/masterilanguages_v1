@@ -29,9 +29,6 @@ export default function ClickableWord({
       onBeforeOpen();
     }
     setOpen(true);
-    if (!sentences) {
-      generateSentences();
-    }
   };
 
   const generateSentences = async () => {
@@ -209,7 +206,7 @@ export default function ClickableWord({
           <div className="flex gap-2 mb-4">
             <Button
               variant={activeTab === "sentences" ? "default" : "outline"}
-              onClick={() => { setActiveTab("sentences"); if (!sentences) generateSentences(); }}
+              onClick={() => setActiveTab("sentences")}
               className={activeTab === "sentences" ? "bg-cyan-500" : "border-white/20 text-white"}
             >
               <MessageSquare className="w-4 h-4 mr-2" />
@@ -228,6 +225,14 @@ export default function ClickableWord({
           {/* Sentences Tab */}
           {activeTab === "sentences" && (
             <div className="space-y-3">
+              {!sentences && !loading && (
+                <div className="text-center py-8">
+                  <Button onClick={generateSentences} className="bg-cyan-500 hover:bg-cyan-600">
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Generate Example Sentences
+                  </Button>
+                </div>
+              )}
               {loading ? (
                 <div className="flex flex-col items-center py-8">
                   <Loader2 className="w-8 h-8 text-cyan-400 animate-spin mb-3" />
