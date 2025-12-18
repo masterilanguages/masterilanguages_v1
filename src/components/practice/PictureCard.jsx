@@ -45,16 +45,29 @@ export default function PictureCard({
         <div className="absolute top-3 right-3 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
           {currentIndex + 1}
         </div>
-        {canEdit && onDelete && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete();
-            }}
-            className="absolute bottom-3 right-3 w-8 h-8 rounded-lg bg-black/40 hover:bg-black/60 flex items-center justify-center backdrop-blur-md transition-all"
-          >
-            <span className="text-lg">🗑️</span>
-          </button>
+        {canEdit && (
+          <div className="absolute bottom-3 right-3 flex gap-2">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                // TODO: Trigger mnemonic image regeneration
+              }}
+              className="w-8 h-8 rounded-lg bg-black/40 hover:bg-black/60 flex items-center justify-center backdrop-blur-md transition-all"
+            >
+              <span className="text-lg">🎨</span>
+            </button>
+            {onDelete && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete();
+                }}
+                className="w-8 h-8 rounded-lg bg-black/40 hover:bg-black/60 flex items-center justify-center backdrop-blur-md transition-all"
+              >
+                <span className="text-lg">🗑️</span>
+              </button>
+            )}
+          </div>
         )}
         <div className="absolute bottom-3 left-3 flex gap-1">
           {[1, 2, 3, 4, 5].map((num) => (
