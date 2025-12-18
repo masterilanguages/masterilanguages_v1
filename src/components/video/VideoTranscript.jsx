@@ -256,7 +256,7 @@ export default function VideoTranscript({ videoId, videoUrl }) {
                         >
                           {hebrew}
                         </p>
-                        <p className="text-white/90 text-lg leading-tight">
+                        <p className="text-white/90 text-lg leading-tight" dir="rtl" style={{ textAlign: 'left' }}>
                           {transliteration}
                         </p>
                         <p className="text-white/70 text-base leading-tight">
