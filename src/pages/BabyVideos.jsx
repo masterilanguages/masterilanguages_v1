@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play, ArrowLeft, Coins, Check, Backpack, Volume2, Star, BookOpen, Plus, ChevronRight, Loader2, FileText } from "lucide-react";
+import { Play, ArrowLeft, Coins, Check, Backpack, Volume2, Star, BookOpen, Plus, ChevronRight, Loader2, FileText, GripVertical } from "lucide-react";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { Input } from "@/components/ui/input";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -421,7 +422,9 @@ export default function BabyVideos() {
     queryFn: async () => {
       const videos = await base44.entities.Video.list();
       // Filter out deleted videos for non-admin users
-      return videos.filter(v => !v.deleted_at || currentUser?.role === 'admin');
+      const filtered = videos.filter(v => !v.deleted_at || currentUser?.role === 'admin');
+      // Sort by order field
+      return filtered.sort((a, b) => (a.order || 0) - (b.order || 0));
     },
     staleTime: 2 * 60 * 1000,
     refetchOnWindowFocus: false,
@@ -499,6 +502,20 @@ export default function BabyVideos() {
     },
   });
 
+  const reorderVideosMutation = useMutation({
+    mutationFn: async (videos) => {
+      await Promise.all(
+        videos.map((video, index) => 
+          base44.entities.Video.update(video.id, { order: index })
+        )
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customVideos'] });
+      toast.success("Order saved!");
+    },
+  });
+
   const updateVideoMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Video.update(id, data),
     onSuccess: () => {
@@ -536,6 +553,21 @@ export default function BabyVideos() {
       await deleteWordMutation.mutateAsync(existingWord.id);
       toast.success("Removed from backpack");
     }
+  };
+
+  const handleVideoDragEnd = (result) => {
+    if (!result.destination) return;
+    
+    const sourceIndex = result.source.index;
+    const destIndex = result.destination.index;
+    
+    if (sourceIndex === destIndex) return;
+    
+    const reordered = Array.from(customVideos);
+    const [removed] = reordered.splice(sourceIndex, 1);
+    reordered.splice(destIndex, 0, removed);
+    
+    reorderVideosMutation.mutate(reordered);
   };
 
   const addTranscriptWordToBackpack = async (line) => {
@@ -1008,17 +1040,26 @@ Create about 15-20 conversational lines that naturally introduce and use these v
             {customVideos.length > 0 && (
               <div className="mb-4">
                 <h2 className="text-white/60 text-sm font-medium mb-3">Your Videos</h2>
-                {customVideos.map((video) => {
+                <DragDropContext onDragEnd={handleVideoDragEnd}>
+                  <Droppable droppableId="custom-videos">
+                    {(provided) => (
+                      <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-3">
+                        {customVideos.map((video, index) => {
                   const ytId = extractYouTubeId(video.video_url);
                   if (!ytId) return null;
-                  
+
                   const isExpanded = expandedVideoId === `custom-${video.id}` || expandedVideoId == video.id;
-                  
+
                   return (
-                    <div
-                      key={`custom-${video.id}`}
-                      className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 backdrop-blur-xl rounded-2xl border border-blue-500/30 overflow-hidden mb-3"
-                    >
+                    <Draggable key={`custom-${video.id}`} draggableId={`custom-${video.id}`} index={index}>
+                      {(provided, snapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          className={`bg-gradient-to-br from-blue-500/10 to-cyan-500/10 backdrop-blur-xl rounded-2xl border border-blue-500/30 overflow-hidden ${
+                            snapshot.isDragging ? 'shadow-2xl scale-105' : ''
+                          }`}
+                        >
                       <div className="p-4 space-y-3">
                         {/* Admin Controls */}
                         {currentUser?.role === 'admin' && (
@@ -1034,10 +1075,14 @@ Create about 15-20 conversational lines that naturally introduce and use these v
                         )}
 
                         {/* Video Header */}
-                        <div 
-                          onClick={() => setExpandedVideoId(isExpanded ? null : `custom-${video.id}`)}
-                          className="flex gap-4 cursor-pointer hover:bg-white/5 transition-all rounded-lg p-2"
-                        >
+                        <div className="flex gap-4 cursor-pointer hover:bg-white/5 transition-all rounded-lg p-2">
+                          <div {...provided.dragHandleProps} className="cursor-grab active:cursor-grabbing flex items-start pt-2">
+                            <GripVertical className="w-5 h-5 text-white/40 hover:text-white/60" />
+                          </div>
+                          <div 
+                            onClick={() => setExpandedVideoId(isExpanded ? null : `custom-${video.id}`)}
+                            className="flex-1 flex gap-4"
+                          >
                         <div className="relative w-40 h-24 flex-shrink-0 rounded-xl overflow-hidden bg-black">
                           <img 
                             src={`https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`}
@@ -1067,7 +1112,8 @@ Create about 15-20 conversational lines that naturally introduce and use these v
                         </div>
                         <ChevronRight className={`w-5 h-5 text-white/40 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
                         </div>
-                      </div>
+                        </div>
+                        </div>
 
                       {isExpanded && (
                         <motion.div
@@ -1265,12 +1311,19 @@ Create about 15-20 conversational lines that naturally introduce and use these v
                                       + Add
                                     </button>
                                   )}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
+                                  </div>
+                                  </div>
+                                  )}
+                                  </Draggable>
+                                  );
+                                  })}
+                                  {provided.placeholder}
+                                  </div>
+                                  )}
+                                  </Droppable>
+                                  </DragDropContext>
+                                  </div>
+                                  )}
                     </div>
                   )}
                 </div>
