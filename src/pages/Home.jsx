@@ -4,7 +4,8 @@ import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingCart, Dumbbell, Church, UtensilsCrossed, Heart, ShoppingBag, BookOpen, Users, Play, Trophy, Sparkles, ArrowRight, Flame, Briefcase, School, Baby, Star, Clock, ChevronRight, X, Home as HomeIcon, Video, Library, Book, Calendar, CheckSquare, Square } from "lucide-react";
+import { ShoppingCart, Dumbbell, Church, UtensilsCrossed, Heart, ShoppingBag, BookOpen, Users, Play, Trophy, Sparkles, ArrowRight, Flame, Briefcase, School, Baby, Star, Clock, ChevronRight, X, Home as HomeIcon, Video, Library, Book, Calendar, CheckSquare, Square, GripVertical } from "lucide-react";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
@@ -75,6 +76,7 @@ export default function Home() {
   const [timerSpeed, setTimerSpeed] = useState(1);
   const [currentUser, setCurrentUser] = useState(null);
   const [showExtras, setShowExtras] = useState(false);
+  const [expandedLevels, setExpandedLevels] = useState({ 1: true });
 
   // Get current user
   useEffect(() => {
@@ -260,6 +262,36 @@ export default function Home() {
     deleteProfileMutation.mutate();
   };
 
+  const createTodoItemMutation = useMutation({
+    mutationFn: (data) => base44.entities.TodoItem.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['todoItems'] });
+      toast.success("Added to To-Do List!");
+    },
+  });
+
+  const handleDragEnd = (result) => {
+    if (!result.destination) return;
+    
+    const { source, destination } = result;
+    
+    // Dragging from level to todo-list
+    if (source.droppableId.startsWith('level-') && destination.droppableId === 'todo-list') {
+      const levelId = parseInt(source.droppableId.replace('level-', ''));
+      const activity = levels[levelId - 1]?.activities[source.index];
+      
+      if (!activity) return;
+      
+      createTodoItemMutation.mutate({
+        label: activity.name,
+        type: 'lesson',
+        order: todoItems.length,
+        is_active: true,
+      });
+      return;
+    }
+  };
+
   const currentAge = userProfile?.age_level || 3;
   const isBaby = currentAge < 5;
   const hasDiaper = unlockedItems.includes("diaper");
@@ -372,13 +404,14 @@ export default function Home() {
       )}
 
       <div className="relative z-10 max-w-4xl mx-auto px-4 py-8">
-        {/* To-Do List */}
-        <div className="mb-8">
-          <HomeTodoList isAdmin={isMasterUser} />
-        </div>
+        <DragDropContext onDragEnd={handleDragEnd}>
+          {/* To-Do List */}
+          <div className="mb-8">
+            <HomeTodoList isAdmin={isMasterUser} />
+          </div>
 
-        {/* Show activity content OR levels */}
-        {selectedActivity ? (
+          {/* Show activity content OR levels */}
+          {selectedActivity ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -572,8 +605,9 @@ export default function Home() {
 
 
           </>
-        )}
-      </div>
+          )}
+          </DragDropContext>
+          </div>
 
       {/* Buy Coins Dialog */}
       <Dialog open={buyCoinsDialog} onOpenChange={setBuyCoinsDialog}>
