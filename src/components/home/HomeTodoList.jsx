@@ -156,6 +156,12 @@ export default function HomeTodoList({ isAdmin = false }) {
                   {item.type === "video" && (
                     <p className="text-xs text-white/40">Video: {videos.find(v => v.id === item.target_video_id)?.title || "Unknown"}</p>
                   )}
+                  {item.type === 'video' && item.target_video_id && !videos.find(v => v.id === item.target_video_id) && (
+                    <div className="flex items-center gap-1 text-amber-400 text-xs mt-1">
+                      <AlertTriangle className="w-3 h-3" />
+                      <span>Video missing or deleted - needs reassignment</span>
+                    </div>
+                  )}
                 </div>
                 <button
                   onClick={(e) => { e.stopPropagation(); setEditingItem(item); }}
@@ -196,6 +202,12 @@ export default function HomeTodoList({ isAdmin = false }) {
                 <p className={`text-white font-medium ${isCompleted(item.id) ? "line-through opacity-60" : ""}`}>
                   {item.label}
                 </p>
+                {item.type === 'video' && item.target_video_id && !videos.find(v => v.id === item.target_video_id) && (
+                  <div className="flex items-center gap-1 text-amber-400 text-xs mt-1">
+                    <AlertTriangle className="w-3 h-3" />
+                    <span>Video missing</span>
+                  </div>
+                )}
               </div>
             </motion.div>
           ))}
