@@ -1318,21 +1318,28 @@ Create about 15-20 conversational lines that naturally introduce and use these v
                                       + Add
                                     </button>
                                   )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+                                </div>
+                                </div>
+                                );
+                                })}
+                                </div>
+                                )}
+                                </div>
+                                )}
+                                </div>
+                                )}
+                                </Draggable>
+                                );
+                                })}
+                                {provided.placeholder}
+                                </div>
+                                )}
+                                </Droppable>
+                                </DragDropContext>
+                                </div>
+                                )}
 
-      <h2 className="text-white/60 text-sm font-medium mb-3">Recommended Videos</h2>
+                                <h2 className="text-white/60 text-sm font-medium mb-3">Recommended Videos</h2>
       {level1Videos.map((video) => {
         // Handle both string and number comparisons
         const isExpanded = expandedVideoId == video.id || expandedVideoId === video.id;
@@ -1495,13 +1502,11 @@ Create about 15-20 conversational lines that naturally introduce and use these v
           </div>
         );
       })}
-    </div>
-          )}
-        </div>
+      </div>
       )}
-    </div>
+      </div>
 
-    {/* Backpack Dialog */}
+      {/* Backpack Dialog */}
       <Dialog open={backpackOpen} onOpenChange={setBackpackOpen}>
         <DialogContent className="bg-slate-900 border-white/20 text-white max-w-md max-h-[80vh] overflow-hidden flex flex-col">
           <DialogHeader>
