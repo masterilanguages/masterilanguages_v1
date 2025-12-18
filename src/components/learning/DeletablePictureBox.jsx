@@ -31,22 +31,22 @@ export default function DeletablePictureBox({
       >
         {children}
         
-        <AnimatePresence>
-          {(isHovered || window.innerWidth < 768) && (
-            <motion.button
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowConfirm(true);
-              }}
-              className="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-red-500/80 hover:bg-red-500 flex items-center justify-center shadow-lg z-10 backdrop-blur-sm"
-            >
-              <Trash2 className="w-4 h-4 text-white" />
-            </motion.button>
-          )}
-        </AnimatePresence>
+        {/* Trash icon - always visible on mobile, hover on desktop */}
+        <motion.button
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ 
+            opacity: isHovered ? 1 : (typeof window !== 'undefined' && window.innerWidth < 768 ? 1 : 0.7),
+            scale: 1 
+          }}
+          whileHover={{ opacity: 1, scale: 1.1 }}
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowConfirm(true);
+          }}
+          className="absolute bottom-2 right-2 w-10 h-10 rounded-full bg-red-500/90 hover:bg-red-600 flex items-center justify-center shadow-xl z-50 backdrop-blur-sm border-2 border-white/20 transition-all"
+        >
+          <Trash2 className="w-5 h-5 text-white" />
+        </motion.button>
       </div>
 
       <Dialog open={showConfirm} onOpenChange={setShowConfirm}>

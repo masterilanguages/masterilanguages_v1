@@ -8,6 +8,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import ClickableWord from "../learning/ClickableWord";
+import EditableWord from "../learning/EditableWord";
 import { createPageUrl } from "@/utils";
 
 // 100 basic Hebrew words organized by category (needs)
@@ -740,16 +741,17 @@ const [imageApproved, setImageApproved] = useState(false);
                           w.word.toLowerCase() === word.toLowerCase().replace(/[.,!?]/g, '')
                         );
                         return (
-                          <button
-                            key={widx}
-                            onClick={() => wordInfo && addWordToBackpack(wordInfo.word, wordInfo.meaning)}
-                            className={`px-1 rounded ${
-                              wordInfo ? "text-cyan-400 hover:bg-cyan-500/20 underline decoration-dotted" : "text-white/80"
-                            }`}
-                            title={wordInfo ? `Click to add: ${wordInfo.meaning}` : undefined}
-                          >
-                            {word}
-                          </button>
+                          <span key={widx} className="inline-flex">
+                            <EditableWord
+                              text={word}
+                              editable={false}
+                              onSave={() => {}}
+                              className={`px-1 rounded cursor-pointer ${
+                                wordInfo ? "text-cyan-400 hover:bg-cyan-500/20 underline decoration-dotted" : "text-white/80"
+                              }`}
+                              onClick={() => wordInfo && addWordToBackpack(wordInfo.word, wordInfo.meaning)}
+                            />
+                          </span>
                         );
                       })}
                     </div>
@@ -774,8 +776,22 @@ const [imageApproved, setImageApproved] = useState(false);
         {/* Word with meaning */}
         <div className="text-center mb-6 bg-green-500/10 border border-green-500/30 rounded-xl p-4">
           <span className="text-4xl mb-2 block">✓</span>
-          <p className="text-2xl font-bold text-yellow-400">{currentWord.transliteration}</p>
-          <p className="text-xl text-green-400">= {currentWord.meaning}</p>
+          <p className="text-2xl font-bold text-yellow-400">
+            <EditableWord
+              text={currentWord.transliteration}
+              editable={false}
+              onSave={() => {}}
+              className="text-2xl font-bold text-yellow-400"
+            />
+          </p>
+          <p className="text-xl text-green-400">
+            = <EditableWord
+              text={currentWord.meaning}
+              editable={false}
+              onSave={() => {}}
+              className="text-xl text-green-400"
+            />
+          </p>
         </div>
 
         {/* Mnemonic Ideas */}
@@ -882,20 +898,21 @@ const [imageApproved, setImageApproved] = useState(false);
                       );
                       const isQueued = newWordsQueue.find(w => w.word.toLowerCase() === wordInfo?.word?.toLowerCase());
                       return (
-                        <button
-                          key={widx}
-                          onClick={() => wordInfo && addWordToBackpack(wordInfo.word, wordInfo.meaning)}
-                          className={`px-1 rounded ${
-                            isQueued 
-                              ? "text-green-400 bg-green-500/20" 
-                              : wordInfo 
-                              ? "text-cyan-400 hover:bg-cyan-500/20 underline decoration-dotted cursor-pointer" 
-                              : "text-white/80"
-                          }`}
-                          title={wordInfo ? `Add: ${wordInfo.meaning}` : undefined}
-                        >
-                          {word}
-                        </button>
+                        <span key={widx} className="inline-flex">
+                          <EditableWord
+                            text={word}
+                            editable={false}
+                            onSave={() => {}}
+                            className={`px-1 rounded cursor-pointer ${
+                              isQueued 
+                                ? "text-green-400 bg-green-500/20" 
+                                : wordInfo 
+                                ? "text-cyan-400 hover:bg-cyan-500/20 underline decoration-dotted" 
+                                : "text-white/80"
+                            }`}
+                            onClick={() => wordInfo && addWordToBackpack(wordInfo.word, wordInfo.meaning)}
+                          />
+                        </span>
                       );
                     })}
                   </div>
@@ -1068,7 +1085,14 @@ const [imageApproved, setImageApproved] = useState(false);
         <div className="text-center mb-6">
           <span className="text-5xl mb-3 block">👶</span>
           <div className="flex items-center justify-center gap-3 flex-wrap">
-            <p className="text-2xl font-bold text-yellow-400">{currentWord.transliteration}</p>
+            <p className="text-2xl font-bold text-yellow-400">
+              <EditableWord
+                text={currentWord.transliteration}
+                editable={false}
+                onSave={() => {}}
+                className="text-2xl font-bold text-yellow-400"
+              />
+            </p>
             <div className="flex gap-1">
               {[1, 2, 3, 4, 5].map((num) => (
                 <motion.button
