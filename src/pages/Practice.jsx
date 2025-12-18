@@ -311,7 +311,7 @@ export default function Practice() {
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-bold mb-1">Start Flashcard Mode</h2>
+                  <h2 className="text-xl font-bold mb-1">Start Flashcards</h2>
                   <p className="text-white/80">Test yourself and earn more coins</p>
                 </div>
                 <Play className="w-10 h-10" />
@@ -471,14 +471,6 @@ export default function Practice() {
           </>
         ) : (
           <div>
-            <Button
-              onClick={() => setMode("list")}
-              variant="ghost"
-              className="text-white mb-4"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" /> Back to List
-            </Button>
-            
             <div className="flex justify-center mb-4">
               <div className="bg-white/10 rounded-xl px-4 py-2 text-white">
                 {currentWordIndex + 1} / {sessionWords.length}
@@ -492,6 +484,7 @@ export default function Practice() {
                 onRate={handleRate}
                 onSkip={moveToNext}
                 currentRating={currentWord?.times_practiced || 0}
+                onGenerateImage={generateImage}
               />
             </AnimatePresence>
           </div>
