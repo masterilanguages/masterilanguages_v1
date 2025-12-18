@@ -96,8 +96,9 @@ export default function Home() {
       const profiles = await base44.entities.UserProfile.list();
       return profiles[0] || null;
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const { data: userCoins } = useQuery({
@@ -109,36 +110,25 @@ export default function Home() {
       }
       return coins[0];
     },
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
-  });
-
-  const { data: activityProgress = [] } = useQuery({
-    queryKey: ['activityProgress'],
-    queryFn: () => base44.entities.ActivityProgress.list(),
-    staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const { data: lessonProgress = [] } = useQuery({
     queryKey: ['lessonProgress'],
     queryFn: () => base44.entities.LessonProgress.list(),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const { data: todoItems = [] } = useQuery({
     queryKey: ['todoItems'],
     queryFn: () => base44.entities.TodoItem.list(),
-    staleTime: 3 * 60 * 1000,
+    staleTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
-  });
-
-  const { data: wordRatings = [] } = useQuery({
-    queryKey: ['wordRatings'],
-    queryFn: () => base44.entities.Word.filter({ category: "wordbank" }),
-    staleTime: 3 * 60 * 1000,
-    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const updateCoinsMutation = useMutation({

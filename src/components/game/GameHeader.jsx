@@ -4,7 +4,7 @@ import { Flame, Star, Baby, Sparkles, Trophy } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 
-export default function GameHeader({ profile, coins, onBuyCoins, onSelectLevel }) {
+const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins, onSelectLevel }) {
   const navigate = useNavigate();
   const [showLevels, setShowLevels] = useState(false);
   const xpToNextLevel = 1000;
@@ -124,4 +124,6 @@ export default function GameHeader({ profile, coins, onBuyCoins, onSelectLevel }
       </div>
     </div>
   );
-}
+});
+
+export default GameHeader;
