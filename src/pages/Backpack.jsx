@@ -363,10 +363,34 @@ export default function Backpack() {
                     onClick={() => setExpandedId(expandedId === word.id ? null : word.id)}
                     className="bg-white/5 border border-white/10 rounded-xl overflow-hidden cursor-pointer hover:border-cyan-400/50 transition-all h-48 flex flex-col"
                   >
-                    <div className="flex-1 overflow-hidden">
+                    <div className="flex-1 overflow-hidden relative">
                       <img src={word.image_url} alt={word.phonetic} className="w-full h-full object-cover" />
+                      <div className="absolute bottom-2 right-2 flex gap-1">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPictureWordId(pictureWordId === word.id ? null : word.id);
+                          }}
+                          className="w-7 h-7 rounded-lg bg-black/40 hover:bg-black/60 flex items-center justify-center backdrop-blur-md transition-all"
+                        >
+                          <span className="text-base">🎨</span>
+                        </button>
+                        {[1, 2, 3, 4, 5].map((num) => (
+                          <button
+                            key={num}
+                            onClick={(e) => handleRateWord(word.id, num, e)}
+                            className={`w-5 h-5 rounded text-[10px] font-bold transition-all ${
+                              word.times_practiced === num
+                                ? num === 5 ? "bg-green-500 text-white" : "bg-cyan-500 text-white"
+                                : "bg-black/30 text-white/70 hover:bg-black/50"
+                            }`}
+                          >
+                            {num}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                    <div className="p-2 text-center h-16 flex flex-col justify-center">
+                    <div className="p-2 text-center h-auto flex flex-col justify-center">
                       <p className="text-cyan-400 font-medium truncate">
                         <EditableWord
                           text={word.phonetic || word.word}
@@ -374,18 +398,43 @@ export default function Backpack() {
                           className="text-cyan-400 font-medium"
                         />
                       </p>
-                      {expandedId === word.id && (
-                        <motion.p
+                      <motion.p
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="text-green-400 font-medium text-sm truncate"
+                      >
+                        = <EditableWord
+                          text={word.translation}
+                          onSave={(newTranslation) => updateWordMutation.mutate({ id: word.id, data: { translation: newTranslation } })}
+                          className="text-green-400 font-medium text-sm"
+                        />
+                      </motion.p>
+                      {pictureWordId === word.id && (
+                        <motion.div
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: "auto" }}
-                          className="text-green-400 font-medium text-sm truncate"
+                          className="mt-2"
                         >
-                          = <EditableWord
-                            text={word.translation}
-                            onSave={(newTranslation) => updateWordMutation.mutate({ id: word.id, data: { translation: newTranslation } })}
-                            className="text-green-400 font-medium text-sm"
+                          <Textarea
+                            value={mnemonicDescription}
+                            onChange={(e) => setMnemonicDescription(e.target.value)}
+                            placeholder="Describe new picture..."
+                            className="bg-white/5 border-white/20 text-white text-xs mb-1 resize-none h-12"
+                            onClick={(e) => e.stopPropagation()}
                           />
-                        </motion.p>
+                          <Button
+                            onClick={(e) => { e.stopPropagation(); generateMnemonicForWord(word); }}
+                            disabled={!mnemonicDescription.trim() || generatingMnemonic}
+                            size="sm"
+                            className="w-full bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 h-6 text-xs"
+                          >
+                            {generatingMnemonic ? (
+                              <><Loader2 className="w-3 h-3 mr-1 animate-spin" /> Generating...</>
+                            ) : (
+                              <><Wand2 className="w-3 h-3 mr-1" /> Generate</>
+                            )}
+                          </Button>
+                        </motion.div>
                       )}
                     </div>
                   </motion.div>
