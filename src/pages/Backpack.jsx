@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import EditableWord from "../components/learning/EditableWord";
 
 export default function Backpack() {
   const queryClient = useQueryClient();
@@ -361,14 +362,24 @@ export default function Backpack() {
                     <img src={word.image_url} alt={word.phonetic} className="w-full h-full object-cover" />
                   </div>
                   <div className="p-2 text-center h-16 flex flex-col justify-center">
-                    <p className="text-cyan-400 font-medium truncate">{word.phonetic || word.word}</p>
+                    <p className="text-cyan-400 font-medium truncate">
+                      <EditableWord
+                        text={word.phonetic || word.word}
+                        onSave={(newText) => updateWordMutation.mutate({ id: word.id, data: { phonetic: newText } })}
+                        className="text-cyan-400 font-medium"
+                      />
+                    </p>
                     {expandedId === word.id && (
                       <motion.p
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
                         className="text-green-400 font-medium text-sm truncate"
                       >
-                        = {word.translation}
+                        = <EditableWord
+                          text={word.translation}
+                          onSave={(newTranslation) => updateWordMutation.mutate({ id: word.id, data: { translation: newTranslation } })}
+                          className="text-green-400 font-medium text-sm"
+                        />
                       </motion.p>
                     )}
                   </div>
@@ -407,15 +418,32 @@ export default function Backpack() {
                             🎨
                           </button>
                         </div>
-                        <p className="text-cyan-400 font-bold text-lg mb-0.5" dir="rtl">{word.word}</p>
-                        <p className="text-white/60 text-xs mb-1">{word.phonetic}</p>
+                        <p className="text-cyan-400 font-bold text-lg mb-0.5" dir="rtl">
+                          <EditableWord
+                            text={word.word}
+                            language="he"
+                            onSave={(newWord) => updateWordMutation.mutate({ id: word.id, data: { word: newWord } })}
+                            className="text-cyan-400 font-bold text-lg"
+                          />
+                        </p>
+                        <p className="text-white/60 text-xs mb-1">
+                          <EditableWord
+                            text={word.phonetic}
+                            onSave={(newPhonetic) => updateWordMutation.mutate({ id: word.id, data: { phonetic: newPhonetic } })}
+                            className="text-white/60 text-xs"
+                          />
+                        </p>
                         {isFlipped && (
                           <motion.p
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             className="text-green-400 font-medium text-sm"
                           >
-                            = {word.translation}
+                            = <EditableWord
+                              text={word.translation}
+                              onSave={(newTranslation) => updateWordMutation.mutate({ id: word.id, data: { translation: newTranslation } })}
+                              className="text-green-400 font-medium text-sm"
+                            />
                           </motion.p>
                         )}
                       </div>
