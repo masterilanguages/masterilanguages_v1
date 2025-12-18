@@ -31,25 +31,51 @@ export default function PictureCard({
   };
 
   return (
-    <DeletablePictureBox
-      onDelete={onDelete}
-      canDelete={canEdit && !!onDelete}
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
       className="bg-white/90 backdrop-blur-sm rounded-2xl border border-violet-100 shadow-xl overflow-hidden max-w-lg mx-auto"
     >
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-      >
-        <div className="relative">
-          <img 
-            src={card.image} 
-            alt="Mnemonic illustration" 
-            className="w-full h-64 object-cover"
-          />
-          <div className="absolute top-3 right-3 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
-            {currentIndex + 1}
-          </div>
+      <div className="relative">
+        <img 
+          src={card.image} 
+          alt="Mnemonic illustration" 
+          className="w-full h-64 object-cover"
+        />
+        <div className="absolute top-3 right-3 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
+          {currentIndex + 1}
         </div>
+        {canEdit && onDelete && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+            className="absolute bottom-3 right-3 w-8 h-8 rounded-lg bg-black/40 hover:bg-black/60 flex items-center justify-center backdrop-blur-md transition-all"
+          >
+            <span className="text-lg">🗑️</span>
+          </button>
+        )}
+        <div className="absolute bottom-3 left-3 flex gap-1">
+          {[1, 2, 3, 4, 5].map((num) => (
+            <button
+              key={num}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowAnswer(true);
+                onRate(card.hebrewWord, num);
+              }}
+              className={`w-6 h-6 rounded text-xs font-bold transition-all ${
+                currentRating === num 
+                  ? "bg-violet-500 text-white" 
+                  : "bg-black/30 text-white/80 hover:bg-black/50"
+              }`}
+            >
+              {num}
+            </button>
+          ))}
+        </div>
+      </div>
 
       <div className="p-6">
         <div className="text-center mb-4">
@@ -95,26 +121,7 @@ export default function PictureCard({
           </div>
         </div>
 
-        <div className="flex justify-center gap-2 mb-4">
-          {[1, 2, 3, 4, 5].map((num) => (
-            <Button
-              key={num}
-              onClick={() => {
-                setShowAnswer(true);
-                onRate(card.hebrewWord, num);
-              }}
-              variant={currentRating === num ? "default" : "outline"}
-              className={`w-10 h-10 p-0 text-lg font-bold ${
-                currentRating === num 
-                  ? "bg-gradient-to-r from-violet-500 to-blue-500 text-white" 
-                  : "border-2 border-violet-200 hover:border-violet-300"
-              }`}
-            >
-              {num}
-            </Button>
-          ))}
-        </div>
-        <p className="text-xs text-center text-gray-400 mb-4">1 = don't know → 5 = know it well</p>
+
 
         {showAnswer && (
           <motion.div
@@ -168,7 +175,6 @@ export default function PictureCard({
           </Button>
         </div>
       </div>
-      </motion.div>
-    </DeletablePictureBox>
+    </motion.div>
   );
 }

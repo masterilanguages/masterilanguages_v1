@@ -65,11 +65,8 @@ export default function EditableWord({
     <motion.span
       whileHover={{ backgroundColor: "rgba(255,255,255,0.1)" }}
       onClick={(e) => {
-        if (onClick) {
-          onClick(e);
-        } else {
-          setIsEditing(true);
-        }
+        e.stopPropagation();
+        setIsEditing(true);
       }}
       className={`inline-block cursor-pointer px-1 rounded hover:underline ${className}`}
       dir={language === "he" ? "rtl" : "ltr"}
