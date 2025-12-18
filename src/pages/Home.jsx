@@ -48,7 +48,6 @@ const levels = [
     icon: Baby, 
     gradient: "from-pink-500 to-rose-500",
     activities: [
-      { id: "level1_world", name: "🎮 Play in Level 1 World (4 zones)", duration: "5 minutes", icon: "🌍", page: "Level1World" },
       { id: "baby_words", name: "Help baby learn 50 first words and learn sentences", duration: "10 minutes", icon: "👶", page: "BabyVideos" },
       { id: "colors", name: "Learn the colors", duration: "5 minutes", icon: "🎨", page: "ColorsLesson" },
       { id: "body_parts", name: "Learn body parts", duration: "5 minutes", icon: "🦵", page: "BodyPartsLesson" },
@@ -75,6 +74,7 @@ export default function Home() {
   const [timerRunning, setTimerRunning] = useState(false);
   const [timerSpeed, setTimerSpeed] = useState(1);
   const [currentUser, setCurrentUser] = useState(null);
+  const [showExtras, setShowExtras] = useState(false);
 
   // Get current user
   useEffect(() => {
@@ -502,60 +502,77 @@ export default function Home() {
               />
             </div>
 
-            {/* Today's Activities - Show at top when no level selected */}
-            {!selectedLevel && levels[0].activities && (
+            {/* Extras Button */}
+            {!selectedLevel && (
               <div className="mb-6">
-                <h2 className="text-xl font-bold text-white mb-3">Today's Activities</h2>
-                <div className="space-y-2">
-                  {levels[0].activities.slice(0, 10).map((activity, idx) => {
-                    const isCompleted = lessonProgress.find(lp => lp.lesson_name === activity.page && lp.completed);
-                    return (
-                      <motion.button
-                        key={activity.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: idx * 0.05 }}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => {
-                          const durationMatch = activity.duration.match(/(\d+)\s*(minute|hour)/i);
-                          if (durationMatch) {
-                            const amount = parseInt(durationMatch[1]);
-                            const unit = durationMatch[2].toLowerCase();
-                            const minutes = unit === 'hour' ? amount * 60 : amount;
-                            startTimer(minutes);
-                          }
+                <Button
+                  onClick={() => setShowExtras(!showExtras)}
+                  className="w-full bg-white/5 hover:bg-white/10 border border-white/20 text-white h-auto py-4"
+                >
+                  <Star className="w-5 h-5 mr-2" />
+                  <span className="text-lg font-bold">Extras</span>
+                  <ChevronRight className={`w-5 h-5 ml-auto transition-transform ${showExtras ? 'rotate-90' : ''}`} />
+                </Button>
+                
+                <AnimatePresence>
+                  {showExtras && levels[0].activities && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="mt-3 space-y-2"
+                    >
+                      {levels[0].activities.slice(0, 10).map((activity, idx) => {
+                        const isCompleted = lessonProgress.find(lp => lp.lesson_name === activity.page && lp.completed);
+                        return (
+                          <motion.button
+                            key={activity.id}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: idx * 0.05 }}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => {
+                              const durationMatch = activity.duration.match(/(\d+)\s*(minute|hour)/i);
+                              if (durationMatch) {
+                                const amount = parseInt(durationMatch[1]);
+                                const unit = durationMatch[2].toLowerCase();
+                                const minutes = unit === 'hour' ? amount * 60 : amount;
+                                startTimer(minutes);
+                              }
 
-                          if (activity.id === "baby_words") {
-                            setSelectedActivity(activity);
-                          } else {
-                            navigate(createPageUrl(activity.page));
-                          }
-                        }}
-                        className={`w-full ${isCompleted ? 'bg-green-500/10 border-green-500/30' : 'bg-white/5 border-white/10'} hover:bg-white/10 border hover:border-cyan-400/50 rounded-xl p-3 text-left transition-all`}
-                      >
-                        <div className="flex items-center gap-3">
-                          {isCompleted ? (
-                            <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
-                              <span className="text-white text-sm">✓</span>
+                              if (activity.id === "baby_words") {
+                                setSelectedActivity(activity);
+                              } else {
+                                navigate(createPageUrl(activity.page));
+                              }
+                            }}
+                            className={`w-full ${isCompleted ? 'bg-green-500/10 border-green-500/30' : 'bg-white/5 border-white/10'} hover:bg-white/10 border hover:border-cyan-400/50 rounded-xl p-3 text-left transition-all`}
+                          >
+                            <div className="flex items-center gap-3">
+                              {isCompleted ? (
+                                <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+                                  <span className="text-white text-sm">✓</span>
+                                </div>
+                              ) : (
+                                <div className="w-6 h-6 rounded-full border-2 border-white/20 flex-shrink-0" />
+                              )}
+                              <span className="text-xl">{activity.icon}</span>
+                              <div className="flex-1">
+                                <p className="text-white font-medium text-sm">{activity.name}</p>
+                                <div className="flex items-center gap-2 mt-1 text-white/60 text-xs">
+                                  <Clock className="w-3 h-3" />
+                                  <span>{activity.duration}</span>
+                                </div>
+                              </div>
+                              <ChevronRight className="w-5 h-5 text-white/40" />
                             </div>
-                          ) : (
-                            <div className="w-6 h-6 rounded-full border-2 border-white/20 flex-shrink-0" />
-                          )}
-                          <span className="text-xl">{activity.icon}</span>
-                          <div className="flex-1">
-                            <p className="text-white font-medium text-sm">{activity.name}</p>
-                            <div className="flex items-center gap-2 mt-1 text-white/60 text-xs">
-                              <Clock className="w-3 h-3" />
-                              <span>{activity.duration}</span>
-                            </div>
-                          </div>
-                          <ChevronRight className="w-5 h-5 text-white/40" />
-                        </div>
-                      </motion.button>
-                    );
-                  })}
-                </div>
+                          </motion.button>
+                        );
+                      })}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             )}
 
