@@ -479,7 +479,7 @@ export default function BabyVideos() {
 
   // Extract YouTube ID from URL
   const extractYouTubeId = (url) => {
-    const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/);
+    const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([^&?]+)/);
     return match ? match[1] : null;
   };
 
