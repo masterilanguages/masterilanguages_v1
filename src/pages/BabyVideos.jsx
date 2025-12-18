@@ -467,17 +467,22 @@ export default function BabyVideos() {
   useEffect(() => {
     const videoId = searchParams.get('videoId');
     if (videoId) {
-      // Convert to number if it's a numeric string (for hardcoded videos 1,2,3...)
-      // Otherwise keep as string (for custom videos "custom-123")
-      const parsedId = videoId.startsWith('custom-') ? videoId : parseInt(videoId, 10);
+      // Try to parse as number for hardcoded videos, keep as string for custom
+      const parsedId = !isNaN(videoId) && !videoId.startsWith('custom-') 
+        ? parseInt(videoId, 10) 
+        : videoId;
+      
+      console.log('Auto-expanding video:', parsedId, 'from URL param:', videoId);
       setExpandedVideoId(parsedId);
+      
       // Scroll to video after a short delay
       setTimeout(() => {
         const videoElement = document.getElementById(`video-${parsedId}`);
+        console.log('Scrolling to element:', videoElement);
         if (videoElement) {
           videoElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
-      }, 300);
+      }, 500);
     }
   }, [searchParams]);
 
@@ -963,7 +968,7 @@ Create about 15-20 conversational lines that naturally introduce and use these v
                   const ytId = extractYouTubeId(video.video_url);
                   if (!ytId) return null;
                   
-                  const isExpanded = expandedVideoId === `custom-${video.id}`;
+                  const isExpanded = expandedVideoId === `custom-${video.id}` || expandedVideoId == video.id;
                   
                   return (
                     <div
@@ -1036,7 +1041,8 @@ Create about 15-20 conversational lines that naturally introduce and use these v
 
             <h2 className="text-white/60 text-sm font-medium mb-3">Recommended Videos</h2>
             {level1Videos.map((video) => {
-              const isExpanded = expandedVideoId === video.id;
+              // Handle both string and number comparisons
+              const isExpanded = expandedVideoId == video.id || expandedVideoId === video.id;
               const hasTranscript = fullTranscripts[video.id];
               const isLoading = loadingTranscript === video.id;
               const showingVocab = showVocabForVideo === video.id;
