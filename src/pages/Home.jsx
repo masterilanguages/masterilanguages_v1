@@ -523,8 +523,100 @@ export default function Home() {
           </motion.div>
         ) : (
           <>
+            {/* Level Cards with Dropdown */}
+            <div className="space-y-4 mb-6">
+              {levels.map((level) => {
+                const Icon = level.icon;
+                const isExpanded = expandedLevels[level.id];
+                
+                return (
+                  <div key={level.id} className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden">
+                    <button
+                      onClick={() => setExpandedLevels(prev => ({ ...prev, [level.id]: !prev[level.id] }))}
+                      className="w-full flex items-center gap-4 p-4 hover:bg-white/5 transition-all"
+                    >
+                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${level.gradient} flex items-center justify-center flex-shrink-0`}>
+                        <Icon className="w-6 h-6 text-white" />
+                      </div>
+                      <div className="flex-1 text-left">
+                        <h3 className="text-white font-bold">{level.name}</h3>
+                        <p className="text-white/60 text-sm">{level.subtitle}</p>
+                      </div>
+                      <ChevronRight className={`w-5 h-5 text-white/40 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+                    </button>
 
-
+                    <AnimatePresence>
+                      {isExpanded && level.activities?.length > 0 && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="border-t border-white/10"
+                        >
+                          <Droppable droppableId={`level-${level.id}`}>
+                            {(provided) => (
+                              <div ref={provided.innerRef} {...provided.droppableProps} className="p-3 space-y-2">
+                                {level.activities.map((activity, index) => {
+                                  const isCompleted = lessonProgress.find(lp => lp.lesson_name === activity.page && lp.completed);
+                                  
+                                  return (
+                                    <Draggable key={`${level.id}-${activity.id}`} draggableId={`${level.id}-${activity.id}`} index={index}>
+                                      {(provided, snapshot) => (
+                                        <div
+                                          ref={provided.innerRef}
+                                          {...provided.draggableProps}
+                                          className={`${isCompleted ? 'bg-green-500/10 border-green-500/30' : 'bg-white/5 border-white/10'} border rounded-lg transition-all ${snapshot.isDragging ? 'shadow-lg scale-105 bg-cyan-500/20' : ''}`}
+                                        >
+                                          <div className="flex items-center gap-2 p-3">
+                                            <div {...provided.dragHandleProps} className="cursor-grab active:cursor-grabbing">
+                                              <GripVertical className="w-4 h-4 text-white/40 hover:text-white/60" />
+                                            </div>
+                                            <button
+                                              onClick={() => {
+                                                const durationMatch = activity.duration?.match(/(\d+)\s*(minute|hour)/i);
+                                                if (durationMatch) {
+                                                  const amount = parseInt(durationMatch[1]);
+                                                  const unit = durationMatch[2].toLowerCase();
+                                                  const minutes = unit === 'hour' ? amount * 60 : amount;
+                                                  startTimer(minutes);
+                                                }
+                                                if (activity.id === "baby_words") {
+                                                  setSelectedActivity(activity);
+                                                } else {
+                                                  navigate(createPageUrl(activity.page));
+                                                }
+                                              }}
+                                              className="flex items-center gap-2 flex-1 text-left"
+                                            >
+                                              {isCompleted ? (
+                                                <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+                                                  <span className="text-white text-xs">✓</span>
+                                                </div>
+                                              ) : (
+                                                <div className="w-5 h-5 rounded-full border-2 border-white/20 flex-shrink-0" />
+                                              )}
+                                              <span className="text-xl">{activity.icon}</span>
+                                              <div className="flex-1">
+                                                <p className="text-white font-medium text-sm">{activity.name}</p>
+                                              </div>
+                                            </button>
+                                          </div>
+                                        </div>
+                                      )}
+                                    </Draggable>
+                                  );
+                                })}
+                                {provided.placeholder}
+                              </div>
+                            )}
+                          </Droppable>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                );
+              })}
+            </div>
           </>
           )}
           </DragDropContext>
