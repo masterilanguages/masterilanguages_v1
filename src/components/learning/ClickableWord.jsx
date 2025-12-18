@@ -123,16 +123,42 @@ export default function ClickableWord({
   };
 
   const saveWord = async () => {
-    await base44.entities.Word.create({
-      word: word,
-      translation: translation,
-      phonetic: transliteration,
-      category: "wordbank",
-      times_practiced: 1,
-      mastered: false,
-    });
-    toast.success("Word added to backpack! 🎒");
-    setOpen(false);
+    try {
+      // If translation is missing, fetch it first
+      let finalTranslation = translation;
+      let finalTransliteration = transliteration;
+      
+      if (!finalTranslation || !finalTransliteration) {
+        setLoading(true);
+        const result = await base44.integrations.Core.InvokeLLM({
+          prompt: `Translate the word "${word}" from Hebrew to English. Provide the transliteration and meaning.`,
+          response_json_schema: {
+            type: "object",
+            properties: {
+              transliteration: { type: "string" },
+              translation: { type: "string" }
+            }
+          }
+        });
+        finalTransliteration = finalTransliteration || result.transliteration;
+        finalTranslation = finalTranslation || result.translation;
+        setLoading(false);
+      }
+
+      await base44.entities.Word.create({
+        word: word,
+        translation: finalTranslation,
+        phonetic: finalTransliteration,
+        category: "wordbank",
+        times_practiced: 1,
+        mastered: false,
+      });
+      toast.success("Word added to backpack! 🎒");
+      setOpen(false);
+    } catch (e) {
+      toast.error("Failed to save word");
+      setLoading(false);
+    }
   };
 
   const displayText = variant === "hebrew" ? word : 
@@ -162,11 +188,15 @@ export default function ClickableWord({
               </div>
               <Button
                 onClick={saveWord}
+                disabled={loading}
                 className="bg-amber-500 hover:bg-amber-600 flex-shrink-0"
                 size="sm"
               >
-                <BookOpen className="w-4 h-4 mr-2" />
-                Add to Backpack
+                {loading ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</>
+                ) : (
+                  <><BookOpen className="w-4 h-4 mr-2" /> Add to Backpack</>
+                )}
               </Button>
             </DialogTitle>
           </DialogHeader>
