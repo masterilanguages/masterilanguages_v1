@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import EditableWord from "../components/learning/EditableWord";
+import DeletablePictureBox from "../components/learning/DeletablePictureBox";
 
 export default function Backpack() {
   const queryClient = useQueryClient();
@@ -351,39 +352,44 @@ export default function Backpack() {
           ) : activeTab === "pictures" ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {getDisplayWords().map((word) => (
-                <motion.div
+                <DeletablePictureBox
                   key={word.id}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  onClick={() => setExpandedId(expandedId === word.id ? null : word.id)}
-                  className="bg-white/5 border border-white/10 rounded-xl overflow-hidden cursor-pointer hover:border-cyan-400/50 transition-all h-48 flex flex-col"
+                  onDelete={() => deleteWordMutation.mutate(word.id)}
+                  canDelete={true}
                 >
-                  <div className="flex-1 overflow-hidden">
-                    <img src={word.image_url} alt={word.phonetic} className="w-full h-full object-cover" />
-                  </div>
-                  <div className="p-2 text-center h-16 flex flex-col justify-center">
-                    <p className="text-cyan-400 font-medium truncate">
-                      <EditableWord
-                        text={word.phonetic || word.word}
-                        onSave={(newText) => updateWordMutation.mutate({ id: word.id, data: { phonetic: newText } })}
-                        className="text-cyan-400 font-medium"
-                      />
-                    </p>
-                    {expandedId === word.id && (
-                      <motion.p
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        className="text-green-400 font-medium text-sm truncate"
-                      >
-                        = <EditableWord
-                          text={word.translation}
-                          onSave={(newTranslation) => updateWordMutation.mutate({ id: word.id, data: { translation: newTranslation } })}
-                          className="text-green-400 font-medium text-sm"
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    onClick={() => setExpandedId(expandedId === word.id ? null : word.id)}
+                    className="bg-white/5 border border-white/10 rounded-xl overflow-hidden cursor-pointer hover:border-cyan-400/50 transition-all h-48 flex flex-col"
+                  >
+                    <div className="flex-1 overflow-hidden">
+                      <img src={word.image_url} alt={word.phonetic} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="p-2 text-center h-16 flex flex-col justify-center">
+                      <p className="text-cyan-400 font-medium truncate">
+                        <EditableWord
+                          text={word.phonetic || word.word}
+                          onSave={(newText) => updateWordMutation.mutate({ id: word.id, data: { phonetic: newText } })}
+                          className="text-cyan-400 font-medium"
                         />
-                      </motion.p>
-                    )}
-                  </div>
-                </motion.div>
+                      </p>
+                      {expandedId === word.id && (
+                        <motion.p
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          className="text-green-400 font-medium text-sm truncate"
+                        >
+                          = <EditableWord
+                            text={word.translation}
+                            onSave={(newTranslation) => updateWordMutation.mutate({ id: word.id, data: { translation: newTranslation } })}
+                            className="text-green-400 font-medium text-sm"
+                          />
+                        </motion.p>
+                      )}
+                    </div>
+                  </motion.div>
+                </DeletablePictureBox>
               ))}
             </div>
           ) : (
