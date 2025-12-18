@@ -11,6 +11,7 @@ import GameHeader from "../components/game/GameHeader";
 import ClickableWord from "../components/learning/ClickableWord";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import VideoTranscript from "../components/video/VideoTranscript";
 
 // Videos with transcripts - Piece of Hebrew channel
 const level1Videos = [
@@ -973,7 +974,7 @@ Create about 15-20 conversational lines that naturally introduce and use these v
                         <motion.div
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: "auto" }}
-                          className="p-4 bg-slate-800/50 border-t border-white/20"
+                          className="p-4 bg-slate-800/50 border-t border-white/20 space-y-4"
                         >
                           <div className="aspect-video bg-black rounded-xl overflow-hidden">
                             <iframe
@@ -986,6 +987,11 @@ Create about 15-20 conversational lines that naturally introduce and use these v
                               allowFullScreen
                             />
                           </div>
+                          
+                          <VideoTranscript 
+                            videoId={video.id}
+                            videoUrl={video.video_url}
+                          />
                         </motion.div>
                       )}
                     </div>
