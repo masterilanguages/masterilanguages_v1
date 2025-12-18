@@ -308,18 +308,20 @@ export default function VideoTranscript({ videoId, videoUrl }) {
                           ))}
                         </p>
                         <p className="text-white/90 text-lg leading-tight" dir="rtl" style={{ textAlign: 'left' }}>
-                          <EditableWord
-                            text={transliteration}
-                            onSave={(val) => updateTranscriptLine(blockIdx, 'transliteration', val)}
-                            className="text-white/90 text-lg"
-                          />
+                          {transliteration.split(/\s+/).map((word, wordIdx) => (
+                            <span key={wordIdx}>
+                              <ClickableWord word={word} />
+                              {wordIdx < transliteration.split(/\s+/).length - 1 ? ' ' : ''}
+                            </span>
+                          ))}
                         </p>
                         <p className="text-white/70 text-base leading-tight">
-                          <EditableWord
-                            text={english}
-                            onSave={(val) => updateTranscriptLine(blockIdx, 'english', val)}
-                            className="text-white/70 text-base"
-                          />
+                          {english.split(/\s+/).map((word, wordIdx) => (
+                            <span key={wordIdx}>
+                              <ClickableWord word={word} />
+                              {wordIdx < english.split(/\s+/).length - 1 ? ' ' : ''}
+                            </span>
+                          ))}
                         </p>
                       </div>
                     );
