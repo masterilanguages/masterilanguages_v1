@@ -236,43 +236,51 @@ export default function VideoTranscript({ videoId, videoUrl }) {
                 <span className="text-white/40 text-xs uppercase">{video.language}</span>
               )}
             </div>
-            <div 
-              className="space-y-4" 
-              style={{ direction: 'ltr', textAlign: 'left' }}
-            >
-              {video.transcript_text.split('\n').filter(line => line.trim()).map((line, idx) => {
-                // Try to parse if it's structured JSON-like data
-                try {
-                  const parsed = JSON.parse(line);
-                  return (
-                    <div key={idx} className="space-y-0.5">
-                      <div className="text-sm text-white/60">{parsed.transliteration || parsed.translit}</div>
-                      <div className="text-base text-white">{parsed.english}</div>
-                      <div 
-                        className="text-lg text-cyan-400 font-semibold"
-                        style={{ direction: 'rtl', textAlign: 'left', unicodeBidi: 'plaintext' }}
-                      >
-                        {parsed.hebrew}
+            <div className="space-y-6">
+              {(() => {
+                // Parse transcript in blocks of 3 lines: Hebrew, Transliteration, English
+                const blocks = video.transcript_text.split('\n\n').filter(b => b.trim());
+                
+                return blocks.map((block, blockIdx) => {
+                  const lines = block.trim().split('\n').filter(l => l.trim());
+                  
+                  // If we have exactly 3 lines, treat as Hebrew/Translit/English
+                  if (lines.length >= 3) {
+                    const [hebrew, transliteration, english] = lines;
+                    return (
+                      <div key={blockIdx} className="space-y-1">
+                        <p 
+                          className="text-cyan-400 text-2xl font-bold leading-tight" 
+                          dir="rtl" 
+                          style={{ textAlign: 'left' }}
+                        >
+                          {hebrew}
+                        </p>
+                        <p className="text-white/90 text-lg leading-tight">
+                          {transliteration}
+                        </p>
+                        <p className="text-white/70 text-base leading-tight">
+                          {english}
+                        </p>
                       </div>
-                    </div>
-                  );
-                } catch {
-                  // Plain text - display as is
-                  return (
+                    );
+                  }
+                  
+                  // Fallback: display as plain text
+                  return lines.map((line, lineIdx) => (
                     <div 
-                      key={idx} 
+                      key={`${blockIdx}-${lineIdx}`}
                       className="text-white/90"
                       style={{ 
                         direction: video.language === "he" || video.language === "iw" ? 'rtl' : 'ltr',
-                        textAlign: 'left',
-                        unicodeBidi: 'plaintext'
+                        textAlign: 'left'
                       }}
                     >
                       {line}
                     </div>
-                  );
-                }
-              })}
+                  ));
+                });
+              })()}
             </div>
           </motion.div>
         )}
@@ -304,12 +312,14 @@ export default function VideoTranscript({ videoId, videoUrl }) {
             exit={{ opacity: 0, height: 0 }}
             className="mt-3 bg-white/5 border border-white/10 rounded-xl p-4"
           >
-            <p className="text-white/60 text-sm mb-2">Paste transcript below:</p>
+            <p className="text-white/60 text-sm mb-2">
+              Paste transcript below (format: Hebrew line, Transliteration line, English line, blank line, repeat):
+            </p>
             <Textarea
               value={manualTranscript}
               onChange={(e) => setManualTranscript(e.target.value)}
-              placeholder="Paste transcript here..."
-              className="bg-white/5 border-white/20 text-white min-h-[150px] mb-3"
+              placeholder="שָׁלוֹם לְכֻלָּם!&#10;Shalom lekulam!&#10;Hello everyone!&#10;&#10;הַיּוֹם נִלְמַד עִבְרִית.&#10;Hayom nilmad Ivrit.&#10;Today we will learn Hebrew."
+              className="bg-white/5 border-white/20 text-white min-h-[200px] mb-3"
             />
             <div className="flex gap-2">
               <Button 
