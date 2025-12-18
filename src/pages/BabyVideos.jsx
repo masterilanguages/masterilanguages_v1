@@ -1311,29 +1311,187 @@ Create about 15-20 conversational lines that naturally introduce and use these v
                                       + Add
                                     </button>
                                   )}
-                                  </div>
-                                  </div>
-                                  )}
-                                  </Draggable>
-                                  );
-                                  })}
-                                  {provided.placeholder}
-                                  </div>
-                                  )}
-                                  </Droppable>
-                                  </DragDropContext>
-                                  </div>
-                                  )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+                                </div>
+                                </div>
+                                );
+                                })}
+                                </div>
+                                )}
+                                </div>
+                                )}
+                                </div>
+                                );
+                                })}
+                                </div>
 
-      {/* Backpack Dialog */}
+                                <h2 className="text-white/60 text-sm font-medium mb-3">Recommended Videos</h2>
+                                {level1Videos.map((video) => {
+                                // Handle both string and number comparisons
+                                const isExpanded = expandedVideoId == video.id || expandedVideoId === video.id;
+                                const hasTranscript = fullTranscripts[video.id];
+                                const isLoading = loadingTranscript === video.id;
+                                const showingVocab = showVocabForVideo === video.id;
+
+                                return (
+                                <div
+                                key={video.id}
+                                id={`video-${video.id}`}
+                                className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden"
+                                >
+                                {/* Video Header - Clickable */}
+                                <div 
+                                onClick={() => {
+                                const newExpanded = expandedVideoId === video.id ? null : video.id;
+                                setExpandedVideoId(newExpanded);
+                                if (newExpanded !== video.id) setShowVocabForVideo(null);
+                                // Auto-generate transcript when expanding
+                                if (newExpanded && !fullTranscripts[video.id] && loadingTranscript !== video.id) {
+                                generateFullTranscript(video);
+                                }
+                                }}
+                                className="flex gap-4 p-4 cursor-pointer hover:bg-white/5 transition-all"
+                                >
+                                <div className="relative w-40 h-24 flex-shrink-0 rounded-xl overflow-hidden bg-black">
+                                <img 
+                                src={video.thumbnail}
+                                alt={video.title}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                e.target.src = `https://via.placeholder.com/160x90/1e1b4b/ffffff?text=Video`;
+                                }}
+                                />
+                                <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                                <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                                <Play className="w-5 h-5 text-white fill-white" />
+                                </div>
+                                </div>
+                                <span className="absolute bottom-1 right-1 bg-black/70 text-white text-xs px-1 rounded">
+                                {video.duration}
+                                </span>
+                                </div>
+                                <div className="flex-1">
+                                <span className="bg-purple-500/80 px-2 py-0.5 rounded-full text-xs text-white font-medium">
+                                {video.category}
+                                </span>
+                                <h3 className="text-white font-bold mt-1">{video.title}</h3>
+                                <div className="flex items-center gap-3 mt-2 text-sm">
+                                <span className="text-white/60">{video.transcript.length} words</span>
+                                <div className="flex items-center gap-1 text-yellow-400">
+                                <Coins className="w-4 h-4" />
+                                <span className="font-bold">+{video.coins}</span>
+                                </div>
+                                </div>
+                                </div>
+                                <ChevronRight className={`w-5 h-5 text-white/40 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+                                </div>
+
+                                {/* Expanded Content */}
+                                {isExpanded && (
+                                <div className="p-4 bg-slate-800/50 border-t border-white/20 space-y-4">
+                                {/* Video Player */}
+                                <div className="aspect-video bg-black rounded-xl overflow-hidden">
+                                <iframe
+                                width="100%"
+                                height="100%"
+                                src={`https://www.youtube.com/embed/${video.youtubeId}`}
+                                title={video.title}
+                                frameBorder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                                />
+                                </div>
+
+                                {/* Transcript Loading/Display */}
+                                {isLoading && (
+                                <div className="flex items-center justify-center gap-2 py-4 text-white/60">
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                                Generating transcript...
+                                </div>
+                                )}
+
+                                {hasTranscript && (
+                                <div className="space-y-1 max-h-64 overflow-y-auto bg-white/5 rounded-xl p-3">
+                                <p className="text-white/50 text-xs font-medium mb-2">📝 Full Transcript (tap any line to add):</p>
+                                {fullTranscripts[video.id].map((line, idx) => {
+                                const inBackpack = wordRatings.find(w => w.word === line.hebrew);
+                                return (
+                                <button
+                                key={idx}
+                                onClick={() => addTranscriptWordToBackpack(line)}
+                                className={`w-full text-left rounded-lg p-2 transition-all ${
+                                inBackpack 
+                                  ? "bg-green-500/10 border border-green-500/30" 
+                                  : "bg-white/5 hover:bg-white/10 border border-transparent hover:border-cyan-400/50"
+                                }`}
+                                >
+                                <p className="text-cyan-400 font-bold leading-tight" dir="rtl">{line.hebrew}</p>
+                                <p className="text-white/70 text-xs leading-tight">{line.transliteration}</p>
+                                <p className="text-white/50 text-xs leading-tight">{line.english}</p>
+                                {inBackpack && <span className="text-green-400 text-xs">✓ in backpack</span>}
+                                </button>
+                                );
+                                })}
+                                </div>
+                                )}
+
+                                {/* Vocab Button */}
+                                <button
+                                onClick={() => setShowVocabForVideo(showingVocab ? null : video.id)}
+                                className={`w-full flex items-center justify-center gap-2 ${showingVocab ? 'bg-amber-600' : 'bg-gradient-to-r from-amber-500 to-orange-500'} text-white py-3 rounded-xl font-bold`}
+                                >
+                                <BookOpen className="w-5 h-5" />
+                                {showingVocab ? '📚 Hide Vocabulary' : `📚 Show Vocabulary (${video.transcript.length} words)`}
+                                </button>
+
+                                {/* Vocabulary Words - Inline */}
+                                {showingVocab && (
+                                <div className="bg-white/5 rounded-xl p-4 space-y-2 max-h-80 overflow-y-auto">
+                                {video.transcript.map((item, idx) => {
+                                const inBackpack = wordRatings.find(w => w.word === item.hebrew);
+                                return (
+                                <div
+                                key={idx}
+                                className={`flex items-center justify-between p-3 rounded-lg ${
+                                inBackpack ? "bg-green-500/10 border border-green-500/30" : "bg-white/5 border border-white/10"
+                                }`}
+                                >
+                                <div>
+                                <span className="text-cyan-400 font-bold text-lg" dir="rtl">{item.hebrew}</span>
+                                <p className="text-white/70 text-sm">{item.transliteration}</p>
+                                <p className="text-white/50 text-xs">{item.meaning}</p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                {inBackpack ? (
+                                  <button
+                                    onClick={() => removeFromBackpack(item)}
+                                    className="px-3 py-1 bg-red-500/20 text-red-400 rounded-lg text-sm hover:bg-red-500/30"
+                                  >
+                                    ✕ Remove
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => addToBackpack(item)}
+                                    className="px-3 py-1 bg-amber-500/20 text-amber-400 rounded-lg text-sm hover:bg-amber-500/30"
+                                  >
+                                    + Add
+                                  </button>
+                                )}
+                                </div>
+                                </div>
+                                );
+                                })}
+                                </div>
+                                )}
+                                </div>
+                                )}
+                                </div>
+                                );
+                                })}
+                                </div>
+                                )}
+                                </div>
+
+                                {/* Backpack Dialog */}
       <Dialog open={backpackOpen} onOpenChange={setBackpackOpen}>
         <DialogContent className="bg-slate-900 border-white/20 text-white max-w-md max-h-[80vh] overflow-hidden flex flex-col">
           <DialogHeader>
