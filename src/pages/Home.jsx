@@ -4,7 +4,8 @@ import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingCart, Dumbbell, Church, UtensilsCrossed, Heart, ShoppingBag, BookOpen, Users, Play, Trophy, Sparkles, ArrowRight, Flame, Briefcase, School, Baby, Star, Clock, ChevronRight, X, Home as HomeIcon, Video, Library, Book, Calendar, CheckSquare, Square } from "lucide-react";
+import { ShoppingCart, Dumbbell, Church, UtensilsCrossed, Heart, ShoppingBag, BookOpen, Users, Play, Trophy, Sparkles, ArrowRight, Flame, Briefcase, School, Baby, Star, Clock, ChevronRight, X, Home as HomeIcon, Video, Library, Book, Calendar, CheckSquare, Square, GripVertical } from "lucide-react";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
@@ -75,6 +76,7 @@ export default function Home() {
   const [timerSpeed, setTimerSpeed] = useState(1);
   const [currentUser, setCurrentUser] = useState(null);
   const [showExtras, setShowExtras] = useState(false);
+  const [expandedLevels, setExpandedLevels] = useState({ 1: true });
 
   // Get current user
   useEffect(() => {
@@ -127,6 +129,13 @@ export default function Home() {
     refetchOnWindowFocus: false,
   });
 
+  const { data: levelActivities = [] } = useQuery({
+    queryKey: ['levelActivities'],
+    queryFn: () => base44.entities.TodoItem.filter({ type: 'lesson' }),
+    staleTime: 3 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+
   const { data: todoItems = [] } = useQuery({
     queryKey: ['todoItems'],
     queryFn: () => base44.entities.TodoItem.list(),
@@ -154,6 +163,18 @@ export default function Home() {
   const updateTodoMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.TodoItem.update(id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['todoItems'] }),
+  });
+
+  const updateActivityOrderMutation = useMutation({
+    mutationFn: async (updates) => {
+      for (const update of updates) {
+        await base44.entities.TodoItem.update(update.id, { order: update.order });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['levelActivities'] });
+      queryClient.invalidateQueries({ queryKey: ['todoItems'] });
+    },
   });
 
   const deleteProfileMutation = useMutation({
@@ -268,6 +289,31 @@ export default function Home() {
 
   const handleChangeAvatar = () => {
     deleteProfileMutation.mutate();
+  };
+
+  const handleDragEnd = (result) => {
+    if (!result.destination) return;
+    
+    const sourceIndex = result.source.index;
+    const destIndex = result.destination.index;
+    
+    if (sourceIndex === destIndex) return;
+
+    const levelId = parseInt(result.source.droppableId.replace('level-', ''));
+    const levelItems = levels[levelId - 1]?.activities || [];
+    const reordered = Array.from(levelItems);
+    const [removed] = reordered.splice(sourceIndex, 1);
+    reordered.splice(destIndex, 0, removed);
+
+    // Update order in database
+    const updates = reordered.map((item, index) => ({
+      id: item.id,
+      order: index
+    }));
+
+    // Optimistic update
+    levels[levelId - 1].activities = reordered;
+    updateActivityOrderMutation.mutate(updates);
   };
 
   const currentAge = userProfile?.age_level || 3;
@@ -436,65 +482,78 @@ export default function Home() {
             </div>
 
             {selectedLevel.activities?.length > 0 ? (
-              <div className="space-y-3">
-                {isMasterUser && (
-                  <div className="bg-yellow-500/20 border border-yellow-500/50 rounded-xl p-3 mb-4">
-                    <p className="text-yellow-400 text-sm font-medium">👑 Master Mode: All levels unlocked</p>
-                  </div>
-                )}
-                {selectedLevel.activities
-                  .map((activity) => ({
-                    ...activity,
-                    isCompleted: lessonProgress.find(lp => lp.lesson_name === activity.page && lp.completed)
-                  }))
-                  .sort((a, b) => (b.isCompleted ? 1 : 0) - (a.isCompleted ? 1 : 0))
-                  .map((activity) => {
-
-                  return (
-                    <motion.button
-                      key={activity.id}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => {
-                        // Parse duration to get minutes
-                        const durationMatch = activity.duration.match(/(\d+)\s*(minute|hour)/i);
-                        if (durationMatch) {
-                          const amount = parseInt(durationMatch[1]);
-                          const unit = durationMatch[2].toLowerCase();
-                          const minutes = unit === 'hour' ? amount * 60 : amount;
-                          startTimer(minutes);
-                        }
-
-                        if (activity.id === "baby_words") {
-                          setSelectedActivity(activity);
-                        } else {
-                          navigate(createPageUrl(activity.page));
-                        }
-                      }}
-                      className={`w-full ${activity.isCompleted ? 'bg-green-500/10 border-green-500/30' : 'bg-white/5 border-white/10'} hover:bg-white/10 border hover:border-cyan-400/50 rounded-xl p-4 text-left transition-all`}
-                    >
-                      <div className="flex items-start gap-3">
-                        {activity.isCompleted ? (
-                          <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
-                            <span className="text-white text-sm">✓</span>
-                          </div>
-                        ) : (
-                          <div className="w-6 h-6 rounded-full border-2 border-white/20 flex-shrink-0" />
-                        )}
-                        <span className="text-2xl">{activity.icon}</span>
-                        <div className="flex-1">
-                          <p className="text-white font-medium">{activity.name}</p>
-                          <div className="flex items-center gap-2 mt-1 text-white/60 text-sm">
-                            <Clock className="w-3 h-3" />
-                            <span>{activity.duration}</span>
-                          </div>
+              <DragDropContext onDragEnd={handleDragEnd}>
+                <Droppable droppableId={`level-${selectedLevel.id}`}>
+                  {(provided) => (
+                    <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-3">
+                      {isMasterUser && (
+                        <div className="bg-yellow-500/20 border border-yellow-500/50 rounded-xl p-3 mb-4">
+                          <p className="text-yellow-400 text-sm font-medium">👑 Master Mode: All levels unlocked</p>
                         </div>
-                        <ChevronRight className="w-5 h-5 text-white/40" />
-                      </div>
-                    </motion.button>
-                  );
-                })}
-              </div>
+                      )}
+                      {selectedLevel.activities
+                        .map((activity) => ({
+                          ...activity,
+                          isCompleted: lessonProgress.find(lp => lp.lesson_name === activity.page && lp.completed)
+                        }))
+                        .sort((a, b) => (b.isCompleted ? 1 : 0) - (a.isCompleted ? 1 : 0))
+                        .map((activity, index) => (
+                          <Draggable key={activity.id} draggableId={`activity-${activity.id}`} index={index}>
+                            {(provided) => (
+                              <div
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                className={`w-full ${activity.isCompleted ? 'bg-green-500/10 border-green-500/30' : 'bg-white/5 border-white/10'} hover:bg-white/10 border hover:border-cyan-400/50 rounded-xl transition-all`}
+                              >
+                                <div className="flex items-start gap-3 p-4">
+                                  <div {...provided.dragHandleProps} className="cursor-grab active:cursor-grabbing">
+                                    <GripVertical className="w-5 h-5 text-white/40" />
+                                  </div>
+                                  <button
+                                    onClick={() => {
+                                      const durationMatch = activity.duration.match(/(\d+)\s*(minute|hour)/i);
+                                      if (durationMatch) {
+                                        const amount = parseInt(durationMatch[1]);
+                                        const unit = durationMatch[2].toLowerCase();
+                                        const minutes = unit === 'hour' ? amount * 60 : amount;
+                                        startTimer(minutes);
+                                      }
+
+                                      if (activity.id === "baby_words") {
+                                        setSelectedActivity(activity);
+                                      } else {
+                                        navigate(createPageUrl(activity.page));
+                                      }
+                                    }}
+                                    className="flex items-start gap-3 flex-1 text-left"
+                                  >
+                                    {activity.isCompleted ? (
+                                      <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+                                        <span className="text-white text-sm">✓</span>
+                                      </div>
+                                    ) : (
+                                      <div className="w-6 h-6 rounded-full border-2 border-white/20 flex-shrink-0" />
+                                    )}
+                                    <span className="text-2xl">{activity.icon}</span>
+                                    <div className="flex-1">
+                                      <p className="text-white font-medium">{activity.name}</p>
+                                      <div className="flex items-center gap-2 mt-1 text-white/60 text-sm">
+                                        <Clock className="w-3 h-3" />
+                                        <span>{activity.duration}</span>
+                                      </div>
+                                    </div>
+                                    <ChevronRight className="w-5 h-5 text-white/40" />
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </Draggable>
+                        ))}
+                      {provided.placeholder}
+                    </div>
+                  )}
+                </Droppable>
+              </DragDropContext>
             ) : (
               <div className="text-center py-8 bg-white/5 rounded-xl border border-white/10">
                 <p className="text-white/60">Coming soon!</p>
@@ -506,9 +565,113 @@ export default function Home() {
           <>
 
 
+            {/* Level Cards */}
+            {!selectedLevel && (
+              <div className="space-y-4">
+                {levels.map((level) => {
+                  const Icon = level.icon;
+                  const isExpanded = expandedLevels[level.id];
+
+                  return (
+                    <div key={level.id} className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden">
+                      <button
+                        onClick={() => setExpandedLevels(prev => ({ ...prev, [level.id]: !prev[level.id] }))}
+                        className="w-full flex items-center gap-4 p-4 hover:bg-white/5 transition-all"
+                      >
+                        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${level.gradient} flex items-center justify-center flex-shrink-0`}>
+                          <Icon className="w-6 h-6 text-white" />
+                        </div>
+                        <div className="flex-1 text-left">
+                          <h3 className="text-white font-bold">{level.name}</h3>
+                          <p className="text-white/60 text-sm">{level.subtitle}</p>
+                        </div>
+                        <ChevronRight className={`w-5 h-5 text-white/40 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+                      </button>
+
+                      <AnimatePresence>
+                        {isExpanded && level.activities?.length > 0 && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="border-t border-white/10"
+                          >
+                            <DragDropContext onDragEnd={handleDragEnd}>
+                              <Droppable droppableId={`level-${level.id}`}>
+                                {(provided) => (
+                                  <div ref={provided.innerRef} {...provided.droppableProps} className="p-3 space-y-2">
+                                    {level.activities.map((activity, index) => {
+                                      const isCompleted = lessonProgress.find(lp => lp.lesson_name === activity.page && lp.completed);
+
+                                      return (
+                                        <Draggable key={activity.id} draggableId={`activity-${activity.id}`} index={index}>
+                                          {(provided) => (
+                                            <div
+                                              ref={provided.innerRef}
+                                              {...provided.draggableProps}
+                                              className={`${isCompleted ? 'bg-green-500/10 border-green-500/30' : 'bg-white/5 border-white/10'} border rounded-lg`}
+                                            >
+                                              <div className="flex items-center gap-2 p-3">
+                                                <div {...provided.dragHandleProps} className="cursor-grab active:cursor-grabbing">
+                                                  <GripVertical className="w-4 h-4 text-white/40" />
+                                                </div>
+                                                <button
+                                                  onClick={() => {
+                                                    const durationMatch = activity.duration.match(/(\d+)\s*(minute|hour)/i);
+                                                    if (durationMatch) {
+                                                      const amount = parseInt(durationMatch[1]);
+                                                      const unit = durationMatch[2].toLowerCase();
+                                                      const minutes = unit === 'hour' ? amount * 60 : amount;
+                                                      startTimer(minutes);
+                                                    }
+
+                                                    if (activity.id === "baby_words") {
+                                                      setSelectedActivity(activity);
+                                                    } else {
+                                                      navigate(createPageUrl(activity.page));
+                                                    }
+                                                  }}
+                                                  className="flex items-center gap-2 flex-1 text-left"
+                                                >
+                                                  {isCompleted ? (
+                                                    <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+                                                      <span className="text-white text-xs">✓</span>
+                                                    </div>
+                                                  ) : (
+                                                    <div className="w-5 h-5 rounded-full border-2 border-white/20 flex-shrink-0" />
+                                                  )}
+                                                  <span className="text-xl">{activity.icon}</span>
+                                                  <div className="flex-1">
+                                                    <p className="text-white font-medium text-sm">{activity.name}</p>
+                                                    <div className="flex items-center gap-2 mt-0.5 text-white/60 text-xs">
+                                                      <Clock className="w-3 h-3" />
+                                                      <span>{activity.duration}</span>
+                                                    </div>
+                                                  </div>
+                                                </button>
+                                              </div>
+                                            </div>
+                                          )}
+                                        </Draggable>
+                                      );
+                                    })}
+                                    {provided.placeholder}
+                                  </div>
+                                )}
+                              </Droppable>
+                            </DragDropContext>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
             {/* Extras Button */}
             {!selectedLevel && (
-              <div className="mb-6">
+              <div className="mb-6 mt-6">
                 <Button
                   onClick={() => setShowExtras(!showExtras)}
                   className="w-full bg-white/5 hover:bg-white/10 border border-white/20 text-white h-auto py-4"
