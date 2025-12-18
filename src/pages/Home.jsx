@@ -4,7 +4,7 @@ import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingCart, Dumbbell, Church, UtensilsCrossed, Heart, ShoppingBag, BookOpen, Users, Play, Trophy, Sparkles, ArrowRight, Flame, Briefcase, School, Baby, Star, Clock, ChevronRight, X, Home as HomeIcon, Video, Library, Book, Calendar, CheckSquare, Square, GripVertical } from "lucide-react";
+import { ShoppingCart, Dumbbell, Church, UtensilsCrossed, Heart, ShoppingBag, BookOpen, Users, Play, Trophy, Sparkles, ArrowRight, Flame, Briefcase, School, Baby, Star, ChevronRight, X, Home as HomeIcon, Video, Library, Book, Calendar, CheckSquare, Square, GripVertical } from "lucide-react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -49,13 +49,13 @@ const levels = [
     icon: Baby, 
     gradient: "from-pink-500 to-rose-500",
     activities: [
+      { id: "youtube", name: "Watch Youtube video", duration: "1 hour", icon: "📺", page: "BabyVideos" },
       { id: "baby_words", name: "Help baby learn 50 first words and learn sentences", duration: "10 minutes", icon: "👶", page: "BabyVideos" },
       { id: "colors", name: "Learn the colors", duration: "5 minutes", icon: "🎨", page: "ColorsLesson" },
       { id: "body_parts", name: "Learn body parts", duration: "5 minutes", icon: "🦵", page: "BodyPartsLesson" },
       { id: "days", name: "Learn days of the week", duration: "5 minutes", icon: "📅", page: "DaysLesson" },
       { id: "months", name: "Learn months of the year", duration: "5 minutes", icon: "🗓️", page: "MonthsLesson" },
       { id: "blessing", name: "Learn a Jewish blessing in Hebrew", duration: "5 minutes", icon: "✡️", page: "Progress" },
-      { id: "youtube", name: "Watch Youtube video", duration: "1 hour", icon: "📺", page: "BabyVideos" },
     ]
   },
   { id: 2, name: "Level 2", subtitle: "Growing Up", icon: Star, gradient: "from-amber-500 to-orange-500", activities: [] },
@@ -507,10 +507,6 @@ export default function Home() {
                         <span className="text-2xl">{activity.icon}</span>
                         <div className="flex-1">
                           <p className="text-white font-medium">{activity.name}</p>
-                          <div className="flex items-center gap-2 mt-1 text-white/60 text-sm">
-                            <Clock className="w-3 h-3" />
-                            <span>{activity.duration}</span>
-                          </div>
                         </div>
                         <ChevronRight className="w-5 h-5 text-white/40" />
                       </div>
@@ -527,81 +523,6 @@ export default function Home() {
           </motion.div>
         ) : (
           <>
-
-
-            {/* Extras Button */}
-            {!selectedLevel && (
-              <div className="mb-6">
-                <Button
-                  onClick={() => setShowExtras(!showExtras)}
-                  className="w-full bg-white/5 hover:bg-white/10 border border-white/20 text-white h-auto py-4"
-                >
-                  <Star className="w-5 h-5 mr-2" />
-                  <span className="text-lg font-bold">Extras</span>
-                  <ChevronRight className={`w-5 h-5 ml-auto transition-transform ${showExtras ? 'rotate-90' : ''}`} />
-                </Button>
-                
-                <AnimatePresence>
-                  {showExtras && levels[0].activities && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="mt-3 space-y-2"
-                    >
-                      {levels[0].activities.slice(0, 10).map((activity, idx) => {
-                        const isCompleted = lessonProgress.find(lp => lp.lesson_name === activity.page && lp.completed);
-                        return (
-                          <motion.button
-                            key={activity.id}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: idx * 0.05 }}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => {
-                              const durationMatch = activity.duration.match(/(\d+)\s*(minute|hour)/i);
-                              if (durationMatch) {
-                                const amount = parseInt(durationMatch[1]);
-                                const unit = durationMatch[2].toLowerCase();
-                                const minutes = unit === 'hour' ? amount * 60 : amount;
-                                startTimer(minutes);
-                              }
-
-                              if (activity.id === "baby_words") {
-                                setSelectedActivity(activity);
-                              } else {
-                                navigate(createPageUrl(activity.page));
-                              }
-                            }}
-                            className={`w-full ${isCompleted ? 'bg-green-500/10 border-green-500/30' : 'bg-white/5 border-white/10'} hover:bg-white/10 border hover:border-cyan-400/50 rounded-xl p-3 text-left transition-all`}
-                          >
-                            <div className="flex items-center gap-3">
-                              {isCompleted ? (
-                                <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
-                                  <span className="text-white text-sm">✓</span>
-                                </div>
-                              ) : (
-                                <div className="w-6 h-6 rounded-full border-2 border-white/20 flex-shrink-0" />
-                              )}
-                              <span className="text-xl">{activity.icon}</span>
-                              <div className="flex-1">
-                                <p className="text-white font-medium text-sm">{activity.name}</p>
-                                <div className="flex items-center gap-2 mt-1 text-white/60 text-xs">
-                                  <Clock className="w-3 h-3" />
-                                  <span>{activity.duration}</span>
-                                </div>
-                              </div>
-                              <ChevronRight className="w-5 h-5 text-white/40" />
-                            </div>
-                          </motion.button>
-                        );
-                      })}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            )}
 
 
           </>
