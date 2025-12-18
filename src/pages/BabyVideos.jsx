@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import VideoTranscript from "../components/video/VideoTranscript";
 import EditableWord from "../components/learning/EditableWord";
+import VideoAdminControls from "../components/admin/VideoAdminControls";
 
 // Videos with transcripts - Piece of Hebrew channel
 const level1Videos = [
