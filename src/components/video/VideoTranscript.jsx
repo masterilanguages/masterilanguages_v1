@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, ChevronUp, Loader2, Edit } from "lucide-react";
+import { ChevronDown, ChevronUp, Loader2, Edit, Plus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import EditableWord from "../learning/EditableWord";
 
 export default function VideoTranscript({ videoId, videoUrl }) {
   const [expanded, setExpanded] = useState(false);
@@ -14,6 +15,14 @@ export default function VideoTranscript({ videoId, videoUrl }) {
   const [showManualInput, setShowManualInput] = useState(false);
   const [manualTranscript, setManualTranscript] = useState("");
   const queryClient = useQueryClient();
+
+  const addToBackpackMutation = useMutation({
+    mutationFn: (word) => base44.entities.Word.create(word),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['wordRatings'] });
+      toast.success("Added to backpack! 🎒");
+    },
+  });
 
   useEffect(() => {
     loadVideo();
@@ -179,6 +188,39 @@ export default function VideoTranscript({ videoId, videoUrl }) {
     }
   };
 
+  const updateTranscriptLine = async (blockIdx, lineType, newValue) => {
+    const blocks = video.transcript_text.split('\n\n').filter(b => b.trim());
+    const block = blocks[blockIdx];
+    const lines = block.trim().split('\n').filter(l => l.trim());
+    
+    const lineIndex = lineType === 'hebrew' ? 0 : lineType === 'transliteration' ? 1 : 2;
+    lines[lineIndex] = newValue;
+    
+    blocks[blockIdx] = lines.join('\n');
+    const newTranscript = blocks.join('\n\n');
+    
+    try {
+      await base44.entities.Video.update(video.id, {
+        transcript_text: newTranscript
+      });
+      setVideo(prev => ({ ...prev, transcript_text: newTranscript }));
+      toast.success("Updated!");
+    } catch (e) {
+      toast.error("Failed to update");
+    }
+  };
+
+  const addSentenceToBackpack = (hebrew, transliteration, english) => {
+    addToBackpackMutation.mutate({
+      word: hebrew,
+      translation: english,
+      phonetic: transliteration,
+      category: "wordbank",
+      times_practiced: 1,
+      mastered: false,
+    });
+  };
+
   if (!video) return null;
 
   const isProcessing = video.transcript_status === "processing" || transcribing;
@@ -248,19 +290,35 @@ export default function VideoTranscript({ videoId, videoUrl }) {
                   if (lines.length >= 3) {
                     const [hebrew, transliteration, english] = lines;
                     return (
-                      <div key={blockIdx} className="space-y-1">
-                        <p 
-                          className="text-cyan-400 text-2xl font-bold leading-tight" 
-                          dir="rtl" 
-                          style={{ textAlign: 'left' }}
+                      <div key={blockIdx} className="group relative space-y-1 p-2 rounded-lg hover:bg-white/5 transition-all">
+                        <button
+                          onClick={() => addSentenceToBackpack(hebrew, transliteration, english)}
+                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity w-7 h-7 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 flex items-center justify-center"
+                          title="Add to backpack"
                         >
-                          {hebrew}
+                          <Plus className="w-4 h-4 text-amber-400" />
+                        </button>
+                        <p className="text-cyan-400 text-2xl font-bold leading-tight" dir="rtl" style={{ textAlign: 'left' }}>
+                          <EditableWord
+                            text={hebrew}
+                            onSave={(val) => updateTranscriptLine(blockIdx, 'hebrew', val)}
+                            language="he"
+                            className="text-cyan-400 text-2xl font-bold"
+                          />
                         </p>
                         <p className="text-white/90 text-lg leading-tight" dir="rtl" style={{ textAlign: 'left' }}>
-                          {transliteration}
+                          <EditableWord
+                            text={transliteration}
+                            onSave={(val) => updateTranscriptLine(blockIdx, 'transliteration', val)}
+                            className="text-white/90 text-lg"
+                          />
                         </p>
                         <p className="text-white/70 text-base leading-tight">
-                          {english}
+                          <EditableWord
+                            text={english}
+                            onSave={(val) => updateTranscriptLine(blockIdx, 'english', val)}
+                            className="text-white/70 text-base"
+                          />
                         </p>
                       </div>
                     );
