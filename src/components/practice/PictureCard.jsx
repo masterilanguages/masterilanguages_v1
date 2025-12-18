@@ -82,16 +82,16 @@ export default function PictureCard({
                 <span className="text-2xl text-gray-400">=</span>
               </>
             )}
-            <span className="text-2xl font-bold text-green-600">
-              {showAnswer ? (
-                <EditableWord
-                  text={card.meaning}
-                  editable={canEdit}
-                  onSave={(newMeaning) => onUpdateWord?.({ ...card, meaning: newMeaning })}
-                  className="text-2xl font-bold text-green-600"
-                />
-              ) : "_____"}
-            </span>
+            {showAnswer ? (
+              <EditableWord
+                text={card.meaning}
+                editable={canEdit}
+                onSave={(newMeaning) => onUpdateWord?.({ ...card, meaning: newMeaning })}
+                className="text-2xl font-bold text-green-600"
+              />
+            ) : (
+              <span className="text-2xl font-bold text-green-600">_____</span>
+            )}
           </div>
         </div>
 
