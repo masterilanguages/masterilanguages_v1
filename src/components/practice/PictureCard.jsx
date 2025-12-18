@@ -18,7 +18,7 @@ export default function PictureCard({
   onUpdateWord,
   canEdit = true 
 }) {
-  const [showAnswer, setShowAnswer] = useState(false);
+  const [showAnswer, setShowAnswer] = useState(true);
 
   const handleNext = () => {
     setShowAnswer(false);
