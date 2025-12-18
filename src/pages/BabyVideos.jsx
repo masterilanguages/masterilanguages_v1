@@ -426,13 +426,25 @@ export default function BabyVideos() {
   });
 
   const createVideoMutation = useMutation({
-    mutationFn: (video) => base44.entities.Video.create(video),
+    mutationFn: async (video) => {
+      console.log('Creating video:', video);
+      const result = await base44.entities.Video.create(video);
+      console.log('Video created:', result);
+      return result;
+    },
     onSuccess: (newVideo) => {
+      console.log('Success callback, new video:', newVideo);
       queryClient.invalidateQueries({ queryKey: ['customVideos'] });
       setCustomVideoUrl("");
-      setExpandedVideoId(`custom-${newVideo.id}`);
-      toast.success("Video added!");
+      setTimeout(() => {
+        setExpandedVideoId(`custom-${newVideo.id}`);
+      }, 100);
+      toast.success("Video added! 🎬");
     },
+    onError: (error) => {
+      console.error('Error creating video:', error);
+      toast.error(`Failed: ${error.message || 'Unknown error'}`);
+    }
   });
 
   const deleteWordMutation = useMutation({
@@ -891,22 +903,20 @@ Create about 15-20 conversational lines that naturally introduce and use these v
                   className="flex-1 px-4 py-3 rounded-lg bg-slate-800 border border-white/30 text-white placeholder:text-white/50 outline-none focus:border-cyan-400"
                 />
                 <button
-                  onClick={async () => {
+                  onClick={() => {
                     const ytId = extractYouTubeId(customVideoUrl);
-                    if (ytId) {
-                      try {
-                        const newVideo = await createVideoMutation.mutateAsync({
-                          video_url: customVideoUrl,
-                          title: "Custom Video"
-                        });
-                        console.log('Created video:', newVideo);
-                      } catch (error) {
-                        console.error('Error creating video:', error);
-                        toast.error("Failed to add video");
-                      }
-                    } else {
-                      toast.error("Invalid YouTube URL - please paste a valid YouTube link");
+                    console.log('YouTube ID extracted:', ytId);
+                    console.log('Full URL:', customVideoUrl);
+                    
+                    if (!ytId) {
+                      toast.error("Invalid YouTube URL - paste a link like: youtube.com/watch?v=...");
+                      return;
                     }
+                    
+                    createVideoMutation.mutate({
+                      video_url: customVideoUrl,
+                      title: `YouTube Video ${Date.now()}`
+                    });
                   }}
                   disabled={!customVideoUrl.trim() || createVideoMutation.isPending}
                   className="px-5 py-3 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
