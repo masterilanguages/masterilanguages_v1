@@ -31,21 +31,20 @@ export default function DeletablePictureBox({
       >
         {children}
         
-        {/* Trash icon - always visible on mobile, hover on desktop */}
+        {/* Trash icon - iOS style */}
         <motion.button
-          initial={{ opacity: 0, scale: 0.8 }}
+          initial={{ opacity: 0 }}
           animate={{ 
-            opacity: isHovered ? 1 : (typeof window !== 'undefined' && window.innerWidth < 768 ? 1 : 0.7),
-            scale: 1 
+            opacity: isHovered ? 0.9 : (typeof window !== 'undefined' && window.innerWidth < 768 ? 0.7 : 0.4)
           }}
-          whileHover={{ opacity: 1, scale: 1.1 }}
+          whileHover={{ opacity: 1 }}
           onClick={(e) => {
             e.stopPropagation();
             setShowConfirm(true);
           }}
-          className="absolute bottom-2 right-2 w-10 h-10 rounded-full bg-red-500/90 hover:bg-red-600 flex items-center justify-center shadow-xl z-50 backdrop-blur-sm border-2 border-white/20 transition-all"
+          className="absolute top-2 right-2 w-7 h-7 rounded-lg bg-black/40 hover:bg-black/60 flex items-center justify-center z-50 backdrop-blur-md transition-all"
         >
-          <Trash2 className="w-5 h-5 text-white" />
+          <Trash2 className="w-4 h-4 text-white" />
         </motion.button>
       </div>
 
