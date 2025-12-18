@@ -43,37 +43,74 @@ export default function VideoTranscript({ videoId, videoUrl }) {
   const startTranscription = async (id) => {
     setTranscribing(true);
     try {
-      // Use LLM with audio context to transcribe
+      // Extract YouTube video ID
+      const ytMatch = videoUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([^&?]+)/);
+      const ytId = ytMatch ? ytMatch[1] : null;
+
+      if (!ytId) {
+        throw new Error("Invalid YouTube URL");
+      }
+
+      // Fetch YouTube transcript using public API
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Transcribe this Hebrew video. Provide the full Hebrew transcript with proper formatting.
-        Video URL: ${videoUrl}
+        prompt: `Fetch the YouTube transcript for video ID: ${ytId}
         
-        Return the transcript in clean Hebrew text, organized in paragraphs.`,
-        file_urls: [videoUrl],
+        Access the YouTube transcript/captions using any available method (auto-generated or manual captions).
+        Look for Hebrew (he, iw) or English captions.
+        
+        Return the full transcript text with timestamps removed, organized in paragraphs.
+        If no captions are available, return: "NO_CAPTIONS_AVAILABLE"`,
+        add_context_from_internet: true,
         response_json_schema: {
           type: "object",
           properties: {
-            transcript: { type: "string" }
+            transcript: { type: "string" },
+            language: { type: "string" },
+            source: { type: "string" }
           }
         }
       });
 
-      await base44.entities.Video.update(id, {
-        transcript_text: result.transcript,
-        transcript_status: "complete",
-        transcript_generated_at: new Date().toISOString()
-      });
+      if (result.transcript === "NO_CAPTIONS_AVAILABLE") {
+        await base44.entities.Video.update(id, {
+          transcript_status: "failed",
+          transcript_source: "unavailable",
+          youtube_video_id: ytId
+        });
+        setVideo(prev => ({
+          ...prev,
+          transcript_status: "failed",
+          transcript_source: "unavailable"
+        }));
+        toast.error("No captions available for this video");
+      } else {
+        await base44.entities.Video.update(id, {
+          transcript_text: result.transcript,
+          transcript_status: "complete",
+          transcript_source: "youtube_captions",
+          language: result.language || "he",
+          youtube_video_id: ytId,
+          transcript_generated_at: new Date().toISOString()
+        });
 
+        setVideo(prev => ({
+          ...prev,
+          transcript_text: result.transcript,
+          transcript_status: "complete",
+          transcript_source: "youtube_captions"
+        }));
+        toast.success("Transcript loaded!");
+      }
+    } catch (e) {
+      console.error("Transcription error:", e);
+      await base44.entities.Video.update(id, {
+        transcript_status: "failed",
+        transcript_source: "unavailable"
+      });
       setVideo(prev => ({
         ...prev,
-        transcript_text: result.transcript,
-        transcript_status: "complete"
-      }));
-      toast.success("Transcript generated!");
-    } catch (e) {
-      await base44.entities.Video.update(id, {
         transcript_status: "failed"
-      });
+      }));
       toast.error("Transcription failed");
     }
     setTranscribing(false);
@@ -113,11 +150,29 @@ export default function VideoTranscript({ videoId, videoUrl }) {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             className="mt-3 bg-white/5 border border-white/10 rounded-xl p-4 max-h-96 overflow-y-auto"
-            dir="rtl"
           >
-            <div className="text-white/90 leading-relaxed whitespace-pre-wrap">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-white/60 text-xs">
+                {video.transcript_source === "youtube_captions" ? "📝 YouTube Captions" : "📝 Transcript"}
+              </span>
+              {video.language && (
+                <span className="text-white/40 text-xs uppercase">{video.language}</span>
+              )}
+            </div>
+            <div className="text-white/90 leading-relaxed whitespace-pre-wrap" dir={video.language === "he" || video.language === "iw" ? "rtl" : "ltr"}>
               {video.transcript_text}
             </div>
+          </motion.div>
+        )}
+        {expanded && video.transcript_status === "failed" && video.transcript_source === "unavailable" && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="mt-3 bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-center"
+          >
+            <p className="text-red-400 text-sm">Transcript unavailable for this video.</p>
+            <p className="text-white/40 text-xs mt-1">This video doesn't have captions enabled.</p>
           </motion.div>
         )}
       </AnimatePresence>
