@@ -467,11 +467,13 @@ export default function BabyVideos() {
   useEffect(() => {
     const videoId = searchParams.get('videoId');
     if (videoId) {
-      // Set the ID as-is (string or number)
-      setExpandedVideoId(videoId);
+      // Convert to number if it's a numeric string (for hardcoded videos 1,2,3...)
+      // Otherwise keep as string (for custom videos "custom-123")
+      const parsedId = videoId.startsWith('custom-') ? videoId : parseInt(videoId, 10);
+      setExpandedVideoId(parsedId);
       // Scroll to video after a short delay
       setTimeout(() => {
-        const videoElement = document.getElementById(`video-${videoId}`);
+        const videoElement = document.getElementById(`video-${parsedId}`);
         if (videoElement) {
           videoElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
