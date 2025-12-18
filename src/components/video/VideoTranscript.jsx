@@ -13,30 +13,11 @@ export default function VideoTranscript({ videoId, videoUrl }) {
   const [transcribing, setTranscribing] = useState(false);
   const [showManualInput, setShowManualInput] = useState(false);
   const [manualTranscript, setManualTranscript] = useState("");
-  const [youtubeConnected, setYoutubeConnected] = useState(false);
-  const [checkingAuth, setCheckingAuth] = useState(true);
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    checkYouTubeAuth();
     loadVideo();
   }, [videoId, videoUrl]);
-
-  const checkYouTubeAuth = async () => {
-    try {
-      const response = await fetch('/api/oauth-youtube-status');
-      const data = await response.json();
-      setYoutubeConnected(data.connected && !data.expired);
-    } catch (e) {
-      console.error('Failed to check YouTube auth', e);
-      setYoutubeConnected(false);
-    }
-    setCheckingAuth(false);
-  };
-
-  const connectYouTube = () => {
-    window.location.href = '/api/oauth-youtube-start';
-  };
 
   const loadVideo = async () => {
     try {
@@ -74,7 +55,7 @@ export default function VideoTranscript({ videoId, videoUrl }) {
       }
 
       // Call backend function to list available captions
-      const listResponse = await fetch('/api/youtubeCaptionsList', {
+      const listResponse = await fetch('/api/youtube/captions/list', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -84,13 +65,6 @@ export default function VideoTranscript({ videoId, videoUrl }) {
       });
 
       if (!listResponse.ok) {
-        const errorData = await listResponse.json();
-        if (errorData.auth_required) {
-          setYoutubeConnected(false);
-          toast.error("YouTube not connected - click Connect YouTube");
-          setTranscribing(false);
-          return;
-        }
         throw new Error('Failed to fetch caption tracks');
       }
 
@@ -118,7 +92,7 @@ export default function VideoTranscript({ videoId, videoUrl }) {
       const selectedTrack = tracks[0];
 
       // Download the caption track
-      const downloadResponse = await fetch('/api/youtubeCaptionsDownload', {
+      const downloadResponse = await fetch('/api/youtube/captions/download', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -212,25 +186,11 @@ export default function VideoTranscript({ videoId, videoUrl }) {
 
   return (
     <div className="mt-4">
-      {!youtubeConnected && !checkingAuth && (
-        <div className="mb-3 bg-blue-500/10 border border-blue-500/30 rounded-xl p-3 text-center">
-          <p className="text-blue-400 text-sm mb-2">Connect YouTube to fetch captions automatically</p>
-          <Button
-            onClick={connectYouTube}
-            className="bg-blue-500 text-white hover:bg-blue-600"
-            size="sm"
-          >
-            Connect YouTube
-          </Button>
-        </div>
-      )}
-
       <div className="flex gap-2">
         <Button
           onClick={() => setExpanded(!expanded)}
           variant="outline"
           className="flex-1 bg-white/5 border-white/20 text-white hover:bg-white/10"
-          disabled={!youtubeConnected && !hasTranscript}
         >
           {isProcessing ? (
             <>
