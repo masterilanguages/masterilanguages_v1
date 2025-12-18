@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { createPageUrl } from "@/utils";
 import VideoTranscript from "../components/video/VideoTranscript";
+import EditableText from "../components/EditableText";
 
 
 
@@ -44,6 +45,14 @@ export default function Home() {
     },
   });
 
+  const updateVideoMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.Video.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['videos'] });
+      toast.success("Video updated");
+    },
+  });
+
   const extractYouTubeId = (url) => {
     const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([^&?]+)/);
     return match ? match[1] : null;
@@ -74,8 +83,20 @@ export default function Home() {
       <div className="bg-slate-900/95 backdrop-blur-xl border-b border-white/10 px-4 py-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-white">Learn Languages with Video</h1>
-            <p className="text-white/60 text-sm mt-1">Watch videos, click words in transcripts, save to your backpack</p>
+            <h1 className="text-3xl font-bold text-white">
+              <EditableText 
+                value="Learn Languages with Video"
+                onSave={(newValue) => toast.success(`Title would be: ${newValue}`)}
+                className="text-3xl font-bold text-white"
+              />
+            </h1>
+            <p className="text-white/60 text-sm mt-1">
+              <EditableText 
+                value="Watch videos, click words in transcripts, save to your backpack"
+                onSave={(newValue) => toast.success(`Subtitle would be: ${newValue}`)}
+                className="text-white/60 text-sm"
+              />
+            </p>
           </div>
           <Button
             onClick={() => window.location.href = createPageUrl("Backpack")}
@@ -93,7 +114,13 @@ export default function Home() {
         <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/20 p-6 mb-6">
           <div className="flex items-center gap-2 mb-4">
             <VideoIcon className="w-5 h-5 text-cyan-400" />
-            <h2 className="text-white font-bold text-lg">Add a YouTube Video</h2>
+            <h2 className="text-white font-bold text-lg">
+              <EditableText 
+                value="Add a YouTube Video"
+                onSave={(newValue) => toast.success(`Section title would be: ${newValue}`)}
+                className="text-white font-bold text-lg"
+              />
+            </h2>
           </div>
           <div className="flex gap-3">
             <Input
@@ -152,7 +179,14 @@ export default function Home() {
                       </div>
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-white font-bold text-lg mb-2">{video.title}</h3>
+                      <h3 className="text-white font-bold text-lg mb-2">
+                        <EditableText 
+                          value={video.title}
+                          onSave={(newTitle) => updateVideoMutation.mutate({ id: video.id, data: { title: newTitle } })}
+                          className="text-white font-bold text-lg"
+                          placeholder="Video title..."
+                        />
+                      </h3>
                       <div className="flex gap-2">
                         <Button
                           onClick={() => setExpandedVideoId(isExpanded ? null : video.id)}
