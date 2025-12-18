@@ -27,7 +27,7 @@ export default function HomeTodoList({ isAdmin = false }) {
   const { data: todoItems = [], isLoading } = useQuery({
     queryKey: ['todoItems'],
     queryFn: () => base44.entities.TodoItem.filter({ is_active: true }, "order"),
-    staleTime: 3 * 60 * 1000,
+    staleTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
 
@@ -35,15 +35,17 @@ export default function HomeTodoList({ isAdmin = false }) {
     queryKey: ['todoProgress', user?.id],
     queryFn: () => base44.entities.TodoProgress.list(),
     enabled: !!user,
+    staleTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: videos = [] } = useQuery({
     queryKey: ['videos'],
     queryFn: async () => {
       const vids = await base44.entities.Video.list();
-      return vids.filter(v => !v.deleted_at || isAdmin); // Show deleted to admin only
+      return vids.filter(v => !v.deleted_at || isAdmin);
     },
-    staleTime: 2 * 60 * 1000,
+    staleTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
 

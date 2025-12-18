@@ -372,11 +372,9 @@ export default function Home() {
       )}
 
       <div className="relative z-10 max-w-4xl mx-auto px-4 py-8">
-        {/* To-Do List - Make it a drop target */}
+        {/* To-Do List */}
         <div className="mb-8">
-          <DragDropContext onDragEnd={handleDragEnd}>
-            <HomeTodoList isAdmin={isMasterUser} />
-          </DragDropContext>
+          <HomeTodoList isAdmin={isMasterUser} />
         </div>
 
         {/* Show activity content OR levels */}
