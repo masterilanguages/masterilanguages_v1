@@ -15,6 +15,9 @@ export default function VideoTranscript({ videoId, videoUrl, onPauseVideo, onSee
   const [transcribing, setTranscribing] = useState(false);
   const [showManualInput, setShowManualInput] = useState(false);
   const [manualTranscript, setManualTranscript] = useState("");
+  const [showHebrewInput, setShowHebrewInput] = useState(false);
+  const [hebrewText, setHebrewText] = useState("");
+  const [generatingTranslations, setGeneratingTranslations] = useState(false);
   const queryClient = useQueryClient();
 
   const addToBackpackMutation = useMutation({
