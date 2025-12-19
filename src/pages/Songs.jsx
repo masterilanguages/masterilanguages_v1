@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import GameHeader from "../components/game/GameHeader";
 import VideoTranscript from "../components/video/VideoTranscript";
+import EditableWord from "../components/learning/EditableWord";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -375,7 +376,15 @@ export default function Songs() {
                                         <Check className="w-4 h-4 text-white" />
                                       </div>
                                     )}
-                                    <h3 className="text-white font-bold">{song.title}</h3>
+                                    {isAdmin ? (
+                                      <EditableWord
+                                        text={song.title}
+                                        onSave={(newTitle) => updateSongMutation.mutate({ id: song.id, data: { title: newTitle } })}
+                                        className="text-white font-bold"
+                                      />
+                                    ) : (
+                                      <h3 className="text-white font-bold">{song.title}</h3>
+                                    )}
                                   </div>
                                   <p className="text-white/60 text-sm mt-1">
                                     Level {song.level} • {hasVideo ? '📺 Video' : '🎵 Audio'} • {song.transcript?.length || 0} words
