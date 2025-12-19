@@ -1043,128 +1043,129 @@ Create about 15-20 conversational lines that naturally introduce and use these v
                 <DragDropContext onDragEnd={handleVideoDragEnd}>
                   <Droppable droppableId="custom-videos">
                     {(provided) => (
-                      <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-3">
-                        {customVideos.map((video, index) => {
-                  const ytId = extractYouTubeId(video.video_url);
-                  if (!ytId) return null;
+                     <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-3">
+                       {customVideos.map((video, index) => {
+                         const ytId = extractYouTubeId(video.video_url);
+                         if (!ytId) return null;
 
-                  const isExpanded = expandedVideoId === `custom-${video.id}` || expandedVideoId == video.id;
+                         const isExpanded = expandedVideoId === `custom-${video.id}` || expandedVideoId == video.id;
 
-                  return (
-                    <Draggable key={`custom-${video.id}`} draggableId={`custom-${video.id}`} index={index}>
-                      {(provided, snapshot) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          className={`bg-gradient-to-br from-blue-500/10 to-cyan-500/10 backdrop-blur-xl rounded-2xl border border-blue-500/30 overflow-hidden ${
-                            snapshot.isDragging ? 'shadow-2xl scale-105' : ''
-                          }`}
-                        >
-                      <div className="p-4 space-y-3">
-                        {/* Admin Controls */}
-                        {currentUser?.role === 'admin' && (
-                          <div className="flex justify-between items-center mb-2">
-                            <span className="text-xs text-white/40">Admin Controls</span>
-                            <VideoAdminControls
-                              video={video}
-                              onUpdate={(data) => updateVideoMutation.mutate({ id: video.id, data })}
-                              onDelete={(data) => deleteVideoMutation.mutate({ videoId: video.id, deleteData: data })}
-                              onReplaceUrl={(data) => updateVideoMutation.mutate({ id: video.id, data })}
-                            />
-                          </div>
-                        )}
+                         return (
+                           <Draggable key={`custom-${video.id}`} draggableId={`custom-${video.id}`} index={index}>
+                             {(provided, snapshot) => (
+                               <div
+                                 ref={provided.innerRef}
+                                 {...provided.draggableProps}
+                                 className={`bg-gradient-to-br from-blue-500/10 to-cyan-500/10 backdrop-blur-xl rounded-2xl border border-blue-500/30 overflow-hidden ${
+                                   snapshot.isDragging ? 'shadow-2xl scale-105' : ''
+                                 }`}
+                               >
+                                 <div className="p-4 space-y-3">
+                                   {/* Admin Controls */}
+                                   {currentUser?.role === 'admin' && (
+                                     <div className="flex justify-between items-center mb-2">
+                                       <span className="text-xs text-white/40">Admin Controls</span>
+                                       <VideoAdminControls
+                                         video={video}
+                                         onUpdate={(data) => updateVideoMutation.mutate({ id: video.id, data })}
+                                         onDelete={(data) => deleteVideoMutation.mutate({ videoId: video.id, deleteData: data })}
+                                         onReplaceUrl={(data) => updateVideoMutation.mutate({ id: video.id, data })}
+                                       />
+                                     </div>
+                                   )}
 
-                        {/* Video Header */}
-                        <div className="flex gap-4 cursor-pointer hover:bg-white/5 transition-all rounded-lg p-2">
-                          <div {...provided.dragHandleProps} className="cursor-grab active:cursor-grabbing flex items-start pt-2">
-                            <GripVertical className="w-5 h-5 text-white/40 hover:text-white/60" />
-                          </div>
-                          <div 
-                            onClick={() => setExpandedVideoId(isExpanded ? null : `custom-${video.id}`)}
-                            className="flex-1 flex gap-4"
-                          >
-                        <div className="relative w-40 h-24 flex-shrink-0 rounded-xl overflow-hidden bg-black">
-                          <img 
-                            src={`https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`}
-                            alt={video.title}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.target.src = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
-                            }}
-                          />
-                          <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                            <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                              <Play className="w-5 h-5 text-white fill-white" />
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex-1">
-                          <span className="bg-blue-500 px-2 py-0.5 rounded-full text-xs text-white font-medium">
-                            My Video
-                          </span>
-                          <h3 className="text-white font-bold mt-1">
-                            <EditableWord
-                              text={video.title}
-                              onSave={(newTitle) => updateVideoMutation.mutate({ id: video.id, data: { title: newTitle } })}
-                              className="text-white font-bold"
-                            />
-                          </h3>
-                        </div>
-                        <ChevronRight className={`w-5 h-5 text-white/40 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
-                        </div>
-                        </div>
-                        </div>
+                                   {/* Video Header */}
+                                   <div className="flex gap-4 cursor-pointer hover:bg-white/5 transition-all rounded-lg p-2">
+                                     <div {...provided.dragHandleProps} className="cursor-grab active:cursor-grabbing flex items-start pt-2">
+                                       <GripVertical className="w-5 h-5 text-white/40 hover:text-white/60" />
+                                     </div>
+                                     <div 
+                                       onClick={() => setExpandedVideoId(isExpanded ? null : `custom-${video.id}`)}
+                                       className="flex-1 flex gap-4"
+                                     >
+                                       <div className="relative w-40 h-24 flex-shrink-0 rounded-xl overflow-hidden bg-black">
+                                         <img 
+                                           src={`https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`}
+                                           alt={video.title}
+                                           className="w-full h-full object-cover"
+                                           onError={(e) => {
+                                             e.target.src = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+                                           }}
+                                         />
+                                         <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                                           <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                                             <Play className="w-5 h-5 text-white fill-white" />
+                                           </div>
+                                         </div>
+                                       </div>
+                                       <div className="flex-1">
+                                         <span className="bg-blue-500 px-2 py-0.5 rounded-full text-xs text-white font-medium">
+                                           My Video
+                                         </span>
+                                         <h3 className="text-white font-bold mt-1">
+                                           <EditableWord
+                                             text={video.title}
+                                             onSave={(newTitle) => updateVideoMutation.mutate({ id: video.id, data: { title: newTitle } })}
+                                             className="text-white font-bold"
+                                           />
+                                         </h3>
+                                       </div>
+                                       <ChevronRight className={`w-5 h-5 text-white/40 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+                                     </div>
+                                   </div>
 
-                      {isExpanded && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          className="p-4 bg-slate-800/50 border-t border-white/20 space-y-4"
-                        >
-                          <div className="aspect-video bg-black rounded-xl overflow-hidden">
-                            <iframe
-                              id={`youtube-player-${video.id}`}
-                              width="100%"
-                              height="100%"
-                              src={`https://www.youtube.com/embed/${ytId}?autoplay=1&enablejsapi=1`}
-                              title={video.title}
-                              frameBorder="0"
-                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                              allowFullScreen
-                            />
-                          </div>
+                                   {/* Expanded Content */}
+                                   {isExpanded && (
+                                     <motion.div
+                                       initial={{ opacity: 0, height: 0 }}
+                                       animate={{ opacity: 1, height: "auto" }}
+                                       className="p-4 bg-slate-800/50 border-t border-white/20 space-y-4"
+                                     >
+                                       <div className="aspect-video bg-black rounded-xl overflow-hidden">
+                                         <iframe
+                                           id={`youtube-player-${video.id}`}
+                                           width="100%"
+                                           height="100%"
+                                           src={`https://www.youtube.com/embed/${ytId}?autoplay=1&enablejsapi=1`}
+                                           title={video.title}
+                                           frameBorder="0"
+                                           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                           allowFullScreen
+                                         />
+                                       </div>
 
-                          <VideoTranscript 
-                            videoId={video.id}
-                            videoUrl={video.video_url}
-                            onPauseVideo={() => {
-                              const iframe = document.getElementById(`youtube-player-${video.id}`);
-                              if (iframe && iframe.contentWindow) {
-                                iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
-                              }
-                            }}
-                            onSeekVideo={(seconds) => {
-                              const iframe = document.getElementById(`youtube-player-${video.id}`);
-                              if (iframe && iframe.contentWindow) {
-                                iframe.contentWindow.postMessage(`{"event":"command","func":"seekTo","args":[${seconds}, true]}`, '*');
-                                iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
-                              }
-                            }}
-                          />
-                          </motion.div>
-                          )}
-                          </div>
-                          )}
-                          </Draggable>
-                          );
-                          })}
-                          {provided.placeholder}
-                          </div>
-                          )}
-                          </Droppable>
-                          </DragDropContext>
-                          </div>
-                          )}
+                                       <VideoTranscript 
+                                         videoId={video.id}
+                                         videoUrl={video.video_url}
+                                         onPauseVideo={() => {
+                                           const iframe = document.getElementById(`youtube-player-${video.id}`);
+                                           if (iframe && iframe.contentWindow) {
+                                             iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+                                           }
+                                         }}
+                                         onSeekVideo={(seconds) => {
+                                           const iframe = document.getElementById(`youtube-player-${video.id}`);
+                                           if (iframe && iframe.contentWindow) {
+                                             iframe.contentWindow.postMessage(`{"event":"command","func":"seekTo","args":[${seconds}, true]}`, '*');
+                                             iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+                                           }
+                                         }}
+                                       />
+                                     </motion.div>
+                                   )}
+                                 </div>
+                               </div>
+                             )}
+                           </Draggable>
+                         );
+                       })}
+                       {provided.placeholder}
+                     </div>
+                    )}
+                    </Droppable>
+                    </DragDropContext>
+                    </div>
+                    )}
 
                           <h2 className="text-white/60 text-sm font-medium mb-3">Recommended Videos</h2>
             {level1Videos.map((video) => {
