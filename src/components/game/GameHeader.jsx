@@ -5,49 +5,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 
 const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }) {
-  const navigate = useNavigate();
   const xpToNextLevel = 1000;
   const xpProgress = ((profile?.xp || 0) % xpToNextLevel) / xpToNextLevel * 100;
-    { 
-      id: 1, 
-      name: "Level 1", 
-      subtitle: "Baby Steps", 
-      icon: Baby, 
-      gradient: "from-pink-500 to-rose-500",
-      activities: [
-        { id: "youtube", name: "Watch Youtube video", duration: "1 hour", icon: "📺", page: "BabyVideos" },
-        { id: "baby_words", name: "Help baby learn 50 first words and learn sentences", duration: "10 minutes", icon: "👶", page: "BabyVideos" },
-        { id: "colors", name: "Learn the colors", duration: "5 minutes", icon: "🎨", page: "ColorsLesson" },
-        { id: "body_parts", name: "Learn body parts", duration: "5 minutes", icon: "🦵", page: "BodyPartsLesson" },
-        { id: "days", name: "Learn days of the week", duration: "5 minutes", icon: "📅", page: "DaysLesson" },
-        { id: "months", name: "Learn months of the year", duration: "5 minutes", icon: "🗓️", page: "MonthsLesson" },
-        { id: "blessing", name: "Learn a Jewish blessing in Hebrew", duration: "5 minutes", icon: "✡️", page: "Progress" },
-        { id: "song_level1", name: "Learn a song", duration: "10 minutes", icon: "🎵", page: "Songs", level: 1 },
-      ]
-    },
-    { 
-      id: 2, 
-      name: "Level 2", 
-      subtitle: "Growing Up", 
-      icon: Star, 
-      gradient: "from-amber-500 to-orange-500",
-      activities: [
-        { id: "song_level2", name: "Learn a song", duration: "10 minutes", icon: "🎵", page: "Songs", level: 2 },
-      ]
-    },
-    { 
-      id: 3, 
-      name: "Level 3", 
-      subtitle: "Explorer", 
-      icon: Sparkles, 
-      gradient: "from-green-500 to-emerald-500",
-      activities: [
-        { id: "song_level3", name: "Learn a song", duration: "10 minutes", icon: "🎵", page: "Songs", level: 3 },
-      ]
-    },
-    { id: 4, name: "Level 4", subtitle: "Adventurer", icon: Trophy, gradient: "from-blue-500 to-indigo-500", activities: [] },
-    { id: 5, name: "Level 5", subtitle: "Master", icon: Star, gradient: "from-purple-500 to-violet-500", activities: [] },
-  ];
 
   return (
     <div className="bg-gradient-to-r from-slate-900/95 via-purple-900/95 to-slate-900/95 backdrop-blur-xl border-b border-white/10 px-4 py-3">
