@@ -4,9 +4,10 @@ import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingCart, Dumbbell, Church, UtensilsCrossed, Heart, ShoppingBag, BookOpen, Users, Play, Trophy, Sparkles, ArrowRight, Flame, Briefcase, School, Baby, Star, ChevronRight, X, Home as HomeIcon, Video, Library, Book, Calendar, Check } from "lucide-react";
+import { ShoppingCart, Dumbbell, Church, UtensilsCrossed, Heart, ShoppingBag, BookOpen, Users, Play, Trophy, Sparkles, ArrowRight, Flame, Briefcase, School, Baby, Star, ChevronRight, ChevronDown, X, Home as HomeIcon, Video, Library, Book, Calendar, Check, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import GameHeader from "../components/game/GameHeader";
@@ -297,9 +298,27 @@ export default function Home() {
   const [editingActivity, setEditingActivity] = useState(null);
   const [newActivity, setNewActivity] = useState({ name: "", duration: "", icon: "", page: "" });
   const [newLevel, setNewLevel] = useState({ name: "", subtitle: "", gradient: "" });
+  const [expandedLevel, setExpandedLevel] = useState(1);
 
   const isActivityCompleted = (activityId) => {
     return todoProgress.some(p => p.todo_item_id === activityId && p.completed);
+  };
+
+  const handleDragEnd = (result) => {
+    if (!result.destination) return;
+    
+    const levelId = parseInt(result.source.droppableId.replace('level-', ''));
+    const levelIdx = levels.findIndex(l => l.id === levelId);
+    
+    if (levelIdx === -1) return;
+    
+    const activities = Array.from(levels[levelIdx].activities);
+    const [reorderedItem] = activities.splice(result.source.index, 1);
+    activities.splice(result.destination.index, 0, reorderedItem);
+    
+    const newLevels = [...levels];
+    newLevels[levelIdx].activities = activities;
+    setLevels(newLevels);
   };
 
   const currentAge = userProfile?.age_level || 3;
@@ -440,109 +459,143 @@ export default function Home() {
             />
           </motion.div>
         ) : (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold text-white">Learning Activities</h2>
-              {isMasterUser && (
-                <Button onClick={() => setNewLevel({ name: "", subtitle: "", gradient: "from-blue-500 to-indigo-500" })} className="bg-green-500 hover:bg-green-600">
-                  + Add Level
-                </Button>
-              )}
-            </div>
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <div className="space-y-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold text-white">Learning Activities</h2>
+                {isMasterUser && (
+                  <Button onClick={() => setNewLevel({ name: "", subtitle: "", gradient: "from-blue-500 to-indigo-500" })} className="bg-green-500 hover:bg-green-600">
+                    + Add Level
+                  </Button>
+                )}
+              </div>
 
-            {levels.map((level, levelIdx) => {
-              const LevelIcon = level.icon;
-              return (
-                <motion.div
-                  key={level.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 overflow-hidden"
-                >
-                  <div className={`bg-gradient-to-r ${level.gradient} p-4`}>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <LevelIcon className="w-8 h-8 text-white" />
-                        <div>
-                          <h3 className="text-white font-bold text-xl">{level.name}</h3>
-                          <p className="text-white/80 text-sm">{level.subtitle}</p>
+              {levels.map((level, levelIdx) => {
+                const LevelIcon = level.icon;
+                const isExpanded = expandedLevel === level.id;
+                return (
+                  <motion.div
+                    key={level.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 overflow-hidden"
+                  >
+                    <button
+                      onClick={() => setExpandedLevel(isExpanded ? null : level.id)}
+                      className={`w-full bg-gradient-to-r ${level.gradient} p-4 transition-all`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <LevelIcon className="w-8 h-8 text-white" />
+                          <div className="text-left">
+                            <h3 className="text-white font-bold text-xl">{level.name}</h3>
+                            <p className="text-white/80 text-sm">{level.subtitle}</p>
+                          </div>
                         </div>
-                      </div>
-                      {isMasterUser && (
-                        <div className="flex gap-2">
-                          <Button size="sm" variant="outline" className="border-white/30 text-white hover:bg-white/10" onClick={() => setNewActivity({ ...newActivity, levelId: level.id })}>
-                            + Activity
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="p-4 space-y-2">
-                    {level.activities.map((activity, actIdx) => {
-                      const completed = isActivityCompleted(activity.id);
-                      return (
-                        <motion.div
-                          key={activity.id}
-                          whileHover={{ scale: 1.01 }}
-                          className={`bg-gradient-to-br from-white/5 to-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-4 flex items-center gap-3 transition-all ${
-                            completed ? 'from-green-500/10 to-green-600/10 border-green-500/30' : ''
-                          }`}
-                        >
-                          <button
-                            onClick={() => toggleActivityMutation.mutate({ activityId: activity.id })}
-                            className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center transition-all ${
-                              completed ? 'bg-green-500 border-green-500 shadow-lg' : 'border-white/40 hover:border-cyan-400 hover:bg-cyan-500/10'
-                            }`}
-                          >
-                            {completed && <Check className="w-5 h-5 text-white" />}
-                          </button>
-                          <button
-                            onClick={() => navigate(createPageUrl(activity.page))}
-                            className="flex-1 flex items-center gap-3 text-left"
-                          >
-                            <span className="text-2xl">{activity.icon}</span>
-                            <div className="flex-1">
-                              <p className={`text-white font-medium text-lg ${completed ? 'line-through opacity-60' : ''}`}>{activity.name}</p>
-                              <p className="text-white/60 text-sm">{activity.duration}</p>
-                            </div>
-                            <ChevronRight className="w-5 h-5 text-white/40" />
-                          </button>
-                          {isMasterUser && (
-                            <Button size="sm" variant="ghost" className="text-red-400 hover:text-red-300 hover:bg-red-500/10" onClick={() => {
-                              levels[levelIdx].activities.splice(actIdx, 1);
-                              setLevels([...levels]);
-                            }}>
-                              ✕
+                        <div className="flex items-center gap-2">
+                          {isMasterUser && isExpanded && (
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="border-white/30 text-white hover:bg-white/10" 
+                              onClick={(e) => { e.stopPropagation(); setNewActivity({ ...newActivity, levelId: level.id }); }}
+                            >
+                              + Activity
                             </Button>
                           )}
-                        </motion.div>
-                      );
-                    })}
-                    {newActivity.levelId === level.id && (
-                      <div className="bg-white/10 rounded-xl p-4 space-y-2">
-                        <Input placeholder="Activity name" value={newActivity.name} onChange={(e) => setNewActivity({...newActivity, name: e.target.value})} className="bg-white/5 border-white/20 text-white" />
-                        <Input placeholder="Duration (e.g., 10 minutes)" value={newActivity.duration} onChange={(e) => setNewActivity({...newActivity, duration: e.target.value})} className="bg-white/5 border-white/20 text-white" />
-                        <Input placeholder="Emoji icon" value={newActivity.icon} onChange={(e) => setNewActivity({...newActivity, icon: e.target.value})} className="bg-white/5 border-white/20 text-white" />
-                        <Input placeholder="Page name (e.g., BabyVideos)" value={newActivity.page} onChange={(e) => setNewActivity({...newActivity, page: e.target.value})} className="bg-white/5 border-white/20 text-white" />
-                        <div className="flex gap-2">
-                          <Button onClick={() => {
-                            levels[levelIdx].activities.push({ id: Date.now().toString(), ...newActivity, levelId: undefined });
-                            setLevels([...levels]);
-                            setNewActivity({ name: "", duration: "", icon: "", page: "" });
-                            toast.success("Activity added!");
-                          }} className="flex-1 bg-green-500 hover:bg-green-600">
-                            Save
-                          </Button>
-                          <Button onClick={() => setNewActivity({ name: "", duration: "", icon: "", page: "" })} variant="outline" className="border-white/20 text-white">
-                            Cancel
-                          </Button>
+                          <ChevronDown className={`w-6 h-6 text-white transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                         </div>
                       </div>
-                    )}
-                  </div>
-                </motion.div>
-              );
-            })}
+                    </button>
+                    
+                    <AnimatePresence>
+                      {isExpanded && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="overflow-hidden"
+                        >
+                          <Droppable droppableId={`level-${level.id}`}>
+                            {(provided) => (
+                              <div 
+                                ref={provided.innerRef} 
+                                {...provided.droppableProps}
+                                className="p-4 space-y-2"
+                              >
+                                {level.activities.map((activity, actIdx) => {
+                                  const completed = isActivityCompleted(activity.id);
+                                  return (
+                                    <Draggable key={activity.id} draggableId={activity.id} index={actIdx}>
+                                      {(provided, snapshot) => (
+                                        <div
+                                          ref={provided.innerRef}
+                                          {...provided.draggableProps}
+                                          className={`bg-gradient-to-br from-white/5 to-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-4 flex items-center gap-3 transition-all ${
+                                            completed ? 'from-green-500/10 to-green-600/10 border-green-500/30' : ''
+                                          } ${snapshot.isDragging ? 'shadow-2xl scale-105' : ''}`}
+                                        >
+                                          <div {...provided.dragHandleProps} className="cursor-grab active:cursor-grabbing">
+                                            <GripVertical className="w-5 h-5 text-white/40" />
+                                          </div>
+                                          <button
+                                            onClick={() => toggleActivityMutation.mutate({ activityId: activity.id })}
+                                            className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center transition-all ${
+                                              completed ? 'bg-green-500 border-green-500 shadow-lg' : 'border-white/40 hover:border-cyan-400 hover:bg-cyan-500/10'
+                                            }`}
+                                          >
+                                            {completed && <Check className="w-5 h-5 text-white" />}
+                                          </button>
+                                          <button
+                                            onClick={() => navigate(createPageUrl(activity.page))}
+                                            className="flex-1 flex items-center gap-3 text-left"
+                                          >
+                                            <span className="text-2xl">{activity.icon}</span>
+                                            <div className="flex-1">
+                                              <p className={`text-white font-medium text-lg ${completed ? 'line-through opacity-60' : ''}`}>{activity.name}</p>
+                                              <p className="text-white/60 text-sm">{activity.duration}</p>
+                                            </div>
+                                            <ChevronRight className="w-5 h-5 text-white/40" />
+                                          </button>
+                                        </div>
+                                      )}
+                                    </Draggable>
+                                  );
+                                })}
+                                {provided.placeholder}
+                                {newActivity.levelId === level.id && (
+                                  <div className="bg-white/10 rounded-xl p-4 space-y-2">
+                                    <Input placeholder="Activity name" value={newActivity.name} onChange={(e) => setNewActivity({...newActivity, name: e.target.value})} className="bg-white/5 border-white/20 text-white" />
+                                    <Input placeholder="Duration (e.g., 10 minutes)" value={newActivity.duration} onChange={(e) => setNewActivity({...newActivity, duration: e.target.value})} className="bg-white/5 border-white/20 text-white" />
+                                    <Input placeholder="Emoji icon" value={newActivity.icon} onChange={(e) => setNewActivity({...newActivity, icon: e.target.value})} className="bg-white/5 border-white/20 text-white" />
+                                    <Input placeholder="Page name (e.g., BabyVideos)" value={newActivity.page} onChange={(e) => setNewActivity({...newActivity, page: e.target.value})} className="bg-white/5 border-white/20 text-white" />
+                                    <div className="flex gap-2">
+                                      <Button onClick={() => {
+                                        levels[levelIdx].activities.push({ id: Date.now().toString(), ...newActivity, levelId: undefined });
+                                        setLevels([...levels]);
+                                        setNewActivity({ name: "", duration: "", icon: "", page: "" });
+                                        toast.success("Activity added!");
+                                      }} className="flex-1 bg-green-500 hover:bg-green-600">
+                                        Save
+                                      </Button>
+                                      <Button onClick={() => setNewActivity({ name: "", duration: "", icon: "", page: "" })} variant="outline" className="border-white/20 text-white">
+                                        Cancel
+                                      </Button>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </Droppable>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </DragDropContext>
 
             {newLevel.name !== undefined && (
               <div className="bg-white/10 rounded-xl p-4 space-y-2">
