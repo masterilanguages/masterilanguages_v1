@@ -458,6 +458,52 @@ Format as array of objects with: transliteration, english, hebrew`,
           </motion.div>
         )}
 
+        {showHebrewInput && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="mt-3 bg-green-500/10 border border-green-500/30 rounded-xl p-4"
+          >
+            <p className="text-white/60 text-sm mb-2">
+              ✨ Paste Hebrew text - I'll auto-generate transliteration & translation:
+            </p>
+            <Textarea
+              value={hebrewText}
+              onChange={(e) => setHebrewText(e.target.value)}
+              placeholder="שָׁלוֹם לְכֻלָּם!&#10;הַיּוֹם נִלְמַד עִבְרִית.&#10;אֲנִי אוֹהֵב לִלְמוֹד שְׂפוֹת."
+              className="bg-white/5 border-white/20 text-white min-h-[200px] mb-3"
+              dir="rtl"
+            />
+            <div className="flex gap-2">
+              <Button 
+                onClick={generateTranscript}
+                disabled={generatingTranslations}
+                className="flex-1 bg-green-500/20 text-green-400 hover:bg-green-500/30"
+              >
+                {generatingTranslations ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Generate Transcript
+                  </>
+                )}
+              </Button>
+              <Button 
+                onClick={() => { setShowHebrewInput(false); setHebrewText(""); }}
+                variant="outline"
+                className="border-white/20 text-white/60"
+              >
+                Cancel
+              </Button>
+            </div>
+          </motion.div>
+        )}
+
         {showManualInput && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
@@ -466,12 +512,12 @@ Format as array of objects with: transliteration, english, hebrew`,
             className="mt-3 bg-white/5 border border-white/10 rounded-xl p-4"
           >
             <p className="text-white/60 text-sm mb-2">
-              Paste transcript below (format: Hebrew line, Transliteration line, English line, blank line, repeat):
+              Paste transcript below (format: Transliteration line, English line, Hebrew line, blank line, repeat):
             </p>
             <Textarea
               value={manualTranscript}
               onChange={(e) => setManualTranscript(e.target.value)}
-              placeholder="שָׁלוֹם לְכֻלָּם!&#10;Shalom lekulam!&#10;Hello everyone!&#10;&#10;הַיּוֹם נִלְמַד עִבְרִית.&#10;Hayom nilmad Ivrit.&#10;Today we will learn Hebrew."
+              placeholder="Shalom lekulam!&#10;Hello everyone!&#10;שָׁלוֹם לְכֻלָּם!&#10;&#10;Hayom nilmad Ivrit.&#10;Today we will learn Hebrew.&#10;הַיּוֹם נִלְמַד עִבְרִית."
               className="bg-white/5 border-white/20 text-white min-h-[200px] mb-3"
             />
             <div className="flex gap-2">
