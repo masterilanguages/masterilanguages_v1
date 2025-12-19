@@ -87,33 +87,60 @@ export default function Journal() {
     }
   }, [todayEntry]);
 
-  // Check which vocab words are used (fuzzy matching)
+  // Check which vocab words are used (very lenient fuzzy matching)
   useEffect(() => {
     const textLower = text.toLowerCase();
+    const textWords = textLower.split(/\s+/);
+    
     const found = suggestedVocab
       .filter(v => {
-        // Check Hebrew word
-        if (v.word && textLower.includes(v.word.toLowerCase())) return true;
+        // Check Hebrew word (exact or 80% match)
+        if (v.word) {
+          const hebrewLower = v.word.toLowerCase();
+          if (textLower.includes(hebrewLower)) return true;
+          
+          // Check if any word in text is similar (at least 70% of characters match)
+          const minMatch = Math.floor(hebrewLower.length * 0.7);
+          for (const word of textWords) {
+            if (word.length >= minMatch && hebrewLower.includes(word.substring(0, minMatch))) return true;
+          }
+        }
         
-        // Check phonetic (allow partial matches - at least 80% of characters)
+        // Check phonetic/transliteration (very lenient - 60% match)
         if (v.phonetic) {
           const phoneticLower = v.phonetic.toLowerCase();
-          const minLength = Math.floor(phoneticLower.length * 0.8);
+          const minLength = Math.floor(phoneticLower.length * 0.6);
+          
+          // Check substring matches
           for (let i = 0; i <= phoneticLower.length - minLength; i++) {
             const substr = phoneticLower.substring(i, i + minLength);
             if (textLower.includes(substr)) return true;
           }
+          
+          // Check if user wrote something close
+          for (const word of textWords) {
+            if (word.length >= 3 && phoneticLower.includes(word.substring(0, Math.min(word.length, minLength)))) {
+              return true;
+            }
+          }
         }
         
-        // Check translation (allow partial matches for longer words)
+        // Check translation (lenient partial matches)
         if (v.translation) {
           const translationLower = v.translation.toLowerCase();
-          if (translationLower.length <= 4) {
-            // Short words must match exactly
+          if (translationLower.length <= 3) {
+            // Very short words must match exactly
             if (textLower.includes(translationLower)) return true;
+          } else if (translationLower.length <= 5) {
+            // Short words need 80% match
+            const minLength = Math.floor(translationLower.length * 0.8);
+            for (let i = 0; i <= translationLower.length - minLength; i++) {
+              const substr = translationLower.substring(i, i + minLength);
+              if (textLower.includes(substr)) return true;
+            }
           } else {
-            // Longer words can be partial (at least 70%)
-            const minLength = Math.floor(translationLower.length * 0.7);
+            // Longer words need 60% match
+            const minLength = Math.floor(translationLower.length * 0.6);
             for (let i = 0; i <= translationLower.length - minLength; i++) {
               const substr = translationLower.substring(i, i + minLength);
               if (textLower.includes(substr)) return true;
