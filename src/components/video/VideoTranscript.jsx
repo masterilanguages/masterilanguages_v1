@@ -192,6 +192,74 @@ export default function VideoTranscript({ videoId, videoUrl, onPauseVideo, onSee
     }
   };
 
+  const generateTranscript = async () => {
+    if (!hebrewText.trim()) {
+      toast.error("Please paste Hebrew text");
+      return;
+    }
+
+    setGeneratingTranslations(true);
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `You have Hebrew text. Generate transliteration and English translation for each sentence.
+
+Hebrew text:
+${hebrewText}
+
+For each sentence, provide:
+1. Transliteration (phonetic Hebrew using Latin characters)
+2. English translation
+3. Original Hebrew
+
+Format as array of objects with: transliteration, english, hebrew`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            sentences: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  transliteration: { type: "string" },
+                  english: { type: "string" },
+                  hebrew: { type: "string" }
+                }
+              }
+            }
+          }
+        }
+      });
+
+      // Format as: Transliteration\nEnglish\nHebrew\n\n
+      const formatted = result.sentences.map(s => 
+        `${s.transliteration}\n${s.english}\n${s.hebrew}`
+      ).join('\n\n');
+
+      await base44.entities.Video.update(video.id, {
+        transcript_text: formatted,
+        transcript_status: "complete",
+        transcript_source: "manual",
+        language: "he",
+        transcript_generated_at: new Date().toISOString()
+      });
+
+      setVideo(prev => ({
+        ...prev,
+        transcript_text: formatted,
+        transcript_status: "complete",
+        transcript_source: "manual",
+        language: "he"
+      }));
+
+      setShowHebrewInput(false);
+      setHebrewText("");
+      toast.success("Transcript generated with translations!");
+    } catch (e) {
+      toast.error("Failed to generate transcript");
+    }
+    setGeneratingTranslations(false);
+  };
+
   const updateTranscriptLine = async (blockIdx, lineType, newValue) => {
     const blocks = video.transcript_text.split('\n\n').filter(b => b.trim());
     const block = blocks[blockIdx];
