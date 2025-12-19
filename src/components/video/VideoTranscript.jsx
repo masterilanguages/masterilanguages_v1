@@ -322,24 +322,14 @@ Format as array of objects with: transliteration, english, hebrew`,
         </Button>
         
         {video?.transcript_status === "failed" && (
-          <>
-            <Button
-              onClick={() => setShowHebrewInput(!showHebrewInput)}
-              variant="outline"
-              className="bg-green-500/20 border-green-500/50 text-green-400 hover:bg-green-500/30"
-            >
-              <Sparkles className="w-4 h-4 mr-2" />
-              Paste Hebrew
-            </Button>
-            <Button
-              onClick={() => setShowManualInput(!showManualInput)}
-              variant="outline"
-              className="bg-amber-500/20 border-amber-500/50 text-amber-400 hover:bg-amber-500/30"
-            >
-              <Edit className="w-4 h-4 mr-2" />
-              Full Format
-            </Button>
-          </>
+          <Button
+            onClick={() => setShowHebrewInput(!showHebrewInput)}
+            variant="outline"
+            className="bg-green-500/20 border-green-500/50 text-green-400 hover:bg-green-500/30"
+          >
+            <Sparkles className="w-4 h-4 mr-2" />
+            Paste Hebrew
+          </Button>
         )}
       </div>
 
