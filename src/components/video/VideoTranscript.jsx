@@ -364,7 +364,7 @@ Format as array of objects with: transliteration, english, hebrew`,
                   if (parts.length >= 3) {
                     const [transliteration, english, hebrew] = parts;
                     return (
-                      <div key={blockIdx} className="group relative space-y-1 p-2 rounded-lg hover:bg-white/5 transition-all flex gap-2">
+                      <div key={blockIdx} className="group relative p-2 rounded-lg hover:bg-white/5 transition-all flex gap-2">
                         {onSeekVideo && (
                           <button
                             onClick={() => onSeekVideo(blockIdx * 3)}
@@ -382,27 +382,33 @@ Format as array of objects with: transliteration, english, hebrew`,
                         >
                           <Plus className="w-4 h-4 text-amber-400" />
                         </button>
-                        <EditableSentence
-                          text={transliteration}
-                          context="video_transcript"
-                          contextId={`${videoId}-${blockIdx}`}
-                          field="transliteration"
-                          className="text-white/90 text-lg leading-tight block"
-                        />
-                        <EditableSentence
-                          text={english}
-                          context="video_transcript"
-                          contextId={`${videoId}-${blockIdx}`}
-                          field="english"
-                          className="text-white/70 text-base leading-tight block"
-                        />
-                        <EditableSentence
-                          text={hebrew}
-                          context="video_transcript"
-                          contextId={`${videoId}-${blockIdx}`}
-                          field="hebrew"
-                          className="text-cyan-400 text-2xl font-bold leading-tight block"
-                        />
+                        <div className="mb-0.5">
+                          <EditableSentence
+                            text={transliteration}
+                            context="video_transcript"
+                            contextId={`${videoId}-${blockIdx}`}
+                            field="transliteration"
+                            className="text-white/90 text-lg leading-tight"
+                          />
+                        </div>
+                        <div className="mb-1">
+                          <EditableSentence
+                            text={english}
+                            context="video_transcript"
+                            contextId={`${videoId}-${blockIdx}`}
+                            field="english"
+                            className="text-white/70 text-base leading-tight"
+                          />
+                        </div>
+                        <div>
+                          <EditableSentence
+                            text={hebrew}
+                            context="video_transcript"
+                            contextId={`${videoId}-${blockIdx}`}
+                            field="hebrew"
+                            className="text-cyan-400 text-2xl font-bold leading-tight"
+                          />
+                        </div>
                         </div>
                         </div>
                     );
