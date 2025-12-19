@@ -788,9 +788,10 @@ Create about 15-20 conversational lines that naturally introduce and use these v
                       const inBackpack = wordRatings.find(w => w.word === item.hebrew);
 
                       const updateTranscriptLine = (field, newValue) => {
-                        const updatedVideo = { ...selectedVideo };
-                        updatedVideo.transcript[idx][field] = newValue;
-                        setSelectedVideo(updatedVideo);
+                        const updatedTranscript = [...selectedVideo.transcript];
+                        updatedTranscript[idx] = { ...updatedTranscript[idx], [field]: newValue };
+                        setSelectedVideo({ ...selectedVideo, transcript: updatedTranscript });
+                        toast.success("Updated!");
                       };
 
                       return (
