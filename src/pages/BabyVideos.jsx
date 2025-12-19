@@ -802,14 +802,36 @@ Create about 15-20 conversational lines that naturally introduce and use these v
                             <div className="flex items-center gap-4">
                               <span className="text-white/40 text-xs w-12">{item.time}</span>
                               <div>
+                                <p className="text-white/90 text-lg leading-tight" style={{ direction: 'ltr', textAlign: 'left', unicodeBidi: 'plaintext' }}>
+                                  {item.transliteration.split(/\s+/).map((word, widx) => (
+                                    <span key={widx}>
+                                      <ClickableWord word={word} transliteration={word} translation={item.english} variant="transliteration" />
+                                      {widx < item.transliteration.split(/\s+/).length - 1 ? ' ' : ''}
+                                    </span>
+                                  ))}
+                                </p>
+                                <p className="text-white/70 text-base leading-tight" style={{ direction: 'ltr', textAlign: 'left', unicodeBidi: 'plaintext' }}>
+                                  {item.english.split(/\s+/).map((word, widx) => (
+                                    <span key={widx}>
+                                      <ClickableWord word={word} transliteration={item.transliteration} translation={item.english} variant="transliteration" />
+                                      {widx < item.english.split(/\s+/).length - 1 ? ' ' : ''}
+                                    </span>
+                                  ))}
+                                </p>
                                 <div className="flex items-center gap-2">
-                                  <span className="text-2xl text-cyan-400 font-bold" dir="rtl">{item.hebrew}</span>
+                                  <p className="text-cyan-400 text-2xl font-bold leading-tight" style={{ direction: 'ltr', textAlign: 'left', unicodeBidi: 'plaintext' }}>
+                                    {item.hebrew.split(/\s+/).map((word, widx) => (
+                                      <span key={widx}>
+                                        <ClickableWord word={word} transliteration={item.transliteration} translation={item.english} variant="hebrew" />
+                                        {widx < item.hebrew.split(/\s+/).length - 1 ? ' ' : ''}
+                                      </span>
+                                    ))}
+                                  </p>
                                   {currentRating >= 5 && <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />}
                                 </div>
-                                <p className="text-white/60 text-sm">{item.transliteration} = {item.meaning}</p>
                               </div>
                             </div>
-                            
+
                             <div className="flex items-center gap-2">
                               {!inBackpack && (
                                 <button
