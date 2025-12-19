@@ -1503,12 +1503,10 @@ Create about 15-20 conversational lines that naturally introduce and use these v
         );
       })}
     </div>
-          )}
-        </div>
-      )}
-    </div>
+  )}
+</div>
 
-    {/* Backpack Dialog */}
+{/* Backpack Dialog */}
       <Dialog open={backpackOpen} onOpenChange={setBackpackOpen}>
         <DialogContent className="bg-slate-900 border-white/20 text-white max-w-md max-h-[80vh] overflow-hidden flex flex-col">
           <DialogHeader>
