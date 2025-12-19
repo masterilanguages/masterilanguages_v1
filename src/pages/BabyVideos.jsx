@@ -389,6 +389,7 @@ export default function BabyVideos() {
   const [loadingTranscript, setLoadingTranscript] = useState(null);
   const [customVideoUrl, setCustomVideoUrl] = useState("");
   const [isDragging, setIsDragging] = useState(false);
+  const [videoEdits, setVideoEdits] = useState({});
 
   const { data: userProfile } = useQuery({
     queryKey: ['userProfile'],
