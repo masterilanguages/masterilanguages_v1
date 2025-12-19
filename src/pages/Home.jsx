@@ -454,10 +454,9 @@ export default function Home() {
               onCorrect={handleToddlerNeedComplete}
               onWatchTV={() => navigate(createPageUrl("BabyVideos"))}
             />
-            </motion.div>
-            ) : null}
-            </div>
-          </div>
+          </motion.div>
+        ) : null}
+      </div>
 
       {/* Buy Coins Dialog */}
       <Dialog open={buyCoinsDialog} onOpenChange={setBuyCoinsDialog}>
