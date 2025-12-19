@@ -844,7 +844,7 @@ Create about 15-20 conversational lines that naturally introduce and use these v
                             <div className="flex items-center gap-2">
                               {!inBackpack && (
                                 <button
-                                  onClick={() => addToBackpack(item)}
+                                  onClick={() => addToBackpack(editedItem)}
                                   className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 flex items-center justify-center transition-all"
                                   title="Add to backpack"
                                 >
@@ -855,7 +855,7 @@ Create about 15-20 conversational lines that naturally introduce and use these v
                                 {[1, 2, 3, 4, 5].map(num => (
                                   <button
                                     key={num}
-                                    onClick={() => handleRate(item, num)}
+                                    onClick={() => handleRate(editedItem, num)}
                                     className={`w-8 h-8 rounded-lg text-sm font-bold transition-all hover:scale-110 ${
                                       currentRating >= num 
                                         ? num === 5 
