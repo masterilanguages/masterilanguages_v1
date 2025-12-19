@@ -102,23 +102,26 @@ export default function Journal() {
     setGeneratingQuestion(true);
     try {
       const isHebrewHeavy = (text.match(/[\u0590-\u05FF]/g) || []).length > text.length * 0.3;
+      const sentences = text.split(/[.!?]+/).filter(s => s.trim());
+      const lastSentence = sentences[sentences.length - 1]?.trim() || text.trim();
       
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `The user wrote this journal entry:
-"${text}"
+        prompt: `The user just wrote: "${lastSentence}"
 
-Previous questions asked: ${questionsAsked.join(", ") || "none"}
+Their full entry so far: "${text}"
 
-Generate ONE simple follow-up question to help them expand their writing.
+Previous questions: ${questionsAsked.join(", ") || "none"}
+
+Generate ONE simple follow-up question about their LAST SENTENCE specifically.
 ${isHebrewHeavy ? "Ask in Hebrew." : "Ask in English."}
 
 Rules:
-- Keep it very short and simple
-- Encourage expansion, not correction
-- Don't rewrite their text
-- Examples: "What happened before that?" / "How did you feel?" / "Where were you?"
+- Focus on what they JUST wrote
+- Very short and simple
+- Ask about feelings, details, or what happened next
+- Examples: "איך הרגשת?" / "What happened next?" / "Who was with you?"
 
-Return just the question text.`,
+Return just the question.`,
         response_json_schema: {
           type: "object",
           properties: {
@@ -134,6 +137,17 @@ Return just the question text.`,
     }
     setGeneratingQuestion(false);
   };
+
+  // Auto-generate question after writing
+  useEffect(() => {
+    const sentences = text.split(/[.!?]+/).filter(s => s.trim());
+    if (sentences.length > 0 && sentences.length % 2 === 0 && !aiQuestion && !generatingQuestion) {
+      const timer = setTimeout(() => {
+        generateQuestion();
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [text]);
 
   const handleSave = () => {
     if (!text.trim()) {
@@ -292,20 +306,18 @@ Return just the question text.`,
           />
 
           <div className="flex gap-3">
-            {text.length > 20 && !aiQuestion && (
-              <Button
-                onClick={generateQuestion}
-                disabled={generatingQuestion}
-                variant="outline"
-                className="border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10"
-              >
-                {generatingQuestion ? (
-                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Thinking...</>
-                ) : (
-                  <><Sparkles className="w-4 h-4 mr-2" /> Ask me a question</>
-                )}
-              </Button>
-            )}
+            <Button
+              onClick={generateQuestion}
+              disabled={generatingQuestion || !text.trim()}
+              variant="outline"
+              className="border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10"
+            >
+              {generatingQuestion ? (
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Thinking...</>
+              ) : (
+                <><Sparkles className="w-4 h-4 mr-2" /> Ask me about what I wrote</>
+              )}
+            </Button>
             <Button
               onClick={handleSave}
               disabled={createEntryMutation.isPending || updateEntryMutation.isPending || !text.trim()}
