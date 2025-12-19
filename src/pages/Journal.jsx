@@ -83,15 +83,42 @@ export default function Journal() {
     }
   }, [todayEntry]);
 
-  // Check which vocab words are used
+  // Check which vocab words are used (fuzzy matching)
   useEffect(() => {
     const textLower = text.toLowerCase();
     const found = suggestedVocab
-      .filter(v => 
-        textLower.includes(v.word.toLowerCase()) || 
-        textLower.includes(v.phonetic?.toLowerCase()) ||
-        textLower.includes(v.translation?.toLowerCase())
-      )
+      .filter(v => {
+        // Check Hebrew word
+        if (v.word && textLower.includes(v.word.toLowerCase())) return true;
+        
+        // Check phonetic (allow partial matches - at least 80% of characters)
+        if (v.phonetic) {
+          const phoneticLower = v.phonetic.toLowerCase();
+          const minLength = Math.floor(phoneticLower.length * 0.8);
+          for (let i = 0; i <= phoneticLower.length - minLength; i++) {
+            const substr = phoneticLower.substring(i, i + minLength);
+            if (textLower.includes(substr)) return true;
+          }
+        }
+        
+        // Check translation (allow partial matches for longer words)
+        if (v.translation) {
+          const translationLower = v.translation.toLowerCase();
+          if (translationLower.length <= 4) {
+            // Short words must match exactly
+            if (textLower.includes(translationLower)) return true;
+          } else {
+            // Longer words can be partial (at least 70%)
+            const minLength = Math.floor(translationLower.length * 0.7);
+            for (let i = 0; i <= translationLower.length - minLength; i++) {
+              const substr = translationLower.substring(i, i + minLength);
+              if (textLower.includes(substr)) return true;
+            }
+          }
+        }
+        
+        return false;
+      })
       .map(v => v.id);
     setUsedWords(found);
   }, [text, suggestedVocab]);
@@ -155,6 +182,11 @@ Return just the question.`,
       return;
     }
 
+    if (usedWords.length < suggestedVocab.length) {
+      toast.error(`Use all ${suggestedVocab.length} words before saving! (${usedWords.length}/${suggestedVocab.length} used)`);
+      return;
+    }
+
     const entryData = {
       date: today,
       text,
@@ -170,6 +202,8 @@ Return just the question.`,
       createEntryMutation.mutate(entryData);
     }
   };
+
+  const allWordsUsed = usedWords.length === suggestedVocab.length;
 
   const unusedVocab = suggestedVocab.filter(v => !usedWords.includes(v.id));
 
@@ -320,15 +354,26 @@ Return just the question.`,
             </Button>
             <Button
               onClick={handleSave}
-              disabled={createEntryMutation.isPending || updateEntryMutation.isPending || !text.trim()}
-              className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-6"
+              disabled={createEntryMutation.isPending || updateEntryMutation.isPending || !text.trim() || !allWordsUsed}
+              className={`flex-1 font-bold py-6 ${
+                allWordsUsed 
+                  ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white" 
+                  : "bg-gray-500/20 text-gray-400 cursor-not-allowed"
+              }`}
             >
-              {todayEntry ? "Update Today's Journal" : "Save Journal Entry"} 📖
+              {allWordsUsed ? (
+                <>{todayEntry ? "Update Today's Journal" : "Save Journal Entry"} 📖</>
+              ) : (
+                <>Use all {suggestedVocab.length} words first ({usedWords.length}/{suggestedVocab.length}) 🔒</>
+              )}
             </Button>
           </div>
 
           <p className="text-white/40 text-xs mt-3 text-center">
-            {todayEntry ? "You can edit today's entry anytime" : "You can write only one entry per day"}
+            {allWordsUsed 
+              ? (todayEntry ? "You can edit today's entry anytime" : "You can write only one entry per day")
+              : `⚠️ You must use all ${suggestedVocab.length} suggested words to save your journal`
+            }
           </p>
         </motion.div>
 
