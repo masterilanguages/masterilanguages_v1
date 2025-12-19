@@ -437,14 +437,6 @@ Format as array of objects with: transliteration, english, hebrew`,
           >
             <p className="text-red-400 text-sm">Transcript unavailable for this video.</p>
             <p className="text-white/40 text-xs mt-1">This video doesn't have captions enabled.</p>
-            <Button 
-              onClick={() => setShowManualInput(true)}
-              className="mt-3 bg-amber-500/20 text-amber-400 hover:bg-amber-500/30"
-              size="sm"
-            >
-              <Edit className="w-4 h-4 mr-2" />
-              Add Transcript Manually
-            </Button>
           </motion.div>
         )}
 
