@@ -309,15 +309,7 @@ export default function VideoTranscript({ videoId, videoUrl, onPauseVideo, onSee
                         >
                           <Plus className="w-4 h-4 text-amber-400" />
                         </button>
-                        <p className="text-cyan-400 text-2xl font-bold leading-tight" dir="rtl" style={{ textAlign: 'left' }}>
-                          {hebrew.split(/\s+/).map((word, wordIdx) => (
-                            <span key={wordIdx}>
-                              <ClickableWord word={word} onBeforeOpen={onPauseVideo} />
-                              {wordIdx < hebrew.split(/\s+/).length - 1 ? ' ' : ''}
-                            </span>
-                          ))}
-                        </p>
-                        <p className="text-white/90 text-lg leading-tight" dir="rtl" style={{ textAlign: 'left' }}>
+                        <p className="text-white/90 text-lg leading-tight" style={{ direction: 'ltr', textAlign: 'left', unicodeBidi: 'plaintext' }}>
                           {transliteration.split(/\s+/).map((word, wordIdx) => (
                             <span key={wordIdx}>
                               <ClickableWord word={word} onBeforeOpen={onPauseVideo} />
@@ -325,13 +317,21 @@ export default function VideoTranscript({ videoId, videoUrl, onPauseVideo, onSee
                             </span>
                           ))}
                         </p>
-                        <p className="text-white/70 text-base leading-tight">
-                        {english.split(/\s+/).map((word, wordIdx) => (
-                        <span key={wordIdx}>
-                        <ClickableWord word={word} onBeforeOpen={onPauseVideo} />
-                        {wordIdx < english.split(/\s+/).length - 1 ? ' ' : ''}
-                        </span>
-                        ))}
+                        <p className="text-white/70 text-base leading-tight" style={{ direction: 'ltr', textAlign: 'left', unicodeBidi: 'plaintext' }}>
+                          {english.split(/\s+/).map((word, wordIdx) => (
+                            <span key={wordIdx}>
+                              <ClickableWord word={word} onBeforeOpen={onPauseVideo} />
+                              {wordIdx < english.split(/\s+/).length - 1 ? ' ' : ''}
+                            </span>
+                          ))}
+                        </p>
+                        <p className="text-cyan-400 text-2xl font-bold leading-tight" style={{ direction: 'ltr', textAlign: 'left', unicodeBidi: 'plaintext' }}>
+                          {hebrew.split(/\s+/).map((word, wordIdx) => (
+                            <span key={wordIdx}>
+                              <ClickableWord word={word} onBeforeOpen={onPauseVideo} />
+                              {wordIdx < hebrew.split(/\s+/).length - 1 ? ' ' : ''}
+                            </span>
+                          ))}
                         </p>
                         </div>
                         </div>
