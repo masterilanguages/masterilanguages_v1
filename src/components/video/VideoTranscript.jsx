@@ -232,10 +232,10 @@ Format as array of objects with: transliteration, english, hebrew`,
         }
       });
 
-      // Format as: Transliteration\nEnglish\nHebrew\n\n
+      // Format as: Transliteration\tEnglish\tHebrew (one line per sentence)
       const formatted = result.sentences.map(s => 
-        `${s.transliteration}\n${s.english}\n${s.hebrew}`
-      ).join('\n\n');
+        `${s.transliteration}\t${s.english}\t${s.hebrew}`
+      ).join('\n');
 
       await base44.entities.Video.update(video.id, {
         transcript_text: formatted,
@@ -354,15 +354,15 @@ Format as array of objects with: transliteration, english, hebrew`,
             </div>
             <div className="space-y-6">
               {(() => {
-                // Parse transcript in blocks of 3 lines: Hebrew, Transliteration, English
-                const blocks = video.transcript_text.split('\n\n').filter(b => b.trim());
+                // Parse transcript: each line has tab-separated transliteration, english, hebrew
+                const lines = video.transcript_text.split('\n').filter(l => l.trim());
                 
-                return blocks.map((block, blockIdx) => {
-                  const lines = block.trim().split('\n').filter(l => l.trim());
+                return lines.map((line, blockIdx) => {
+                  const parts = line.split('\t');
                   
-                  // If we have exactly 3 lines, treat as Translit/English/Hebrew
-                  if (lines.length >= 3) {
-                    const [transliteration, english, hebrew] = lines;
+                  // If we have exactly 3 parts, treat as Translit/English/Hebrew
+                  if (parts.length >= 3) {
+                    const [transliteration, english, hebrew] = parts;
                     return (
                       <div key={blockIdx} className="group relative space-y-1 p-2 rounded-lg hover:bg-white/5 transition-all flex gap-2">
                         {onSeekVideo && (
@@ -409,9 +409,9 @@ Format as array of objects with: transliteration, english, hebrew`,
                   }
                   
                   // Fallback: display as plain text
-                  return lines.map((line, lineIdx) => (
+                  return (
                     <div 
-                      key={`${blockIdx}-${lineIdx}`}
+                      key={blockIdx}
                       className="text-white/90"
                       style={{ 
                         direction: video.language === "he" || video.language === "iw" ? 'rtl' : 'ltr',
@@ -420,7 +420,7 @@ Format as array of objects with: transliteration, english, hebrew`,
                     >
                       {line}
                     </div>
-                  ));
+                  );
                 });
               })()}
             </div>
@@ -493,12 +493,12 @@ Format as array of objects with: transliteration, english, hebrew`,
             className="mt-3 bg-white/5 border border-white/10 rounded-xl p-4"
           >
             <p className="text-white/60 text-sm mb-2">
-              Paste transcript below (format: Transliteration line, English line, Hebrew line, blank line, repeat):
+              Paste transcript below (format: each line has Transliteration[TAB]English[TAB]Hebrew):
             </p>
             <Textarea
               value={manualTranscript}
               onChange={(e) => setManualTranscript(e.target.value)}
-              placeholder="Shalom lekulam!&#10;Hello everyone!&#10;שָׁלוֹם לְכֻלָּם!&#10;&#10;Hayom nilmad Ivrit.&#10;Today we will learn Hebrew.&#10;הַיּוֹם נִלְמַד עִבְרִית."
+              placeholder="Shalom lekulam!	Hello everyone!	שָׁלוֹם לְכֻלָּם!&#10;Hayom nilmad Ivrit.	Today we will learn Hebrew.	הַיּוֹם נִלְמַד עִבְרִית."
               className="bg-white/5 border-white/20 text-white min-h-[200px] mb-3"
             />
             <div className="flex gap-2">
