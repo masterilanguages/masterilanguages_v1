@@ -809,28 +809,25 @@ Create about 15-20 conversational lines that naturally introduce and use these v
                             <div className="flex items-center gap-4">
                               <span className="text-white/40 text-xs w-12">{item.time}</span>
                               <div>
-                                <p className="text-white/90 text-lg leading-tight" style={{ direction: 'ltr', textAlign: 'left', unicodeBidi: 'plaintext' }}>
-                                  <EditableWord 
-                                    text={item.transliteration} 
-                                    onSave={(newValue) => updateTranscriptLine('transliteration', newValue)}
-                                    className="text-white/90 text-lg"
-                                  />
-                                </p>
-                                <p className="text-white/70 text-base leading-tight" style={{ direction: 'ltr', textAlign: 'left', unicodeBidi: 'plaintext' }}>
-                                  <EditableWord 
-                                    text={item.english} 
-                                    onSave={(newValue) => updateTranscriptLine('english', newValue)}
-                                    className="text-white/70 text-base"
-                                  />
-                                </p>
+                                <EditableWord 
+                                  text={item.transliteration} 
+                                  onSave={(newValue) => updateTranscriptLine('transliteration', newValue)}
+                                  className="text-white/90 text-lg leading-tight block"
+                                  editable={true}
+                                />
+                                <EditableWord 
+                                  text={item.english} 
+                                  onSave={(newValue) => updateTranscriptLine('english', newValue)}
+                                  className="text-white/70 text-base leading-tight block"
+                                  editable={true}
+                                />
                                 <div className="flex items-center gap-2">
-                                  <p className="text-cyan-400 text-2xl font-bold leading-tight" style={{ direction: 'ltr', textAlign: 'left', unicodeBidi: 'plaintext' }}>
-                                    <EditableWord 
-                                      text={item.hebrew} 
-                                      onSave={(newValue) => updateTranscriptLine('hebrew', newValue)}
-                                      className="text-cyan-400 text-2xl font-bold"
-                                    />
-                                  </p>
+                                  <EditableWord 
+                                    text={item.hebrew} 
+                                    onSave={(newValue) => updateTranscriptLine('hebrew', newValue)}
+                                    className="text-cyan-400 text-2xl font-bold leading-tight"
+                                    editable={true}
+                                  />
                                   {currentRating >= 5 && <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />}
                                 </div>
                               </div>
