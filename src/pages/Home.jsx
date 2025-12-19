@@ -594,29 +594,28 @@ export default function Home() {
                   </motion.div>
                 );
               })}
+
+              {newLevel.name !== undefined && (
+                <div className="bg-white/10 rounded-xl p-4 space-y-2">
+                  <Input placeholder="Level name (e.g., Level 4)" value={newLevel.name} onChange={(e) => setNewLevel({...newLevel, name: e.target.value})} className="bg-white/5 border-white/20 text-white" />
+                  <Input placeholder="Subtitle (e.g., Master)" value={newLevel.subtitle} onChange={(e) => setNewLevel({...newLevel, subtitle: e.target.value})} className="bg-white/5 border-white/20 text-white" />
+                  <Input placeholder="Gradient (e.g., from-blue-500 to-indigo-500)" value={newLevel.gradient} onChange={(e) => setNewLevel({...newLevel, gradient: e.target.value})} className="bg-white/5 border-white/20 text-white" />
+                  <div className="flex gap-2">
+                    <Button onClick={() => {
+                      setLevels([...levels, { id: levels.length + 1, name: newLevel.name, subtitle: newLevel.subtitle, icon: Star, gradient: newLevel.gradient, activities: [] }]);
+                      setNewLevel({ name: "", subtitle: "", gradient: "" });
+                      toast.success("Level added!");
+                    }} className="flex-1 bg-green-500 hover:bg-green-600">
+                      Save Level
+                    </Button>
+                    <Button onClick={() => setNewLevel({ name: "", subtitle: "", gradient: "" })} variant="outline" className="border-white/20 text-white">
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           </DragDropContext>
-
-            {newLevel.name !== undefined && (
-              <div className="bg-white/10 rounded-xl p-4 space-y-2">
-                <Input placeholder="Level name (e.g., Level 4)" value={newLevel.name} onChange={(e) => setNewLevel({...newLevel, name: e.target.value})} className="bg-white/5 border-white/20 text-white" />
-                <Input placeholder="Subtitle (e.g., Master)" value={newLevel.subtitle} onChange={(e) => setNewLevel({...newLevel, subtitle: e.target.value})} className="bg-white/5 border-white/20 text-white" />
-                <Input placeholder="Gradient (e.g., from-blue-500 to-indigo-500)" value={newLevel.gradient} onChange={(e) => setNewLevel({...newLevel, gradient: e.target.value})} className="bg-white/5 border-white/20 text-white" />
-                <div className="flex gap-2">
-                  <Button onClick={() => {
-                    setLevels([...levels, { id: levels.length + 1, name: newLevel.name, subtitle: newLevel.subtitle, icon: Star, gradient: newLevel.gradient, activities: [] }]);
-                    setNewLevel({ name: "", subtitle: "", gradient: "" });
-                    toast.success("Level added!");
-                  }} className="flex-1 bg-green-500 hover:bg-green-600">
-                    Save Level
-                  </Button>
-                  <Button onClick={() => setNewLevel({ name: "", subtitle: "", gradient: "" })} variant="outline" className="border-white/20 text-white">
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
         )}
       </div>
 
