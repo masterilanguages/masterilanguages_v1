@@ -56,10 +56,17 @@ const levels = [
       { id: "days", name: "Learn days of the week", duration: "5 minutes", icon: "📅", page: "DaysLesson" },
       { id: "months", name: "Learn months of the year", duration: "5 minutes", icon: "🗓️", page: "MonthsLesson" },
       { id: "blessing", name: "Learn a Jewish blessing in Hebrew", duration: "5 minutes", icon: "✡️", page: "Progress" },
+      { id: "song_level1", name: "Learn a song", duration: "10 minutes", icon: "🎵", page: "Songs", level: 1 },
     ]
   },
-  { id: 2, name: "Level 2", subtitle: "Growing Up", icon: Star, gradient: "from-amber-500 to-orange-500", activities: [] },
-  { id: 3, name: "Level 3", subtitle: "Explorer", icon: Sparkles, gradient: "from-green-500 to-emerald-500", activities: [] },
+  { id: 2, name: "Level 2", subtitle: "Growing Up", icon: Star, gradient: "from-amber-500 to-orange-500", activities: [
+      { id: "song_level2", name: "Learn a song", duration: "10 minutes", icon: "🎵", page: "Songs", level: 2 },
+    ] 
+  },
+  { id: 3, name: "Level 3", subtitle: "Explorer", icon: Sparkles, gradient: "from-green-500 to-emerald-500", activities: [
+      { id: "song_level3", name: "Learn a song", duration: "10 minutes", icon: "🎵", page: "Songs", level: 3 },
+    ] 
+  },
   { id: 4, name: "Level 4", subtitle: "Adventurer", icon: Trophy, gradient: "from-blue-500 to-indigo-500", activities: [] },
   { id: 5, name: "Level 5", subtitle: "Master", icon: Star, gradient: "from-purple-500 to-violet-500", activities: [] },
 ];
@@ -120,6 +127,22 @@ export default function Home() {
   const { data: lessonProgress = [] } = useQuery({
     queryKey: ['lessonProgress'],
     queryFn: () => base44.entities.LessonProgress.list(),
+    staleTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
+
+  const { data: songProgress = [] } = useQuery({
+    queryKey: ['songProgress'],
+    queryFn: () => base44.entities.SongProgress.list(),
+    staleTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
+
+  const { data: songs = [] } = useQuery({
+    queryKey: ['songs'],
+    queryFn: () => base44.entities.Song.list(),
     staleTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
@@ -466,10 +489,21 @@ export default function Home() {
                   </div>
                 )}
                 {selectedLevel.activities
-                  .map((activity) => ({
-                    ...activity,
-                    isCompleted: lessonProgress.find(lp => lp.lesson_name === activity.page && lp.completed)
-                  }))
+                  .map((activity) => {
+                    let isCompleted = false;
+
+                    // Check if it's a song activity
+                    if (activity.id.startsWith('song_')) {
+                      const levelSongs = songs.filter(s => s.level === activity.level);
+                      isCompleted = levelSongs.length > 0 && levelSongs.every(song => 
+                        songProgress.find(sp => sp.song_id === song.id && sp.completed)
+                      );
+                    } else {
+                      isCompleted = lessonProgress.find(lp => lp.lesson_name === activity.page && lp.completed);
+                    }
+
+                    return { ...activity, isCompleted };
+                  })
                   .sort((a, b) => (b.isCompleted ? 1 : 0) - (a.isCompleted ? 1 : 0))
                   .map((activity) => {
 
@@ -557,7 +591,17 @@ export default function Home() {
                             {(provided) => (
                               <div ref={provided.innerRef} {...provided.droppableProps} className="p-3 space-y-2">
                                 {level.activities.map((activity, index) => {
-                                  const isCompleted = lessonProgress.find(lp => lp.lesson_name === activity.page && lp.completed);
+                                  let isCompleted = false;
+
+                                  // Check if it's a song activity
+                                  if (activity.id.startsWith('song_')) {
+                                    const levelSongs = songs.filter(s => s.level === activity.level);
+                                    isCompleted = levelSongs.length > 0 && levelSongs.every(song => 
+                                      songProgress.find(sp => sp.song_id === song.id && sp.completed)
+                                    );
+                                  } else {
+                                    isCompleted = lessonProgress.find(lp => lp.lesson_name === activity.page && lp.completed);
+                                  }
                                   
                                   return (
                                     <Draggable key={`${level.id}-${activity.id}`} draggableId={`${level.id}-${activity.id}`} index={index}>
