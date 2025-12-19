@@ -785,15 +785,21 @@ Create about 15-20 conversational lines that naturally introduce and use these v
                   
                   <div className="space-y-3 max-h-96 overflow-y-auto">
                     {selectedVideo.transcript.map((item, idx) => {
-                      const currentRating = getWordRating(item.hebrew);
-                      const inBackpack = wordRatings.find(w => w.word === item.hebrew);
+                        // Get edited version if it exists
+                        const editedItem = videoEdits[`${selectedVideo.id}-${idx}`] || item;
+                        const currentRating = getWordRating(editedItem.hebrew);
+                        const inBackpack = wordRatings.find(w => w.word === editedItem.hebrew);
 
-                      const updateTranscriptLine = (field, newValue) => {
-                        const updatedTranscript = [...selectedVideo.transcript];
-                        updatedTranscript[idx] = { ...updatedTranscript[idx], [field]: newValue };
-                        setSelectedVideo({ ...selectedVideo, transcript: updatedTranscript });
-                        toast.success("Updated!");
-                      };
+                        const updateTranscriptLine = (field, newValue) => {
+                          setVideoEdits(prev => ({
+                            ...prev,
+                            [`${selectedVideo.id}-${idx}`]: {
+                              ...editedItem,
+                              [field]: newValue
+                            }
+                          }));
+                          toast.success("Updated!");
+                        };
 
                       return (
                         <motion.div
