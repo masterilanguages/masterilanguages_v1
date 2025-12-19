@@ -28,11 +28,23 @@ export default function ClickableWord({
   const [generatedImage, setGeneratedImage] = useState(null);
   const [generatingCustom, setGeneratingCustom] = useState(false);
 
-  const handleClick = () => {
+  const handleClick = (e) => {
+    if (editable && e.ctrlKey) {
+      e.stopPropagation();
+      setIsEditing(true);
+      return;
+    }
     if (onBeforeOpen) {
       onBeforeOpen();
     }
     setOpen(true);
+  };
+
+  const handleSaveEdit = () => {
+    if (onEdit && editValue !== word) {
+      onEdit(editValue);
+    }
+    setIsEditing(false);
   };
 
   const generateSentences = async () => {
