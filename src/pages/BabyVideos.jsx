@@ -818,20 +818,20 @@ Create about 15-20 conversational lines that naturally introduce and use these v
                               <span className="text-white/40 text-xs w-12">{item.time}</span>
                               <div>
                                 <EditableWord 
-                                  text={item.transliteration} 
+                                  text={editedItem.transliteration} 
                                   onSave={(newValue) => updateTranscriptLine('transliteration', newValue)}
                                   className="text-white/90 text-lg leading-tight block"
                                   editable={true}
                                 />
                                 <EditableWord 
-                                  text={item.english} 
+                                  text={editedItem.english} 
                                   onSave={(newValue) => updateTranscriptLine('english', newValue)}
                                   className="text-white/70 text-base leading-tight block"
                                   editable={true}
                                 />
                                 <div className="flex items-center gap-2">
                                   <EditableWord 
-                                    text={item.hebrew} 
+                                    text={editedItem.hebrew} 
                                     onSave={(newValue) => updateTranscriptLine('hebrew', newValue)}
                                     className="text-cyan-400 text-2xl font-bold leading-tight"
                                     editable={true}
