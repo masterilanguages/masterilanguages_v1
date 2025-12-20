@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import GameHeader from "../components/game/GameHeader";
 import VideoTranscript from "../components/video/VideoTranscript";
+import KaraokeTranscript from "../components/transcript/KaraokeTranscript";
 import EditableWord from "../components/learning/EditableWord";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -430,34 +431,65 @@ export default function Songs() {
 
                                 {hasAudio && !hasVideo && (
                                   <div className="bg-white/5 rounded-xl p-4">
-                                    <audio controls className="w-full">
+                                    <audio id={`audio-player-${song.id}`} controls className="w-full">
                                       <source src={song.audio_url} type="audio/mpeg" />
                                       Your browser does not support the audio element.
                                     </audio>
                                   </div>
                                 )}
 
-                                <VideoTranscript
-                                  videoId={song.id}
-                                  videoUrl={song.youtube_url || song.audio_url}
-                                  onPauseVideo={() => {
-                                    if (hasVideo) {
-                                      const iframe = document.getElementById(`youtube-player-${song.id}`);
-                                      if (iframe && iframe.contentWindow) {
-                                        iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+                                {song.transcript && song.transcript.length > 0 && song.transcript[0].start_ms !== undefined ? (
+                                  <div className="mt-4">
+                                    <p className="text-white/60 text-sm mb-3">🎤 Karaoke Lyrics - Click line to jump</p>
+                                    <KaraokeTranscript
+                                      lines={song.transcript.map((line, idx) => ({
+                                        id: `line_${idx}`,
+                                        start_ms: line.start_ms || idx * 5000,
+                                        end_ms: line.end_ms || (idx + 1) * 5000,
+                                        transliteration: line.transliteration,
+                                        english: line.english,
+                                        hebrew: line.hebrew
+                                      }))}
+                                      audioRef={hasAudio && !hasVideo ? { current: document.getElementById(`audio-player-${song.id}`) } : null}
+                                      videoRef={hasVideo ? { current: document.getElementById(`youtube-player-${song.id}`) } : null}
+                                      onLineUpdate={(lineIndex, updatedLine) => {
+                                        const newTranscript = [...song.transcript];
+                                        newTranscript[lineIndex] = {
+                                          ...song.transcript[lineIndex],
+                                          transliteration: updatedLine.transliteration,
+                                          english: updatedLine.english,
+                                          hebrew: updatedLine.hebrew
+                                        };
+                                        updateSongMutation.mutate({ id: song.id, data: { transcript: newTranscript } });
+                                      }}
+                                      onAddToBackpack={(hebrew, transliteration, english) => {
+                                        addWordToBackpack({ hebrew, transliteration, english }, song.id, song.title);
+                                      }}
+                                    />
+                                  </div>
+                                ) : (
+                                  <VideoTranscript
+                                    videoId={song.id}
+                                    videoUrl={song.youtube_url || song.audio_url}
+                                    onPauseVideo={() => {
+                                      if (hasVideo) {
+                                        const iframe = document.getElementById(`youtube-player-${song.id}`);
+                                        if (iframe && iframe.contentWindow) {
+                                          iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+                                        }
                                       }
-                                    }
-                                  }}
-                                  onSeekVideo={(seconds) => {
-                                    if (hasVideo) {
-                                      const iframe = document.getElementById(`youtube-player-${song.id}`);
-                                      if (iframe && iframe.contentWindow) {
-                                        iframe.contentWindow.postMessage(`{"event":"command","func":"seekTo","args":[${seconds}, true]}`, '*');
-                                        iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+                                    }}
+                                    onSeekVideo={(seconds) => {
+                                      if (hasVideo) {
+                                        const iframe = document.getElementById(`youtube-player-${song.id}`);
+                                        if (iframe && iframe.contentWindow) {
+                                          iframe.contentWindow.postMessage(`{"event":"command","func":"seekTo","args":[${seconds}, true]}`, '*');
+                                          iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+                                        }
                                       }
-                                    }
-                                  }}
-                                />
+                                    }}
+                                  />
+                                )}
                               </motion.div>
                             )}
                           </div>
