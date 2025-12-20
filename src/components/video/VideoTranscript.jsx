@@ -366,11 +366,24 @@ Format as array of objects with: transliteration, english, hebrew`,
                     const [transliteration, english, hebrew] = parts;
                     return (
                       <div key={blockIdx} className="group relative p-2 rounded-lg hover:bg-white/5 transition-all flex gap-2">
-                        {onSeekVideo && (
+                        {onSeekVideo && parts.length >= 4 && parts[3] && (
                           <button
-                            onClick={() => onSeekVideo(blockIdx * 3)}
+                            onClick={() => {
+                              const timeStr = parts[3].trim();
+                              let seconds = 0;
+                              
+                              // Parse time format (MM:SS or just seconds)
+                              if (timeStr.includes(':')) {
+                                const [min, sec] = timeStr.split(':').map(Number);
+                                seconds = (min * 60) + sec;
+                              } else {
+                                seconds = parseInt(timeStr);
+                              }
+                              
+                              onSeekVideo(seconds);
+                            }}
                             className="flex-shrink-0 w-8 h-8 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/40 flex items-center justify-center transition-all mt-1"
-                            title="Play from here"
+                            title={`Play from ${parts[3]}`}
                           >
                             <Play className="w-4 h-4 text-cyan-400 fill-cyan-400" />
                           </button>
@@ -383,7 +396,7 @@ Format as array of objects with: transliteration, english, hebrew`,
                         >
                           <Plus className="w-4 h-4 text-amber-400" />
                         </button>
-                        <div className="mb-0.5" dir="rtl">
+                        <div className="mb-0.5" style={{ direction: 'ltr', textAlign: 'left', unicodeBidi: 'plaintext' }}>
                           {transliteration.split(/(\s+)/).map((part, i) => 
                             /\S/.test(part) ? (
                               <VideoTranscriptWord
@@ -402,7 +415,7 @@ Format as array of objects with: transliteration, english, hebrew`,
                             ) : part
                           )}
                         </div>
-                        <div className="mb-1">
+                        <div className="mb-1" style={{ direction: 'ltr', textAlign: 'left', unicodeBidi: 'plaintext' }}>
                           {english.split(/(\s+)/).map((part, i) => 
                             /\S/.test(part) ? (
                               <VideoTranscriptWord
@@ -421,7 +434,7 @@ Format as array of objects with: transliteration, english, hebrew`,
                             ) : part
                           )}
                         </div>
-                        <div>
+                        <div style={{ direction: 'ltr', textAlign: 'left', unicodeBidi: 'plaintext' }}>
                           {hebrew.split(/(\s+)/).map((part, i) => 
                             /\S/.test(part) ? (
                               <VideoTranscriptWord
