@@ -310,7 +310,7 @@ export default function Home() {
   const currentDay = userProfile?.current_day || 1;
   const sortedDays = [...days].sort((a, b) => a.day_number - b.day_number);
 
-  const isDayUnlocked = (dayNum) => dayNum <= currentDay;
+  const isDayUnlocked = (dayNum) => isMasterUser || dayNum <= currentDay;
   const getDayProgress = (dayId) => dayProgress.find(p => p.day_id === dayId);
 
   const handleAddSubsection = (dayId) => {
@@ -488,10 +488,24 @@ export default function Home() {
               )}
             </div>
 
-            {sortedDays.map((day) => {
+            {sortedDays.map((day, idx) => {
               const unlocked = isDayUnlocked(day.day_number);
               const progress = getDayProgress(day.id);
               const isExpanded = expandedDay === day.day_number;
+
+              const gradients = [
+                "from-pink-500 to-rose-500",
+                "from-amber-500 to-orange-500",
+                "from-green-500 to-emerald-500",
+                "from-blue-500 to-indigo-500",
+                "from-purple-500 to-violet-500",
+                "from-cyan-500 to-blue-500",
+                "from-red-500 to-pink-500",
+                "from-yellow-500 to-orange-500",
+                "from-teal-500 to-green-500",
+                "from-indigo-500 to-purple-500",
+              ];
+              const gradient = gradients[idx % gradients.length];
 
               return (
                 <motion.div
@@ -505,26 +519,28 @@ export default function Home() {
                   <button
                     onClick={() => unlocked && setExpandedDay(isExpanded ? null : day.day_number)}
                     disabled={!unlocked}
-                    className="w-full p-6 text-left flex items-center justify-between hover:bg-white/5 transition-all"
+                    className={`w-full bg-gradient-to-r ${gradient} p-4 transition-all`}
                   >
-                    <div className="flex items-center gap-4">
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                        progress?.completed ? 'bg-green-500' : unlocked ? 'bg-cyan-500/20 border-2 border-cyan-500' : 'bg-white/10'
-                      }`}>
-                        {progress?.completed ? (
-                          <Check className="w-6 h-6 text-white" />
-                        ) : !unlocked ? (
-                          <Lock className="w-6 h-6 text-white/40" />
-                        ) : (
-                          <span className="text-white font-bold">{day.day_number}</span>
-                        )}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                          progress?.completed ? 'bg-white/30' : !unlocked ? 'bg-white/10' : 'bg-white/20'
+                        }`}>
+                          {progress?.completed ? (
+                            <Check className="w-6 h-6 text-white" />
+                          ) : !unlocked ? (
+                            <Lock className="w-5 h-5 text-white/60" />
+                          ) : (
+                            <div className="w-3 h-3 rounded-full bg-white"></div>
+                          )}
+                        </div>
+                        <div className="text-left">
+                          <h3 className="text-white font-bold text-xl">{day.title || `Day ${day.day_number}`}</h3>
+                          {day.description && <p className="text-white/80 text-sm">{day.description}</p>}
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="text-white font-bold text-xl">{day.title || `Day ${day.day_number}`}</h3>
-                        {day.description && <p className="text-white/60 text-sm">{day.description}</p>}
-                      </div>
+                      {unlocked && <ChevronDown className={`w-6 h-6 text-white transition-transform ${isExpanded ? 'rotate-180' : ''}`} />}
                     </div>
-                    {unlocked && <ChevronDown className={`w-6 h-6 text-white transition-transform ${isExpanded ? 'rotate-180' : ''}`} />}
                   </button>
 
                   <AnimatePresence>
@@ -561,7 +577,7 @@ export default function Home() {
                                   <span className="text-2xl">{subsection.icon}</span>
                                   <div className="flex-1">
                                     <p className={`text-white font-medium ${isCompleted ? 'line-through opacity-60' : ''}`}>{subsection.name}</p>
-                                    <p className="text-white/60 text-sm">{subsection.duration}</p>
+                                    {subsection.duration && <p className="text-white/60 text-sm">Approx {subsection.duration}</p>}
                                   </div>
                                   {subsection.page && <ChevronRight className="w-5 h-5 text-white/40" />}
                                 </button>
@@ -580,7 +596,7 @@ export default function Home() {
                           {isMasterUser && (
                             <div className="bg-white/10 rounded-xl p-4 space-y-2">
                               <Input placeholder="Subsection name" value={newSubsection.name} onChange={(e) => setNewSubsection({...newSubsection, name: e.target.value})} className="bg-white/5 border-white/20 text-white" />
-                              <Input placeholder="Duration (e.g., 10 minutes)" value={newSubsection.duration} onChange={(e) => setNewSubsection({...newSubsection, duration: e.target.value})} className="bg-white/5 border-white/20 text-white" />
+                              <Input placeholder="Approx duration (e.g., 10 minutes)" value={newSubsection.duration} onChange={(e) => setNewSubsection({...newSubsection, duration: e.target.value})} className="bg-white/5 border-white/20 text-white" />
                               <Input placeholder="Emoji icon" value={newSubsection.icon} onChange={(e) => setNewSubsection({...newSubsection, icon: e.target.value})} className="bg-white/5 border-white/20 text-white" />
                               <Input placeholder="Page name (e.g., BabyVideos)" value={newSubsection.page} onChange={(e) => setNewSubsection({...newSubsection, page: e.target.value})} className="bg-white/5 border-white/20 text-white" />
                               <Button onClick={() => handleAddSubsection(day.id)} className="w-full bg-green-500 hover:bg-green-600">
