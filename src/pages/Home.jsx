@@ -4,10 +4,10 @@ import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingCart, Dumbbell, Church, UtensilsCrossed, Heart, ShoppingBag, BookOpen, Users, Play, Trophy, Sparkles, ArrowRight, Flame, Briefcase, School, Baby, Star, ChevronRight, ChevronDown, X, Home as HomeIcon, Video, Library, Book, Calendar, Check, GripVertical } from "lucide-react";
+import { ShoppingCart, Dumbbell, Church, UtensilsCrossed, Heart, ShoppingBag, BookOpen, Users, Play, Trophy, Sparkles, ArrowRight, Flame, Briefcase, School, Baby, Star, ChevronRight, ChevronDown, X, Home as HomeIcon, Video, Library, Book, Calendar, Check, Lock, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import GameHeader from "../components/game/GameHeader";
@@ -55,35 +55,7 @@ export default function Home() {
   const [timerSpeed, setTimerSpeed] = useState(1);
   const [currentUser, setCurrentUser] = useState(null);
   const [showExtras, setShowExtras] = useState(false);
-  const [levels, setLevels] = useState([
-    { 
-      id: 1, 
-      name: "Level 1", 
-      subtitle: "Baby Steps",
-      icon: Baby, 
-      gradient: "from-pink-500 to-rose-500",
-      activities: [
-        { id: "youtube", name: "Watch Youtube video", duration: "1 hour", icon: "📺", page: "BabyVideos" },
-        { id: "baby_words", name: "Help baby learn 50 first words and learn sentences", duration: "10 minutes", icon: "👶", page: "BabyVideos" },
-        { id: "colors", name: "Learn the colors", duration: "5 minutes", icon: "🎨", page: "ColorsLesson" },
-        { id: "body_parts", name: "Learn body parts", duration: "5 minutes", icon: "🦵", page: "BodyPartsLesson" },
-        { id: "days", name: "Learn days of the week", duration: "5 minutes", icon: "📅", page: "DaysLesson" },
-        { id: "months", name: "Learn months of the year", duration: "5 minutes", icon: "🗓️", page: "MonthsLesson" },
-        { id: "blessing", name: "Learn a Jewish blessing in Hebrew", duration: "5 minutes", icon: "✡️", page: "Progress" },
-        { id: "song_level1", name: "Learn a song", duration: "10 minutes", icon: "🎵", page: "Songs", level: 1 },
-      ]
-    },
-    { id: 2, name: "Level 2", subtitle: "Growing Up", icon: Star, gradient: "from-amber-500 to-orange-500", activities: [
-        { id: "song_level2", name: "Learn a song", duration: "10 minutes", icon: "🎵", page: "Songs", level: 2 },
-      ] 
-    },
-    { id: 3, name: "Level 3", subtitle: "Explorer", icon: Sparkles, gradient: "from-green-500 to-emerald-500", activities: [
-        { id: "song_level3", name: "Learn a song", duration: "10 minutes", icon: "🎵", page: "Songs", level: 3 },
-      ] 
-    },
-    { id: 4, name: "Level 4", subtitle: "Adventurer", icon: Trophy, gradient: "from-blue-500 to-indigo-500", activities: [] },
-    { id: 5, name: "Level 5", subtitle: "Master", icon: Star, gradient: "from-purple-500 to-violet-500", activities: [] },
-  ]);
+
 
   // Get current user
   useEffect(() => {
@@ -156,6 +128,23 @@ export default function Home() {
     refetchOnMount: false,
   });
 
+  const { data: days = [] } = useQuery({
+    queryKey: ['days', userProfile?.language],
+    queryFn: () => base44.entities.Day.filter({ language: userProfile?.language || 'hebrew' }),
+    enabled: !!userProfile,
+    staleTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
+
+  const { data: dayProgress = [] } = useQuery({
+    queryKey: ['dayProgress'],
+    queryFn: () => base44.entities.DayProgress.list(),
+    staleTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
+
   const updateCoinsMutation = useMutation({
     mutationFn: (data) => base44.entities.UserCoins.update(userCoins?.id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['userCoins'] }),
@@ -166,16 +155,37 @@ export default function Home() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['userProfile'] }),
   });
 
-  const toggleActivityMutation = useMutation({
-    mutationFn: async ({ activityId }) => {
-      const existing = todoProgress.find(p => p.todo_item_id === activityId);
-      if (existing) {
-        await base44.entities.TodoProgress.update(existing.id, { completed: !existing.completed });
+  const toggleSubsectionMutation = useMutation({
+    mutationFn: async ({ dayId, subsectionId, dayNumber }) => {
+      const progress = dayProgress.find(p => p.day_id === dayId) || { day_id: dayId, day_number: dayNumber, subsections_completed: [] };
+      const isCompleted = progress.subsections_completed?.includes(subsectionId);
+      const newCompleted = isCompleted 
+        ? progress.subsections_completed.filter(id => id !== subsectionId)
+        : [...(progress.subsections_completed || []), subsectionId];
+      
+      if (progress.id) {
+        await base44.entities.DayProgress.update(progress.id, { subsections_completed: newCompleted });
       } else {
-        await base44.entities.TodoProgress.create({ todo_item_id: activityId, completed: true });
+        await base44.entities.DayProgress.create({ day_id: dayId, day_number: dayNumber, subsections_completed: newCompleted });
       }
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['todoProgress'] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['dayProgress'] }),
+  });
+
+  const updateDayMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.Day.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['days'] });
+      toast.success("Day updated!");
+    },
+  });
+
+  const createDayMutation = useMutation({
+    mutationFn: (data) => base44.entities.Day.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['days'] });
+      toast.success("Day created!");
+    },
   });
 
   const deleteProfileMutation = useMutation({
@@ -294,31 +304,29 @@ export default function Home() {
 
 
 
-  const [editingLevel, setEditingLevel] = useState(null);
-  const [editingActivity, setEditingActivity] = useState(null);
-  const [newActivity, setNewActivity] = useState({ name: "", duration: "", icon: "", page: "" });
-  const [newLevel, setNewLevel] = useState({ name: "", subtitle: "", gradient: "" });
-  const [expandedLevel, setExpandedLevel] = useState(1);
+  const [expandedDay, setExpandedDay] = useState(1);
+  const [newSubsection, setNewSubsection] = useState({ name: "", duration: "", icon: "", page: "" });
 
-  const isActivityCompleted = (activityId) => {
-    return todoProgress.some(p => p.todo_item_id === activityId && p.completed);
+  const currentDay = userProfile?.current_day || 1;
+  const sortedDays = [...days].sort((a, b) => a.day_number - b.day_number);
+
+  const isDayUnlocked = (dayNum) => dayNum <= currentDay;
+  const getDayProgress = (dayId) => dayProgress.find(p => p.day_id === dayId);
+
+  const handleAddSubsection = (dayId) => {
+    const day = days.find(d => d.id === dayId);
+    const updatedSubsections = [...(day.subsections || []), { 
+      id: Date.now().toString(), 
+      ...newSubsection 
+    }];
+    updateDayMutation.mutate({ id: dayId, data: { subsections: updatedSubsections } });
+    setNewSubsection({ name: "", duration: "", icon: "", page: "" });
   };
 
-  const handleDragEnd = (result) => {
-    if (!result.destination) return;
-    
-    const levelId = parseInt(result.source.droppableId.replace('level-', ''));
-    const levelIdx = levels.findIndex(l => l.id === levelId);
-    
-    if (levelIdx === -1) return;
-    
-    const activities = Array.from(levels[levelIdx].activities);
-    const [reorderedItem] = activities.splice(result.source.index, 1);
-    activities.splice(result.destination.index, 0, reorderedItem);
-    
-    const newLevels = [...levels];
-    newLevels[levelIdx].activities = activities;
-    setLevels(newLevels);
+  const handleDeleteSubsection = (dayId, subsectionId) => {
+    const day = days.find(d => d.id === dayId);
+    const updatedSubsections = day.subsections.filter(s => s.id !== subsectionId);
+    updateDayMutation.mutate({ id: dayId, data: { subsections: updatedSubsections } });
   };
 
   const currentAge = userProfile?.age_level || 3;
@@ -459,163 +467,135 @@ export default function Home() {
             />
           </motion.div>
         ) : (
-          <DragDropContext onDragEnd={handleDragEnd}>
-            <div className="space-y-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold text-white">Learning Activities</h2>
-                {isMasterUser && (
-                  <Button onClick={() => setNewLevel({ name: "", subtitle: "", gradient: "from-blue-500 to-indigo-500" })} className="bg-green-500 hover:bg-green-600">
-                    + Add Level
-                  </Button>
-                )}
+          <div className="space-y-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-2xl font-bold text-white">Days</h2>
+                <p className="text-white/60">Day {currentDay} of 100</p>
               </div>
-
-              {levels.map((level, levelIdx) => {
-                const LevelIcon = level.icon;
-                const isExpanded = expandedLevel === level.id;
-                return (
-                  <motion.div
-                    key={level.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 overflow-hidden"
-                  >
-                    <button
-                      onClick={() => setExpandedLevel(isExpanded ? null : level.id)}
-                      className={`w-full bg-gradient-to-r ${level.gradient} p-4 transition-all`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <LevelIcon className="w-8 h-8 text-white" />
-                          <div className="text-left">
-                            <h3 className="text-white font-bold text-xl">{level.name}</h3>
-                            <p className="text-white/80 text-sm">{level.subtitle}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {isMasterUser && isExpanded && (
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              className="border-white/30 text-white hover:bg-white/10" 
-                              onClick={(e) => { e.stopPropagation(); setNewActivity({ ...newActivity, levelId: level.id }); }}
-                            >
-                              + Activity
-                            </Button>
-                          )}
-                          <ChevronDown className={`w-6 h-6 text-white transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
-                        </div>
-                      </div>
-                    </button>
-                    
-                    <AnimatePresence>
-                      {isExpanded && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.2 }}
-                          className="overflow-hidden"
-                        >
-                          <Droppable droppableId={`level-${level.id}`}>
-                            {(provided) => (
-                              <div 
-                                ref={provided.innerRef} 
-                                {...provided.droppableProps}
-                                className="p-4 space-y-2"
-                              >
-                                {level.activities.map((activity, actIdx) => {
-                                  const completed = isActivityCompleted(activity.id);
-                                  return (
-                                    <Draggable key={activity.id} draggableId={activity.id} index={actIdx}>
-                                      {(provided, snapshot) => (
-                                        <div
-                                          ref={provided.innerRef}
-                                          {...provided.draggableProps}
-                                          className={`bg-gradient-to-br from-white/5 to-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-4 flex items-center gap-3 transition-all ${
-                                            completed ? 'from-green-500/10 to-green-600/10 border-green-500/30' : ''
-                                          } ${snapshot.isDragging ? 'shadow-2xl scale-105' : ''}`}
-                                        >
-                                          <div {...provided.dragHandleProps} className="cursor-grab active:cursor-grabbing">
-                                            <GripVertical className="w-5 h-5 text-white/40" />
-                                          </div>
-                                          <button
-                                            onClick={() => toggleActivityMutation.mutate({ activityId: activity.id })}
-                                            className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center transition-all ${
-                                              completed ? 'bg-green-500 border-green-500 shadow-lg' : 'border-white/40 hover:border-cyan-400 hover:bg-cyan-500/10'
-                                            }`}
-                                          >
-                                            {completed && <Check className="w-5 h-5 text-white" />}
-                                          </button>
-                                          <button
-                                            onClick={() => navigate(createPageUrl(activity.page))}
-                                            className="flex-1 flex items-center gap-3 text-left"
-                                          >
-                                            <span className="text-2xl">{activity.icon}</span>
-                                            <div className="flex-1">
-                                              <p className={`text-white font-medium text-lg ${completed ? 'line-through opacity-60' : ''}`}>{activity.name}</p>
-                                              <p className="text-white/60 text-sm">{activity.duration}</p>
-                                            </div>
-                                            <ChevronRight className="w-5 h-5 text-white/40" />
-                                          </button>
-                                        </div>
-                                      )}
-                                    </Draggable>
-                                  );
-                                })}
-                                {provided.placeholder}
-                                {newActivity.levelId === level.id && (
-                                  <div className="bg-white/10 rounded-xl p-4 space-y-2">
-                                    <Input placeholder="Activity name" value={newActivity.name} onChange={(e) => setNewActivity({...newActivity, name: e.target.value})} className="bg-white/5 border-white/20 text-white" />
-                                    <Input placeholder="Duration (e.g., 10 minutes)" value={newActivity.duration} onChange={(e) => setNewActivity({...newActivity, duration: e.target.value})} className="bg-white/5 border-white/20 text-white" />
-                                    <Input placeholder="Emoji icon" value={newActivity.icon} onChange={(e) => setNewActivity({...newActivity, icon: e.target.value})} className="bg-white/5 border-white/20 text-white" />
-                                    <Input placeholder="Page name (e.g., BabyVideos)" value={newActivity.page} onChange={(e) => setNewActivity({...newActivity, page: e.target.value})} className="bg-white/5 border-white/20 text-white" />
-                                    <div className="flex gap-2">
-                                      <Button onClick={() => {
-                                        levels[levelIdx].activities.push({ id: Date.now().toString(), ...newActivity, levelId: undefined });
-                                        setLevels([...levels]);
-                                        setNewActivity({ name: "", duration: "", icon: "", page: "" });
-                                        toast.success("Activity added!");
-                                      }} className="flex-1 bg-green-500 hover:bg-green-600">
-                                        Save
-                                      </Button>
-                                      <Button onClick={() => setNewActivity({ name: "", duration: "", icon: "", page: "" })} variant="outline" className="border-white/20 text-white">
-                                        Cancel
-                                      </Button>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </Droppable>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </motion.div>
-                );
-              })}
-
-              {newLevel.name !== undefined && (
-                <div className="bg-white/10 rounded-xl p-4 space-y-2">
-                  <Input placeholder="Level name (e.g., Level 4)" value={newLevel.name} onChange={(e) => setNewLevel({...newLevel, name: e.target.value})} className="bg-white/5 border-white/20 text-white" />
-                  <Input placeholder="Subtitle (e.g., Master)" value={newLevel.subtitle} onChange={(e) => setNewLevel({...newLevel, subtitle: e.target.value})} className="bg-white/5 border-white/20 text-white" />
-                  <Input placeholder="Gradient (e.g., from-blue-500 to-indigo-500)" value={newLevel.gradient} onChange={(e) => setNewLevel({...newLevel, gradient: e.target.value})} className="bg-white/5 border-white/20 text-white" />
-                  <div className="flex gap-2">
-                    <Button onClick={() => {
-                      setLevels([...levels, { id: levels.length + 1, name: newLevel.name, subtitle: newLevel.subtitle, icon: Star, gradient: newLevel.gradient, activities: [] }]);
-                      setNewLevel({ name: "", subtitle: "", gradient: "" });
-                      toast.success("Level added!");
-                    }} className="flex-1 bg-green-500 hover:bg-green-600">
-                      Save Level
-                    </Button>
-                    <Button onClick={() => setNewLevel({ name: "", subtitle: "", gradient: "" })} variant="outline" className="border-white/20 text-white">
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
+              {isMasterUser && (
+                <Button onClick={() => {
+                  const nextDayNum = Math.max(...days.map(d => d.day_number), 0) + 1;
+                  createDayMutation.mutate({
+                    day_number: nextDayNum,
+                    language: userProfile?.language || 'hebrew',
+                    title: `Day ${nextDayNum}`,
+                    subsections: []
+                  });
+                }} className="bg-green-500 hover:bg-green-600">
+                  + Add Day
+                </Button>
               )}
             </div>
-          </DragDropContext>
+
+            {sortedDays.map((day) => {
+              const unlocked = isDayUnlocked(day.day_number);
+              const progress = getDayProgress(day.id);
+              const isExpanded = expandedDay === day.day_number;
+
+              return (
+                <motion.div
+                  key={day.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 overflow-hidden ${
+                    !unlocked ? 'opacity-50' : ''
+                  }`}
+                >
+                  <button
+                    onClick={() => unlocked && setExpandedDay(isExpanded ? null : day.day_number)}
+                    disabled={!unlocked}
+                    className="w-full p-6 text-left flex items-center justify-between hover:bg-white/5 transition-all"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                        progress?.completed ? 'bg-green-500' : unlocked ? 'bg-cyan-500/20 border-2 border-cyan-500' : 'bg-white/10'
+                      }`}>
+                        {progress?.completed ? (
+                          <Check className="w-6 h-6 text-white" />
+                        ) : !unlocked ? (
+                          <Lock className="w-6 h-6 text-white/40" />
+                        ) : (
+                          <span className="text-white font-bold">{day.day_number}</span>
+                        )}
+                      </div>
+                      <div>
+                        <h3 className="text-white font-bold text-xl">{day.title || `Day ${day.day_number}`}</h3>
+                        {day.description && <p className="text-white/60 text-sm">{day.description}</p>}
+                      </div>
+                    </div>
+                    {unlocked && <ChevronDown className={`w-6 h-6 text-white transition-transform ${isExpanded ? 'rotate-180' : ''}`} />}
+                  </button>
+
+                  <AnimatePresence>
+                    {isExpanded && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="p-6 pt-0 space-y-3">
+                          {day.subsections?.map((subsection) => {
+                            const isCompleted = progress?.subsections_completed?.includes(subsection.id);
+                            return (
+                              <div
+                                key={subsection.id}
+                                className={`bg-gradient-to-br from-white/5 to-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-4 flex items-center gap-3 ${
+                                  isCompleted ? 'from-green-500/10 to-green-600/10 border-green-500/30' : ''
+                                }`}
+                              >
+                                <button
+                                  onClick={() => toggleSubsectionMutation.mutate({ dayId: day.id, subsectionId: subsection.id, dayNumber: day.day_number })}
+                                  className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center transition-all ${
+                                    isCompleted ? 'bg-green-500 border-green-500' : 'border-white/40 hover:border-cyan-400'
+                                  }`}
+                                >
+                                  {isCompleted && <Check className="w-5 h-5 text-white" />}
+                                </button>
+                                <button
+                                  onClick={() => subsection.page && navigate(createPageUrl(subsection.page))}
+                                  className="flex-1 flex items-center gap-3 text-left"
+                                >
+                                  <span className="text-2xl">{subsection.icon}</span>
+                                  <div className="flex-1">
+                                    <p className={`text-white font-medium ${isCompleted ? 'line-through opacity-60' : ''}`}>{subsection.name}</p>
+                                    <p className="text-white/60 text-sm">{subsection.duration}</p>
+                                  </div>
+                                  {subsection.page && <ChevronRight className="w-5 h-5 text-white/40" />}
+                                </button>
+                                {isMasterUser && (
+                                  <button
+                                    onClick={() => handleDeleteSubsection(day.id, subsection.id)}
+                                    className="text-red-400 hover:text-red-300"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                )}
+                              </div>
+                            );
+                          })}
+
+                          {isMasterUser && (
+                            <div className="bg-white/10 rounded-xl p-4 space-y-2">
+                              <Input placeholder="Subsection name" value={newSubsection.name} onChange={(e) => setNewSubsection({...newSubsection, name: e.target.value})} className="bg-white/5 border-white/20 text-white" />
+                              <Input placeholder="Duration (e.g., 10 minutes)" value={newSubsection.duration} onChange={(e) => setNewSubsection({...newSubsection, duration: e.target.value})} className="bg-white/5 border-white/20 text-white" />
+                              <Input placeholder="Emoji icon" value={newSubsection.icon} onChange={(e) => setNewSubsection({...newSubsection, icon: e.target.value})} className="bg-white/5 border-white/20 text-white" />
+                              <Input placeholder="Page name (e.g., BabyVideos)" value={newSubsection.page} onChange={(e) => setNewSubsection({...newSubsection, page: e.target.value})} className="bg-white/5 border-white/20 text-white" />
+                              <Button onClick={() => handleAddSubsection(day.id)} className="w-full bg-green-500 hover:bg-green-600">
+                                <Plus className="w-4 h-4 mr-2" /> Add Subsection
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              );
+            })}
+          </div>
         )}
       </div>
 
