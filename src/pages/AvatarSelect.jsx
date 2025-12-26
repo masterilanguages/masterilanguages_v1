@@ -19,6 +19,7 @@ const avatars = [
   { id: "cat", type: "cat", emoji: "🐱", label: "Cat" },
   { id: "boy", type: "boy", emoji: "👦", label: "Boy" },
   { id: "girl", type: "girl", emoji: "👧", label: "Girl" },
+  { id: "custom", type: "custom", emoji: "✨", label: "Create Your Own" },
 ];
 
 const nameExamples = {
@@ -73,6 +74,11 @@ const customizationOptions = {
     traits: ["Curly hair", "Straight hair", "Short hair", "Long hair", "Big eyes", "Soft eyes"],
     accessories: ["Hoodie", "Sporty jacket", "Cozy sweater", "Small backpack", "Coin pouch"],
     vibes: ["Friendly", "Focused", "Confident", "Determined"]
+  },
+  custom: {
+    traits: ["Big eyes", "Small eyes", "Round face", "Long body", "Short body", "Fluffy"],
+    accessories: ["Hat", "Scarf", "Backpack", "Bow", "Cape", "Coin pouch"],
+    vibes: ["Cheerful", "Focused", "Adventurous", "Calm", "Energetic"]
   }
 };
 
@@ -254,7 +260,11 @@ Examples: Penny, Bucks, Clever, NestEgg, Lucky, Earnie, Value`,
                     onClick={() => handleAvatarSelect(avatar)}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="relative p-8 rounded-3xl bg-white/10 backdrop-blur-sm border-2 border-white/20 hover:border-white/40 transition-all"
+                    className={`relative p-8 rounded-3xl backdrop-blur-sm border-2 transition-all ${
+                      avatar.id === 'custom' 
+                        ? 'bg-gradient-to-br from-yellow-400/20 to-orange-500/20 border-yellow-400/40 hover:border-yellow-400/60'
+                        : 'bg-white/10 border-white/20 hover:border-white/40'
+                    }`}
                   >
                     <motion.div
                       animate={{ scale: [1, 1.05, 1] }}
@@ -268,8 +278,6 @@ Examples: Penny, Bucks, Clever, NestEgg, Lucky, Earnie, Value`,
                     </p>
                   </motion.button>
                 ))}
-
-
               </div>
 
               <p className="text-center text-white/60 text-sm">
