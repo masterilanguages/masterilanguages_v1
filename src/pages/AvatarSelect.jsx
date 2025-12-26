@@ -227,7 +227,7 @@ Examples: Penny, Bucks, Clever, NestEgg, Lucky, Earnie, Value`,
               </div>
 
               <div className="bg-white/10 backdrop-blur-sm rounded-3xl p-6 mb-6">
-                <p className="text-white/80 text-sm mb-3">Example prompts (tap to use):</p>
+                <p className="text-white/80 text-sm mb-3">Choose your player:</p>
                 <div className="space-y-2 mb-4">
                   {descriptionExamples.map((example, idx) => (
                     <button
@@ -243,7 +243,7 @@ Examples: Penny, Bucks, Clever, NestEgg, Lucky, Earnie, Value`,
                 <Textarea
                   value={customDescription}
                   onChange={(e) => setCustomDescription(e.target.value)}
-                  placeholder="Or write your own..."
+                  placeholder="Describe your own character"
                   className="bg-white/5 border-white/20 text-white placeholder:text-white/40 min-h-[100px]"
                 />
               </div>
@@ -252,7 +252,7 @@ Examples: Penny, Bucks, Clever, NestEgg, Lucky, Earnie, Value`,
                 <Button
                   onClick={() => setStep(1)}
                   variant="outline"
-                  className="flex-1 py-6 text-lg border-white/30 text-white hover:bg-white/10"
+                  className="flex-1 py-6 text-lg border-white/30 bg-white/10 text-black font-semibold hover:bg-white/20"
                 >
                   Back
                 </Button>
@@ -309,7 +309,7 @@ Examples: Penny, Bucks, Clever, NestEgg, Lucky, Earnie, Value`,
                 <Button
                   onClick={() => setStep(2)}
                   variant="outline"
-                  className="flex-1 py-6 text-lg border-white/30 text-white hover:bg-white/10"
+                  className="flex-1 py-6 text-lg border-white/30 bg-white/10 text-black font-semibold hover:bg-white/20"
                 >
                   Edit description
                 </Button>
@@ -378,7 +378,7 @@ Examples: Penny, Bucks, Clever, NestEgg, Lucky, Earnie, Value`,
                 <Button
                   onClick={() => setStep(selectedAvatar?.id === "custom" ? 3 : 1)}
                   variant="outline"
-                  className="flex-1 py-6 text-lg border-white/30 text-white hover:bg-white/10"
+                  className="flex-1 py-6 text-lg border-white/30 bg-white/10 text-black font-semibold hover:bg-white/20"
                 >
                   Back
                 </Button>
