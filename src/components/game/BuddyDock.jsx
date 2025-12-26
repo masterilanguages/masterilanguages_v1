@@ -129,7 +129,7 @@ export default function BuddyDock({ profile, coins, backpackCount }) {
           onClick={() => setShowBuddyPanel(!showBuddyPanel)}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="relative bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-xl border-2 border-white/30 rounded-full shadow-2xl hover:border-white/50 transition-all w-14 h-14 md:w-16 md:h-16 flex items-center justify-center"
+          className="relative bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-xl border-2 border-white/30 rounded-2xl shadow-2xl hover:border-white/50 transition-all p-2 md:p-3 flex items-end justify-center overflow-visible"
         >
           <motion.div
             animate={isBlinking ? { scaleY: 0.1 } : { scaleY: 1, y: [0, -2, 0] }}
