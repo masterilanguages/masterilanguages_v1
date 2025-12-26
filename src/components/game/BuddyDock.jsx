@@ -102,6 +102,18 @@ export default function BuddyDock({ profile, coins, backpackCount }) {
   const avatarEmoji = avatarEmojis[profile.avatar_type] || avatarEmojis.custom;
   const growthEmoji = growthStageEmojis[profile.growth_stage] || "🌱";
   const message = emotionMessages[profile.emotion_state] || emotionMessages.neutral;
+  
+  // Use starter avatar for custom avatars that are resolving
+  const showStarterAvatar = profile.avatar_type === "custom" && profile.avatar_status === "resolving";
+  const avatarDisplay = showStarterAvatar ? (
+    <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+      <span className="text-base md:text-lg">😊</span>
+    </div>
+  ) : profile.avatar_image_url && profile.avatar_type === "custom" ? (
+    <img src={profile.avatar_image_url} alt={profile.avatar_name} className="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover" />
+  ) : (
+    <span className="text-3xl md:text-4xl">{avatarEmoji}</span>
+  );
 
   return (
     <>
@@ -117,9 +129,8 @@ export default function BuddyDock({ profile, coins, backpackCount }) {
           <motion.div
             animate={isBlinking ? { scaleY: 0.1 } : { scaleY: 1, y: [0, -2, 0] }}
             transition={isBlinking ? { duration: 0.1 } : { duration: 2, repeat: Infinity }}
-            className="text-3xl md:text-4xl"
           >
-            {avatarEmoji}
+            {avatarDisplay}
           </motion.div>
 
           {/* Growth badge */}
@@ -150,7 +161,17 @@ export default function BuddyDock({ profile, coins, backpackCount }) {
           >
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <span className="text-3xl">{avatarEmoji}</span>
+                <div className="w-10 h-10 flex items-center justify-center">
+                  {showStarterAvatar ? (
+                    <div className="w-full h-full bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                      <span className="text-xl">😊</span>
+                    </div>
+                  ) : profile.avatar_image_url && profile.avatar_type === "custom" ? (
+                    <img src={profile.avatar_image_url} alt={profile.avatar_name} className="w-full h-full rounded-full object-cover" />
+                  ) : (
+                    <span className="text-3xl">{avatarEmoji}</span>
+                  )}
+                </div>
                 <div>
                   <p className="font-bold text-white">{profile.avatar_name}</p>
                   <p className="text-xs text-white/60 capitalize">{profile.growth_stage}</p>

@@ -109,7 +109,24 @@ Examples: Penny, Bucks, Clever, NestEgg, Lucky, Earnie, Value`,
       setSuggestedNames(nameExamples.custom);
     }
     setGeneratingNames(false);
-    setStep(3); // Go to preview for custom avatars
+    setStep(3);
+    
+    // Start generating avatar in background
+    generateAvatarImage();
+  };
+
+  const generateAvatarImage = async () => {
+    try {
+      const result = await base44.integrations.Core.GenerateImage({
+        prompt: `Create a cute, friendly character avatar with a big head and small body. ${customDescription}. The character should have a warm, approachable expression with visible eyes. Style: cartoon, kawaii, simple shapes, soft colors. The character should look motivating and encouraging for a learning app.`
+      });
+      
+      if (result?.url) {
+        setSelectedAvatar({ ...selectedAvatar, imageUrl: result.url, status: "ready" });
+      }
+    } catch (e) {
+      console.error("Avatar generation failed:", e);
+    }
   };
 
   // Blink animation for preview
@@ -134,6 +151,8 @@ Examples: Penny, Bucks, Clever, NestEgg, Lucky, Earnie, Value`,
       avatar_type: selectedAvatar.type,
       avatar_name: avatarName,
       avatar_description: selectedAvatar.id === "custom" ? customDescription : null,
+      avatar_image_url: selectedAvatar.imageUrl || null,
+      avatar_status: selectedAvatar.imageUrl ? "ready" : (selectedAvatar.id === "custom" ? "resolving" : "ready"),
       growth_stage: "starter",
       age_level: 3,
       xp: 0,
@@ -284,20 +303,39 @@ Examples: Penny, Bucks, Clever, NestEgg, Lucky, Earnie, Value`,
               </div>
 
               <div className="bg-white/10 backdrop-blur-sm rounded-3xl p-8 mb-6 flex flex-col items-center">
-                {/* Avatar Preview */}
-                <motion.div
-                  animate={{ 
-                    scale: previewBlink ? [1, 1, 1] : [1, 1.02, 1],
-                    scaleY: previewBlink ? 0.1 : 1
-                  }}
-                  transition={{ 
-                    scale: { duration: 2, repeat: Infinity },
-                    scaleY: { duration: 0.1 }
-                  }}
-                  className="text-9xl mb-6"
-                >
-                  ✨
-                </motion.div>
+                {/* Starter Avatar */}
+                <div className="relative mb-6">
+                  {selectedAvatar?.imageUrl ? (
+                    <motion.img
+                      key="generated"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.3 }}
+                      src={selectedAvatar.imageUrl}
+                      alt="Your avatar"
+                      className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover"
+                    />
+                  ) : (
+                    <motion.div
+                      key="starter"
+                      animate={{ 
+                        scale: previewBlink ? [1, 1, 1] : [1, 1.02, 1],
+                        scaleY: previewBlink ? 0.1 : 1
+                      }}
+                      transition={{ 
+                        scale: { duration: 2, repeat: Infinity },
+                        scaleY: { duration: 0.1 }
+                      }}
+                      className="w-32 h-32 md:w-40 md:h-40 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-2xl"
+                    >
+                      <div className="text-6xl">😊</div>
+                    </motion.div>
+                  )}
+                </div>
+
+                <p className="text-cyan-400 text-sm mb-4 font-medium">
+                  {selectedAvatar?.imageUrl ? "Your avatar is ready!" : "Building your avatar..."}
+                </p>
 
                 <div className="bg-white/5 rounded-xl p-4 max-w-md">
                   <p className="text-white/60 text-sm mb-1">Description:</p>
