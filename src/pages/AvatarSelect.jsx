@@ -2,26 +2,52 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { Sparkles } from "lucide-react";
 
-const babyAvatars = [
-  { id: "turtle_baby", type: "turtle", emoji: "🐢", label: "Baby Turtle" },
-  { id: "rabbit_baby", type: "rabbit", emoji: "🐰", label: "Baby Rabbit" },
-  { id: "boy_baby", type: "boy", emoji: "👶", label: "Baby Boy" },
-  { id: "girl_baby", type: "girl", emoji: "👧", label: "Baby Girl" },
-  { id: "bear_baby", type: "bear", emoji: "🐻", label: "Baby Bear" },
-  { id: "fox_baby", type: "fox", emoji: "🦊", label: "Baby Fox" },
-  { id: "cat_baby", type: "cat", emoji: "🐱", label: "Baby Cat" },
-  { id: "chick_baby", type: "chick", emoji: "🐥", label: "Baby Chick" },
+const avatars = [
+  { id: "turtle", type: "turtle", emoji: "🐢", label: "Turtle" },
+  { id: "rabbit", type: "rabbit", emoji: "🐰", label: "Rabbit" },
+  { id: "fox", type: "fox", emoji: "🦊", label: "Fox" },
+  { id: "bear", type: "bear", emoji: "🐻", label: "Bear" },
+  { id: "bird", type: "bird", emoji: "🐦", label: "Bird" },
+  { id: "cat", type: "cat", emoji: "🐱", label: "Cat" },
+  { id: "boy", type: "boy", emoji: "👦", label: "Boy" },
+  { id: "girl", type: "girl", emoji: "👧", label: "Girl" },
+];
+
+const nameExamples = {
+  turtle: ["Penny", "Saver", "SlowPay"],
+  rabbit: ["Bucks", "QuickCoin", "HopPay"],
+  fox: ["Clever", "Minty", "Coinny"],
+  bear: ["Goldie", "Banky", "BigEarn"],
+  bird: ["NestEgg", "FlyPay", "Chirpy"],
+  cat: ["Lucky", "Whisker", "Coinny"],
+  boy: ["Lucky", "PayDay", "Buddy"],
+  girl: ["Lucky", "PayDay", "Buddy"],
+  custom: ["Earnie", "Value", "Return"],
+};
+
+const descriptionExamples = [
+  "A calm turtle that earns rewards by showing up every day",
+  "A playful fox that's clever and loves earning back",
+  "A friendly creature that grows with discipline and consistency",
 ];
 
 export default function AvatarSelect() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [step, setStep] = useState(1); // 1: avatar, 2: description (custom), 3: name
   const [selectedAvatar, setSelectedAvatar] = useState(null);
+  const [customDescription, setCustomDescription] = useState("");
+  const [avatarName, setAvatarName] = useState("");
+  const [suggestedNames, setSuggestedNames] = useState([]);
+  const [generatingNames, setGeneratingNames] = useState(false);
 
   const createProfileMutation = useMutation({
     mutationFn: async (profileData) => {
@@ -38,14 +64,65 @@ export default function AvatarSelect() {
     },
   });
 
-  const handleContinue = () => {
-    if (!selectedAvatar) return;
+  const handleAvatarSelect = async (avatar) => {
+    setSelectedAvatar(avatar);
+    
+    if (avatar.id === "custom") {
+      setStep(2);
+    } else {
+      setStep(3);
+      // Generate name suggestions
+      const examples = nameExamples[avatar.type] || nameExamples.custom;
+      setSuggestedNames(examples);
+    }
+  };
+
+  const handleCustomDescriptionDone = async () => {
+    if (!customDescription.trim()) {
+      toast.error("Please describe your avatar");
+      return;
+    }
+    
+    setGeneratingNames(true);
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Based on this avatar description: "${customDescription}"
+        
+Generate 3 short, fun, motivational names (max 8 characters each) that relate to earning, saving, or progress. 
+Names should be positive, easy to pronounce in English/Spanish, and have money/reward energy.
+
+Examples: Penny, Bucks, Clever, NestEgg, Lucky, Earnie, Value`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            names: {
+              type: "array",
+              items: { type: "string" }
+            }
+          }
+        }
+      });
+      
+      setSuggestedNames(result.names || nameExamples.custom);
+    } catch (e) {
+      setSuggestedNames(nameExamples.custom);
+    }
+    setGeneratingNames(false);
+    setStep(3);
+  };
+
+  const handleFinish = () => {
+    if (!avatarName.trim()) {
+      toast.error("Please name your avatar");
+      return;
+    }
     
     createProfileMutation.mutate({
       avatar_id: selectedAvatar.id,
       avatar_type: selectedAvatar.type,
-      avatar_name: selectedAvatar.label,
-      growth_stage: "baby",
+      avatar_name: avatarName,
+      avatar_description: selectedAvatar.id === "custom" ? customDescription : null,
+      growth_stage: "starter",
       age_level: 3,
       xp: 0,
       daily_streak: 0,
@@ -59,64 +136,195 @@ export default function AvatarSelect() {
         animate={{ opacity: 1, y: 0 }}
         className="max-w-2xl w-full"
       >
-        <div className="text-center mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">
-            Choose your baby buddy
-          </h1>
-          <p className="text-xl text-white/90">
-            They grow as you show up 🌱
-          </p>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-          {babyAvatars.map((avatar) => (
-            <motion.button
-              key={avatar.id}
-              onClick={() => setSelectedAvatar(avatar)}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className={`relative p-8 rounded-3xl bg-white/10 backdrop-blur-sm border-2 transition-all ${
-                selectedAvatar?.id === avatar.id
-                  ? 'border-yellow-300 shadow-[0_0_30px_rgba(253,224,71,0.6)]'
-                  : 'border-white/20 hover:border-white/40'
-              }`}
+        <AnimatePresence mode="wait">
+          {step === 1 && (
+            <motion.div
+              key="step1"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
             >
-              {selectedAvatar?.id === avatar.id && (
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="absolute -top-2 -right-2 w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center"
+              <div className="text-center mb-8">
+                <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">
+                  Choose your avatar
+                </h1>
+                <p className="text-xl text-white/90">
+                  They grow as you show up 🌱
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+                {avatars.map((avatar) => (
+                  <motion.button
+                    key={avatar.id}
+                    onClick={() => handleAvatarSelect(avatar)}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="relative p-8 rounded-3xl bg-white/10 backdrop-blur-sm border-2 border-white/20 hover:border-white/40 transition-all"
+                  >
+                    <motion.div
+                      animate={{ scale: [1, 1.05, 1] }}
+                      transition={{ duration: 3, repeat: Infinity }}
+                      className="text-7xl mb-3"
+                    >
+                      {avatar.emoji}
+                    </motion.div>
+                    <p className="text-white font-semibold text-lg">
+                      {avatar.label}
+                    </p>
+                  </motion.button>
+                ))}
+
+                {/* Create Your Own */}
+                <motion.button
+                  onClick={() => handleAvatarSelect({ id: "custom", type: "custom", emoji: "✨", label: "Create Your Own" })}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="relative p-8 rounded-3xl bg-gradient-to-br from-yellow-400/20 to-orange-500/20 backdrop-blur-sm border-2 border-yellow-400/40 hover:border-yellow-400/60 transition-all"
                 >
-                  <span className="text-lg">✓</span>
-                </motion.div>
-              )}
-              
-              <motion.div
-                animate={selectedAvatar?.id === avatar.id ? { scale: [1, 1.1, 1] } : {}}
-                transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 1 }}
-                className="text-7xl mb-3"
-              >
-                {avatar.emoji}
-              </motion.div>
-              
-              <p className="text-white font-semibold text-lg">
-                {avatar.label}
+                  <Sparkles className="w-16 h-16 mx-auto mb-3 text-yellow-300" />
+                  <p className="text-white font-semibold text-lg">
+                    Create Your Own
+                  </p>
+                  <p className="text-white/70 text-xs mt-1">
+                    Design a cute character
+                  </p>
+                </motion.button>
+              </div>
+
+              <p className="text-center text-white/60 text-sm">
+                Don't worry — you can change this later.
               </p>
-            </motion.button>
-          ))}
-        </div>
+            </motion.div>
+          )}
 
-        <Button
-          onClick={handleContinue}
-          disabled={!selectedAvatar || createProfileMutation.isPending}
-          className="w-full py-6 text-xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {createProfileMutation.isPending ? "Starting..." : "Let's go!"}
-        </Button>
+          {step === 2 && (
+            <motion.div
+              key="step2"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+            >
+              <div className="text-center mb-8">
+                <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">
+                  Describe your avatar
+                </h1>
+                <p className="text-xl text-white/90">
+                  Keep it cute, friendly, and motivating.
+                </p>
+              </div>
 
-        <p className="text-center text-white/60 text-sm mt-4">
-          Don't worry — you can change this later.
-        </p>
+              <div className="bg-white/10 backdrop-blur-sm rounded-3xl p-6 mb-6">
+                <p className="text-white/80 text-sm mb-3">Example prompts (tap to use):</p>
+                <div className="space-y-2 mb-4">
+                  {descriptionExamples.map((example, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setCustomDescription(example)}
+                      className="w-full text-left p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/20 text-white text-sm transition-all"
+                    >
+                      "{example}"
+                    </button>
+                  ))}
+                </div>
+
+                <Textarea
+                  value={customDescription}
+                  onChange={(e) => setCustomDescription(e.target.value)}
+                  placeholder="Or write your own..."
+                  className="bg-white/5 border-white/20 text-white placeholder:text-white/40 min-h-[100px]"
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => setStep(1)}
+                  variant="outline"
+                  className="flex-1 py-6 text-lg border-white/30 text-white hover:bg-white/10"
+                >
+                  Back
+                </Button>
+                <Button
+                  onClick={handleCustomDescriptionDone}
+                  disabled={!customDescription.trim() || generatingNames}
+                  className="flex-1 py-6 text-lg font-bold bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white shadow-lg disabled:opacity-50"
+                >
+                  {generatingNames ? "Generating..." : "Next"}
+                </Button>
+              </div>
+            </motion.div>
+          )}
+
+          {step === 3 && (
+            <motion.div
+              key="step3"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+            >
+              <div className="text-center mb-8">
+                <motion.div
+                  animate={{ scale: [1, 1.1, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="text-8xl mb-4"
+                >
+                  {selectedAvatar?.emoji}
+                </motion.div>
+                <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">
+                  Name your avatar
+                </h1>
+                <p className="text-xl text-white/90">
+                  Pick a fun name that reminds you to earn it back 💰
+                </p>
+              </div>
+
+              <div className="bg-white/10 backdrop-blur-sm rounded-3xl p-6 mb-6">
+                <p className="text-white/80 text-sm mb-3">Suggested names:</p>
+                <div className="grid grid-cols-3 gap-2 mb-4">
+                  {suggestedNames.map((name, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setAvatarName(name)}
+                      className={`p-3 rounded-xl border transition-all ${
+                        avatarName === name
+                          ? 'bg-yellow-400/30 border-yellow-400 text-white font-bold'
+                          : 'bg-white/5 border-white/20 text-white hover:bg-white/10'
+                      }`}
+                    >
+                      {name}
+                    </button>
+                  ))}
+                </div>
+
+                <p className="text-white/60 text-sm mb-2">Or type your own:</p>
+                <Input
+                  value={avatarName}
+                  onChange={(e) => setAvatarName(e.target.value)}
+                  placeholder="Max 8 characters"
+                  maxLength={8}
+                  className="bg-white/5 border-white/20 text-white placeholder:text-white/40 text-lg"
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => setStep(selectedAvatar?.id === "custom" ? 2 : 1)}
+                  variant="outline"
+                  className="flex-1 py-6 text-lg border-white/30 text-white hover:bg-white/10"
+                >
+                  Back
+                </Button>
+                <Button
+                  onClick={handleFinish}
+                  disabled={!avatarName.trim() || createProfileMutation.isPending}
+                  className="flex-1 py-6 text-lg font-bold bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white shadow-lg disabled:opacity-50"
+                >
+                  {createProfileMutation.isPending ? "Starting..." : "Let's go!"}
+                </Button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
     </div>
   );
