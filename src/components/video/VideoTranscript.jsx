@@ -441,12 +441,12 @@ Format as array of objects with: transliteration, english, hebrew`,
   }, [activeSegmentIdx]);
 
   const deleteTranscript = async () => {
-    if (!confirm('Delete this transcript? This cannot be undone.')) return;
+    if (!confirm('Delete transcript?\n\nThis will remove the current transcript from this video.')) return;
     
     try {
       await base44.entities.Video.update(video.id, {
         transcript_text: null,
-        transcript_status: null,
+        transcript_status: "deleted",
         transcript_source: null,
         language: null
       });
@@ -454,11 +454,12 @@ Format as array of objects with: transliteration, english, hebrew`,
       setVideo(prev => ({
         ...prev,
         transcript_text: null,
-        transcript_status: null,
+        transcript_status: "deleted",
         transcript_source: null,
         language: null
       }));
 
+      setExpanded(true);
       toast.success("Transcript deleted");
     } catch (e) {
       toast.error("Failed to delete transcript");
@@ -493,14 +494,14 @@ Format as array of objects with: transliteration, english, hebrew`,
           )}
         </Button>
         
-        {video?.transcript_status === "failed" && (
+        {(video?.transcript_status === "failed" || video?.transcript_status === "deleted") && (
           <Button
-            onClick={() => setShowHebrewInput(!showHebrewInput)}
+            onClick={() => setShowManualInput(true)}
             variant="outline"
             className="bg-green-500/20 border-green-500/50 text-green-400 hover:bg-green-500/30"
           >
-            <Sparkles className="w-4 h-4 mr-2" />
-            Paste Hebrew
+            <Plus className="w-4 h-4 mr-2" />
+            Add New Transcript
           </Button>
         )}
       </div>
@@ -673,6 +674,24 @@ Format as array of objects with: transliteration, english, hebrew`,
           >
             <p className="text-red-400 text-sm">Transcript unavailable for this video.</p>
             <p className="text-white/40 text-xs mt-1">This video doesn't have captions enabled.</p>
+          </motion.div>
+        )}
+
+        {expanded && video?.transcript_status === "deleted" && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="mt-3 bg-white/5 border border-white/10 rounded-xl p-6 text-center"
+          >
+            <p className="text-white/60 text-sm mb-3">No transcript added yet.</p>
+            <Button
+              onClick={() => setShowManualInput(true)}
+              className="bg-green-500/20 text-green-400 hover:bg-green-500/30 border-green-500/50"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add New Transcript
+            </Button>
           </motion.div>
         )}
 
