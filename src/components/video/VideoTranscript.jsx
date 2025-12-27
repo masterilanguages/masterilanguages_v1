@@ -547,9 +547,14 @@ Format as array of objects with: transliteration, english, hebrew`,
                   
                   // If we have exactly 3 parts, treat as Translit/English/Hebrew
                   if (parts.length >= 3) {
-                    const [transliteration, english, hebrew] = parts;
+                    const transliteration = (parts[0] || '').trim();
+                    const english = (parts[1] || '').trim();
+                    const hebrew = (parts[2] || '').trim();
                     const isActive = activeSegmentIdx === blockIdx;
                     const hasTimestamp = parts.length >= 4 && parts[3];
+                    
+                    // Skip if all fields are empty
+                    if (!transliteration && !english && !hebrew) return null;
                     
                     return (
                       <div 
@@ -586,63 +591,69 @@ Format as array of objects with: transliteration, english, hebrew`,
                         >
                           <Plus className="w-4 h-4 text-amber-400" />
                         </button>
-                        <div className="mb-0.5" style={{ direction: 'ltr', textAlign: 'left', unicodeBidi: 'bidi-override' }}>
-                          {transliteration.split(/(\s+)/).map((part, i) => 
-                            /\S/.test(part) ? (
-                              <VideoTranscriptWord
-                                key={i}
-                                word={part}
-                                hebrew={hebrew}
-                                transliteration={transliteration}
-                                english={english}
-                                onEdit={(newWord) => {
-                                  const newText = transliteration.split(/(\s+)/).map((p, idx) => idx === i ? newWord : p).join('');
-                                  updateTranscriptLine(blockIdx, 'transliteration', newText);
-                                }}
-                                onAddToBackpack={addSentenceToBackpack}
-                                className="text-white/90 text-lg leading-tight"
-                              />
-                            ) : part
-                          )}
-                        </div>
-                        <div className="mb-1" style={{ direction: 'ltr', textAlign: 'left', unicodeBidi: 'bidi-override' }}>
-                          {english.split(/(\s+)/).map((part, i) => 
-                            /\S/.test(part) ? (
-                              <VideoTranscriptWord
-                                key={i}
-                                word={part}
-                                hebrew={hebrew}
-                                transliteration={transliteration}
-                                english={english}
-                                onEdit={(newWord) => {
-                                  const newText = english.split(/(\s+)/).map((p, idx) => idx === i ? newWord : p).join('');
-                                  updateTranscriptLine(blockIdx, 'english', newText);
-                                }}
-                                onAddToBackpack={addSentenceToBackpack}
-                                className="text-white/70 text-base leading-tight"
-                              />
-                            ) : part
-                          )}
-                        </div>
-                        <div style={{ direction: 'ltr', textAlign: 'left', unicodeBidi: 'bidi-override' }}>
-                          {hebrew.split(/(\s+)/).map((part, i) => 
-                            /\S/.test(part) ? (
-                              <VideoTranscriptWord
-                                key={i}
-                                word={part}
-                                hebrew={hebrew}
-                                transliteration={transliteration}
-                                english={english}
-                                onEdit={(newWord) => {
-                                  const newText = hebrew.split(/(\s+)/).map((p, idx) => idx === i ? newWord : p).join('');
-                                  updateTranscriptLine(blockIdx, 'hebrew', newText);
-                                }}
-                                onAddToBackpack={addSentenceToBackpack}
-                                className="text-cyan-400 text-xl font-bold leading-tight"
-                              />
-                            ) : part
-                          )}
-                        </div>
+                        {transliteration && (
+                          <div className="mb-0.5" style={{ direction: 'ltr', textAlign: 'left', unicodeBidi: 'bidi-override' }}>
+                            {transliteration.split(/(\s+)/).map((part, i) => 
+                              /\S/.test(part) ? (
+                                <VideoTranscriptWord
+                                  key={i}
+                                  word={part}
+                                  hebrew={hebrew}
+                                  transliteration={transliteration}
+                                  english={english}
+                                  onEdit={(newWord) => {
+                                    const newText = transliteration.split(/(\s+)/).map((p, idx) => idx === i ? newWord : p).join('');
+                                    updateTranscriptLine(blockIdx, 'transliteration', newText);
+                                  }}
+                                  onAddToBackpack={addSentenceToBackpack}
+                                  className="text-white/90 text-lg leading-tight"
+                                />
+                              ) : part
+                            )}
+                          </div>
+                        )}
+                        {english && (
+                          <div className="mb-1" style={{ direction: 'ltr', textAlign: 'left', unicodeBidi: 'bidi-override' }}>
+                            {english.split(/(\s+)/).map((part, i) => 
+                              /\S/.test(part) ? (
+                                <VideoTranscriptWord
+                                  key={i}
+                                  word={part}
+                                  hebrew={hebrew}
+                                  transliteration={transliteration}
+                                  english={english}
+                                  onEdit={(newWord) => {
+                                    const newText = english.split(/(\s+)/).map((p, idx) => idx === i ? newWord : p).join('');
+                                    updateTranscriptLine(blockIdx, 'english', newText);
+                                  }}
+                                  onAddToBackpack={addSentenceToBackpack}
+                                  className="text-white/70 text-base leading-tight"
+                                />
+                              ) : part
+                            )}
+                          </div>
+                        )}
+                        {hebrew && (
+                          <div style={{ direction: 'ltr', textAlign: 'left', unicodeBidi: 'bidi-override' }}>
+                            {hebrew.split(/(\s+)/).map((part, i) => 
+                              /\S/.test(part) ? (
+                                <VideoTranscriptWord
+                                  key={i}
+                                  word={part}
+                                  hebrew={hebrew}
+                                  transliteration={transliteration}
+                                  english={english}
+                                  onEdit={(newWord) => {
+                                    const newText = hebrew.split(/(\s+)/).map((p, idx) => idx === i ? newWord : p).join('');
+                                    updateTranscriptLine(blockIdx, 'hebrew', newText);
+                                  }}
+                                  onAddToBackpack={addSentenceToBackpack}
+                                  className="text-cyan-400 text-xl font-bold leading-tight"
+                                />
+                              ) : part
+                            )}
+                          </div>
+                        )}
                         </div>
                         </div>
                     );
