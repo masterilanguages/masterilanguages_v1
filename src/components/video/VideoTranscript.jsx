@@ -790,24 +790,35 @@ Format as array of objects with: transliteration, english, hebrew`,
                         ) : (
                           <>
                             {transliteration && (
-                              <div style={{ direction: 'ltr', textAlign: 'left', unicodeBidi: 'bidi-override' }}>
-                                {transliteration.split(/(\s+)/).map((part, i) => 
-                                  /\S/.test(part) ? (
-                                    <VideoTranscriptWord
-                                      key={i}
-                                      word={part}
-                                      hebrew={hebrew}
-                                      transliteration={transliteration}
-                                      english={english}
-                                      onEdit={(newWord) => {
-                                        const newText = transliteration.split(/(\s+)/).map((p, idx) => idx === i ? newWord : p).join('');
-                                        updateTranscriptLine(blockIdx, 'transliteration', newText);
-                                      }}
-                                      onAddToBackpack={addSentenceToBackpack}
-                                      className="text-white/90 text-sm leading-tight"
-                                    />
-                                  ) : part
-                                )}
+                              <div style={{ direction: 'ltr', textAlign: 'left', unicodeBidi: 'bidi-override' }} className="flex items-start gap-1 flex-wrap">
+                                {transliteration.split(/(\s+)/).map((part, i, arr) => {
+                                  const isLastWord = i === arr.length - 1 || (i === arr.length - 2 && /^\s+$/.test(arr[arr.length - 1]));
+                                  return /\S/.test(part) ? (
+                                    <span key={i} className="inline-flex items-center gap-1">
+                                      <VideoTranscriptWord
+                                        word={part}
+                                        hebrew={hebrew}
+                                        transliteration={transliteration}
+                                        english={english}
+                                        onEdit={(newWord) => {
+                                          const newText = transliteration.split(/(\s+)/).map((p, idx) => idx === i ? newWord : p).join('');
+                                          updateTranscriptLine(blockIdx, 'transliteration', newText);
+                                        }}
+                                        onAddToBackpack={addSentenceToBackpack}
+                                        className="text-white/90 text-sm leading-tight"
+                                      />
+                                      {isLastWord && (
+                                        <button
+                                          onClick={() => startEditingLine(blockIdx, transliteration, english, hebrew)}
+                                          className="w-5 h-5 rounded bg-blue-500/20 hover:bg-blue-500/30 flex items-center justify-center ml-1"
+                                          title="Edit sentence"
+                                        >
+                                          <Pencil className="w-3 h-3 text-blue-400" />
+                                        </button>
+                                      )}
+                                    </span>
+                                  ) : part;
+                                })}
                               </div>
                             )}
                             {english && (
@@ -832,35 +843,24 @@ Format as array of objects with: transliteration, english, hebrew`,
                               </div>
                             )}
                             {hebrew && (
-                              <div style={{ direction: 'ltr', textAlign: 'left', unicodeBidi: 'bidi-override' }} className="flex items-start gap-1 flex-wrap">
-                                {hebrew.split(/(\s+)/).map((part, i, arr) => {
-                                  const isLastWord = i === arr.length - 1 || (i === arr.length - 2 && /^\s+$/.test(arr[arr.length - 1]));
-                                  return /\S/.test(part) ? (
-                                    <span key={i} className="inline-flex items-center gap-1">
-                                      <VideoTranscriptWord
-                                        word={part}
-                                        hebrew={hebrew}
-                                        transliteration={transliteration}
-                                        english={english}
-                                        onEdit={(newWord) => {
-                                          const newText = hebrew.split(/(\s+)/).map((p, idx) => idx === i ? newWord : p).join('');
-                                          updateTranscriptLine(blockIdx, 'hebrew', newText);
-                                        }}
-                                        onAddToBackpack={addSentenceToBackpack}
-                                        className="text-cyan-400 text-sm font-bold leading-tight"
-                                      />
-                                      {isLastWord && (
-                                        <button
-                                          onClick={() => startEditingLine(blockIdx, transliteration, english, hebrew)}
-                                          className="opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded bg-blue-500/20 hover:bg-blue-500/30 flex items-center justify-center ml-1"
-                                          title="Edit sentence"
-                                        >
-                                          <Pencil className="w-3 h-3 text-blue-400" />
-                                        </button>
-                                      )}
-                                    </span>
-                                  ) : part;
-                                })}
+                              <div style={{ direction: 'ltr', textAlign: 'left', unicodeBidi: 'bidi-override' }}>
+                                {hebrew.split(/(\s+)/).map((part, i) => 
+                                  /\S/.test(part) ? (
+                                    <VideoTranscriptWord
+                                      key={i}
+                                      word={part}
+                                      hebrew={hebrew}
+                                      transliteration={transliteration}
+                                      english={english}
+                                      onEdit={(newWord) => {
+                                        const newText = hebrew.split(/(\s+)/).map((p, idx) => idx === i ? newWord : p).join('');
+                                        updateTranscriptLine(blockIdx, 'hebrew', newText);
+                                      }}
+                                      onAddToBackpack={addSentenceToBackpack}
+                                      className="text-cyan-400 text-sm font-bold leading-tight"
+                                    />
+                                  ) : part
+                                )}
                               </div>
                             )}
                           </>
