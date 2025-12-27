@@ -1,12 +1,73 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Flame, BookOpen } from "lucide-react";
+import { Flame, BookOpen, Clock, LogOut } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }) {
+  const queryClient = useQueryClient();
+  const [timeRemaining, setTimeRemaining] = useState(0);
   const xpToNextLevel = 1000;
   const xpProgress = ((profile?.xp || 0) % xpToNextLevel) / xpToNextLevel * 100;
+
+  const updateProfileMutation = useMutation({
+    mutationFn: (data) => base44.entities.UserProfile.update(profile?.id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['userProfile'] }),
+  });
+
+  // Calculate time remaining
+  useEffect(() => {
+    if (!profile?.session_start || !profile?.session_duration) {
+      setTimeRemaining(0);
+      return;
+    }
+
+    const updateTimer = () => {
+      const startTime = new Date(profile.session_start).getTime();
+      const durationMs = profile.session_duration * 60 * 1000;
+      const endTime = startTime + durationMs;
+      const now = Date.now();
+      const remaining = Math.max(0, Math.floor((endTime - now) / 1000));
+      
+      setTimeRemaining(remaining);
+      
+      if (remaining === 0 && profile.session_start) {
+        toast.info("Session time expired!");
+      }
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [profile?.session_start, profile?.session_duration]);
+
+  const startSession = (minutes) => {
+    updateProfileMutation.mutate({
+      session_start: new Date().toISOString(),
+      session_duration: minutes
+    });
+    toast.success(`${minutes} min session started!`);
+  };
+
+  const endSession = () => {
+    updateProfileMutation.mutate({
+      session_start: null,
+      session_duration: null
+    });
+    toast.success("Session ended");
+  };
+
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const sessionActive = profile?.session_start && profile?.session_duration;
 
   return (
     <div className="bg-gradient-to-r from-slate-900/95 via-purple-900/95 to-slate-900/95 backdrop-blur-xl border-b border-white/10 px-4 py-3">
@@ -47,6 +108,55 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
             </div>
             </div>
             </div>
+
+        {/* Session Timer */}
+        <div className="flex items-center gap-2">
+          {sessionActive ? (
+            <div className="flex items-center gap-2">
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                className={`flex items-center gap-2 px-3 py-2 rounded-xl border ${
+                  timeRemaining < 300 ? 'bg-red-500/20 border-red-500/50' : 'bg-cyan-500/20 border-cyan-500/50'
+                }`}
+              >
+                <Clock className={`w-5 h-5 ${timeRemaining < 300 ? 'text-red-400' : 'text-cyan-400'}`} />
+                <span className={`font-bold ${timeRemaining < 300 ? 'text-red-400' : 'text-cyan-400'}`}>
+                  {formatTime(timeRemaining)}
+                </span>
+              </motion.div>
+              <Button
+                onClick={endSession}
+                variant="outline"
+                size="sm"
+                className="bg-red-500/20 border-red-500/50 text-red-400 hover:bg-red-500/30"
+              >
+                <LogOut className="w-4 h-4 mr-1" />
+                Exit
+              </Button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <Button
+                onClick={() => startSession(30)}
+                variant="outline"
+                size="sm"
+                className="bg-cyan-500/20 border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/30"
+              >
+                <Clock className="w-4 h-4 mr-1" />
+                30m
+              </Button>
+              <Button
+                onClick={() => startSession(60)}
+                variant="outline"
+                size="sm"
+                className="bg-cyan-500/20 border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/30"
+              >
+                <Clock className="w-4 h-4 mr-1" />
+                1hr
+              </Button>
+            </div>
+          )}
+        </div>
 
         {/* Stats */}
         <div className="flex items-center gap-4">
