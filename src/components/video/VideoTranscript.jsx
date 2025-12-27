@@ -494,6 +494,8 @@ Format as array of objects with: transliteration, english, hebrew`,
                   if (parts.length >= 3) {
                     const [transliteration, english, hebrew] = parts;
                     const isActive = activeSegmentIdx === blockIdx;
+                    const hasTimestamp = parts.length >= 4 && parts[3];
+                    
                     return (
                       <div 
                         key={blockIdx} 
@@ -502,9 +504,12 @@ Format as array of objects with: transliteration, english, hebrew`,
                           isActive ? 'bg-yellow-400/20 border-l-4 border-yellow-500 pl-3' : 'hover:bg-white/5'
                         }`}
                       >
-                        {onSeekVideo && parts.length >= 4 && parts[3] && (
+                        {onSeekVideo && hasTimestamp && (
                           <button
-                            onClick={() => handlePlaySegment(blockIdx, parts[3].trim())}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handlePlaySegment(blockIdx, parts[3].trim());
+                            }}
                             className={`flex-shrink-0 w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center transition-all mt-0.5 ${
                               isActive 
                                 ? 'bg-yellow-500/60 hover:bg-yellow-500/80' 
