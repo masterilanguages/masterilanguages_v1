@@ -536,6 +536,8 @@ export default function Home() {
               const unlocked = isDayUnlocked(day.day_number);
               const progress = getDayProgress(day.id);
               const isExpanded = expandedDay === day.day_number;
+              const allCompleted = day.subsections?.length > 0 && 
+                day.subsections.every(task => progress?.subsections_completed?.includes(task.id));
 
               const gradients = [
                 "from-pink-500 to-rose-500",
@@ -567,17 +569,17 @@ export default function Home() {
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                          progress?.completed ? 'bg-white/30' : !unlocked ? 'bg-white/10' : 'bg-white/20'
-                        }`}>
-                          {progress?.completed ? (
-                            <Check className="w-6 h-6 text-white" />
-                          ) : !unlocked ? (
-                            <Lock className="w-5 h-5 text-white/60" />
-                          ) : (
-                            <div className="w-3 h-3 rounded-full bg-white"></div>
-                          )}
-                        </div>
+                        {(allCompleted || !unlocked) && (
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                            allCompleted ? 'bg-green-500/30' : 'bg-white/10'
+                          }`}>
+                            {allCompleted ? (
+                              <Check className="w-6 h-6 text-white" />
+                            ) : (
+                              <Lock className="w-5 h-5 text-white/60" />
+                            )}
+                          </div>
+                        )}
                         <div className="text-left">
                           <h3 className="text-white font-bold text-xl">{day.title || `Day ${day.day_number}`}</h3>
                           {day.description && <p className="text-white/80 text-sm">{day.description}</p>}
