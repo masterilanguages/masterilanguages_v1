@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, ChevronUp, Loader2, Edit, Plus, Play, Sparkles, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Loader2, Edit, Plus, Play, Sparkles, Trash2, Pencil, Check, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,6 +23,8 @@ export default function VideoTranscript({ videoId, videoUrl, onPauseVideo, onSee
   const [generatingTranslations, setGeneratingTranslations] = useState(false);
   const [activeSegmentIdx, setActiveSegmentIdx] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [editingLineIdx, setEditingLineIdx] = useState(null);
+  const [editValues, setEditValues] = useState({ transliteration: '', english: '', hebrew: '' });
   const [currentUser, setCurrentUser] = useState(null);
   const activeSegmentRef = useRef(null);
   const containerRef = useRef(null);
@@ -405,6 +407,40 @@ Format as array of objects with: transliteration, english, hebrew`,
     }
   };
 
+  const startEditingLine = (idx, transliteration, english, hebrew) => {
+    setEditingLineIdx(idx);
+    setEditValues({ transliteration, english, hebrew });
+  };
+
+  const saveLineEdit = async (blockIdx) => {
+    const lines = video.transcript_text.split('\n').filter(l => l.trim());
+    const parts = lines[blockIdx].split('\t');
+    
+    // Preserve timestamp if exists
+    const newLine = parts.length >= 4 
+      ? `${editValues.transliteration}\t${editValues.english}\t${editValues.hebrew}\t${parts[3]}`
+      : `${editValues.transliteration}\t${editValues.english}\t${editValues.hebrew}`;
+    
+    lines[blockIdx] = newLine;
+    const newTranscript = lines.join('\n');
+    
+    try {
+      await base44.entities.Video.update(video.id, {
+        transcript_text: newTranscript
+      });
+      setVideo(prev => ({ ...prev, transcript_text: newTranscript }));
+      setEditingLineIdx(null);
+      toast.success("Sentence updated!");
+    } catch (e) {
+      toast.error("Failed to update");
+    }
+  };
+
+  const cancelEdit = () => {
+    setEditingLineIdx(null);
+    setEditValues({ transliteration: '', english: '', hebrew: '' });
+  };
+
   const addSentenceToBackpack = (hebrew, transliteration, english) => {
     addToBackpackMutation.mutate({
       word: hebrew,
@@ -602,13 +638,63 @@ Format as array of objects with: transliteration, english, hebrew`,
                           </button>
                         )}
                         <div className="flex-1 relative">
-                        <button
-                          onClick={() => addSentenceToBackpack(hebrew, transliteration, english)}
-                          className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity w-7 h-7 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 flex items-center justify-center"
-                          title="Add to backpack"
-                        >
-                          <Plus className="w-4 h-4 text-amber-400" />
-                        </button>
+                        <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                          <button
+                            onClick={() => startEditingLine(blockIdx, transliteration, english, hebrew)}
+                            className="w-7 h-7 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 flex items-center justify-center"
+                            title="Edit sentence"
+                          >
+                            <Pencil className="w-3 h-3 text-blue-400" />
+                          </button>
+                          <button
+                            onClick={() => addSentenceToBackpack(hebrew, transliteration, english)}
+                            className="w-7 h-7 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 flex items-center justify-center"
+                            title="Add to backpack"
+                          >
+                            <Plus className="w-4 h-4 text-amber-400" />
+                          </button>
+                        </div>
+                        {editingLineIdx === blockIdx ? (
+                          <div className="space-y-2 pr-16">
+                            <input
+                              type="text"
+                              value={editValues.transliteration}
+                              onChange={(e) => setEditValues({...editValues, transliteration: e.target.value})}
+                              className="w-full px-2 py-1 bg-white/10 border border-white/20 rounded text-white/90 text-lg"
+                              placeholder="Transliteration"
+                            />
+                            <input
+                              type="text"
+                              value={editValues.english}
+                              onChange={(e) => setEditValues({...editValues, english: e.target.value})}
+                              className="w-full px-2 py-1 bg-white/10 border border-white/20 rounded text-white/70 text-base"
+                              placeholder="English"
+                            />
+                            <input
+                              type="text"
+                              value={editValues.hebrew}
+                              onChange={(e) => setEditValues({...editValues, hebrew: e.target.value})}
+                              className="w-full px-2 py-1 bg-white/10 border border-white/20 rounded text-cyan-400 text-xl font-bold"
+                              placeholder="Hebrew"
+                              dir="rtl"
+                            />
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => saveLineEdit(blockIdx)}
+                                className="px-3 py-1 bg-green-500/20 hover:bg-green-500/30 border border-green-500/50 rounded text-green-400 text-sm flex items-center gap-1"
+                              >
+                                <Check className="w-3 h-3" /> Save
+                              </button>
+                              <button
+                                onClick={cancelEdit}
+                                className="px-3 py-1 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 rounded text-red-400 text-sm flex items-center gap-1"
+                              >
+                                <X className="w-3 h-3" /> Cancel
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
                         {transliteration && (
                           <div className="mb-0.5" style={{ direction: 'ltr', textAlign: 'left', unicodeBidi: 'bidi-override' }}>
                             {transliteration.split(/(\s+)/).map((part, i) => 
