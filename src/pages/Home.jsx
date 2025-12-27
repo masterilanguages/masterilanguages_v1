@@ -569,19 +569,23 @@ export default function Home() {
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        {(allCompleted || !unlocked) && (
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                            allCompleted ? 'bg-green-500' : 'bg-white/10'
-                          }`}>
-                            {allCompleted ? (
-                              <Check className="w-6 h-6 text-white" />
-                            ) : (
-                              <Lock className="w-5 h-5 text-white/60" />
-                            )}
+                        {!unlocked && (
+                          <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/10">
+                            <Lock className="w-5 h-5 text-white/60" />
                           </div>
                         )}
-                        <div className="text-left">
-                          <h3 className="text-white font-bold text-xl">{day.title || `Day ${day.day_number}`}</h3>
+                        <div className="text-left flex-1">
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-white font-bold text-xl">{day.title || `Day ${day.day_number}`}</h3>
+                            {allCompleted && (
+                              <>
+                                <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+                                  <Check className="w-4 h-4 text-white" />
+                                </div>
+                                <span className="text-green-400 font-medium text-sm">Completed 🔥</span>
+                              </>
+                            )}
+                          </div>
                           {day.description && <p className="text-white/80 text-sm">{day.description}</p>}
                         </div>
                         </div>
