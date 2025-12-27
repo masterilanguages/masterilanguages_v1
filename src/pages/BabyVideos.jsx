@@ -1443,8 +1443,9 @@ Create about 15-20 conversational lines that naturally introduce and use these v
         </DialogContent>
       </Dialog>
 
-      {/* Translator Widget */}
-      <TranslatorWidget />
+        {/* Translator Widget */}
+        <TranslatorWidget />
       </div>
-      );
-      }
+    </div>
+  );
+}
