@@ -584,7 +584,7 @@ Format as array of objects with: transliteration, english, hebrew`,
                 )}
               </div>
             </div>
-            <div className="space-y-6">
+            <div className="space-y-2">
               {(() => {
                 // Parse transcript: each line has tab-separated transliteration, english, hebrew
                 const lines = video.transcript_text.split('\n').filter(l => l.trim());
@@ -731,7 +731,7 @@ Format as array of objects with: transliteration, english, hebrew`,
                                         updateTranscriptLine(blockIdx, 'english', newText);
                                       }}
                                       onAddToBackpack={addSentenceToBackpack}
-                                      className="text-white/70 text-xs leading-tight"
+                                      className="text-white/70 text-sm leading-tight"
                                     />
                                   ) : part
                                 )}
@@ -752,7 +752,7 @@ Format as array of objects with: transliteration, english, hebrew`,
                                         updateTranscriptLine(blockIdx, 'hebrew', newText);
                                       }}
                                       onAddToBackpack={addSentenceToBackpack}
-                                      className="text-cyan-400 text-base font-bold leading-tight"
+                                      className="text-cyan-400 text-sm font-bold leading-tight"
                                     />
                                   ) : part
                                 )}
