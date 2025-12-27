@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, ChevronUp, Loader2, Edit, Plus, Play, Sparkles } from "lucide-react";
@@ -21,6 +21,9 @@ export default function VideoTranscript({ videoId, videoUrl, onPauseVideo, onSee
   const [showHebrewInput, setShowHebrewInput] = useState(false);
   const [hebrewText, setHebrewText] = useState("");
   const [generatingTranslations, setGeneratingTranslations] = useState(false);
+  const [activeSegmentIdx, setActiveSegmentIdx] = useState(null);
+  const activeSegmentRef = useRef(null);
+  const containerRef = useRef(null);
   const queryClient = useQueryClient();
 
   const addToBackpackMutation = useMutation({
@@ -394,6 +397,33 @@ Format as array of objects with: transliteration, english, hebrew`,
     });
   };
 
+  const handlePlaySegment = (idx, timeStr) => {
+    if (!onSeekVideo) return;
+    
+    let seconds = 0;
+    
+    // Parse time format (MM:SS or just seconds)
+    if (timeStr.includes(':')) {
+      const [min, sec] = timeStr.split(':').map(Number);
+      seconds = (min * 60) + sec;
+    } else {
+      seconds = parseInt(timeStr);
+    }
+    
+    setActiveSegmentIdx(idx);
+    onSeekVideo(seconds);
+  };
+
+  // Auto-scroll to active segment
+  useEffect(() => {
+    if (activeSegmentRef.current && containerRef.current) {
+      activeSegmentRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+      });
+    }
+  }, [activeSegmentIdx]);
+
   if (!video) return null;
 
   const isProcessing = video.transcript_status === "processing" || transcribing;
@@ -441,6 +471,7 @@ Format as array of objects with: transliteration, english, hebrew`,
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             className="mt-3 bg-white/5 border border-white/10 rounded-xl p-4 max-h-96 overflow-y-auto"
+            ref={containerRef}
           >
             <div className="flex items-center justify-between mb-2">
               <span className="text-white/60 text-xs">
@@ -462,28 +493,29 @@ Format as array of objects with: transliteration, english, hebrew`,
                   // If we have exactly 3 parts, treat as Translit/English/Hebrew
                   if (parts.length >= 3) {
                     const [transliteration, english, hebrew] = parts;
+                    const isActive = activeSegmentIdx === blockIdx;
                     return (
-                      <div key={blockIdx} className="group relative p-2 rounded-lg hover:bg-white/5 transition-all flex gap-2">
+                      <div 
+                        key={blockIdx} 
+                        ref={isActive ? activeSegmentRef : null}
+                        className={`group relative p-2 rounded-lg transition-all flex gap-3 ${
+                          isActive ? 'bg-yellow-400/20 border-l-4 border-yellow-500 pl-3' : 'hover:bg-white/5'
+                        }`}
+                      >
                         {onSeekVideo && parts.length >= 4 && parts[3] && (
                           <button
-                            onClick={() => {
-                              const timeStr = parts[3].trim();
-                              let seconds = 0;
-                              
-                              // Parse time format (MM:SS or just seconds)
-                              if (timeStr.includes(':')) {
-                                const [min, sec] = timeStr.split(':').map(Number);
-                                seconds = (min * 60) + sec;
-                              } else {
-                                seconds = parseInt(timeStr);
-                              }
-                              
-                              onSeekVideo(seconds);
-                            }}
-                            className="flex-shrink-0 w-8 h-8 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/40 flex items-center justify-center transition-all mt-1"
-                            title={`Play from ${parts[3]}`}
+                            onClick={() => handlePlaySegment(blockIdx, parts[3].trim())}
+                            className={`flex-shrink-0 w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center transition-all mt-0.5 ${
+                              isActive 
+                                ? 'bg-yellow-500/60 hover:bg-yellow-500/80' 
+                                : 'bg-cyan-500/20 hover:bg-cyan-500/40'
+                            }`}
+                            title="Play this sentence"
+                            aria-label="Play this sentence"
                           >
-                            <Play className="w-4 h-4 text-cyan-400 fill-cyan-400" />
+                            <Play className={`w-3 h-3 md:w-4 md:h-4 ${
+                              isActive ? 'text-white fill-white' : 'text-cyan-400 fill-cyan-400'
+                            }`} />
                           </button>
                         )}
                         <div className="flex-1 relative">
