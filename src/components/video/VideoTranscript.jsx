@@ -22,6 +22,7 @@ export default function VideoTranscript({ videoId, videoUrl, onPauseVideo, onSee
   const [hebrewText, setHebrewText] = useState("");
   const [generatingTranslations, setGeneratingTranslations] = useState(false);
   const [activeSegmentIdx, setActiveSegmentIdx] = useState(null);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const activeSegmentRef = useRef(null);
   const containerRef = useRef(null);
@@ -418,6 +419,15 @@ Format as array of objects with: transliteration, english, hebrew`,
   const handlePlaySegment = (idx, timeStr) => {
     if (!onSeekVideo) return;
     
+    // If clicking same segment while playing, pause
+    if (activeSegmentIdx === idx && isPlaying) {
+      if (onPauseVideo) {
+        onPauseVideo();
+        setIsPlaying(false);
+      }
+      return;
+    }
+    
     let seconds = 0;
     
     // Parse time format (MM:SS or just seconds)
@@ -429,6 +439,7 @@ Format as array of objects with: transliteration, english, hebrew`,
     }
     
     setActiveSegmentIdx(idx);
+    setIsPlaying(true);
     onSeekVideo(seconds);
   };
 
@@ -575,12 +586,19 @@ Format as array of objects with: transliteration, english, hebrew`,
                                 ? 'bg-yellow-500/60 hover:bg-yellow-500/80' 
                                 : 'bg-cyan-500/20 hover:bg-cyan-500/40'
                             }`}
-                            title="Play this sentence"
-                            aria-label="Play this sentence"
+                            title={isActive && isPlaying ? "Pause" : "Play this sentence"}
+                            aria-label={isActive && isPlaying ? "Pause" : "Play this sentence"}
                           >
-                            <Play className={`w-3 h-3 md:w-4 md:h-4 ${
-                              isActive ? 'text-white fill-white' : 'text-cyan-400 fill-cyan-400'
-                            }`} />
+                            {isActive && isPlaying ? (
+                              <div className="w-3 h-3 md:w-4 md:h-4 flex items-center justify-center gap-0.5">
+                                <div className="w-1 h-full bg-white" />
+                                <div className="w-1 h-full bg-white" />
+                              </div>
+                            ) : (
+                              <Play className={`w-3 h-3 md:w-4 md:h-4 ${
+                                isActive ? 'text-white fill-white' : 'text-cyan-400 fill-cyan-400'
+                              }`} />
+                            )}
                           </button>
                         )}
                         <div className="flex-1 relative">
