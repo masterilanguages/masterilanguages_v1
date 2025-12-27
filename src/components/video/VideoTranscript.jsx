@@ -605,11 +605,11 @@ Format as array of objects with: transliteration, english, hebrew`,
                     
                     return (
                       <div 
-                        key={blockIdx} 
-                        ref={isActive ? activeSegmentRef : null}
-                        className={`group relative p-2 rounded-lg transition-all flex gap-3 ${
-                          isActive ? 'bg-yellow-400/20 border-l-4 border-yellow-500 pl-3' : 'hover:bg-white/5'
-                        }`}
+                      key={blockIdx} 
+                      ref={isActive ? activeSegmentRef : null}
+                      className={`group relative p-1.5 rounded-lg transition-all flex gap-2 ${
+                        isActive ? 'bg-yellow-400/20 border-l-4 border-yellow-500 pl-2' : 'hover:bg-white/5'
+                      }`}
                       >
                         {onSeekVideo && hasTimestamp && (
                           <button
@@ -696,7 +696,7 @@ Format as array of objects with: transliteration, english, hebrew`,
                         ) : (
                           <>
                             {transliteration && (
-                              <div className="mb-0.5" style={{ direction: 'ltr', textAlign: 'left', unicodeBidi: 'bidi-override' }}>
+                              <div style={{ direction: 'ltr', textAlign: 'left', unicodeBidi: 'bidi-override' }}>
                                 {transliteration.split(/(\s+)/).map((part, i) => 
                                   /\S/.test(part) ? (
                                     <VideoTranscriptWord
@@ -710,14 +710,14 @@ Format as array of objects with: transliteration, english, hebrew`,
                                         updateTranscriptLine(blockIdx, 'transliteration', newText);
                                       }}
                                       onAddToBackpack={addSentenceToBackpack}
-                                      className="text-white/90 text-lg leading-tight"
+                                      className="text-white/90 text-sm leading-tight"
                                     />
                                   ) : part
                                 )}
                               </div>
                             )}
                             {english && (
-                              <div className="mb-1" style={{ direction: 'ltr', textAlign: 'left', unicodeBidi: 'bidi-override' }}>
+                              <div style={{ direction: 'ltr', textAlign: 'left', unicodeBidi: 'bidi-override' }}>
                                 {english.split(/(\s+)/).map((part, i) => 
                                   /\S/.test(part) ? (
                                     <VideoTranscriptWord
@@ -731,7 +731,7 @@ Format as array of objects with: transliteration, english, hebrew`,
                                         updateTranscriptLine(blockIdx, 'english', newText);
                                       }}
                                       onAddToBackpack={addSentenceToBackpack}
-                                      className="text-white/70 text-base leading-tight"
+                                      className="text-white/70 text-xs leading-tight"
                                     />
                                   ) : part
                                 )}
@@ -752,7 +752,7 @@ Format as array of objects with: transliteration, english, hebrew`,
                                         updateTranscriptLine(blockIdx, 'hebrew', newText);
                                       }}
                                       onAddToBackpack={addSentenceToBackpack}
-                                      className="text-cyan-400 text-xl font-bold leading-tight"
+                                      className="text-cyan-400 text-base font-bold leading-tight"
                                     />
                                   ) : part
                                 )}
