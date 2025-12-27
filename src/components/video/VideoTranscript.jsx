@@ -459,21 +459,41 @@ Format as array of objects with: transliteration, english, hebrew`,
     const lines = video.transcript_text.split('\n').filter(l => l && l.trim());
     const parts = lines[blockIdx].split('\t');
     
-    // Preserve timestamp if exists
-    const newLine = parts.length >= 4 
-      ? `${editValues.transliteration}\t${editValues.english}\t${editValues.hebrew}\t${parts[3]}`
-      : `${editValues.transliteration}\t${editValues.english}\t${editValues.hebrew}`;
-    
-    lines[blockIdx] = newLine;
-    const newTranscript = lines.join('\n');
-    
     try {
+      toast.info("Updating translations...");
+      
+      // Use AI to regenerate all fields based on what was edited
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Given this Hebrew sentence, provide the transliteration and English translation:
+
+Hebrew: ${editValues.hebrew}
+
+Provide:
+1. transliteration: Phonetic Hebrew using Latin characters
+2. translation: English translation`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            transliteration: { type: "string" },
+            translation: { type: "string" }
+          }
+        }
+      });
+      
+      // Use AI results
+      const newLine = parts.length >= 4 
+        ? `${result.transliteration}\t${result.translation}\t${editValues.hebrew}\t${parts[3]}`
+        : `${result.transliteration}\t${result.translation}\t${editValues.hebrew}`;
+      
+      lines[blockIdx] = newLine;
+      const newTranscript = lines.join('\n');
+      
       await base44.entities.Video.update(video.id, {
         transcript_text: newTranscript
       });
       setVideo(prev => ({ ...prev, transcript_text: newTranscript }));
       setEditingLineIdx(null);
-      toast.success("Sentence updated!");
+      toast.success("Sentence updated with AI translations!");
     } catch (e) {
       toast.error("Failed to update");
     }
