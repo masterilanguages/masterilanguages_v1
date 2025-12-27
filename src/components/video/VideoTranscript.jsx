@@ -450,7 +450,7 @@ Format as array of objects with: transliteration, english, hebrew`,
   };
 
   const saveLineEdit = async (blockIdx) => {
-    const lines = video.transcript_text.split('\n').filter(l => l.trim());
+    const lines = video.transcript_text.split('\n').filter(l => l && l.trim());
     const parts = lines[blockIdx].split('\t');
     
     // Preserve timestamp if exists
@@ -531,11 +531,11 @@ Format as array of objects with: transliteration, english, hebrew`,
   useEffect(() => {
     if (!expanded || !video?.transcript_text) return;
 
-    const lines = video.transcript_text.split('\n').filter(l => l.trim());
+    const lines = video.transcript_text.split('\n').filter(l => l && l.trim());
     const segments = lines.map((line, idx) => {
       const parts = line.split('\t');
-      return { idx, time: parts.length >= 4 ? parseFloat(parts[3]) : null };
-    }).filter(s => s.time !== null);
+      return { idx, time: parts.length >= 4 && parts[3] ? parseFloat(parts[3]) : null };
+    }).filter(s => s.time !== null && !isNaN(s.time));
 
     if (segments.length === 0) return;
 
@@ -674,7 +674,7 @@ Format as array of objects with: transliteration, english, hebrew`,
             <div className="space-y-2">
               {(() => {
                 // Parse transcript: each line has tab-separated transliteration, english, hebrew
-                const lines = video.transcript_text.split('\n').filter(l => l.trim());
+                const lines = video.transcript_text.split('\n').filter(l => l && l.trim());
                 
                 return lines.map((line, blockIdx) => {
                   const parts = line.split('\t');
