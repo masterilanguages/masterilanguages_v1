@@ -542,13 +542,13 @@ export default function Home() {
               const gradients = [
                 "from-pink-500 to-rose-500",
                 "from-amber-500 to-orange-500",
-                "from-green-500 to-emerald-500",
+                "from-sky-500 to-cyan-500",
                 "from-blue-500 to-indigo-500",
                 "from-purple-500 to-violet-500",
                 "from-cyan-500 to-blue-500",
                 "from-red-500 to-pink-500",
                 "from-yellow-500 to-orange-500",
-                "from-teal-500 to-green-500",
+                "from-teal-500 to-cyan-500",
                 "from-indigo-500 to-purple-500",
               ];
               const gradient = gradients[idx % gradients.length];
@@ -571,7 +571,7 @@ export default function Home() {
                       <div className="flex items-center gap-3">
                         {(allCompleted || !unlocked) && (
                           <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                            allCompleted ? 'bg-green-500/30' : 'bg-white/10'
+                            allCompleted ? 'bg-green-500' : 'bg-white/10'
                           }`}>
                             {allCompleted ? (
                               <Check className="w-6 h-6 text-white" />
