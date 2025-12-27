@@ -517,12 +517,20 @@ Format as array of objects with: transliteration, english, hebrew`,
     onSeekVideo(seconds);
   };
 
-  // Auto-scroll to active segment
+  // Auto-scroll to active segment smoothly
   useEffect(() => {
     if (activeSegmentRef.current && containerRef.current && isPlaying) {
-      activeSegmentRef.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center'
+      const container = containerRef.current;
+      const activeElement = activeSegmentRef.current;
+      
+      // Calculate smooth scroll position to keep active segment near top
+      const containerRect = container.getBoundingClientRect();
+      const elementRect = activeElement.getBoundingClientRect();
+      const offset = elementRect.top - containerRect.top - 40; // 40px from top
+      
+      container.scrollBy({
+        top: offset,
+        behavior: 'smooth'
       });
     }
   }, [activeSegmentIdx, isPlaying]);
