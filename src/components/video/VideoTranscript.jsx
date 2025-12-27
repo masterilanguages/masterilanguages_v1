@@ -240,6 +240,7 @@ export default function VideoTranscript({ videoId, videoUrl, onPauseVideo, onSee
     }));
 
     setGeneratingTranslations(true);
+    toast.info("Processing transcript - this may take 10-20 seconds...");
     
     try {
       // Step 1: Add nikud to Hebrew text and generate transliteration/translation
@@ -306,7 +307,8 @@ Return as array of objects with: hebrew_nikud, transliteration, translation`,
       setManualTranscript("");
       toast.success("Transcript saved with nikud and translations!");
     } catch (e) {
-      toast.error("Failed to generate transcript");
+      console.error("Transcript generation error:", e);
+      toast.error(`Failed: ${e.message || 'Unknown error'}`);
     }
     
     setGeneratingTranslations(false);
