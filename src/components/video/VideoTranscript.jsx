@@ -242,18 +242,21 @@ export default function VideoTranscript({ videoId, videoUrl, onPauseVideo, onSee
     setGeneratingTranslations(true);
     
     try {
-      // Generate transliteration and translation for all blocks
+      // Step 1: Add nikud to Hebrew text and generate transliteration/translation
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Generate transliteration and English translation for each Hebrew segment.
+        prompt: `For each Hebrew segment, add full nikud (vowel points) if missing, then generate transliteration and English translation.
 
 Hebrew segments:
 ${blocksWithEnd.map((b, i) => `${i + 1}. ${b.hebrew}`).join('\n')}
 
 For each segment, provide:
-1. Transliteration (phonetic Hebrew using Latin characters)
-2. English translation
+1. hebrew_nikud: Hebrew text with full nikud (ניקוד) added. If nikud already exists, preserve it.
+2. transliteration: Phonetic Hebrew using Latin characters
+3. translation: English translation
 
-Return as array of objects with: transliteration, translation`,
+CRITICAL: Always output Hebrew WITH nikud. Add vowel points to every word.
+
+Return as array of objects with: hebrew_nikud, transliteration, translation`,
         response_json_schema: {
           type: "object",
           properties: {
@@ -262,6 +265,7 @@ Return as array of objects with: transliteration, translation`,
               items: {
                 type: "object",
                 properties: {
+                  hebrew_nikud: { type: "string" },
                   transliteration: { type: "string" },
                   translation: { type: "string" }
                 }
@@ -274,6 +278,7 @@ Return as array of objects with: transliteration, translation`,
       // Merge AI results with parsed data
       const enriched = blocksWithEnd.map((block, i) => ({
         ...block,
+        hebrew: result.segments[i]?.hebrew_nikud || block.hebrew,
         transliteration: result.segments[i]?.transliteration || "",
         translation: result.segments[i]?.translation || ""
       }));
@@ -299,7 +304,7 @@ Return as array of objects with: transliteration, translation`,
 
       setShowManualInput(false);
       setManualTranscript("");
-      toast.success("Transcript saved with auto-generated translations!");
+      toast.success("Transcript saved with nikud and translations!");
     } catch (e) {
       toast.error("Failed to generate transcript");
     }
