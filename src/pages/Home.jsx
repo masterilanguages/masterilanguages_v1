@@ -14,7 +14,6 @@ import GameHeader from "../components/game/GameHeader";
 import TranslatorWidget from "../components/TranslatorWidget";
 
 import ActivityCard from "../components/game/ActivityCard";
-import TimelineBar from "../components/game/TimelineBar";
 import BabyGame from "../components/game/BabyGame";
 import AvatarMenu from "../components/game/AvatarMenu";
 
@@ -392,8 +391,6 @@ export default function Home() {
         coins={coins} 
         onBuyCoins={() => setBuyCoinsDialog(true)}
       />
-      
-      <TimelineBar currentAge={currentAge} />
 
       {/* Quick Navigation */}
       <div className="max-w-4xl mx-auto px-4 pt-4">
@@ -433,45 +430,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Timer display */}
-      {timer > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="fixed top-20 right-4 z-50 bg-slate-800/90 backdrop-blur-sm border border-white/20 rounded-xl p-3 shadow-lg"
-        >
-          <div className="text-center">
-            <p className="text-white/60 text-xs mb-1">Time Left</p>
-            <p className="text-2xl font-bold text-cyan-400">{formatTime(timer)}</p>
-            <div className="flex gap-1 mt-2">
-              <button
-                onClick={() => setTimerSpeed(1)}
-                className={`px-2 py-1 rounded text-xs ${timerSpeed === 1 ? 'bg-cyan-500 text-white' : 'bg-white/10 text-white/60'}`}
-              >
-                1x
-              </button>
-              <button
-                onClick={() => setTimerSpeed(2)}
-                className={`px-2 py-1 rounded text-xs ${timerSpeed === 2 ? 'bg-cyan-500 text-white' : 'bg-white/10 text-white/60'}`}
-              >
-                2x
-              </button>
-              <button
-                onClick={() => setTimerSpeed(10)}
-                className={`px-2 py-1 rounded text-xs ${timerSpeed === 10 ? 'bg-cyan-500 text-white' : 'bg-white/10 text-white/60'}`}
-              >
-                10x
-              </button>
-              <button
-                onClick={() => { setTimer(0); setTimerRunning(false); }}
-                className="px-2 py-1 rounded text-xs bg-red-500/20 text-red-400"
-              >
-                ✕
-              </button>
-            </div>
-          </div>
-        </motion.div>
-      )}
+
 
       <div className="relative z-10 max-w-4xl mx-auto px-4 py-8">
         {/* Show activity content */}

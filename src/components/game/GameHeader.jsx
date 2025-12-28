@@ -218,33 +218,23 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
                 size="sm"
                 className="bg-red-500/20 border-red-500/50 text-red-400 hover:bg-red-500/30"
               >
-                <LogOut className="w-4 h-4 mr-1" />
-                Exit
+                End
               </Button>
             </div>
           ) : (
-            <div className="flex gap-2">
-              <Button
-                onClick={() => startSession(30)}
-                variant="outline"
-                size="sm"
-                className="bg-cyan-500/20 border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/30"
-              >
-                <Clock className="w-4 h-4 mr-1" />
-                30m
-              </Button>
-              <Button
-                onClick={() => startSession(60)}
-                variant="outline"
-                size="sm"
-                className="bg-cyan-500/20 border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/30"
-              >
-                <Clock className="w-4 h-4 mr-1" />
-                1hr
-              </Button>
-            </div>
+            <Button
+              onClick={() => startSession(30)}
+              variant="outline"
+              size="sm"
+              className="bg-cyan-500/20 border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/30"
+            >
+              <Clock className="w-4 h-4 mr-1" />
+              Start
+            </Button>
           )}
         </div>
+
+
 
         {/* Stats */}
         <div className="flex items-center gap-4">
