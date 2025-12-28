@@ -1368,7 +1368,6 @@ Create about 15-20 conversational lines that naturally introduce and use these v
                            );
                          })}
                          </div>
-                         </div>
                          )}
                          </div>
                          )}
