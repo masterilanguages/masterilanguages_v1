@@ -69,15 +69,27 @@ export default function FloatingAvatar({ profile, coins }) {
           onClick={() => setShowMessage(!showMessage)}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
-          className="relative bg-white/10 backdrop-blur-xl border-2 border-white/20 rounded-full w-16 h-16 md:w-20 md:h-20 flex items-center justify-center shadow-lg hover:border-white/40 transition-all"
+          className="relative bg-transparent backdrop-blur-xl border-2 border-white/20 w-16 h-16 md:w-20 md:h-20 flex items-center justify-center shadow-lg hover:border-white/40 transition-all"
+          style={{ borderRadius: 0 }}
         >
-          <motion.div
-            animate={isBlinking ? { scaleY: 0.1 } : { scaleY: 1 }}
-            transition={{ duration: 0.1 }}
-            className="text-3xl md:text-4xl"
-          >
-            {avatarEmoji}
-          </motion.div>
+          {profile?.avatar_image_url ? (
+            <motion.img
+              src={profile.avatar_image_url}
+              alt={profile.avatar_name}
+              animate={isBlinking ? { scaleY: 0.1 } : { scaleY: 1 }}
+              transition={{ duration: 0.1 }}
+              className="w-full h-auto object-contain bg-transparent"
+              style={{ borderRadius: 0, clipPath: 'none', mask: 'none', backgroundColor: 'transparent' }}
+            />
+          ) : (
+            <motion.div
+              animate={isBlinking ? { scaleY: 0.1 } : { scaleY: 1 }}
+              transition={{ duration: 0.1 }}
+              className="text-3xl md:text-4xl"
+            >
+              {avatarEmoji}
+            </motion.div>
+          )}
 
           {/* Growth stage indicator */}
           <motion.div

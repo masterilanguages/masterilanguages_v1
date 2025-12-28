@@ -470,12 +470,12 @@ Examples: Penny, Bucks, Clever, NestEgg, Lucky, Earnie, Value`,
                         whileTap={{ scale: 0.95 }}
                         className="bg-transparent backdrop-blur-sm rounded-2xl p-6 border-2 border-white/20 hover:border-white/60 hover:shadow-lg transition-all overflow-visible"
                       >
-                        <div className="w-full h-auto flex items-end justify-center overflow-visible">
+                        <div className="w-full h-auto flex items-end justify-center overflow-visible bg-transparent">
                           <img
                             src={imageUrl}
                             alt={`Avatar option ${idx + 1}`}
-                            className="w-full h-auto object-contain"
-                            style={{ borderRadius: 0, clipPath: 'none', mask: 'none' }}
+                            className="w-full h-auto object-contain bg-transparent"
+                            style={{ borderRadius: 0, clipPath: 'none', mask: 'none', backgroundColor: 'transparent' }}
                           />
                         </div>
                       </motion.button>
@@ -526,12 +526,12 @@ Examples: Penny, Bucks, Clever, NestEgg, Lucky, Earnie, Value`,
             >
               <div className="text-center mb-8">
                 {selectedAvatarImage ? (
-                <div className="w-32 h-auto mx-auto mb-4 flex items-end justify-center overflow-visible">
+                <div className="w-32 h-auto mx-auto mb-4 flex items-end justify-center overflow-visible bg-transparent">
                   <img
                     src={selectedAvatarImage}
                     alt="Selected avatar"
-                    className="w-full h-auto object-contain"
-                    style={{ borderRadius: 0 }}
+                    className="w-full h-auto object-contain bg-transparent"
+                    style={{ borderRadius: 0, clipPath: 'none', mask: 'none', backgroundColor: 'transparent' }}
                   />
                 </div>
                 ) : (
