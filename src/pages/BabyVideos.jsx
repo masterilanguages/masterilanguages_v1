@@ -420,16 +420,21 @@ export default function BabyVideos() {
   });
 
   const { data: customVideos = [] } = useQuery({
-    queryKey: ['customVideos'],
+    queryKey: ['customVideos', userProfile?.language],
     queryFn: async () => {
       const videos = await base44.entities.Video.list();
-      // Filter out deleted videos for non-admin users
-      const filtered = videos.filter(v => !v.deleted_at || currentUser?.role === 'admin');
+      // Filter by language and deleted status
+      const filtered = videos.filter(v => {
+        const notDeleted = !v.deleted_at || currentUser?.role === 'admin';
+        const matchesLanguage = !userProfile?.language || v.language === userProfile.language || v.language === 'he';
+        return notDeleted && matchesLanguage;
+      });
       // Sort by order field
       return filtered.sort((a, b) => (a.order || 0) - (b.order || 0));
     },
     staleTime: 2 * 60 * 1000,
     refetchOnWindowFocus: false,
+    enabled: !!userProfile,
   });
 
   // Check if current user is admin
@@ -1200,19 +1205,20 @@ Create about 15-20 conversational lines that naturally introduce and use these v
                     </div>
                     )}
 
-            {/* Recommended Videos Dropdown */}
-            <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden">
-              <button
-                onClick={() => setRecommendedExpanded(!recommendedExpanded)}
-                className="w-full flex items-center justify-between p-4 text-left hover:bg-white/5 transition-all"
-              >
-                <h2 className="text-white font-medium">Recommended Videos ({level1Videos.length})</h2>
-                <ChevronDown className={`w-5 h-5 text-white/60 transition-transform ${recommendedExpanded ? 'rotate-180' : ''}`} />
-              </button>
+            {/* Recommended Videos Dropdown - Only show for Hebrew */}
+            {userProfile?.language === 'hebrew' && (
+              <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden">
+                <button
+                  onClick={() => setRecommendedExpanded(!recommendedExpanded)}
+                  className="w-full flex items-center justify-between p-4 text-left hover:bg-white/5 transition-all"
+                >
+                  <h2 className="text-white font-medium">Recommended Videos ({level1Videos.length})</h2>
+                  <ChevronDown className={`w-5 h-5 text-white/60 transition-transform ${recommendedExpanded ? 'rotate-180' : ''}`} />
+                </button>
 
-              {recommendedExpanded && (
-                <div className="border-t border-white/10 p-4 space-y-3">
-                  {level1Videos.map((video) => {
+                {recommendedExpanded && (
+                  <div className="border-t border-white/10 p-4 space-y-3">
+                    {level1Videos.map((video) => {
               // Handle both string and number comparisons
               const isExpanded = expandedVideoId == video.id || expandedVideoId === video.id;
               const hasTranscript = fullTranscripts[video.id];
@@ -1361,9 +1367,10 @@ Create about 15-20 conversational lines that naturally introduce and use these v
                              </div>
                            );
                          })}
-                       </div>
-                      )}
-                      </div>
+                         </div>
+                         )}
+                         </div>
+                         )}
                       )}
                       </div>
                       );
