@@ -10,7 +10,9 @@ import { toast } from "sonner";
 
 const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [timeRemaining, setTimeRemaining] = useState(0);
+  const [showLogout, setShowLogout] = useState(false);
   const xpToNextLevel = 1000;
   const xpProgress = ((profile?.xp || 0) % xpToNextLevel) / xpToNextLevel * 100;
 
@@ -107,47 +109,74 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const handleLogout = () => {
+    base44.auth.logout();
+  };
+
   const sessionActive = profile?.session_start && profile?.session_duration;
 
   return (
     <div className="bg-gradient-to-r from-slate-900/95 via-purple-900/95 to-slate-900/95 backdrop-blur-xl border-b border-white/10 px-4 py-3">
       <div className="flex items-center justify-between max-w-7xl mx-auto">
         {/* Avatar */}
-                <div className="relative flex items-center gap-3">
-                  <div className="relative">
-                    <div className={`w-12 h-auto flex items-end justify-center overflow-visible ${profile?.avatar_id === 'jordan' ? 'hue-rotate-[320deg]' : ''}`}>
-                      {profile?.avatar_image_url && profile?.avatar_type === 'custom' ? (
-                        <img 
-                          src={profile.avatar_image_url} 
-                          alt={profile.avatar_name} 
-                          className="w-full h-auto object-contain" 
-                          style={{ borderRadius: 0, clipPath: 'none', mask: 'none' }}
-                        />
-                      ) : (
-                        <span className="text-3xl">
-                          {['alex', 'jordan', 'sam'].includes(profile?.avatar_id) ? '🧍‍♂️' : '🧍‍♀️'}
-                          {!profile?.avatar_id && '👤'}
-                        </span>
-                      )}
-                    </div>
-                    <div className="absolute -bottom-1 -right-1 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full px-2 py-0.5 text-xs font-bold text-black">
-                      {profile?.age_level || 5}
-                    </div>
-                  </div>
-          <div className="hidden md:block">
-            <p className="text-white font-bold">{profile?.avatar_name || 'Player'}</p>
-            <div className="flex items-center gap-2">
-              <div className="w-24 h-2 bg-white/20 rounded-full overflow-hidden">
-                <motion.div
-                  className="h-full bg-gradient-to-r from-cyan-400 to-purple-500"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${xpProgress}%` }}
-                />
+        <div className="relative">
+          <motion.button
+            onClick={() => setShowLogout(!showLogout)}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="relative flex items-center gap-3 cursor-pointer"
+          >
+            <div className="relative">
+              <div className="w-12 h-auto flex items-end justify-center overflow-visible">
+                {profile?.avatar_image_url ? (
+                  <img 
+                    src={profile.avatar_image_url} 
+                    alt={profile.avatar_name} 
+                    className="w-full h-auto object-contain" 
+                    style={{ borderRadius: 0, clipPath: 'none', mask: 'none' }}
+                  />
+                ) : (
+                  <span className="text-3xl">👤</span>
+                )}
               </div>
-              <span className="text-xs text-white/60">{profile?.xp || 0} XP</span>
+              <div className="absolute -bottom-1 -right-1 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full px-2 py-0.5 text-xs font-bold text-black">
+                {profile?.age_level || 5}
+              </div>
             </div>
+            <div className="hidden md:block">
+              <p className="text-white font-bold">{profile?.avatar_name || 'Player'}</p>
+              <div className="flex items-center gap-2">
+                <div className="w-24 h-2 bg-white/20 rounded-full overflow-hidden">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-cyan-400 to-purple-500"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${xpProgress}%` }}
+                  />
+                </div>
+                <span className="text-xs text-white/60">{profile?.xp || 0} XP</span>
+              </div>
             </div>
-            </div>
+          </motion.button>
+
+          <AnimatePresence>
+            {showLogout && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="absolute top-full left-0 mt-2 z-50"
+              >
+                <Button
+                  onClick={handleLogout}
+                  className="bg-red-500 hover:bg-red-600 text-white shadow-lg"
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Logout
+                </Button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
         {/* Session Timer */}
         <div className="flex items-center gap-2">
