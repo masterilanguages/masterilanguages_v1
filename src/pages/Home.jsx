@@ -130,8 +130,8 @@ export default function Home() {
 
   const { data: days = [] } = useQuery({
     queryKey: ['days', userProfile?.language],
-    queryFn: () => base44.entities.Day.filter({ language: userProfile?.language || 'hebrew' }),
-    enabled: !!userProfile,
+    queryFn: () => base44.entities.Day.filter({ language: userProfile?.language }),
+    enabled: !!userProfile && !!userProfile.language,
     staleTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
