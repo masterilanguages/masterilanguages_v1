@@ -68,8 +68,8 @@ export default function Home() {
     fetchUser();
   }, []);
 
-  // Master user = admin role OR specific emails
-  const isMasterUser = currentUser?.role === 'admin';
+  // Master user = admin role AND not in onboarding
+  const isMasterUser = currentUser?.role === 'admin' && userProfile?.is_new_user !== true;
 
   const { data: userProfile, isLoading: profileLoading } = useQuery({
     queryKey: ['userProfile'],
