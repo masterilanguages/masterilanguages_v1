@@ -22,28 +22,23 @@ export default function Layout({ children, currentPageName }) {
     staleTime: 5 * 60 * 1000,
   });
 
-  // Global onboarding gate - runs on every page load except onboarding pages
-  useEffect(() => {
-    if (isOnboardingPage || profileLoading) return;
-    
-    // No profile = start onboarding
-    if (!userProfile) {
-      navigate(createPageUrl("LanguageSelect"));
-      return;
+  // HARD BLOCK: Don't render anything except onboarding if language not set
+  if (!isOnboardingPage && !profileLoading) {
+    if (!userProfile || !userProfile.language || userProfile.language === "") {
+      // Force redirect and block render
+      if (currentPageName !== "LanguageSelect") {
+        navigate(createPageUrl("LanguageSelect"), { replace: true });
+      }
+      return null; // Block all content rendering
     }
     
-    // HARD BLOCK: No language = must select language
-    if (!userProfile.language || userProfile.language === "") {
-      navigate(createPageUrl("LanguageSelect"));
-      return;
-    }
-    
-    // Check is_new_user flag for avatar requirement
     if (userProfile.is_new_user === true && !userProfile.avatar_id) {
-      navigate(createPageUrl("AvatarSelect"));
-      return;
+      if (currentPageName !== "AvatarSelect") {
+        navigate(createPageUrl("AvatarSelect"), { replace: true });
+      }
+      return null; // Block all content rendering
     }
-  }, [userProfile, profileLoading, isOnboardingPage, navigate]);
+  }
 
   const { data: userCoins } = useQuery({
     queryKey: ['userCoins'],

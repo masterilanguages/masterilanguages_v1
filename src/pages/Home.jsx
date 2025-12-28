@@ -130,7 +130,10 @@ export default function Home() {
 
   const { data: days = [] } = useQuery({
     queryKey: ['days', userProfile?.language],
-    queryFn: () => base44.entities.Day.filter({ language: userProfile?.language }),
+    queryFn: () => {
+      if (!userProfile?.language) return [];
+      return base44.entities.Day.filter({ language: userProfile.language });
+    },
     enabled: !!userProfile && !!userProfile.language,
     staleTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
@@ -229,30 +232,10 @@ export default function Home() {
     },
   });
 
-  // Global onboarding gate
-  useEffect(() => {
-    if (profileLoading) return;
-    
-    // No profile = create one and start onboarding
-    if (!userProfile) {
-      navigate(createPageUrl("LanguageSelect"));
-      return;
-    }
-    
-    // Check is_new_user flag
-    if (userProfile.is_new_user === true) {
-      // Need language
-      if (!userProfile.language) {
-        navigate(createPageUrl("LanguageSelect"));
-        return;
-      }
-      // Need avatar
-      if (!userProfile.avatar_id) {
-        navigate(createPageUrl("AvatarSelect"));
-        return;
-      }
-    }
-  }, [userProfile, profileLoading, navigate]);
+  // Don't render if no language (Layout handles redirect)
+  if (!userProfile?.language) {
+    return null;
+  }
 
   // Timer logic
   useEffect(() => {
