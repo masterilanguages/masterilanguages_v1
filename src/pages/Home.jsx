@@ -68,9 +68,6 @@ export default function Home() {
     fetchUser();
   }, []);
 
-  // Master user = admin role AND not in onboarding
-  const isMasterUser = currentUser?.role === 'admin' && userProfile?.is_new_user !== true;
-
   const { data: userProfile, isLoading: profileLoading } = useQuery({
     queryKey: ['userProfile'],
     queryFn: async () => {
@@ -236,6 +233,9 @@ export default function Home() {
   if (!userProfile?.language) {
     return null;
   }
+
+  // Master user = admin role AND not in onboarding
+  const isMasterUser = currentUser?.role === 'admin' && userProfile?.is_new_user !== true;
 
   // Timer logic
   useEffect(() => {
