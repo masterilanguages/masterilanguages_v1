@@ -6,9 +6,11 @@ import Backpack from './pages/Backpack';
 import BodyPartsLesson from './pages/BodyPartsLesson';
 import ColorsLesson from './pages/ColorsLesson';
 import ColorsTest from './pages/ColorsTest';
+import Days from './pages/Days';
 import DaysLesson from './pages/DaysLesson';
 import Home from './pages/Home';
 import Journal from './pages/Journal';
+import LanguageSelect from './pages/LanguageSelect';
 import Level1World from './pages/Level1World';
 import MonthsLesson from './pages/MonthsLesson';
 import Pictures from './pages/Pictures';
@@ -20,8 +22,6 @@ import Songs from './pages/Songs';
 import Store from './pages/Store';
 import StoryLearning from './pages/StoryLearning';
 import Videos from './pages/Videos';
-import LanguageSelect from './pages/LanguageSelect';
-import Days from './pages/Days';
 import __Layout from './Layout.jsx';
 
 
@@ -34,9 +34,11 @@ export const PAGES = {
     "BodyPartsLesson": BodyPartsLesson,
     "ColorsLesson": ColorsLesson,
     "ColorsTest": ColorsTest,
+    "Days": Days,
     "DaysLesson": DaysLesson,
     "Home": Home,
     "Journal": Journal,
+    "LanguageSelect": LanguageSelect,
     "Level1World": Level1World,
     "MonthsLesson": MonthsLesson,
     "Pictures": Pictures,
@@ -48,8 +50,6 @@ export const PAGES = {
     "Store": Store,
     "StoryLearning": StoryLearning,
     "Videos": Videos,
-    "LanguageSelect": LanguageSelect,
-    "Days": Days,
 }
 
 export const pagesConfig = {

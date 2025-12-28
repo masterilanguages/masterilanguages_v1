@@ -229,10 +229,12 @@ export default function Home() {
     },
   });
 
-  // Redirect to avatar selection if no profile
+  // Redirect to language or avatar selection if no profile
   useEffect(() => {
     if (!profileLoading && !userProfile) {
-      navigate(createPageUrl("AvatarSelect"));
+      navigate(createPageUrl("LanguageSelect"));
+    } else if (!profileLoading && userProfile && !userProfile.language) {
+      navigate(createPageUrl("LanguageSelect"));
     }
   }, [userProfile, profileLoading, navigate]);
 

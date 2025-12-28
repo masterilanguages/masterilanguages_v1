@@ -13,6 +13,16 @@ export default function TranslatorWidget() {
   const [inputText, setInputText] = useState("");
   const [translation, setTranslation] = useState(null);
   const [isTranslating, setIsTranslating] = useState(false);
+  const [learningLanguage, setLearningLanguage] = useState("hebrew");
+
+  // Get user's learning language
+  useState(() => {
+    base44.entities.UserProfile.list().then(profiles => {
+      if (profiles[0]?.language) {
+        setLearningLanguage(profiles[0].language);
+      }
+    });
+  }, []);
 
   const createWordMutation = useMutation({
     mutationFn: (wordData) => base44.entities.Word.create(wordData),
@@ -36,10 +46,11 @@ export default function TranslatorWidget() {
       let prompt, schema;
       
       if (isEnglish) {
-        // English to Hebrew
-        prompt = `You are an expert English→Israeli Hebrew translator for a language-learning app.
+        // English to target language
+        const targetLangName = learningLanguage.charAt(0).toUpperCase() + learningLanguage.slice(1);
+        prompt = `You are an expert English→${targetLangName} translator for a language-learning app.
 Output MUST be valid JSON only (no markdown, no extra text).
-Translate naturally (modern Israeli Hebrew), not biblical.
+Translate naturally to modern ${targetLangName}.
 Prefer the most common everyday translation.
 If the English is ambiguous, choose the most likely meaning and include 1–3 alternatives.
 
@@ -59,31 +70,33 @@ Transliteration scheme (must be consistent):
 Input: "${inputText}"
 
 Provide:
-- "hebrew" in Hebrew script (RTL)
+- "target_language" in ${targetLangName} script
 - "transliteration" in Latin letters using the scheme above
-- "alternatives" as a list of Hebrew strings (may be empty)
+- "alternatives" as a list of ${targetLangName} strings (may be empty)
 - "notes" only if ambiguity is meaningful (otherwise empty string)`;
         
         schema = {
           type: "object",
           properties: {
-            hebrew: { type: "string" },
+            target_language: { type: "string" },
             transliteration: { type: "string" },
             alternatives: { type: "array", items: { type: "string" } },
             notes: { type: "string" }
           }
         };
+        result.hebrew = result.target_language; // Normalize for backwards compatibility
       } else {
-        // Hebrew/transliteration to English
-        prompt = `You are an expert transliterated-Hebrew→English interpreter for a language-learning app.
-Input is Hebrew written in Latin letters (transliteration), possibly with inconsistent spelling.
+        // Target language/transliteration to English
+        const targetLangName = learningLanguage.charAt(0).toUpperCase() + learningLanguage.slice(1);
+        prompt = `You are an expert transliterated-${targetLangName}→English interpreter for a language-learning app.
+Input is ${targetLangName} written in Latin letters (transliteration), possibly with inconsistent spelling.
 Your job:
 1. Normalize transliteration to the app's scheme
-2. Reconstruct the most likely Hebrew spelling
+2. Reconstruct the most likely ${targetLangName} spelling
 3. Translate to natural English
 
 Output MUST be valid JSON only (no markdown, no extra text).
-If ambiguous, choose the most likely and include 1–3 alternatives (as Hebrew strings).
+If ambiguous, choose the most likely and include 1–3 alternatives (as ${targetLangName} strings).
 
 Transliteration scheme: kh/ tz/ sh, etc. Normalize common variants:
 - ch → kh
@@ -96,19 +109,20 @@ Input: "${inputText}"
 
 Provide:
 - "english" translation
-- "hebrew" reconstructed Hebrew text
+- "target_language" reconstructed ${targetLangName} text
 - "transliteration" normalized transliteration
-- "alternatives" as Hebrew strings if ambiguous`;
+- "alternatives" as ${targetLangName} strings if ambiguous`;
         
         schema = {
           type: "object",
           properties: {
             english: { type: "string" },
-            hebrew: { type: "string" },
+            target_language: { type: "string" },
             transliteration: { type: "string" },
             alternatives: { type: "array", items: { type: "string" } }
           }
         };
+        result.hebrew = result.target_language; // Normalize for backwards compatibility
       }
       
       const result = await base44.integrations.Core.InvokeLLM({
@@ -159,7 +173,7 @@ Provide:
               <Input
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
-                placeholder="English or Hebrew..."
+                placeholder={`English or ${learningLanguage.charAt(0).toUpperCase() + learningLanguage.slice(1)}...`}
                 className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
                 onKeyDown={(e) => e.key === 'Enter' && handleTranslate()}
               />
