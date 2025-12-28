@@ -109,8 +109,9 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleLogout = () => {
-    base44.auth.logout();
+  const handleLogout = async () => {
+    await base44.auth.logout();
+    window.location.href = '/';
   };
 
   const sessionActive = profile?.session_start && profile?.session_duration;
