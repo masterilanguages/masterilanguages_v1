@@ -561,71 +561,100 @@ Return JSON with sentences array, each containing:
                     <p className="text-sm">Generating sentences...</p>
                   </div>
                 ) : (
-                  exampleSentences.map((sentence, idx) => {
-                    const isRevealed = revealedSentences.has(idx);
-                    return (
-                      <div 
-                        key={idx} 
-                        className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4 cursor-pointer"
+                  <>
+                    {exampleSentences.map((sentence, idx) => {
+                      const isRevealed = revealedSentences.has(idx);
+                      return (
+                        <div 
+                          key={idx} 
+                          className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4 cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setRevealedSentences(prev => {
+                              const next = new Set(prev);
+                              if (next.has(idx)) {
+                                next.delete(idx);
+                              } else {
+                                next.add(idx);
+                              }
+                              return next;
+                            });
+                          }}
+                        >
+                          <div className="flex items-start justify-between gap-3 mb-2">
+                            <div className="flex-1">
+                              <p className="text-white/60 text-sm mb-2">{sentence.english}</p>
+                              {isRevealed && (
+                                <>
+                                  <p className="text-cyan-400 text-base mb-2" dir="ltr" style={{ unicodeBidi: 'isolate' }}>{sentence.transliteration}</p>
+                                  <p className="text-white text-base mb-2" dir="rtl" lang="he" style={{ unicodeBidi: 'plaintext', textAlign: 'right' }}>
+                                    <bdi>
+                                      {sentence.hebrew.split(' ').map((word, wordIdx) => (
+                                        <span
+                                          key={wordIdx}
+                                          className="hover:text-cyan-400 transition-colors cursor-pointer inline-block"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            createWordMutation.mutate({
+                                              word: word,
+                                              translation: "",
+                                              phonetic: "",
+                                              category: "wordbank",
+                                              times_practiced: 0,
+                                            });
+                                          }}
+                                          title="Click to add this word to backpack"
+                                        >
+                                          {word}{' '}
+                                        </span>
+                                      ))}
+                                    </bdi>
+                                  </p>
+                                </>
+                              )}
+                            </div>
+                            <div className="flex flex-col gap-2">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  addSentenceToBackpack(sentence);
+                                }}
+                                className="text-2xl hover:scale-110 transition-transform"
+                                title="Add sentence to backpack"
+                              >
+                                🎒
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setExampleSentences(prev => prev.filter((_, i) => i !== idx));
+                                  toast.success("Sentence removed");
+                                }}
+                                className="text-xl hover:scale-110 transition-transform opacity-60 hover:opacity-100"
+                                title="Delete sentence"
+                              >
+                                🗑️
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {exampleSentences.length > 0 && (
+                      <Button
                         onClick={(e) => {
                           e.stopPropagation();
-                          setRevealedSentences(prev => {
-                            const next = new Set(prev);
-                            if (next.has(idx)) {
-                              next.delete(idx);
-                            } else {
-                              next.add(idx);
-                            }
-                            return next;
-                          });
+                          setExampleSentences([]);
+                          generateSentences(currentWord);
                         }}
+                        variant="outline"
+                        className="w-full bg-white/5 border-white/20 text-white hover:bg-white/10"
                       >
-                        <div className="flex items-start justify-between gap-3 mb-2">
-                          <div className="flex-1">
-                            <p className="text-white/60 text-sm mb-2">{sentence.english}</p>
-                            {isRevealed && (
-                              <>
-                                <p className="text-cyan-400 text-base mb-2" dir="ltr" style={{ unicodeBidi: 'isolate' }}>{sentence.transliteration}</p>
-                                <p className="text-white text-base mb-2" dir="rtl" lang="he" style={{ unicodeBidi: 'plaintext', textAlign: 'right' }}>
-                                  <bdi>
-                                    {sentence.hebrew.split(' ').map((word, wordIdx) => (
-                                      <span
-                                        key={wordIdx}
-                                        className="hover:text-cyan-400 transition-colors cursor-pointer inline-block"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          createWordMutation.mutate({
-                                            word: word,
-                                            translation: "",
-                                            phonetic: "",
-                                            category: "wordbank",
-                                            times_practiced: 0,
-                                          });
-                                        }}
-                                        title="Click to add this word to backpack"
-                                      >
-                                        {word}{' '}
-                                      </span>
-                                    ))}
-                                  </bdi>
-                                </p>
-                              </>
-                            )}
-                          </div>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              addSentenceToBackpack(sentence);
-                            }}
-                            className="text-2xl hover:scale-110 transition-transform"
-                            title="Add sentence to backpack"
-                          >
-                            🎒
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Generate New Sentences
+                      </Button>
+                    )}
+                  </>
                 )}
               </div>
             )}
