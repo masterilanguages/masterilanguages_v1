@@ -119,14 +119,16 @@ export default function AvatarSelect() {
 
   const createProfileMutation = useMutation({
     mutationFn: async (profileData) => {
-      const existingProfiles = await base44.entities.UserProfile.list();
+      const currentUser = await base44.auth.me();
+      const existingProfiles = await base44.entities.UserProfile.filter({ created_by: currentUser.email });
       if (existingProfiles.length > 0) {
         return await base44.entities.UserProfile.update(existingProfiles[0].id, profileData);
       }
       return await base44.entities.UserProfile.create(profileData);
     },
     onSuccess: async (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['userProfile'] });
+      const currentUser = await base44.auth.me();
+      await queryClient.invalidateQueries({ queryKey: ['userProfile', currentUser?.email] });
 
       // Notify admin of new user
       try {
