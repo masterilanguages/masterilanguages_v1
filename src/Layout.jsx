@@ -28,13 +28,14 @@ export default function Layout({ children, currentPageName }) {
   }, []);
 
   const { data: userProfile, isLoading: profileLoading } = useQuery({
-    queryKey: ['userProfile'],
+    queryKey: ['userProfile', currentUser?.email],
     queryFn: async () => {
-      const profiles = await base44.entities.UserProfile.list();
+      if (!currentUser?.email) return null;
+      const profiles = await base44.entities.UserProfile.filter({ created_by: currentUser.email });
       return profiles[0] || null;
     },
     staleTime: 5 * 60 * 1000,
-    enabled: isAuthChecked,
+    enabled: isAuthChecked && !!currentUser,
   });
 
   // Debug label (dev only)
