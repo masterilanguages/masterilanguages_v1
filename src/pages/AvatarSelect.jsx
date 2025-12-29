@@ -158,8 +158,8 @@ export default function AvatarSelect() {
   };
 
   const handleDescriptionDone = async () => {
-    if (selectedTraits.length < 2) {
-      toast.error("Pick at least 2 traits");
+    if (selectedTraits.length < 1) {
+      toast.error("Pick at least 1 trait");
       return;
     }
     if (selectedAccessories.length < 1) {
@@ -349,7 +349,7 @@ Examples: Penny, Bucks, Clever, NestEgg, Lucky, Earnie, Value`,
               <div className="bg-white/10 backdrop-blur-sm rounded-3xl p-6 mb-6 space-y-6">
                 {/* Traits */}
                 <div>
-                  <p className="text-white/80 text-sm mb-3">Pick traits (min 2):</p>
+                  <p className="text-white/80 text-sm mb-3">Pick traits:</p>
                   <div className="flex flex-wrap gap-2">
                     {customizationOptions[selectedAvatar.type]?.traits.map((trait) => (
                       <button
@@ -375,7 +375,7 @@ Examples: Penny, Bucks, Clever, NestEgg, Lucky, Earnie, Value`,
 
                 {/* Accessories */}
                 <div>
-                  <p className="text-white/80 text-sm mb-3">Pick accessory/outfit (min 1):</p>
+                  <p className="text-white/80 text-sm mb-3">Pick accessory/outfit:</p>
                   <div className="flex flex-wrap gap-2">
                     {customizationOptions[selectedAvatar.type]?.accessories.map((acc) => (
                       <button
@@ -441,7 +441,7 @@ Examples: Penny, Bucks, Clever, NestEgg, Lucky, Earnie, Value`,
                 </Button>
                 <Button
                   onClick={handleDescriptionDone}
-                  disabled={selectedTraits.length < 2 || selectedAccessories.length < 1 || !selectedVibe || generatingNames}
+                  disabled={selectedTraits.length < 1 || selectedAccessories.length < 1 || !selectedVibe || generatingNames}
                   className="flex-1 py-6 text-lg font-bold bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white shadow-lg disabled:opacity-50"
                 >
                   {generatingNames ? "Generating..." : "Generate"}
