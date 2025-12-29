@@ -530,17 +530,12 @@ Return JSON with sentences array, each containing:
                     );
                   })}
                 </div>
-              </motion.div>
+              </div>
             )}
 
             {/* Example sentences (state 1+) */}
             {revealState >= 1 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="w-full mt-6 space-y-3"
-                onClick={(e) => e.stopPropagation()}
-              >
+              <div className="w-full mt-6 space-y-3" onClick={(e) => e.stopPropagation()}>
                 {generatingSentences ? (
                   <div className="text-center text-white/60 py-4">
                     <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2" />
