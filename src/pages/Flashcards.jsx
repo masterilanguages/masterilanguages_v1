@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Loader2, ChevronLeft, ChevronRight, Volume2 } from "lucide-react";
+import { X, Loader2, Volume2, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import GameHeader from "../components/game/GameHeader";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 export default function Flashcards() {
@@ -14,7 +16,10 @@ export default function Flashcards() {
   const [selectedLevel, setSelectedLevel] = useState(null);
   const [sessionWords, setSessionWords] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [revealState, setRevealState] = useState(0); // 0: image only, 1: +english, 2: +transliteration
+  const [revealState, setRevealState] = useState(0); // 0: image only, 1: +english, 2: +target/conjugation
+  const [imageRegenDialog, setImageRegenDialog] = useState(false);
+  const [imagePrompt, setImagePrompt] = useState("");
+  const [generatingImage, setGeneratingImage] = useState(false);
 
   const { data: userProfile } = useQuery({
     queryKey: ['userProfile'],
@@ -57,12 +62,12 @@ export default function Flashcards() {
   });
 
   const levelData = [
-    { level: 0, label: "Level 0", subtitle: "New", color: "gray", gradient: "from-gray-500 to-slate-500" },
-    { level: 1, label: "Level 1", subtitle: "Seen", color: "red", gradient: "from-red-500 to-pink-500" },
-    { level: 2, label: "Level 2", subtitle: "Familiar", color: "orange", gradient: "from-orange-500 to-amber-500" },
-    { level: 3, label: "Level 3", subtitle: "Practicing", color: "yellow", gradient: "from-yellow-500 to-lime-500" },
-    { level: 4, label: "Level 4", subtitle: "Strong", color: "blue", gradient: "from-blue-500 to-cyan-500" },
-    { level: 5, label: "Level 5", subtitle: "Mastered", color: "green", gradient: "from-green-500 to-emerald-500" },
+    { level: 0, label: "Level 0", subtitle: "New", gradient: "from-gray-500 to-slate-500" },
+    { level: 1, label: "Level 1", subtitle: "Seen", gradient: "from-red-500 to-pink-500" },
+    { level: 2, label: "Level 2", subtitle: "Familiar", gradient: "from-orange-500 to-amber-500" },
+    { level: 3, label: "Level 3", subtitle: "Practicing", gradient: "from-yellow-500 to-lime-500" },
+    { level: 4, label: "Level 4", subtitle: "Strong", gradient: "from-blue-500 to-cyan-500" },
+    { level: 5, label: "Level 5", subtitle: "Mastered", gradient: "from-green-500 to-emerald-500" },
   ];
 
   const getWordsForLevel = (level) => {
@@ -85,6 +90,9 @@ export default function Flashcards() {
   const handleCardTap = () => {
     if (revealState < 2) {
       setRevealState(revealState + 1);
+    } else if (currentWord?.is_verb && revealState === 2) {
+      // For verbs, stay at conjugation view
+      return;
     }
   };
 
@@ -99,14 +107,12 @@ export default function Flashcards() {
       },
     });
 
-    // Award coins
     if (rating >= 3 && userCoins) {
       const coinsEarned = rating >= 5 ? 20 : 10;
       updateCoinsMutation.mutate({ coins: (userCoins.coins || 0) + coinsEarned });
       toast.success(`+${coinsEarned} coins!`, { icon: '🪙' });
     }
 
-    // Move to next card
     if (currentIndex < sessionWords.length - 1) {
       setCurrentIndex(currentIndex + 1);
       setRevealState(0);
@@ -116,13 +122,28 @@ export default function Flashcards() {
     }
   };
 
-  const handleSkip = () => {
-    if (currentIndex < sessionWords.length - 1) {
-      setCurrentIndex(currentIndex + 1);
+  const handleImageRegenerate = async () => {
+    if (!imagePrompt.trim()) return;
+    setGeneratingImage(true);
+    try {
+      const result = await base44.integrations.Core.GenerateImage({
+        prompt: `A colorful, memorable illustration for learning: ${imagePrompt}. 
+        The word means "${currentWord.translation}". 
+        Cartoon style, vibrant colors, educational, fun and memorable.
+        NO TEXT in the image - purely visual.`
+      });
+      await updateWordMutation.mutateAsync({
+        id: currentWord.id,
+        data: { image_url: result.url }
+      });
+      toast.success("New image saved!");
+      setImageRegenDialog(false);
+      setImagePrompt("");
       setRevealState(0);
-    } else {
-      setSelectedLevel(null);
+    } catch (e) {
+      toast.error("Failed to generate image");
     }
+    setGeneratingImage(false);
   };
 
   const speakWord = (word) => {
@@ -154,14 +175,9 @@ export default function Flashcards() {
         <GameHeader profile={userProfile} coins={userCoins?.coins} onBuyCoins={() => {}} />
 
         <div className="max-w-4xl mx-auto px-4 py-6">
-          <div className="flex items-center gap-4 mb-6">
-            <Link to={createPageUrl("Home")} className="text-white/60 hover:text-white">
-              <ArrowLeft className="w-6 h-6" />
-            </Link>
-            <div>
-              <h1 className="text-3xl font-bold text-white">Flashcards</h1>
-              <p className="text-white/60">Pick a level to start learning</p>
-            </div>
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold text-white mb-2">Flashcards</h1>
+            <p className="text-white/60">Pick a level to start learning</p>
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -196,147 +212,228 @@ export default function Flashcards() {
     );
   }
 
-  // Flashcard session
+  // Full-screen flashcard session
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-      <GameHeader profile={userProfile} coins={userCoins?.coins} onBuyCoins={() => {}} />
-
-      <div className="max-w-2xl mx-auto px-4 py-6">
-        <div className="flex items-center justify-between mb-6">
-          <Button
-            onClick={() => setSelectedLevel(null)}
-            variant="ghost"
-            className="text-white"
-          >
-            <ArrowLeft className="w-5 h-5 mr-2" /> Exit
-          </Button>
-          <div className="bg-white/10 rounded-xl px-4 py-2 text-white font-medium">
-            {currentIndex + 1} / {sessionWords.length}
-          </div>
+    <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex flex-col">
+      {/* Top bar */}
+      <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4">
+        <Button
+          onClick={() => setSelectedLevel(null)}
+          variant="ghost"
+          size="icon"
+          className="text-white bg-black/30 backdrop-blur-sm hover:bg-black/50 rounded-full"
+        >
+          <X className="w-6 h-6" />
+        </Button>
+        <div className="bg-black/30 backdrop-blur-sm rounded-full px-4 py-2">
+          <span className="text-white font-medium">{currentIndex + 1} / {sessionWords.length}</span>
         </div>
+        <button
+          onClick={() => setImageRegenDialog(true)}
+          className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm hover:bg-black/50 flex items-center justify-center text-2xl"
+        >
+          🎨
+        </button>
+      </div>
 
+      {/* Main card area */}
+      <div className="flex-1 flex items-center justify-center p-4 pt-20 pb-32">
         <AnimatePresence mode="wait">
           <motion.div
-            key={currentWord?.id}
-            initial={{ opacity: 0, x: 100 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -100 }}
-            className="mb-6"
+            key={`${currentWord?.id}-${revealState}`}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            onClick={handleCardTap}
+            className="w-full max-w-2xl h-full max-h-[600px] bg-white/10 backdrop-blur-xl rounded-3xl border-2 border-white/20 p-8 cursor-pointer flex flex-col items-center justify-center relative overflow-y-auto"
           >
-            {/* Card */}
-            <div
-              onClick={handleCardTap}
-              className="bg-white/10 backdrop-blur-xl rounded-3xl border-2 border-white/20 p-8 cursor-pointer hover:border-cyan-400/50 transition-all min-h-[400px] flex flex-col items-center justify-center"
-            >
-              {/* Image */}
-              {currentWord?.image_url && (
-                <motion.div
-                  initial={{ scale: 0.9, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  className="w-full max-w-sm mb-6"
-                >
-                  <img
-                    src={currentWord.image_url}
-                    alt="Flashcard"
-                    className="w-full h-64 object-contain rounded-2xl"
-                  />
-                </motion.div>
-              )}
+            {/* Image (always visible if exists) */}
+            {currentWord?.image_url && revealState >= 0 && (
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="w-full max-w-md mb-6"
+              >
+                <img
+                  src={currentWord.image_url}
+                  alt="Flashcard"
+                  className="w-full h-64 object-contain rounded-2xl"
+                />
+              </motion.div>
+            )}
 
-              {/* Tap indicator */}
-              {revealState === 0 && (
-                <motion.p
-                  animate={{ opacity: [0.5, 1, 0.5] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                  className="text-white/60 text-sm"
-                >
-                  Tap to reveal
-                </motion.p>
-              )}
+            {/* Tap indicator (state 0) */}
+            {revealState === 0 && (
+              <motion.p
+                animate={{ opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="text-white/60 text-sm"
+              >
+                Tap to reveal
+              </motion.p>
+            )}
 
-              {/* English (reveal state 1+) */}
-              {revealState >= 1 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-center mb-4"
-                >
-                  <p className="text-white text-4xl font-bold mb-2">
-                    {currentWord?.translation}
+            {/* English (state 1+) */}
+            {revealState >= 1 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center mb-4"
+              >
+                <p className="text-white text-5xl font-bold">
+                  {currentWord?.translation?.toUpperCase()}
+                </p>
+              </motion.div>
+            )}
+
+            {/* Target language (state 2) */}
+            {revealState >= 2 && !currentWord?.is_verb && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center"
+              >
+                <div className="flex items-center gap-3 justify-center mb-2">
+                  <p className="text-cyan-400 text-3xl font-medium">
+                    {currentWord?.phonetic}
                   </p>
-                </motion.div>
-              )}
-
-              {/* Transliteration (reveal state 2) */}
-              {revealState >= 2 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-center"
-                >
-                  <div className="flex items-center gap-3 justify-center">
-                    <p className="text-cyan-400 text-2xl font-medium">
-                      {currentWord?.phonetic}
-                    </p>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        speakWord(currentWord);
-                      }}
-                      className="w-10 h-10 rounded-full bg-cyan-500/20 hover:bg-cyan-500/30 flex items-center justify-center transition-all"
-                    >
-                      <Volume2 className="w-5 h-5 text-cyan-400" />
-                    </button>
-                  </div>
-                  <p className="text-white/60 text-lg mt-2" dir="rtl">
-                    {currentWord?.word}
-                  </p>
-                </motion.div>
-              )}
-            </div>
-
-            {/* Rating buttons (always visible) */}
-            <div className="mt-6">
-              <p className="text-white/60 text-center text-sm mb-3">
-                How well do you know this word?
-              </p>
-              <div className="flex gap-2 justify-center mb-4">
-                {[0, 1, 2, 3, 4, 5].map((rating) => (
-                  <motion.button
-                    key={rating}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => handleRating(rating)}
-                    className={`w-14 h-14 rounded-xl font-bold text-lg transition-all ${
-                      rating === 0
-                        ? "bg-gray-500/30 text-white/60 hover:bg-gray-500/50"
-                        : rating === 5
-                        ? "bg-gradient-to-br from-green-500 to-emerald-500 text-white shadow-lg"
-                        : rating >= 4
-                        ? "bg-gradient-to-br from-blue-500 to-cyan-500 text-white"
-                        : rating >= 3
-                        ? "bg-gradient-to-br from-yellow-500 to-amber-500 text-white"
-                        : "bg-white/20 text-white hover:bg-white/30"
-                    }`}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      speakWord(currentWord);
+                    }}
+                    className="w-10 h-10 rounded-full bg-cyan-500/20 hover:bg-cyan-500/30 flex items-center justify-center"
                   >
-                    {rating}
-                  </motion.button>
-                ))}
-              </div>
+                    <Volume2 className="w-5 h-5 text-cyan-400" />
+                  </button>
+                </div>
+                <p className="text-white/80 text-2xl" dir="rtl">
+                  {currentWord?.word}
+                </p>
+              </motion.div>
+            )}
 
-              <div className="flex justify-center">
-                <Button
-                  onClick={handleSkip}
-                  variant="ghost"
-                  className="text-white/60 hover:text-white"
-                >
-                  Skip <ChevronRight className="w-4 h-4 ml-1" />
-                </Button>
-              </div>
-            </div>
+            {/* Verb conjugation table (state 2) */}
+            {revealState >= 2 && currentWord?.is_verb && currentWord?.verb_conjugations && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="w-full max-w-3xl overflow-x-auto"
+              >
+                <div className="grid grid-cols-3 gap-4 text-white text-sm">
+                  {/* Headers */}
+                  <div className="text-center">
+                    <h4 className="font-bold text-white/60 mb-3 text-base">PAST</h4>
+                  </div>
+                  <div className="text-center">
+                    <h4 className="font-bold text-cyan-400 mb-3 text-xl">PRESENT</h4>
+                  </div>
+                  <div className="text-center">
+                    <h4 className="font-bold text-white/60 mb-3 text-base">FUTURE</h4>
+                  </div>
+
+                  {/* Rows for each person */}
+                  {['i', 'you_m', 'you_f', 'he', 'she', 'we', 'they'].map((person) => {
+                    const labels = { i: 'I', you_m: 'You (m)', you_f: 'You (f)', he: 'He', she: 'She', we: 'We', they: 'They' };
+                    return (
+                      <React.Fragment key={person}>
+                        {/* Past */}
+                        <div className="text-center p-2 bg-white/5 rounded-lg">
+                          <p className="text-white/40 text-xs mb-1">{labels[person]}</p>
+                          <p className="text-white/80 font-medium">{currentWord.verb_conjugations.past?.[person]?.transliteration || '-'}</p>
+                          <p className="text-white/60 text-xs" dir="rtl">{currentWord.verb_conjugations.past?.[person]?.native || ''}</p>
+                        </div>
+                        
+                        {/* Present (highlighted) */}
+                        <div className="text-center p-2 bg-cyan-500/20 rounded-lg border border-cyan-500/30">
+                          <p className="text-cyan-300 text-xs mb-1">{labels[person]}</p>
+                          <p className="text-white font-bold text-lg">{currentWord.verb_conjugations.present?.[person]?.transliteration || '-'}</p>
+                          <p className="text-cyan-300 text-sm" dir="rtl">{currentWord.verb_conjugations.present?.[person]?.native || ''}</p>
+                        </div>
+                        
+                        {/* Future */}
+                        <div className="text-center p-2 bg-white/5 rounded-lg">
+                          <p className="text-white/40 text-xs mb-1">{labels[person]}</p>
+                          <p className="text-white/80 font-medium">{currentWord.verb_conjugations.future?.[person]?.transliteration || '-'}</p>
+                          <p className="text-white/60 text-xs" dir="rtl">{currentWord.verb_conjugations.future?.[person]?.native || ''}</p>
+                        </div>
+                      </React.Fragment>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
           </motion.div>
         </AnimatePresence>
       </div>
+
+      {/* Bottom rating buttons (always visible) */}
+      <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/50 to-transparent backdrop-blur-sm">
+        <p className="text-white/60 text-center text-sm mb-3">
+          How well do you know this?
+        </p>
+        <div className="flex gap-2 justify-center">
+          {[0, 1, 2, 3, 4, 5].map((rating) => (
+            <motion.button
+              key={rating}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => handleRating(rating)}
+              className={`w-14 h-14 rounded-xl font-bold text-lg transition-all ${
+                rating === 0
+                  ? "bg-gray-500/30 text-white/60"
+                  : rating === 5
+                  ? "bg-gradient-to-br from-green-500 to-emerald-500 text-white shadow-lg"
+                  : rating >= 4
+                  ? "bg-gradient-to-br from-blue-500 to-cyan-500 text-white"
+                  : rating >= 3
+                  ? "bg-gradient-to-br from-yellow-500 to-amber-500 text-white"
+                  : "bg-white/20 text-white"
+              }`}
+            >
+              {rating}
+            </motion.button>
+          ))}
+        </div>
+      </div>
+
+      {/* Image regeneration dialog */}
+      <Dialog open={imageRegenDialog} onOpenChange={setImageRegenDialog}>
+        <DialogContent className="bg-slate-900 border-white/20 text-white">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-cyan-400" />
+              Suggest New Image
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <p className="text-white/60 text-sm mb-2">This word sounds like...</p>
+              <Input
+                value={imagePrompt}
+                onChange={(e) => setImagePrompt(e.target.value)}
+                placeholder="e.g. 'a cat running' or 'someone eating'"
+                className="bg-white/5 border-white/20 text-white"
+                onKeyDown={(e) => e.key === 'Enter' && handleImageRegenerate()}
+              />
+            </div>
+            <Button
+              onClick={handleImageRegenerate}
+              disabled={!imagePrompt.trim() || generatingImage}
+              className="w-full bg-gradient-to-r from-cyan-500 to-purple-500"
+            >
+              {generatingImage ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                'Create Image'
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
