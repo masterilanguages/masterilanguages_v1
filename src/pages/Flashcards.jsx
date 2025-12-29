@@ -570,30 +570,15 @@ Return JSON with sentences array, each containing:
                       >
                         <div className="flex items-start justify-between gap-3 mb-2">
                           <div className="flex-1">
-                            {!isRevealed && revealState === 1 && (
+                            {!isRevealed && (
                               <p className="text-white/60 text-sm mb-2">{sentence.english}</p>
                             )}
                             {isRevealed && (
                               <>
                                 <p className="text-cyan-400 text-base mb-2">{sentence.transliteration}</p>
                                 <p className="text-white/60 text-sm mb-2">{sentence.english}</p>
-                                <p className="text-white text-base" dir="ltr">
-                                  {sentence.hebrew.split(' ').map((word, wordIdx) => (
-                                    <span
-                                      key={wordIdx}
-                                      className="hover:text-cyan-400 transition-colors cursor-pointer inline-block mr-1"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        if ('speechSynthesis' in window) {
-                                          const utterance = new SpeechSynthesisUtterance(word);
-                                          utterance.lang = 'he-IL';
-                                          window.speechSynthesis.speak(utterance);
-                                        }
-                                      }}
-                                    >
-                                      {word}
-                                    </span>
-                                  ))}
+                                <p className="text-white text-base" dir="rtl">
+                                  {sentence.hebrew}
                                 </p>
                               </>
                             )}
