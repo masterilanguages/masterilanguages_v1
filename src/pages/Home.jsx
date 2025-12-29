@@ -500,7 +500,29 @@ export default function Home() {
               )}
             </div>
 
-            {sortedDays.map((day, idx) => {
+            {sortedDays.length === 0 ? (
+              <div className="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 p-8 text-center">
+                <p className="text-white/60 mb-4">No days available yet for {userProfile?.language}.</p>
+                {isMasterUser && (
+                  <Button onClick={() => {
+                    const defaultTasks = [
+                      { id: "video", name: "Watch a video", duration: "20 minutes", page: "BabyVideos" },
+                      { id: "flashcards", name: "Vocab Flashcards", duration: "10 minutes", page: "Practice" },
+                      { id: "journal", name: "Journal", duration: "5 minutes", page: "Journal" },
+                      { id: "speak", name: "Speak 1 minute", duration: "1 minute", page: "Practice" }
+                    ];
+                    createDayMutation.mutate({
+                      day_number: 1,
+                      language: userProfile?.language,
+                      title: "Day 1",
+                      subsections: defaultTasks
+                    });
+                  }} className="bg-green-500 hover:bg-green-600">
+                    Create First Day
+                  </Button>
+                )}
+              </div>
+            ) : sortedDays.map((day, idx) => {
               const unlocked = isDayUnlocked(day.day_number);
               const progress = getDayProgress(day.id);
               const isExpanded = expandedDay === day.day_number;
