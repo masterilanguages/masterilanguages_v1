@@ -571,7 +571,7 @@ Return JSON with sentences array, each containing:
                                   {sentence.hebrew.split(' ').map((word, wordIdx) => (
                                     <span
                                       key={wordIdx}
-                                      className="hover:text-cyan-400 transition-colors cursor-pointer inline-block ml-1"
+                                      className="hover:text-cyan-400 transition-colors cursor-pointer inline-block"
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         createWordMutation.mutate({
@@ -584,7 +584,7 @@ Return JSON with sentences array, each containing:
                                       }}
                                       title="Click to add this word to backpack"
                                     >
-                                      {word}
+                                      {word}{' '}
                                     </span>
                                   ))}
                                 </p>
