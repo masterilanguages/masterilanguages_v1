@@ -328,9 +328,9 @@ Return JSON with sentences array, each containing:
                   onClick={() => setSelectedLevel(null)}
                   variant="ghost"
                   size="icon"
-                  className="text-white bg-black/30 backdrop-blur-sm hover:bg-black/50 rounded-full text-xs"
+                  className="text-white bg-black/30 backdrop-blur-sm hover:bg-black/50 rounded-full"
                 >
-                  Back
+                  &lt;
                 </Button>
               </div>
               <div className="flex items-center gap-3">
@@ -340,57 +340,49 @@ Return JSON with sentences array, each containing:
                 <div className="bg-black/30 backdrop-blur-sm rounded-full px-3 py-1.5">
                   <span className="text-white text-sm font-medium">{currentIndex + 1}/{sessionWords.length}</span>
                 </div>
-                <button
-                  onClick={() => setImageRegenDialog(true)}
-                  className="w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm hover:bg-black/50 flex items-center justify-center text-xl"
-                >
-                  🎨
-                </button>
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={() => setImageRegenDialog(true)}
+                    className="w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm hover:bg-black/50 flex items-center justify-center text-xl"
+                  >
+                    🎨
+                  </button>
+                  <Button
+                    onClick={() => {
+                      if (currentIndex < sessionWords.length - 1) {
+                        setCurrentIndex(currentIndex + 1);
+                        setRevealState(0);
+                        setExampleSentences([]);
+                        setRevealedSentences(new Set());
+                      } else {
+                        toast.info("End of session!");
+                      }
+                    }}
+                    variant="ghost"
+                    size="icon"
+                    className="text-white bg-black/30 backdrop-blur-sm hover:bg-black/50 rounded-full"
+                  >
+                    &gt;
+                  </Button>
+                </div>
               </div>
             </div>
 
             <div className="flex-1 flex flex-col items-center justify-center w-full mt-12">
-            {/* Image (always visible if exists) */}
-            {currentWord?.image_url && revealState >= 0 && (
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="w-full max-w-md mb-6"
-              >
-                <img
-                  src={currentWord.image_url}
-                  alt="Flashcard"
-                  className="w-full h-64 object-contain rounded-2xl"
-                />
-              </motion.div>
-            )}
-
-
-
             {/* English (state 1+) */}
             {revealState >= 1 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-center mb-4"
-                onClick={(e) => e.stopPropagation()}
-              >
+              <div className="text-center mb-4" onClick={(e) => e.stopPropagation()}>
                 <EditableWord
                   text={currentWord?.translation || ''}
                   onSave={(newText) => updateWordMutation.mutate({ id: currentWord.id, data: { translation: newText } })}
                   className="text-white text-5xl font-bold uppercase"
                 />
-              </motion.div>
+              </div>
             )}
 
             {/* Target language (state 2) */}
             {revealState >= 2 && !currentWord?.is_verb && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-center"
-                onClick={(e) => e.stopPropagation()}
-              >
+              <div className="text-center" onClick={(e) => e.stopPropagation()}>
                 <div className="flex items-center gap-3 justify-center mb-2">
                   <EditableWord
                     text={currentWord?.phonetic || ''}
@@ -414,17 +406,23 @@ Return JSON with sentences array, each containing:
                   className="text-white/80 text-2xl"
                   dir="rtl"
                 />
-              </motion.div>
+              </div>
+            )}
+
+            {/* Image (inside card content) */}
+            {currentWord?.image_url && revealState >= 2 && (
+              <div className="w-full max-w-md mb-6 mt-4">
+                <img
+                  src={currentWord.image_url}
+                  alt="Flashcard"
+                  className="w-full h-64 object-contain rounded-2xl"
+                />
+              </div>
             )}
 
             {/* Verb conjugation table (state 2) */}
             {revealState >= 2 && currentWord?.is_verb && currentWord?.verb_conjugations && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="w-full max-w-3xl overflow-x-auto"
-                onClick={(e) => e.stopPropagation()}
-              >
+              <div className="w-full max-w-3xl overflow-x-auto" onClick={(e) => e.stopPropagation()}>
                 <div className="grid grid-cols-3 gap-4 text-white text-sm">
                   {/* Headers */}
                   <div className="text-center" onClick={(e) => e.stopPropagation()}>
@@ -570,15 +568,30 @@ Return JSON with sentences array, each containing:
                       >
                         <div className="flex items-start justify-between gap-3 mb-2">
                           <div className="flex-1">
-                            {!isRevealed && (
-                              <p className="text-white/60 text-sm mb-2">{sentence.english}</p>
-                            )}
+                            <p className="text-white/60 text-sm mb-2">{sentence.english}</p>
                             {isRevealed && (
                               <>
                                 <p className="text-cyan-400 text-base mb-2">{sentence.transliteration}</p>
-                                <p className="text-white/60 text-sm mb-2">{sentence.english}</p>
-                                <p className="text-white text-base" dir="rtl">
-                                  {sentence.hebrew}
+                                <p className="text-white text-base mb-2" dir="rtl">
+                                  {sentence.hebrew.split(' ').map((word, wordIdx) => (
+                                    <span
+                                      key={wordIdx}
+                                      className="hover:text-cyan-400 transition-colors cursor-pointer inline-block ml-1"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        createWordMutation.mutate({
+                                          word: word,
+                                          translation: "",
+                                          phonetic: "",
+                                          category: "wordbank",
+                                          times_practiced: 0,
+                                        });
+                                      }}
+                                      title="Click to add this word to backpack"
+                                    >
+                                      {word}
+                                    </span>
+                                  ))}
                                 </p>
                               </>
                             )}
@@ -589,7 +602,7 @@ Return JSON with sentences array, each containing:
                               addSentenceToBackpack(sentence);
                             }}
                             className="text-2xl hover:scale-110 transition-transform"
-                            title="Add to backpack"
+                            title="Add sentence to backpack"
                           >
                             🎒
                           </button>
@@ -598,41 +611,41 @@ Return JSON with sentences array, each containing:
                     );
                   })
                 )}
-              </motion.div>
+              </div>
             )}
+          </div>
+
+          {/* Bottom rating buttons inside card */}
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20" onClick={(e) => e.stopPropagation()}>
+            <div className="bg-white/10 backdrop-blur-xl rounded-2xl border-2 border-white/20 p-4 shadow-2xl">
+              <p className="text-white/60 text-center text-xs mb-2">
+                How well do you know this?
+              </p>
+              <div className="flex gap-2">
+                {[0, 1, 2, 3, 4, 5].map((rating) => (
+                  <button
+                    key={rating}
+                    onClick={() => handleRating(rating)}
+                    className={`w-12 h-12 rounded-xl font-bold text-base transition-all hover:scale-110 active:scale-95 ${
+                      rating === 0
+                        ? "bg-gray-500/30 text-white/60"
+                        : rating === 5
+                        ? "bg-gradient-to-br from-green-500 to-emerald-500 text-white shadow-lg"
+                        : rating >= 4
+                        ? "bg-gradient-to-br from-blue-500 to-cyan-500 text-white"
+                        : rating >= 3
+                        ? "bg-gradient-to-br from-yellow-500 to-amber-500 text-white"
+                        : "bg-white/20 text-white"
+                    }`}
+                  >
+                    {rating}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
           </motion.div>
         </AnimatePresence>
-      </div>
-
-      {/* Bottom rating buttons inside card */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20">
-        <div className="bg-white/10 backdrop-blur-xl rounded-2xl border-2 border-white/20 p-4 shadow-2xl">
-          <p className="text-white/60 text-center text-xs mb-2">
-            How well do you know this?
-          </p>
-          <div className="flex gap-2">
-            {[0, 1, 2, 3, 4, 5].map((rating) => (
-              <button
-                key={rating}
-                onClick={() => handleRating(rating)}
-                className={`w-12 h-12 rounded-xl font-bold text-base transition-all hover:scale-110 active:scale-95 ${
-                  rating === 0
-                    ? "bg-gray-500/30 text-white/60"
-                    : rating === 5
-                    ? "bg-gradient-to-br from-green-500 to-emerald-500 text-white shadow-lg"
-                    : rating >= 4
-                    ? "bg-gradient-to-br from-blue-500 to-cyan-500 text-white"
-                    : rating >= 3
-                    ? "bg-gradient-to-br from-yellow-500 to-amber-500 text-white"
-                    : "bg-white/20 text-white"
-                }`}
-              >
-                {rating}
-              </button>
-            ))}
-          </div>
-        </div>
       </div>
 
       {/* Image regeneration dialog */}
