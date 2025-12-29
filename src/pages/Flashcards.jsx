@@ -23,6 +23,7 @@ export default function Flashcards() {
   const [generatingImage, setGeneratingImage] = useState(false);
   const [exampleSentences, setExampleSentences] = useState([]);
   const [generatingSentences, setGeneratingSentences] = useState(false);
+  const [revealedSentences, setRevealedSentences] = useState(new Set());
 
   const { data: userProfile } = useQuery({
     queryKey: ['userProfile'],
