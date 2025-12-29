@@ -561,7 +561,7 @@ Return JSON with sentences array, each containing:
                 )}
               </motion.div>
             )}
-            </div>
+          </div>
           </motion.div>
         </AnimatePresence>
       </div>
