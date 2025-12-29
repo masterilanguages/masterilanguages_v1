@@ -402,7 +402,7 @@ export default function Home() {
 
       {/* Quick Navigation */}
       <div className="max-w-4xl mx-auto px-4 pt-4">
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           <Link to={createPageUrl("Home")}>
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Button variant="outline" className="w-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 border-purple-500/50 text-white hover:from-purple-500/30 hover:to-pink-500/30 h-auto py-3 flex-col backdrop-blur-sm">
@@ -419,19 +419,11 @@ export default function Home() {
               </Button>
             </motion.div>
           </Link>
-          <Link to={createPageUrl("Practice")}>
+          <Link to={createPageUrl("Flashcards")}>
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Button variant="outline" className="w-full bg-gradient-to-br from-green-500/20 to-emerald-500/20 border-green-500/50 text-white hover:from-green-500/30 hover:to-emerald-500/30 h-auto py-3 flex-col backdrop-blur-sm">
                 <BookOpen className="w-5 h-5 mb-1" />
-                <span className="text-xs font-medium">Practice</span>
-              </Button>
-            </motion.div>
-          </Link>
-          <Link to={createPageUrl("Backpack")}>
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button variant="outline" className="w-full bg-gradient-to-br from-amber-500/20 to-orange-500/20 border-amber-500/50 text-white hover:from-amber-500/30 hover:to-orange-500/30 h-auto py-3 flex-col backdrop-blur-sm">
-                <Library className="w-5 h-5 mb-1" />
-                <span className="text-xs font-medium">Backpack</span>
+                <span className="text-xs font-medium">Flashcards</span>
               </Button>
             </motion.div>
           </Link>
