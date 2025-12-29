@@ -8,7 +8,6 @@ import ColorsLesson from './pages/ColorsLesson';
 import ColorsTest from './pages/ColorsTest';
 import Days from './pages/Days';
 import DaysLesson from './pages/DaysLesson';
-import Flashcards from './pages/Flashcards';
 import Home from './pages/Home';
 import Journal from './pages/Journal';
 import LanguageSelect from './pages/LanguageSelect';
@@ -23,6 +22,7 @@ import Songs from './pages/Songs';
 import Store from './pages/Store';
 import StoryLearning from './pages/StoryLearning';
 import Videos from './pages/Videos';
+import Flashcards from './pages/Flashcards';
 import __Layout from './Layout.jsx';
 
 
@@ -37,7 +37,6 @@ export const PAGES = {
     "ColorsTest": ColorsTest,
     "Days": Days,
     "DaysLesson": DaysLesson,
-    "Flashcards": Flashcards,
     "Home": Home,
     "Journal": Journal,
     "LanguageSelect": LanguageSelect,
@@ -52,6 +51,7 @@ export const PAGES = {
     "Store": Store,
     "StoryLearning": StoryLearning,
     "Videos": Videos,
+    "Flashcards": Flashcards,
 }
 
 export const pagesConfig = {

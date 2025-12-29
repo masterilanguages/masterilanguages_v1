@@ -588,41 +588,39 @@ Return JSON with sentences array, each containing:
                                 <>
                                   <p className="text-cyan-400 text-base mb-2" dir="ltr" style={{ unicodeBidi: 'isolate' }}>{sentence.transliteration}</p>
                                   <div className="mb-2" dir="rtl" lang="he" style={{ unicodeBidi: 'plaintext', textAlign: 'right' }}>
-                                    <bdi>
-                                      {sentence.hebrew.split(' ').map((word, wordIdx) => (
-                                        <span key={wordIdx} className="inline-flex items-center gap-1 group">
-                                          <EditableWord
-                                            text={word}
-                                            language="he"
-                                            onSave={(newWord) => {
-                                              const words = sentence.hebrew.split(' ');
-                                              words[wordIdx] = newWord;
-                                              const newSentences = [...exampleSentences];
-                                              newSentences[idx] = { ...sentence, hebrew: words.join(' ') };
-                                              setExampleSentences(newSentences);
-                                            }}
-                                            className="text-white text-base"
-                                          />
-                                          <button
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              createWordMutation.mutate({
-                                                word: word,
-                                                translation: "",
-                                                phonetic: "",
-                                                category: "wordbank",
-                                                times_practiced: 0,
-                                              });
-                                            }}
-                                            className="opacity-0 group-hover:opacity-100 transition-opacity text-xs"
-                                            title="Add to backpack"
-                                          >
-                                            🎒
-                                          </button>
-                                          {' '}
-                                        </span>
-                                      ))}
-                                    </bdi>
+                                    {sentence.hebrew.split(' ').map((word, wordIdx) => (
+                                      <span key={wordIdx} className="inline-block group" dir="rtl" style={{ unicodeBidi: 'isolate' }}>
+                                        <EditableWord
+                                          text={word}
+                                          language="he"
+                                          onSave={(newWord) => {
+                                            const words = sentence.hebrew.split(' ');
+                                            words[wordIdx] = newWord;
+                                            const newSentences = [...exampleSentences];
+                                            newSentences[idx] = { ...sentence, hebrew: words.join(' ') };
+                                            setExampleSentences(newSentences);
+                                          }}
+                                          className="text-white text-base"
+                                        />
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            createWordMutation.mutate({
+                                              word: word,
+                                              translation: "",
+                                              phonetic: "",
+                                              category: "wordbank",
+                                              times_practiced: 0,
+                                            });
+                                          }}
+                                          className="opacity-0 group-hover:opacity-100 transition-opacity text-xs ml-1"
+                                          title="Add to backpack"
+                                        >
+                                          🎒
+                                        </button>
+                                        {' '}
+                                      </span>
+                                    ))}
                                   </div>
                                 </>
                               )}

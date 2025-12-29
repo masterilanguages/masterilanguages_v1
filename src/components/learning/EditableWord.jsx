@@ -59,8 +59,11 @@ export default function EditableWord({
         onBlur={handleSave}
         onKeyDown={handleKeyDown}
         className={`inline-block bg-white/20 border border-cyan-400 rounded px-1 outline-none ${className}`}
-        style={{ width: `${Math.max(value.length * 8 + 10, 40)}px` }}
-        dir="ltr"
+        style={{ 
+          width: `${Math.max(value.length * 8 + 10, 40)}px`,
+          unicodeBidi: language === "he" ? "plaintext" : "normal"
+        }}
+        dir={language === "he" ? "rtl" : "ltr"}
       />
     );
   }
@@ -74,6 +77,7 @@ export default function EditableWord({
       }}
       className={`inline-block cursor-pointer px-1 rounded hover:underline ${className}`}
       dir={language === "he" ? "rtl" : "ltr"}
+      style={{ unicodeBidi: language === "he" ? "isolate" : "normal" }}
     >
       {text}
     </motion.span>
