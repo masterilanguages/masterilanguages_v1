@@ -125,8 +125,22 @@ export default function AvatarSelect() {
       }
       return await base44.entities.UserProfile.create(profileData);
     },
-    onSuccess: () => {
+    onSuccess: async (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['userProfile'] });
+
+      // Notify admin of new user
+      try {
+        const currentUser = await base44.auth.me();
+        await base44.functions.invoke('notifyNewUser', {
+          userEmail: currentUser?.email,
+          userName: currentUser?.full_name,
+          language: variables.language || profile?.language,
+          avatarName: variables.avatar_name
+        });
+      } catch (e) {
+        console.error('Failed to notify admin:', e);
+      }
+
       navigate(createPageUrl("Home"));
       toast.success("Welcome! Let's start learning! 🌱");
     },
