@@ -522,42 +522,56 @@ Return JSON with sentences array, each containing:
                     <p className="text-sm">Generating sentences...</p>
                   </div>
                 ) : (
-                  exampleSentences.map((sentence, idx) => (
-                    <div key={idx} className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4">
-                      <div className="flex items-start justify-between gap-3 mb-2">
-                        <p className="text-white text-base flex-1 cursor-text" dir="ltr">
-                          {sentence.hebrew.split(' ').map((word, wordIdx) => (
-                            <span
-                              key={wordIdx}
-                              className="hover:text-cyan-400 transition-colors cursor-pointer inline-block mr-1"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if ('speechSynthesis' in window) {
-                                  const utterance = new SpeechSynthesisUtterance(word);
-                                  utterance.lang = 'he-IL';
-                                  window.speechSynthesis.speak(utterance);
-                                }
-                              }}
-                            >
-                              {word}
-                            </span>
-                          ))}
-                        </p>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            addSentenceToBackpack(sentence);
-                          }}
-                          className="text-2xl hover:scale-110 transition-transform"
-                          title="Add to backpack"
-                        >
-                          🎒
-                        </button>
+                  exampleSentences.map((sentence, idx) => {
+                    const [showTranslation, setShowTranslation] = React.useState(false);
+                    return (
+                      <div 
+                        key={idx} 
+                        className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4 cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowTranslation(!showTranslation);
+                        }}
+                      >
+                        <div className="flex items-start justify-between gap-3 mb-2">
+                          <div className="flex-1">
+                            <p className="text-cyan-400 text-base mb-2">{sentence.transliteration}</p>
+                            {showTranslation && (
+                              <p className="text-white/60 text-sm mb-2">{sentence.english}</p>
+                            )}
+                            <p className="text-white text-base" dir="ltr">
+                              {sentence.hebrew.split(' ').map((word, wordIdx) => (
+                                <span
+                                  key={wordIdx}
+                                  className="hover:text-cyan-400 transition-colors cursor-pointer inline-block mr-1"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if ('speechSynthesis' in window) {
+                                      const utterance = new SpeechSynthesisUtterance(word);
+                                      utterance.lang = 'he-IL';
+                                      window.speechSynthesis.speak(utterance);
+                                    }
+                                  }}
+                                >
+                                  {word}
+                                </span>
+                              ))}
+                            </p>
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              addSentenceToBackpack(sentence);
+                            }}
+                            className="text-2xl hover:scale-110 transition-transform"
+                            title="Add to backpack"
+                          >
+                            🎒
+                          </button>
+                        </div>
                       </div>
-                      <p className="text-cyan-400 text-sm mb-1">{sentence.transliteration}</p>
-                      <p className="text-white/60 text-sm">{sentence.english}</p>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </motion.div>
             )}
