@@ -566,27 +566,29 @@ Return JSON with sentences array, each containing:
                             <p className="text-white/60 text-sm mb-2">{sentence.english}</p>
                             {isRevealed && (
                               <>
-                                <p className="text-cyan-400 text-base mb-2">{sentence.transliteration}</p>
-                                <p className="text-white text-base mb-2" dir="rtl">
-                                  {sentence.hebrew.split(' ').map((word, wordIdx) => (
-                                    <span
-                                      key={wordIdx}
-                                      className="hover:text-cyan-400 transition-colors cursor-pointer inline-block"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        createWordMutation.mutate({
-                                          word: word,
-                                          translation: "",
-                                          phonetic: "",
-                                          category: "wordbank",
-                                          times_practiced: 0,
-                                        });
-                                      }}
-                                      title="Click to add this word to backpack"
-                                    >
-                                      {word}{' '}
-                                    </span>
-                                  ))}
+                                <p className="text-cyan-400 text-base mb-2" dir="ltr" style={{ unicodeBidi: 'isolate' }}>{sentence.transliteration}</p>
+                                <p className="text-white text-base mb-2" dir="rtl" lang="he" style={{ unicodeBidi: 'plaintext', textAlign: 'right' }}>
+                                  <bdi>
+                                    {sentence.hebrew.split(' ').map((word, wordIdx) => (
+                                      <span
+                                        key={wordIdx}
+                                        className="hover:text-cyan-400 transition-colors cursor-pointer inline-block"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          createWordMutation.mutate({
+                                            word: word,
+                                            translation: "",
+                                            phonetic: "",
+                                            category: "wordbank",
+                                            times_practiced: 0,
+                                          });
+                                        }}
+                                        title="Click to add this word to backpack"
+                                      >
+                                        {word}{' '}
+                                      </span>
+                                    ))}
+                                  </bdi>
                                 </p>
                               </>
                             )}
