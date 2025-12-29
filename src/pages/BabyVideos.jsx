@@ -749,7 +749,9 @@ Create about 15-20 conversational lines that naturally introduce and use these v
               <ArrowLeft className="w-6 h-6" />
             </Link>
             <div>
-              <h1 className="text-3xl font-bold text-white">📺 Hebrew TV</h1>
+              <h1 className="text-3xl font-bold text-white">
+                📺 {userProfile?.language === 'hebrew' ? 'Hebrew TV' : 'Videos'}
+              </h1>
               <p className="text-white/60">Watch videos & rate words you learn</p>
             </div>
           </div>
