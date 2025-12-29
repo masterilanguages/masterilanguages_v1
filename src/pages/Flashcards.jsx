@@ -21,6 +21,8 @@ export default function Flashcards() {
   const [imageRegenDialog, setImageRegenDialog] = useState(false);
   const [imagePrompt, setImagePrompt] = useState("");
   const [generatingImage, setGeneratingImage] = useState(false);
+  const [exampleSentences, setExampleSentences] = useState([]);
+  const [generatingSentences, setGeneratingSentences] = useState(false);
 
   const { data: userProfile } = useQuery({
     queryKey: ['userProfile'],
@@ -62,6 +64,14 @@ export default function Flashcards() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['userCoins'] }),
   });
 
+  const createWordMutation = useMutation({
+    mutationFn: (wordData) => base44.entities.Word.create(wordData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['words'] });
+      toast.success("Sentence added to backpack!");
+    },
+  });
+
   const levelData = [
     { level: 0, label: "Level 0", subtitle: "New", gradient: "from-gray-500 to-slate-500" },
     { level: 1, label: "Level 1", subtitle: "Seen", gradient: "from-red-500 to-pink-500" },
@@ -86,6 +96,58 @@ export default function Flashcards() {
     setCurrentIndex(0);
     setRevealState(0);
     setSelectedLevel(level);
+    setExampleSentences([]);
+  };
+
+  const generateSentences = async (word) => {
+    if (exampleSentences.length > 0) return;
+    setGeneratingSentences(true);
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Generate 3 simple example sentences in Hebrew using the word "${word.word}" (${word.translation}).
+        
+Each sentence should:
+- Be short (5-10 words)
+- Use common vocabulary
+- Show natural usage
+- Include the target word
+
+Return JSON with sentences array, each containing:
+- hebrew: the Hebrew sentence
+- transliteration: phonetic spelling
+- english: English translation`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            sentences: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  hebrew: { type: "string" },
+                  transliteration: { type: "string" },
+                  english: { type: "string" }
+                }
+              }
+            }
+          }
+        }
+      });
+      setExampleSentences(result.sentences || []);
+    } catch (e) {
+      console.error("Failed to generate sentences", e);
+    }
+    setGeneratingSentences(false);
+  };
+
+  const addSentenceToBackpack = async (sentence) => {
+    await createWordMutation.mutateAsync({
+      word: sentence.hebrew,
+      translation: sentence.english,
+      phonetic: sentence.transliteration,
+      category: "sentences",
+      times_practiced: 0,
+    });
   };
 
   const handleCardTap = () => {
@@ -117,6 +179,7 @@ export default function Flashcards() {
     if (currentIndex < sessionWords.length - 1) {
       setCurrentIndex(currentIndex + 1);
       setRevealState(0);
+      setExampleSentences([]);
     } else {
       toast.success("Session complete! 🎉");
       setSelectedLevel(null);
@@ -154,6 +217,12 @@ export default function Flashcards() {
       window.speechSynthesis.speak(utterance);
     }
   };
+
+  React.useEffect(() => {
+    if (currentWord && revealState >= 1) {
+      generateSentences(currentWord);
+    }
+  }, [currentWord, revealState]);
 
   if (isLoading) {
     return (
@@ -216,29 +285,8 @@ export default function Flashcards() {
   // Full-screen flashcard session
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex flex-col">
-      {/* Top bar */}
-      <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4">
-        <Button
-          onClick={() => setSelectedLevel(null)}
-          variant="ghost"
-          size="icon"
-          className="text-white bg-black/30 backdrop-blur-sm hover:bg-black/50 rounded-full"
-        >
-          <X className="w-6 h-6" />
-        </Button>
-        <div className="bg-black/30 backdrop-blur-sm rounded-full px-4 py-2">
-          <span className="text-white font-medium">{currentIndex + 1} / {sessionWords.length}</span>
-        </div>
-        <button
-          onClick={() => setImageRegenDialog(true)}
-          className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm hover:bg-black/50 flex items-center justify-center text-2xl"
-        >
-          🎨
-        </button>
-      </div>
-
       {/* Main card area */}
-      <div className="flex-1 flex items-center justify-center p-4 pt-20 pb-32">
+      <div className="flex-1 flex items-center justify-center p-4 py-8">
         <AnimatePresence mode="wait">
           <motion.div
             key={`${currentWord?.id}-${revealState}`}
@@ -246,8 +294,35 @@ export default function Flashcards() {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
             onClick={handleCardTap}
-            className="w-full max-w-2xl h-full max-h-[600px] bg-white/10 backdrop-blur-xl rounded-3xl border-2 border-white/20 p-8 cursor-pointer flex flex-col items-center justify-center relative overflow-y-auto"
+            className="w-full max-w-2xl h-full max-h-[700px] bg-white/10 backdrop-blur-xl rounded-3xl border-2 border-white/20 p-8 cursor-pointer flex flex-col items-center justify-start relative overflow-y-auto"
           >
+            {/* Top bar inside card */}
+            <div className="absolute top-4 left-4 right-4 z-10 flex items-center justify-between" onClick={(e) => e.stopPropagation()}>
+              <Button
+                onClick={() => setSelectedLevel(null)}
+                variant="ghost"
+                size="icon"
+                className="text-white bg-black/30 backdrop-blur-sm hover:bg-black/50 rounded-full"
+              >
+                <X className="w-5 h-5" />
+              </Button>
+              <div className="flex items-center gap-3">
+                <div className="bg-black/30 backdrop-blur-sm rounded-full px-3 py-1.5 text-white text-sm font-medium">
+                  Level {currentWord?.times_practiced || 0}
+                </div>
+                <div className="bg-black/30 backdrop-blur-sm rounded-full px-3 py-1.5">
+                  <span className="text-white text-sm font-medium">{currentIndex + 1}/{sessionWords.length}</span>
+                </div>
+                <button
+                  onClick={() => setImageRegenDialog(true)}
+                  className="w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm hover:bg-black/50 flex items-center justify-center text-xl"
+                >
+                  🎨
+                </button>
+              </div>
+            </div>
+
+            <div className="flex-1 flex flex-col items-center justify-center w-full mt-12">
             {/* Image (always visible if exists) */}
             {currentWord?.image_url && revealState >= 0 && (
               <motion.div
@@ -263,16 +338,7 @@ export default function Flashcards() {
               </motion.div>
             )}
 
-            {/* Tap indicator (state 0) */}
-            {revealState === 0 && (
-              <motion.p
-                animate={{ opacity: [0.5, 1, 0.5] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                className="text-white/60 text-sm"
-              >
-                Tap to reveal
-              </motion.p>
-            )}
+
 
             {/* English (state 1+) */}
             {revealState >= 1 && (
