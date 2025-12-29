@@ -246,10 +246,49 @@ Return JSON with sentences array, each containing:
   const currentWord = sessionWords[currentIndex];
 
   React.useEffect(() => {
-    if (currentWord && revealState >= 1) {
-      generateSentences(currentWord);
+    if (currentWord && revealState >= 1 && exampleSentences.length === 0) {
+      const generate = async () => {
+        setGeneratingSentences(true);
+        try {
+          const result = await base44.integrations.Core.InvokeLLM({
+            prompt: `Generate 3 simple example sentences in Hebrew using the word "${currentWord.word}" (${currentWord.translation}).
+            
+  Each sentence should:
+  - Be short (5-10 words)
+  - Use common vocabulary
+  - Show natural usage
+  - Include the target word
+  
+  Return JSON with sentences array, each containing:
+  - hebrew: the Hebrew sentence
+  - transliteration: phonetic spelling
+  - english: English translation`,
+            response_json_schema: {
+              type: "object",
+              properties: {
+                sentences: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      hebrew: { type: "string" },
+                      transliteration: { type: "string" },
+                      english: { type: "string" }
+                    }
+                  }
+                }
+              }
+            }
+          });
+          setExampleSentences(result.sentences || []);
+        } catch (e) {
+          console.error("Failed to generate sentences", e);
+        }
+        setGeneratingSentences(false);
+      };
+      generate();
     }
-  }, [currentWord, revealState]);
+  }, [currentWord?.id, revealState]);
 
   if (isLoading) {
     return (
