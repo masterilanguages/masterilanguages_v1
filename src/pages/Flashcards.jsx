@@ -23,7 +23,7 @@ export default function Flashcards() {
   const [generatingImage, setGeneratingImage] = useState(false);
   const [exampleSentences, setExampleSentences] = useState([]);
   const [generatingSentences, setGeneratingSentences] = useState(false);
-  const [revealedSentences, setRevealedSentences] = useState(new Set());
+  const [revealedSentences, setRevealedSentences] = useState([]);
   const [skipCount, setSkipCount] = useState(0);
 
   const { data: userProfile } = useQuery({
@@ -563,22 +563,18 @@ Return JSON with sentences array, each containing:
                 ) : (
                   <>
                     {exampleSentences.map((sentence, idx) => {
-                      const isRevealed = revealedSentences.has(idx);
+                      const isRevealed = revealedSentences.includes(idx);
                       return (
                         <div 
                           key={idx} 
                           className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4 cursor-pointer"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setRevealedSentences(prev => {
-                              const next = new Set(prev);
-                              if (next.has(idx)) {
-                                next.delete(idx);
-                              } else {
-                                next.add(idx);
-                              }
-                              return next;
-                            });
+                            setRevealedSentences(prev => 
+                              prev.includes(idx) 
+                                ? prev.filter(i => i !== idx)
+                                : [...prev, idx]
+                            );
                           }}
                         >
                           <div className="flex items-start justify-between gap-3 mb-2">
