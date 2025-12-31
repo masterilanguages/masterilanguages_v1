@@ -12,7 +12,7 @@ export default function VideoAdminControls({ video, onUpdate }) {
   
   const [editForm, setEditForm] = useState({
     title: video.title || "",
-    level: video.level || 1,
+    day: video.level || 1,
     tags: video.tags || "",
     notes: video.notes || ""
   });
@@ -21,7 +21,7 @@ export default function VideoAdminControls({ video, onUpdate }) {
     try {
       await onUpdate({
         title: editForm.title,
-        level: parseInt(editForm.level) || 1,
+        level: parseInt(editForm.day) || 1,
         tags: editForm.tags,
         notes: editForm.notes
       });
@@ -62,13 +62,13 @@ export default function VideoAdminControls({ video, onUpdate }) {
               />
             </div>
             <div>
-              <Label>Level</Label>
+              <Label>Day</Label>
               <Input
                 type="number"
                 min="1"
-                max="5"
-                value={editForm.level}
-                onChange={(e) => setEditForm({ ...editForm, level: e.target.value })}
+                max="100"
+                value={editForm.day}
+                onChange={(e) => setEditForm({ ...editForm, day: e.target.value })}
                 className="bg-white/5 border-white/20 text-white"
               />
             </div>
