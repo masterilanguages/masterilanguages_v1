@@ -1120,7 +1120,10 @@ Create about 15-20 conversational lines that naturally introduce and use these v
                                        <VideoAdminControls
                                          video={video}
                                          onUpdate={(data) => updateVideoMutation.mutate({ id: video.id, data })}
-                                         onDelete={(data) => deleteVideoMutation.mutate({ videoId: video.id, deleteData: data })}
+                                         onDelete={(data) => {
+                                           console.log('BabyVideos onDelete called with:', data, 'video.id:', video.id);
+                                           deleteVideoMutation.mutate({ videoId: video.id, deleteData: data });
+                                         }}
                                          onReplaceUrl={(data) => updateVideoMutation.mutate({ id: video.id, data })}
                                        />
                                      </div>
