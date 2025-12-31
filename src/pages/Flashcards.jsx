@@ -15,6 +15,10 @@ import EditableWord from "../components/learning/EditableWord";
 export default function Flashcards() {
   const queryClient = useQueryClient();
   const [selectedLevel, setSelectedLevel] = useState(null);
+
+  React.useEffect(() => {
+    document.title = "Flashcards - Lashon Languages";
+  }, []);
   const [sessionWords, setSessionWords] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [revealState, setRevealState] = useState(0); // 0: image only, 1: +english, 2: +target/conjugation
