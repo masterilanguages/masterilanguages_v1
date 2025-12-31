@@ -536,7 +536,7 @@ Return JSON only.`,
                            }}
                            className="text-xl transition-transform hover:scale-110"
                          >
-                           🖊️
+                           ✏️
                          </button>
                        )}
                        {canDelete && (
@@ -548,6 +548,7 @@ Return JSON only.`,
                              }
                            }}
                            className="text-xl transition-transform hover:scale-110"
+                           style={{ filter: 'grayscale(100%) brightness(200%)' }}
                          >
                            🗑️
                          </button>
@@ -620,7 +621,7 @@ Return JSON only.`,
                           }}
                           className="text-xl transition-transform hover:scale-110"
                         >
-                          🖊️
+                          ✏️
                         </button>
                       )}
                       {canDelete && (
@@ -632,6 +633,7 @@ Return JSON only.`,
                             }
                           }}
                           className="text-xl transition-transform hover:scale-110"
+                          style={{ filter: 'grayscale(100%) brightness(200%)' }}
                         >
                           🗑️
                         </button>
