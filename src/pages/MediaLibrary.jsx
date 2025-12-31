@@ -151,10 +151,33 @@ export default function MediaLibrary() {
       
       const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
       
+      // Get video duration and detect language/topics using LLM
+      const analysisResult = await base44.integrations.Core.InvokeLLM({
+        prompt: `Analyze this YouTube video title: "${data.title}"
+        
+1. Detect the PRIMARY language (return one of: hebrew, english, spanish, french, portuguese, italian)
+2. Suggest 2-4 relevant topics from this list: Religion / Spirituality, Sports / Fitness, Cooking / Food, Nutrition, Health / Wellness, Meditation / Mindfulness, Music, Travel, Culture, Education / Learning, Business / Career, Personal Growth, Relationships, News / Current Events
+3. Get the video duration from the page
+
+Return JSON only.`,
+        add_context_from_internet: true,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            language: { type: "string" },
+            topics: { type: "array", items: { type: "string" } },
+            duration_minutes: { type: "number" }
+          }
+        }
+      });
+      
       setFormData(prev => ({
         ...prev,
         title: data.title || prev.title,
-        thumbnail_url: thumbnailUrl
+        thumbnail_url: thumbnailUrl,
+        language: analysisResult.language || prev.language,
+        topics: analysisResult.topics || [],
+        duration_minutes: analysisResult.duration_minutes || ""
       }));
 
       toast.success("Video info loaded!");
@@ -173,10 +196,7 @@ export default function MediaLibrary() {
       difficulty_level: "All",
       duration_minutes: "",
       tags: "",
-      speaking_speed: "Normal",
       accent_region: "",
-      suitable_for_journaling: false,
-      suitable_for_speaking: false,
       is_active: true,
       thumbnail_url: "",
       notes: ""
