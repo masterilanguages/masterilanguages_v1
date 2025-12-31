@@ -1160,7 +1160,12 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
                       <div className="flex items-start gap-3">
                         <div className="flex items-center gap-1">
                           <button
-                            onClick={() => handleSeekTo(segment.start)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (editingSegment !== idx) {
+                                handleSeekTo(segment.start);
+                              }
+                            }}
                             className="flex-shrink-0 w-8 h-8 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 flex items-center justify-center text-xs text-cyan-400 font-mono transition-all cursor-pointer"
                           >
                             {editingSegment === idx ? (
