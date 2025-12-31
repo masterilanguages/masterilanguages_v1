@@ -335,7 +335,16 @@ Return JSON only.`,
   };
 
   const getThumbnailUrl = (video) => {
+    // Try thumbnail_url first
     if (video.thumbnail_url) return video.thumbnail_url;
+    
+    // Try to extract from video_url (most reliable for MediaLibrary)
+    if (video.video_url) {
+      const videoId = extractYouTubeId(video.video_url);
+      if (videoId) {
+        return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+      }
+    }
     
     // For MediaLibrary videos with video_id
     if (video.video_id) {
@@ -345,14 +354,6 @@ Return JSON only.`,
     // For Video entity with youtube_video_id
     if (video.youtube_video_id) {
       return `https://img.youtube.com/vi/${video.youtube_video_id}/hqdefault.jpg`;
-    }
-    
-    // Try to extract from video_url
-    if (video.video_url) {
-      const videoId = extractYouTubeId(video.video_url);
-      if (videoId) {
-        return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-      }
     }
     
     return null;
