@@ -336,24 +336,27 @@ Return JSON only.`,
 
   const getThumbnailUrl = (video) => {
     // Try thumbnail_url first
-    if (video.thumbnail_url) return video.thumbnail_url;
-    
-    // Try to extract from video_url (most reliable for MediaLibrary)
-    if (video.video_url) {
-      const videoId = extractYouTubeId(video.video_url);
-      if (videoId) {
-        return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-      }
+    if (video.thumbnail_url && video.thumbnail_url.trim()) {
+      return video.thumbnail_url;
     }
     
-    // For MediaLibrary videos with video_id
-    if (video.video_id) {
-      return `https://img.youtube.com/vi/${video.video_id}/hqdefault.jpg`;
-    }
+    let videoId = null;
     
+    // Try stored video_id first
+    if (video.video_id && video.video_id.trim()) {
+      videoId = video.video_id;
+    }
+    // Try extracting from video_url
+    else if (video.video_url && video.video_url.trim()) {
+      videoId = extractYouTubeId(video.video_url);
+    }
     // For Video entity with youtube_video_id
-    if (video.youtube_video_id) {
-      return `https://img.youtube.com/vi/${video.youtube_video_id}/hqdefault.jpg`;
+    else if (video.youtube_video_id && video.youtube_video_id.trim()) {
+      videoId = video.youtube_video_id;
+    }
+    
+    if (videoId) {
+      return `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
     }
     
     return null;
