@@ -1097,6 +1097,55 @@ export default function Home() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Add Task Dialog */}
+      <Dialog open={showAddTaskDialog} onOpenChange={setShowAddTaskDialog}>
+        <DialogContent className="bg-slate-900 border-white/20 text-white">
+          <DialogHeader>
+            <DialogTitle>Add New Task</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-white/60 text-sm mb-2 block">Task Name</label>
+              <Input 
+                placeholder="e.g., Watch a video" 
+                value={newTask.name} 
+                onChange={(e) => setNewTask({...newTask, name: e.target.value})} 
+                className="bg-white/5 border-white/20 text-white" 
+              />
+            </div>
+            <div>
+              <label className="text-white/60 text-sm mb-2 block">Duration (optional)</label>
+              <Input 
+                placeholder="e.g., 10 minutes" 
+                value={newTask.duration} 
+                onChange={(e) => setNewTask({...newTask, duration: e.target.value})} 
+                className="bg-white/5 border-white/20 text-white" 
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => {
+                  setShowAddTaskDialog(false);
+                  setEditingDayId(null);
+                  setNewTask({ name: "", duration: "" });
+                }}
+                variant="outline"
+                className="flex-1 border-white/20 text-white"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleAddTask}
+                disabled={!newTask.name.trim()}
+                className="flex-1 bg-green-500 hover:bg-green-600"
+              >
+                Add Task
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
       </div>
       );
       }
