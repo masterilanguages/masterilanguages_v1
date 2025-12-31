@@ -16,7 +16,6 @@ import Level1World from './pages/Level1World';
 import MonthsLesson from './pages/MonthsLesson';
 import Pictures from './pages/Pictures';
 import PicturesLesson2 from './pages/PicturesLesson2';
-import Practice from './pages/Practice';
 import Progress from './pages/Progress';
 import Sentences from './pages/Sentences';
 import Songs from './pages/Songs';
@@ -45,7 +44,6 @@ export const PAGES = {
     "MonthsLesson": MonthsLesson,
     "Pictures": Pictures,
     "PicturesLesson2": PicturesLesson2,
-    "Practice": Practice,
     "Progress": Progress,
     "Sentences": Sentences,
     "Songs": Songs,
@@ -55,7 +53,7 @@ export const PAGES = {
 }
 
 export const pagesConfig = {
-    mainPage: "Practice",
+    mainPage: "Activities",
     Pages: PAGES,
     Layout: __Layout,
 };
