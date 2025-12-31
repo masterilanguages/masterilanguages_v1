@@ -60,6 +60,10 @@ export default function Home() {
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [managingUserEmail, setManagingUserEmail] = useState(localStorage.getItem('admin_managing_user'));
   const [showLanguageSelector, setShowLanguageSelector] = useState(false);
+  const [showCoachManager, setShowCoachManager] = useState(false);
+  const [showAssignDialog, setShowAssignDialog] = useState(false);
+  const [selectedCoach, setSelectedCoach] = useState("");
+  const [selectedStudent, setSelectedStudent] = useState("");
 
 
   // Get current user
@@ -178,6 +182,13 @@ export default function Home() {
     staleTime: 30 * 60 * 1000,
   });
 
+  const { data: coachAssignments = [] } = useQuery({
+    queryKey: ['coachAssignments'],
+    queryFn: () => base44.entities.CoachAssignment.list(),
+    enabled: currentUser?.role === 'admin',
+    staleTime: 30 * 60 * 1000,
+  });
+
   const updateCoinsMutation = useMutation({
     mutationFn: (data) => base44.entities.UserCoins.update(userCoins?.id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['userCoins'] }),
@@ -269,6 +280,25 @@ export default function Home() {
       queryClient.invalidateQueries({ queryKey: ['days'] });
       toast.success("Language updated!");
       setShowLanguageSelector(false);
+    },
+  });
+
+  const createAssignmentMutation = useMutation({
+    mutationFn: (data) => base44.entities.CoachAssignment.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['coachAssignments'] });
+      setShowAssignDialog(false);
+      setSelectedCoach("");
+      setSelectedStudent("");
+      toast.success("Coach assigned!");
+    },
+  });
+
+  const deleteAssignmentMutation = useMutation({
+    mutationFn: (id) => base44.entities.CoachAssignment.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['coachAssignments'] });
+      toast.success("Assignment removed");
     },
   });
 
@@ -531,16 +561,17 @@ export default function Home() {
               🔧 Admin: Manage Content by Language
             </Button>
             <Button
+              onClick={() => setShowCoachManager(!showCoachManager)}
+              className="w-full bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/50 text-white hover:from-cyan-500/30 hover:to-blue-500/30"
+            >
+              👥 Admin: Manage Coaches
+            </Button>
+            <Button
               onClick={() => setShowUserManager(!showUserManager)}
               className="w-full bg-gradient-to-r from-indigo-500/20 to-purple-500/20 border border-indigo-500/50 text-white hover:from-indigo-500/30 hover:to-purple-500/30"
             >
               👥 Admin: Manage Users
             </Button>
-            <Link to={createPageUrl("ManageCoaches")}>
-              <Button className="w-full bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/50 text-white hover:from-cyan-500/30 hover:to-blue-500/30">
-                👥 Admin: Manage Coaches
-              </Button>
-            </Link>
           </div>
         )}
 
@@ -575,6 +606,66 @@ export default function Home() {
                 ))}
               </div>
               <p className="text-white/40 text-xs">Your current view is: {userProfile?.language}</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Coach Manager Panel */}
+        <AnimatePresence>
+          {showCoachManager && currentUser?.role === 'admin' && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mt-2 bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-4 space-y-3 max-h-96 overflow-y-auto"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-white/60 text-sm font-medium">Coach Assignments</p>
+                <Button
+                  onClick={() => setShowAssignDialog(true)}
+                  size="sm"
+                  className="bg-gradient-to-r from-green-500 to-emerald-500"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Assign Coach
+                </Button>
+              </div>
+
+              {coachAssignments.length === 0 ? (
+                <div className="text-center py-4">
+                  <p className="text-white/40 text-sm">No coach assignments yet</p>
+                </div>
+              ) : (
+                Object.entries(
+                  coachAssignments.reduce((acc, assignment) => {
+                    if (!acc[assignment.coach_email]) acc[assignment.coach_email] = [];
+                    acc[assignment.coach_email].push(assignment);
+                    return acc;
+                  }, {})
+                ).map(([coachEmail, assignments]) => (
+                  <div key={coachEmail} className="bg-white/5 rounded-lg p-3 space-y-2">
+                    <div className="flex items-center gap-2 text-cyan-400 font-medium text-sm">
+                      <span>👨‍🏫</span>
+                      <span>{coachEmail}</span>
+                      <span className="text-white/40">({assignments.length})</span>
+                    </div>
+                    {assignments.map((assignment) => (
+                      <div
+                        key={assignment.id}
+                        className="flex items-center justify-between bg-white/5 rounded p-2 text-sm"
+                      >
+                        <span className="text-white/80">{assignment.student_email}</span>
+                        <button
+                          onClick={() => deleteAssignmentMutation.mutate(assignment.id)}
+                          className="text-red-400 hover:text-red-300"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ))
+              )}
             </motion.div>
           )}
         </AnimatePresence>
@@ -925,6 +1016,78 @@ export default function Home() {
         onRestartLife={handleRestartLife}
         avatarName={userProfile?.avatar_name || 'Avatar'}
       />
+
+      {/* Assign Coach Dialog */}
+      <Dialog open={showAssignDialog} onOpenChange={setShowAssignDialog}>
+        <DialogContent className="bg-slate-900 border-white/20 text-white">
+          <DialogHeader>
+            <DialogTitle>Assign Coach to Student</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-white/60 text-sm mb-2 block">Coach</label>
+              <select
+                value={selectedCoach}
+                onChange={(e) => setSelectedCoach(e.target.value)}
+                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
+              >
+                <option value="">Select coach...</option>
+                {allUsers.map((user) => (
+                  <option key={user.id} value={user.email}>
+                    {user.email} {user.role === 'admin' ? '(Admin)' : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-white/60 text-sm mb-2 block">Student</label>
+              <select
+                value={selectedStudent}
+                onChange={(e) => setSelectedStudent(e.target.value)}
+                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
+              >
+                <option value="">Select student...</option>
+                {allUsers.map((user) => (
+                  <option key={user.id} value={user.email}>
+                    {user.email}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setShowAssignDialog(false)}
+                variant="outline"
+                className="flex-1 border-white/20 text-white"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  if (!selectedCoach || !selectedStudent) {
+                    toast.error("Select both coach and student");
+                    return;
+                  }
+                  if (selectedCoach === selectedStudent) {
+                    toast.error("Coach cannot manage themselves");
+                    return;
+                  }
+                  createAssignmentMutation.mutate({
+                    coach_email: selectedCoach,
+                    student_email: selectedStudent,
+                    assigned_by: currentUser.email,
+                    assigned_at: new Date().toISOString(),
+                  });
+                }}
+                disabled={createAssignmentMutation.isPending}
+                className="flex-1 bg-gradient-to-r from-green-500 to-emerald-500"
+              >
+                Assign
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
       </div>
       );
       }
