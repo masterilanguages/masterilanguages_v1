@@ -570,28 +570,29 @@ export default function BabyVideos() {
     },
   });
 
+  // Check if single video mode (from day task)
+  const singleVideoMode = searchParams.get('single') === 'true';
+  const targetVideoId = searchParams.get('videoId');
+
   // Auto-expand video from URL parameter
   useEffect(() => {
-    const videoId = searchParams.get('videoId');
-    if (videoId) {
+    if (targetVideoId) {
       // Try to parse as number for hardcoded videos, keep as string for custom
-      const parsedId = !isNaN(videoId) && !videoId.startsWith('custom-') 
-        ? parseInt(videoId, 10) 
-        : videoId;
+      const parsedId = !isNaN(targetVideoId) && !targetVideoId.startsWith('custom-') 
+        ? parseInt(targetVideoId, 10) 
+        : targetVideoId;
       
-      console.log('Auto-expanding video:', parsedId, 'from URL param:', videoId);
       setExpandedVideoId(parsedId);
       
       // Scroll to video after a short delay
       setTimeout(() => {
         const videoElement = document.getElementById(`video-${parsedId}`);
-        console.log('Scrolling to element:', videoElement);
         if (videoElement) {
           videoElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
       }, 500);
     }
-  }, [searchParams]);
+  }, [targetVideoId]);
 
   const removeFromBackpack = async (word) => {
     const existingWord = wordRatings.find(w => w.word === word.hebrew || w.word === word);
@@ -799,13 +800,22 @@ Create about 15-20 conversational lines that naturally introduce and use these v
               )}
             </div>
           </div>
-          <Button
-            onClick={() => setBackpackOpen(true)}
-            className="bg-amber-500/20 text-amber-400 border border-amber-500/50"
-          >
-            <Backpack className="w-5 h-5 mr-2" />
-            Backpack ({fluentWords.length} ⭐)
-          </Button>
+          <div className="flex gap-2">
+            {singleVideoMode && (
+              <Link to={createPageUrl("BabyVideos")}>
+                <Button className="bg-white/10 text-white border border-white/20">
+                  See All Videos
+                </Button>
+              </Link>
+            )}
+            <Button
+              onClick={() => setBackpackOpen(true)}
+              className="bg-amber-500/20 text-amber-400 border border-amber-500/50"
+            >
+              <Backpack className="w-5 h-5 mr-2" />
+              Backpack ({fluentWords.length} ⭐)
+            </Button>
+          </div>
         </div>
 
         {/* Video Player */}
@@ -1083,47 +1093,49 @@ Create about 15-20 conversational lines that naturally introduce and use these v
             </div>
           </motion.div>
         ) : (
-          <div className="space-y-4">
-            {/* Add Custom Video Section */}
-            <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/20 p-6">
-              <p className="text-white/60 mb-3 text-center">🎬 Add a YouTube video</p>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={customVideoUrl}
-                  onChange={(e) => setCustomVideoUrl(e.target.value)}
-                  placeholder="Paste YouTube URL here..."
-                  className="flex-1 px-4 py-3 rounded-lg bg-slate-800 border border-white/30 text-white placeholder:text-white/50 outline-none focus:border-cyan-400"
-                />
-                <button
-                  onClick={() => {
-                    const ytId = extractYouTubeId(customVideoUrl);
-                    console.log('YouTube ID extracted:', ytId);
-                    console.log('Full URL:', customVideoUrl);
-                    
-                    if (!ytId) {
-                      toast.error("Invalid YouTube URL - paste a link like: youtube.com/watch?v=...");
-                      return;
-                    }
-                    
-                    createVideoMutation.mutate({
-                      video_url: customVideoUrl,
-                      title: `YouTube Video ${Date.now()}`,
-                      youtube_video_id: ytId,
-                      language: userProfile?.language || 'hebrew',
-                      order: customVideos.length
-                    });
-                  }}
-                  disabled={!customVideoUrl.trim() || createVideoMutation.isPending}
-                  className="px-5 py-3 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {createVideoMutation.isPending ? 'Adding...' : 'Add'}
-                </button>
-              </div>
-            </div>
+                <div className="space-y-4">
+                  {/* Add Custom Video Section - hide in single video mode */}
+                  {!singleVideoMode && (
+                    <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/20 p-6">
+                      <p className="text-white/60 mb-3 text-center">🎬 Add a YouTube video</p>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={customVideoUrl}
+                          onChange={(e) => setCustomVideoUrl(e.target.value)}
+                          placeholder="Paste YouTube URL here..."
+                          className="flex-1 px-4 py-3 rounded-lg bg-slate-800 border border-white/30 text-white placeholder:text-white/50 outline-none focus:border-cyan-400"
+                        />
+                        <button
+                          onClick={() => {
+                            const ytId = extractYouTubeId(customVideoUrl);
+                            console.log('YouTube ID extracted:', ytId);
+                            console.log('Full URL:', customVideoUrl);
 
-            {/* Custom Videos First */}
-            {customVideos.length > 0 && (
+                            if (!ytId) {
+                              toast.error("Invalid YouTube URL - paste a link like: youtube.com/watch?v=...");
+                              return;
+                            }
+
+                            createVideoMutation.mutate({
+                              video_url: customVideoUrl,
+                              title: `YouTube Video ${Date.now()}`,
+                              youtube_video_id: ytId,
+                              language: userProfile?.language || 'hebrew',
+                              order: customVideos.length
+                            });
+                          }}
+                          disabled={!customVideoUrl.trim() || createVideoMutation.isPending}
+                          className="px-5 py-3 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {createVideoMutation.isPending ? 'Adding...' : 'Add'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Custom Videos First */}
+                  {customVideos.length > 0 && !singleVideoMode && (
               <div className="mb-4">
                 <h2 className="text-white/60 text-sm font-medium mb-3">Your Videos</h2>
                 <DragDropContext onDragEnd={handleVideoDragEnd}>
@@ -1271,8 +1283,8 @@ Create about 15-20 conversational lines that naturally introduce and use these v
                     </div>
                     )}
 
-            {/* Recommended Videos Dropdown - Only show for Hebrew */}
-            {userProfile?.language === 'hebrew' && (
+            {/* Recommended Videos Dropdown - Only show for Hebrew and not in single video mode */}
+            {userProfile?.language === 'hebrew' && !singleVideoMode && (
               <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden">
                 <button
                   onClick={() => setRecommendedExpanded(!recommendedExpanded)}

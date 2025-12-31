@@ -833,7 +833,7 @@ export default function Home() {
                                       });
 
                                       if (videos.length > 0) {
-                                        navigate(`${createPageUrl("BabyVideos")}?videoId=custom-${videos[0].id}`);
+                                        navigate(`${createPageUrl("BabyVideos")}?videoId=custom-${videos[0].id}&single=true`);
                                       } else {
                                         navigate(createPageUrl("BabyVideos"));
                                         toast.info(`No video found for Day ${day.day_number}`);
