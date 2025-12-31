@@ -955,21 +955,9 @@ export default function Home() {
                                   </div>
                                 ) : (
                                   <button
-                                    onClick={isMasterUser ? () => handleStartEditTask(task) : async () => {
-                                      if (task.page === "BabyVideos") {
-                                        const videos = await base44.entities.Video.filter({ 
-                                          language: userProfile?.language || 'hebrew',
-                                          level: day.day_number
-                                        });
-
-                                        if (videos.length > 0) {
-                                          navigate(`${createPageUrl("BabyVideos")}?videoId=custom-${videos[0].id}&single=true`);
-                                        } else {
-                                          navigate(createPageUrl("BabyVideos"));
-                                          toast.info(`No video found for Day ${day.day_number}`);
-                                        }
-                                      } else if (task.page) {
-                                        navigate(createPageUrl(task.page));
+                                    onClick={isMasterUser ? () => handleStartEditTask(task) : () => {
+                                      if (task.page) {
+                                        window.open(task.page, '_blank');
                                       }
                                     }}
                                     className="flex-1 flex items-center gap-3 text-left"
@@ -999,6 +987,7 @@ export default function Home() {
                               <div className="bg-white/10 rounded-xl p-3 space-y-2">
                                 <Input placeholder="Task name" value={newTask.name} onChange={(e) => setNewTask({...newTask, name: e.target.value})} className="bg-white/5 border-white/20 text-white text-sm" />
                                 <Input placeholder="Duration (optional)" value={newTask.duration} onChange={(e) => setNewTask({...newTask, duration: e.target.value})} className="bg-white/5 border-white/20 text-white text-sm" />
+                                <Input placeholder="Link URL (optional)" value={newTask.page} onChange={(e) => setNewTask({...newTask, page: e.target.value})} className="bg-white/5 border-white/20 text-white text-sm" />
                                 <div className="flex gap-2">
                                   <Button onClick={() => handleAddTask(day.id)} className="flex-1 bg-green-500 hover:bg-green-600" size="sm" disabled={!newTask.name.trim()}>
                                     Add
