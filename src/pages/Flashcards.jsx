@@ -386,15 +386,10 @@ Return JSON with sentences array, each containing:
                     <Volume2 className="w-5 h-5 text-cyan-400" />
                   </button>
                 </div>
-                <div dir="rtl" lang="he" style={{ unicodeBidi: 'plaintext', textAlign: 'center' }}>
-                  <bdi>
-                    <EditableWord
-                      text={currentWord?.word || ''}
-                      language="he"
-                      onSave={(newText) => updateWordMutation.mutate({ id: currentWord.id, data: { word: newText } })}
-                      className="text-white/80 text-2xl"
-                    />
-                  </bdi>
+                <div dir="rtl" lang="he" className="text-center">
+                  <p className="text-white/80 text-2xl" style={{ unicodeBidi: 'plaintext', direction: 'rtl' }}>
+                    {currentWord?.word || ''}
+                  </p>
                 </div>
               </div>
             )}
@@ -559,48 +554,18 @@ Return JSON with sentences array, each containing:
                         >
                           <div className="flex items-start justify-between gap-3 mb-2">
                             <div className="flex-1">
-                              <div dir="ltr">
-                                <p className="text-white/60 text-sm mb-2">{sentence.english}</p>
+                              <div dir="ltr" className="mb-2">
+                                <p className="text-white/60 text-sm">{sentence.english}</p>
                               </div>
                               {isRevealed && (
                                 <>
-                                  <div dir="ltr">
-                                    <p className="text-cyan-400 text-base mb-2">{sentence.transliteration}</p>
+                                  <div dir="ltr" className="mb-2">
+                                    <p className="text-cyan-400 text-base">{sentence.transliteration}</p>
                                   </div>
-                                  <div dir="rtl" lang="he" style={{ unicodeBidi: 'plaintext' }} className="mb-2 text-right">
-                                    {sentence.hebrew.split(' ').map((word, wordIdx) => (
-                                      <span key={wordIdx} className="inline-block group">
-                                        <EditableWord
-                                          text={word}
-                                          language="he"
-                                          onSave={(newWord) => {
-                                            const words = sentence.hebrew.split(' ');
-                                            words[wordIdx] = newWord;
-                                            const newSentences = [...exampleSentences];
-                                            newSentences[idx] = { ...sentence, hebrew: words.join(' ') };
-                                            setExampleSentences(newSentences);
-                                          }}
-                                          className="text-white text-base"
-                                        />
-                                        <button
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            createWordMutation.mutate({
-                                              word: word,
-                                              translation: "",
-                                              phonetic: "",
-                                              category: "wordbank",
-                                              times_practiced: 0,
-                                            });
-                                          }}
-                                          className="opacity-0 group-hover:opacity-100 transition-opacity text-xs mr-1"
-                                          title="Add to backpack"
-                                        >
-                                          🎒
-                                        </button>
-                                        {' '}
-                                      </span>
-                                    ))}
+                                  <div dir="rtl" lang="he" className="mb-2 text-right">
+                                    <p className="text-white text-base" style={{ unicodeBidi: 'plaintext', direction: 'rtl' }}>
+                                      {sentence.hebrew}
+                                    </p>
                                   </div>
                                 </>
                               )}
