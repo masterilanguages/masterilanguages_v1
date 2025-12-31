@@ -40,6 +40,8 @@ export default function MediaLibrary() {
   const [showAssignDialog, setShowAssignDialog] = useState(false);
   const [assigningVideo, setAssigningVideo] = useState(null);
   const [selectedUser, setSelectedUser] = useState("");
+  const [selectedVideo, setSelectedVideo] = useState(null);
+  const [showTranscript, setShowTranscript] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -86,6 +88,23 @@ export default function MediaLibrary() {
   const { data: allVideosData = [] } = useQuery({
     queryKey: ['allVideos'],
     queryFn: () => base44.entities.Video.list(),
+  });
+
+  const { data: myProgram = [] } = useQuery({
+    queryKey: ['myProgram'],
+    queryFn: async () => {
+      if (!currentUser?.email) return [];
+      return await base44.entities.UserProgram.filter({ user_email: currentUser.email });
+    },
+    enabled: !!currentUser,
+  });
+
+  const createWordMutation = useMutation({
+    mutationFn: (wordData) => base44.entities.Word.create(wordData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['words'] });
+      toast.success("Added to backpack! 🎒");
+    },
   });
 
   const { data: allUsers = [] } = useQuery({
@@ -295,6 +314,26 @@ Return JSON only.`,
   const canDelete = currentUser?.role === 'admin';
   const canAssign = currentUser?.role === 'admin' || currentUser?.role === 'coach';
 
+  const myVideos = myProgram.map(prog => {
+    const video = videos.find(v => v.id === prog.media_library_id);
+    return video ? { ...video, programId: prog.id, completed: prog.completed } : null;
+  }).filter(Boolean);
+
+  const handleVideoClick = (video) => {
+    setSelectedVideo(video);
+    setShowTranscript(true);
+  };
+
+  const handleAddWordFromTranscript = (word, meaning) => {
+    createWordMutation.mutate({
+      word: word,
+      translation: meaning,
+      category: "wordbank",
+      times_practiced: 0,
+      mastered: false,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
       <div className="max-w-7xl mx-auto">
@@ -381,20 +420,18 @@ Return JSON only.`,
           </div>
         </div>
 
-        {/* Recommended Videos Section */}
-        {allVideosData.length > 0 && (
+        {/* My Videos Section */}
+        {myVideos.length > 0 && (
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-white mb-4">Recommended Videos</h2>
+            <h2 className="text-2xl font-bold text-white mb-4">My Videos</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {allVideosData.slice(0, 6).map((video) => (
-                <motion.a
+              {myVideos.map((video) => (
+                <motion.div
                   key={video.id}
-                  href={video.video_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden hover:border-white/30 transition-all"
+                  onClick={() => handleVideoClick(video)}
+                  className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden hover:border-cyan-500/50 transition-all cursor-pointer"
                 >
                   {video.thumbnail_url ? (
                     <img 
@@ -403,24 +440,24 @@ Return JSON only.`,
                       className="w-full h-48 object-cover"
                     />
                   ) : (
-                    <div className="w-full h-48 bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
+                    <div className="w-full h-48 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center">
                       <Video className="w-16 h-16 text-white/40" />
                     </div>
                   )}
                   <div className="p-4">
                     <h3 className="text-white font-bold text-lg mb-2">{video.title}</h3>
-                    {video.tags && (
-                      <p className="text-white/60 text-sm">{video.tags}</p>
+                    {video.completed && (
+                      <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">✓ Completed</span>
                     )}
                   </div>
-                </motion.a>
+                </motion.div>
               ))}
             </div>
           </div>
         )}
 
         {/* Videos Grid */}
-        <h2 className="text-2xl font-bold text-white mb-4">All Library Videos</h2>
+        <h2 className="text-2xl font-bold text-white mb-4">Library Videos</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <AnimatePresence>
             {filteredVideos.map((video) => (
@@ -520,6 +557,42 @@ Return JSON only.`,
           <div className="text-center py-16">
             <Video className="w-16 h-16 text-white/20 mx-auto mb-4" />
             <p className="text-white/60">No videos found</p>
+          </div>
+        )}
+
+        {/* Recommended Videos Section */}
+        {allVideosData.length > 0 && (
+          <div className="mt-8">
+            <h2 className="text-2xl font-bold text-white mb-4">Recommended Videos</h2>
+            <div className="space-y-4">
+              {allVideosData.slice(0, 10).map((video) => (
+                <motion.div
+                  key={video.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  onClick={() => handleVideoClick(video)}
+                  className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden hover:border-purple-500/50 transition-all cursor-pointer flex"
+                >
+                  {video.thumbnail_url ? (
+                    <img 
+                      src={video.thumbnail_url} 
+                      alt={video.title}
+                      className="w-48 h-32 object-cover flex-shrink-0"
+                    />
+                  ) : (
+                    <div className="w-48 h-32 bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center flex-shrink-0">
+                      <Video className="w-12 h-12 text-white/40" />
+                    </div>
+                  )}
+                  <div className="p-4 flex-1">
+                    <h3 className="text-white font-bold text-lg mb-1">{video.title}</h3>
+                    {video.tags && (
+                      <p className="text-white/60 text-sm">{video.tags}</p>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           </div>
         )}
       </div>
@@ -724,6 +797,55 @@ Return JSON only.`,
                 Cancel
               </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Video Transcript Dialog */}
+      <Dialog open={showTranscript} onOpenChange={setShowTranscript}>
+        <DialogContent className="bg-slate-900 border-white/20 text-white max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>{selectedVideo?.title}</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto space-y-4">
+            {selectedVideo?.youtube_video_id && (
+              <div className="aspect-video w-full bg-black rounded-lg overflow-hidden">
+                <iframe
+                  width="100%"
+                  height="100%"
+                  src={`https://www.youtube.com/embed/${selectedVideo.youtube_video_id}`}
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            )}
+            
+            {selectedVideo?.transcript_text ? (
+              <div className="bg-white/5 rounded-xl p-4">
+                <h3 className="text-white font-bold mb-3">Transcript - Click words to add to backpack</h3>
+                <div className="space-y-2">
+                  {selectedVideo.transcript_text.split(/[\s\n]+/).map((word, idx) => (
+                    <button
+                      key={idx}
+                      onClick={async () => {
+                        const result = await base44.integrations.Core.InvokeLLM({
+                          prompt: `Translate this ${userProfile?.language || 'Hebrew'} word to English: "${word}". Return only the English translation, nothing else.`
+                        });
+                        handleAddWordFromTranscript(word, result);
+                      }}
+                      className="inline-block mr-2 mb-2 px-2 py-1 bg-white/10 hover:bg-cyan-500/30 text-white rounded transition-all hover:scale-105"
+                    >
+                      {word}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white/5 rounded-xl p-4 text-center">
+                <p className="text-white/60">No transcript available for this video</p>
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
