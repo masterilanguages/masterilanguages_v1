@@ -570,24 +570,62 @@ export default function Flashcards() {
                           }}
                         >
                           <div className="flex items-start justify-between gap-3">
-                            <div className="flex-1 space-y-0.5 text-center">
+                            <div className="flex-1 space-y-0.5 text-center" onClick={(e) => e.stopPropagation()}>
                               <div dir="ltr">
-                                <p className="text-white/60 text-sm">{sentence.english}</p>
+                                <EditableWord
+                                  text={sentence.english}
+                                  onSave={(newText) => {
+                                    const updated = [...exampleSentences];
+                                    updated[idx] = { ...sentence, english: newText };
+                                    setExampleSentences(updated);
+                                  }}
+                                  className="text-white/60 text-sm"
+                                />
                               </div>
                               {isRevealed && (
                                 <>
                                   <div dir="ltr">
-                                    <p className="text-cyan-400 text-base">{sentence.transliteration}</p>
+                                    <EditableWord
+                                      text={sentence.transliteration}
+                                      onSave={(newText) => {
+                                        const updated = [...exampleSentences];
+                                        updated[idx] = { ...sentence, transliteration: newText };
+                                        setExampleSentences(updated);
+                                      }}
+                                      className="text-cyan-400 text-base"
+                                    />
                                   </div>
                                   <div dir="rtl" lang="he">
-                                    <p className="text-white text-base" style={{ unicodeBidi: 'plaintext', direction: 'rtl' }}>
-                                      {sentence.hebrew}
-                                    </p>
+                                    <EditableWord
+                                      text={sentence.hebrew}
+                                      language="he"
+                                      onSave={(newText) => {
+                                        const updated = [...exampleSentences];
+                                        updated[idx] = { ...sentence, hebrew: newText };
+                                        setExampleSentences(updated);
+                                      }}
+                                      className="text-white text-base"
+                                    />
                                   </div>
                                 </>
                               )}
                             </div>
                             <div className="flex flex-col gap-2">
+                              <button
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  const currentSaved = currentWord.saved_sentences || [];
+                                  await updateWordMutation.mutateAsync({
+                                    id: currentWord.id,
+                                    data: { saved_sentences: [...currentSaved, sentence] }
+                                  });
+                                  toast.success("Sentence approved!");
+                                }}
+                                className="text-2xl hover:scale-110 transition-transform"
+                                title="Approve and save this sentence"
+                              >
+                                ✅
+                              </button>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -615,33 +653,18 @@ export default function Flashcards() {
                       );
                     })}
                     {exampleSentences.length > 0 && (
-                      <div className="space-y-2">
-                        <Button
-                          onClick={async (e) => {
-                            e.stopPropagation();
-                            await updateWordMutation.mutateAsync({
-                              id: currentWord.id,
-                              data: { saved_sentences: exampleSentences }
-                            });
-                            toast.success("Sentences saved to card!");
-                          }}
-                          className="w-full bg-gradient-to-r from-green-500 to-emerald-500"
-                        >
-                          ✓ Approve & Save Sentences
-                        </Button>
-                        <Button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setExampleSentences([]);
-                            generateSentences(currentWord);
-                          }}
-                          variant="outline"
-                          className="w-full bg-white/5 border-white/20 text-white hover:bg-white/10"
-                        >
-                          <Sparkles className="w-4 h-4 mr-2" />
-                          Generate New Sentences
-                        </Button>
-                      </div>
+                      <Button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setExampleSentences([]);
+                          generateSentences(currentWord);
+                        }}
+                        variant="outline"
+                        className="w-full bg-white/5 border-white/20 text-white hover:bg-white/10"
+                      >
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Generate New Sentences
+                      </Button>
                     )}
                   </>
                 )}
