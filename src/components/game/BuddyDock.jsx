@@ -171,7 +171,7 @@ export default function BuddyDock({ profile, coins, backpackCount }) {
                 <div className="w-12 h-auto flex items-end justify-center overflow-visible">
                   {showStarterAvatar ? (
                     <span className="text-3xl">😊</span>
-                  ) : profile.avatar_image_url && profile.avatar_type === "custom" ? (
+                  ) : hasCustomImage ? (
                     <img 
                       src={profile.avatar_image_url} 
                       alt={profile.avatar_name} 
