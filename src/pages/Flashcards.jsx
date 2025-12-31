@@ -556,6 +556,9 @@ export default function Flashcards() {
                   <>
                     {exampleSentences.map((sentence, idx) => {
                       const isRevealed = revealedSentences.includes(idx);
+                      const isSaved = (currentWord.saved_sentences || []).some(
+                        s => s.hebrew === sentence.hebrew && s.english === sentence.english
+                      );
                       return (
                         <div 
                           key={idx} 
@@ -614,15 +617,20 @@ export default function Flashcards() {
                               <button
                                 onClick={async (e) => {
                                   e.stopPropagation();
-                                  const currentSaved = currentWord.saved_sentences || [];
-                                  await updateWordMutation.mutateAsync({
-                                    id: currentWord.id,
-                                    data: { saved_sentences: [...currentSaved, sentence] }
-                                  });
-                                  toast.success("Sentence approved!");
+                                  if (!isSaved) {
+                                    const currentSaved = currentWord.saved_sentences || [];
+                                    await updateWordMutation.mutateAsync({
+                                      id: currentWord.id,
+                                      data: { saved_sentences: [...currentSaved, sentence] }
+                                    });
+                                    toast.success("Sentence approved!");
+                                  }
                                 }}
-                                className="text-2xl hover:scale-110 transition-transform"
-                                title="Approve and save this sentence"
+                                className={`text-2xl hover:scale-110 transition-transform ${
+                                  isSaved ? 'opacity-100' : 'opacity-40 grayscale'
+                                }`}
+                                style={isSaved ? { filter: 'hue-rotate(0deg) brightness(1.2)' } : {}}
+                                title={isSaved ? "Already saved" : "Approve and save this sentence"}
                               >
                                 ✅
                               </button>
