@@ -44,16 +44,21 @@ export default function Layout({ children, currentPageName }) {
   // Only redirect authenticated users with loaded profiles
   useEffect(() => {
     if (isOnboardingPage) return;
-    if (!isAuthChecked || !currentUser || profileLoading) return;
+    if (!isAuthChecked || profileLoading) return;
+    
+    // Not authenticated - allow access to public pages
+    if (!currentUser) return;
     
     // If no profile or no language, redirect to LanguageSelect
     if (!userProfile || !userProfile.language || userProfile.language === "") {
+      console.log("Redirecting to LanguageSelect - no profile or language");
       navigate(createPageUrl("LanguageSelect"), { replace: true });
       return;
     }
     
     // If new user without avatar, redirect to AvatarSelect
     if (userProfile.is_new_user === true && !userProfile.avatar_id) {
+      console.log("Redirecting to AvatarSelect - no avatar");
       navigate(createPageUrl("AvatarSelect"), { replace: true });
     }
   }, [isOnboardingPage, isAuthChecked, currentUser, profileLoading, userProfile, navigate]);
@@ -65,8 +70,13 @@ export default function Layout({ children, currentPageName }) {
 
   // Block rendering only for authenticated users who need onboarding
   if (!isOnboardingPage && currentUser && !profileLoading) {
-    if (!userProfile || !userProfile.language || (userProfile.is_new_user === true && !userProfile.avatar_id)) {
-      return null;
+    if (!userProfile || !userProfile.language || userProfile.language === "" || (userProfile.is_new_user === true && !userProfile.avatar_id)) {
+      return <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+        <div className="text-white text-center">
+          <p className="mb-2">Redirecting to onboarding...</p>
+          <div className="w-8 h-8 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin mx-auto" />
+        </div>
+      </div>;
     }
   }
   
