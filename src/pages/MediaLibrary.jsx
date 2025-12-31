@@ -589,7 +589,25 @@ Return JSON only.`,
           <div className="mt-8">
             <h2 className="text-2xl font-bold text-white mb-4">Recommended Videos</h2>
             <div className="space-y-4">
-              {allVideosData.slice(0, 10).map((video) => (
+              {allVideosData
+                .filter(video => {
+                  // Only show Hebrew videos for Hebrew learners
+                  if (userProfile?.language === 'hebrew') {
+                    return video.title?.toLowerCase().includes('hebrew') || 
+                           video.tags?.toLowerCase().includes('hebrew') ||
+                           video.title?.toLowerCase().includes('עברית');
+                  }
+                  return true;
+                })
+                .filter((video, index, self) => 
+                  // Remove duplicates by video_url or youtube_video_id
+                  index === self.findIndex(v => 
+                    (v.video_url === video.video_url) || 
+                    (v.youtube_video_id && v.youtube_video_id === video.youtube_video_id)
+                  )
+                )
+                .slice(0, 15)
+                .map((video) => (
                 <motion.div
                   key={video.id}
                   initial={{ opacity: 0, y: 20 }}
