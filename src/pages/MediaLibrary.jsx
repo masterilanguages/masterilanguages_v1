@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Plus, Edit, Trash2, Search, Filter, Video, Users, Play, Loader2 } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Filter, Video, Users, Play, Loader2, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -43,7 +43,7 @@ export default function MediaLibrary() {
   const [transcript, setTranscript] = useState([]);
   const [loadingTranscript, setLoadingTranscript] = useState(false);
   const [videoPlayer, setVideoPlayer] = useState(null);
-  const recommendedRef = React.useRef(null);
+  const [showRecommended, setShowRecommended] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -416,27 +416,15 @@ Return JSON only.`,
             <h1 className="text-4xl font-bold text-white mb-2">Media Library</h1>
             <p className="text-white/60">Central repository for all learning videos</p>
           </div>
-          <div className="flex gap-2">
-            {allVideosData.length > 0 && (
-              <Button
-                onClick={() => recommendedRef.current?.scrollIntoView({ behavior: 'smooth' })}
-                variant="outline"
-                className="bg-purple-500/20 border-purple-500/50 text-purple-400 hover:bg-purple-500/30"
-              >
-                <Video className="w-5 h-5 mr-2" />
-                Recommended Videos
-              </Button>
-            )}
-            {canEdit && (
-              <Button
-                onClick={() => { resetForm(); setEditingVideo(null); setShowAddDialog(true); }}
-                className="bg-gradient-to-r from-cyan-500 to-blue-500"
-              >
-                <Plus className="w-5 h-5 mr-2" />
-                Add Video
-              </Button>
-            )}
-          </div>
+          {canEdit && (
+            <Button
+              onClick={() => { resetForm(); setEditingVideo(null); setShowAddDialog(true); }}
+              className="bg-gradient-to-r from-cyan-500 to-blue-500"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              Add Video
+            </Button>
+          )}
         </div>
 
         {/* Filters */}
@@ -531,10 +519,25 @@ Return JSON only.`,
                     </div>
                   )}
                   <div className="p-4">
-                    <h3 className="text-white font-bold text-lg mb-2">{video.title}</h3>
-                    {video.completed && (
-                      <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">✓ Completed</span>
-                    )}
+                   <div className="flex items-start justify-between gap-2 mb-2">
+                     <h3 className="text-white font-bold text-lg flex-1">{video.title}</h3>
+                     {canDelete && (
+                       <button
+                         onClick={(e) => {
+                           e.stopPropagation();
+                           if (confirm("Delete this video from your list?")) {
+                             deleteVideoMutation.mutate(video.id);
+                           }
+                         }}
+                         className="text-xl opacity-40 hover:opacity-100 transition-opacity"
+                       >
+                         🗑️
+                       </button>
+                     )}
+                   </div>
+                   {video.completed && (
+                     <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">✓ Completed</span>
+                   )}
                   </div>
                 </motion.div>
               ))}
@@ -569,7 +572,22 @@ Return JSON only.`,
                 </div>
 
                 <div className="p-4">
-                  <h3 className="text-white font-bold text-lg mb-2">{video.title}</h3>
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <h3 className="text-white font-bold text-lg flex-1">{video.title}</h3>
+                    {canDelete && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (confirm("Delete this video from library?")) {
+                            deleteVideoMutation.mutate(video.id);
+                          }
+                        }}
+                        className="text-xl opacity-40 hover:opacity-100 transition-opacity"
+                      >
+                        🗑️
+                      </button>
+                    )}
+                  </div>
                   
                   <div className="flex flex-wrap gap-2 mb-3">
                     <span className="text-xs bg-cyan-500/20 text-cyan-400 px-2 py-1 rounded">
@@ -624,32 +642,16 @@ Return JSON only.`,
                         </SelectContent>
                       </Select>
                     )}
-                    <div className="flex gap-2">
-                      {canEdit && (
-                        <Button
-                          onClick={() => handleEdit(video)}
-                          size="sm"
-                          variant="outline"
-                          className="flex-1 bg-blue-500/20 border-blue-500/50 text-blue-400 hover:bg-blue-500/30"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                      )}
-                      {canDelete && (
-                        <Button
-                          onClick={() => {
-                            if (confirm("Delete this video from library?")) {
-                              deleteVideoMutation.mutate(video.id);
-                            }
-                          }}
-                          size="sm"
-                          variant="outline"
-                          className="flex-1 bg-red-500/20 border-red-500/50 text-red-400 hover:bg-red-500/30"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      )}
-                    </div>
+                    {canEdit && (
+                      <Button
+                        onClick={() => handleEdit(video)}
+                        size="sm"
+                        variant="outline"
+                        className="w-full bg-blue-500/20 border-blue-500/50 text-blue-400 hover:bg-blue-500/30"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                    )}
                   </div>
                 </div>
               </motion.div>
@@ -666,9 +668,35 @@ Return JSON only.`,
 
         {/* Recommended Videos Section */}
         {allVideosData.length > 0 && (
-          <div ref={recommendedRef} className="mt-8">
-            <h2 className="text-2xl font-bold text-white mb-4">Recommended Videos</h2>
-            <div className="space-y-4">
+          <div className="mt-8">
+            <button
+              onClick={() => setShowRecommended(!showRecommended)}
+              className="w-full bg-purple-600/40 hover:bg-purple-600/50 backdrop-blur-xl rounded-2xl border border-white/10 p-4 flex items-center justify-between transition-all mb-4"
+            >
+              <h2 className="text-xl font-bold text-white">
+                Recommended Videos ({allVideosData.filter(video => {
+                  if (userProfile?.language === 'hebrew') {
+                    return video.title?.toLowerCase().includes('hebrew') || 
+                           video.tags?.toLowerCase().includes('hebrew') ||
+                           video.title?.toLowerCase().includes('עברית');
+                  }
+                  return true;
+                }).filter((video, index, self) => 
+                  index === self.findIndex(v => 
+                    (v.video_url === video.video_url) || 
+                    (v.youtube_video_id && v.youtube_video_id === video.youtube_video_id)
+                  )
+                ).length})
+              </h2>
+              <ChevronDown className={`w-6 h-6 text-white transition-transform ${showRecommended ? 'rotate-180' : ''}`} />
+            </button>
+            {showRecommended && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="space-y-4"
+              >
               {allVideosData
                 .filter(video => {
                   // Only show Hebrew videos for Hebrew learners
