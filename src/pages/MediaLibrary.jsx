@@ -61,7 +61,8 @@ export default function MediaLibrary() {
     is_active: true,
     thumbnail_url: "",
     notes: "",
-    default_day: ""
+    default_day: "",
+    transcript_phonetics: ""
   });
 
   useEffect(() => {
@@ -256,7 +257,8 @@ Return JSON only.`,
       is_active: true,
       thumbnail_url: "",
       notes: "",
-      default_day: ""
+      default_day: "",
+      transcript_phonetics: ""
     });
   };
 
@@ -294,7 +296,8 @@ Return JSON only.`,
       is_active: video.is_active !== false,
       thumbnail_url: video.thumbnail_url || "",
       notes: video.notes || "",
-      default_day: video.default_day || ""
+      default_day: video.default_day || "",
+      transcript_phonetics: video.transcript_phonetics || ""
     });
     setShowAddDialog(true);
   };
@@ -589,15 +592,15 @@ Return JSON only.`,
                     )}
                   </div>
                   
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    <span className="text-xs bg-cyan-500/20 text-cyan-400 px-2 py-1 rounded">
+                  <div className="flex gap-2 mb-3 overflow-x-auto">
+                    <span className="text-xs bg-cyan-500/20 text-cyan-400 px-2 py-1 rounded whitespace-nowrap">
                       {video.language}
                     </span>
-                    <span className="text-xs bg-purple-500/20 text-purple-400 px-2 py-1 rounded">
+                    <span className="text-xs bg-purple-500/20 text-purple-400 px-2 py-1 rounded whitespace-nowrap">
                       {video.difficulty_level}
                     </span>
                     {video.duration_minutes && (
-                      <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">
+                      <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded whitespace-nowrap">
                         {video.duration_minutes} min
                       </span>
                     )}
@@ -926,6 +929,18 @@ Return JSON only.`,
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 className="bg-white/5 border-white/20 text-white"
                 rows={3}
+              />
+            </div>
+
+            <div>
+              <Label>Transcript (Hebrew Phonetics)</Label>
+              <p className="text-xs text-white/60 mb-2">Paste Hebrew phonetic transcript. System will add transliteration, translation, and Hebrew phonetics.</p>
+              <Textarea
+                value={formData.transcript_phonetics}
+                onChange={(e) => setFormData({ ...formData, transcript_phonetics: e.target.value })}
+                placeholder="Paste Hebrew phonetics here..."
+                className="bg-white/5 border-white/20 text-white"
+                rows={6}
               />
             </div>
 
