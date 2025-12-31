@@ -263,16 +263,67 @@ Return JSON only.`,
     });
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.title || !formData.video_url || !formData.video_id) {
       toast.error("Title, URL, and Video ID are required");
       return;
     }
 
+    let processedTranscript = null;
+    
+    // Process transcript if provided
+    if (formData.transcript_phonetics && formData.transcript_phonetics.trim()) {
+      toast.info("Processing transcript...");
+      try {
+        const result = await base44.integrations.Core.InvokeLLM({
+          prompt: `You are processing a Hebrew phonetic transcript for a language learning app.
+
+Input (Hebrew phonetics): "${formData.transcript_phonetics}"
+
+For each line/sentence:
+1. Convert phonetics to proper Hebrew script with nikud (vowel points)
+2. Provide clean Latin transliteration (no Hebrew characters)
+3. Translate to English
+
+Return a JSON array where each item has:
+- text: original phonetic input
+- hebrew: Hebrew text with nikud
+- transliteration: Latin alphabet only
+- english: English translation
+- start: timestamp in seconds (estimate based on position, starting at 0)
+
+Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds per sentence).`,
+          response_json_schema: {
+            type: "object",
+            properties: {
+              transcript: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    text: { type: "string" },
+                    hebrew: { type: "string" },
+                    transliteration: { type: "string" },
+                    english: { type: "string" },
+                    start: { type: "number" }
+                  }
+                }
+              }
+            }
+          }
+        });
+        processedTranscript = result.transcript;
+        toast.success("Transcript processed!");
+      } catch (e) {
+        toast.error("Failed to process transcript");
+      }
+    }
+
     const data = {
       ...formData,
       duration_minutes: formData.duration_minutes ? parseFloat(formData.duration_minutes) : null,
-      default_day: formData.default_day ? parseInt(formData.default_day) : null
+      default_day: formData.default_day ? parseInt(formData.default_day) : null,
+      processed_transcript: processedTranscript
     };
 
     if (editingVideo) {
@@ -338,6 +389,14 @@ Return JSON only.`,
     setTranscript([]);
     setLoadingTranscript(true);
 
+    // Check if video has processed transcript first
+    if (video.processed_transcript && video.processed_transcript.length > 0) {
+      setTranscript(video.processed_transcript);
+      setLoadingTranscript(false);
+      return;
+    }
+
+    // Otherwise try to fetch from YouTube
     const videoId = video.video_id || video.youtube_video_id || extractYouTubeId(video.video_url);
     
     if (!videoId) {
@@ -590,7 +649,8 @@ Return JSON only.`,
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden hover:border-white/30 transition-all"
+                onClick={() => handleVideoClick(video)}
+                className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden hover:border-white/30 transition-all cursor-pointer"
               >
                 {/* Thumbnail */}
                 <div className="w-full aspect-video bg-black">
