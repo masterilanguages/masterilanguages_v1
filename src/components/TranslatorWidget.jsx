@@ -15,6 +15,9 @@ export default function TranslatorWidget() {
   const [isTranslating, setIsTranslating] = useState(false);
   const [learningLanguage, setLearningLanguage] = useState("hebrew");
   const [wordAdded, setWordAdded] = useState(false);
+  const [aiQuestion, setAiQuestion] = useState("");
+  const [aiAnswer, setAiAnswer] = useState("");
+  const [isAskingAI, setIsAskingAI] = useState(false);
 
   const { data: words = [] } = useQuery({
     queryKey: ['words'],
@@ -158,6 +161,28 @@ Provide:
     });
   };
 
+  const handleAskAI = async () => {
+    if (!aiQuestion.trim() || !translation) return;
+    
+    setIsAskingAI(true);
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `You are a helpful language teacher. The user is learning about the word:
+        - Hebrew: ${translation.hebrew}
+        - Transliteration: ${translation.transliteration}
+        - English: ${translation.english}
+        
+        User's question: ${aiQuestion}
+        
+        Provide a clear, concise answer (2-3 sentences max).`
+      });
+      setAiAnswer(result);
+    } catch (e) {
+      toast.error("Failed to get AI response");
+    }
+    setIsAskingAI(false);
+  };
+
   return (
     <>
       {!isOpen && (
@@ -181,12 +206,26 @@ Provide:
           >
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-white font-medium text-sm">Translate</h3>
-              <button
-                onClick={() => setIsOpen(false)}
-                className="text-white/60 hover:text-white"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-2">
+                {translation && (
+                  <button
+                    onClick={handleAddToBackpack}
+                    disabled={createWordMutation.isPending || wordAdded}
+                    className="relative w-10 h-10 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center"
+                  >
+                    <span className="text-2xl">🎒</span>
+                    {wordAdded && (
+                      <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-3xl">✓</span>
+                    )}
+                  </button>
+                )}
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="text-white/60 hover:text-white"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
             <div className="flex gap-2 mb-3">
               <Input
@@ -269,16 +308,30 @@ Provide:
                   )}
                 </div>
 
-                <button
-                  onClick={handleAddToBackpack}
-                  disabled={createWordMutation.isPending || wordAdded}
-                  className="relative w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                >
-                  <span className="text-3xl">🎒</span>
-                  {wordAdded && (
-                    <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-4xl">✓</span>
-                  )}
-                </button>
+                {aiAnswer && (
+                  <div className="bg-purple-500/10 rounded-lg p-3 mb-3 border border-purple-500/30">
+                    <p className="text-purple-300 text-xs mb-1">AI ANSWER</p>
+                    <p className="text-white text-sm">{aiAnswer}</p>
+                  </div>
+                )}
+
+                <div className="flex gap-2">
+                  <Input
+                    value={aiQuestion}
+                    onChange={(e) => setAiQuestion(e.target.value)}
+                    placeholder="Ask about this word..."
+                    className="bg-white/10 border-white/20 text-white text-sm placeholder:text-white/40"
+                    onKeyDown={(e) => e.key === 'Enter' && handleAskAI()}
+                  />
+                  <Button
+                    onClick={handleAskAI}
+                    disabled={!aiQuestion.trim() || isAskingAI}
+                    size="sm"
+                    className="bg-purple-500 hover:bg-purple-600"
+                  >
+                    {isAskingAI ? <Loader2 className="w-4 h-4 animate-spin" /> : "Ask"}
+                  </Button>
+                </div>
               </>
             )}
           </motion.div>
