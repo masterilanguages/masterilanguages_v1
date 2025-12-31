@@ -408,7 +408,7 @@ export default function Home() {
   const [newTask, setNewTask] = useState({ name: "", duration: "", page: "" });
   const [editingTaskId, setEditingTaskId] = useState(null);
   const [editingTaskData, setEditingTaskData] = useState({ name: "", duration: "", page: "" });
-  const [daysToShow, setDaysToShow] = useState(7);
+  const [currentWeek, setCurrentWeek] = useState(1);
   const [addingTaskToDayId, setAddingTaskToDayId] = useState(null);
 
   const currentDay = userProfile?.current_day || 1;
@@ -757,10 +757,10 @@ export default function Home() {
                     });
                   }} className="bg-green-500 hover:bg-green-600">
                     Create First Day
-                  </Button>
-                )}
-              </div>
-            ) : sortedDays.slice(0, daysToShow).map((day, idx) => {
+                    </Button>
+                    )}
+                    </div>
+                    ) : sortedDays.slice((currentWeek - 1) * 7, currentWeek * 7).map((day, idx) => {
               const unlocked = isDayUnlocked(day.day_number);
               const progress = getDayProgress(day.id);
               const isExpanded = expandedDay === day.day_number;
@@ -978,13 +978,23 @@ export default function Home() {
                 })}
 
                 {sortedDays.length > 7 && (
-                  <div className="flex justify-center mt-6">
-                    <Button
-                      onClick={() => setDaysToShow(prev => prev === 7 ? sortedDays.length : 7)}
-                      className="bg-white/10 border border-white/20 text-white hover:bg-white/20"
-                    >
-                      {daysToShow === 7 ? 'Show More Days' : 'Hide More Days'}
-                    </Button>
+                  <div className="flex justify-center gap-3 mt-6">
+                    {currentWeek > 1 && (
+                      <Button
+                        onClick={() => setCurrentWeek(prev => prev - 1)}
+                        className="bg-white/10 border border-white/20 text-white hover:bg-white/20"
+                      >
+                        Show Last 7 Days
+                      </Button>
+                    )}
+                    {sortedDays.length > currentWeek * 7 && (
+                      <Button
+                        onClick={() => setCurrentWeek(prev => prev + 1)}
+                        className="bg-white/10 border border-white/20 text-white hover:bg-white/20"
+                      >
+                        Days {currentWeek * 7 + 1}-{Math.min((currentWeek + 1) * 7, sortedDays.length)}: Week {currentWeek + 1}
+                      </Button>
+                    )}
                   </div>
                 )}
                 </div>
