@@ -232,10 +232,7 @@ Return JSON only.`,
       difficulty_level: video.difficulty_level || "All",
       duration_minutes: video.duration_minutes || "",
       tags: video.tags || "",
-      speaking_speed: video.speaking_speed || "Normal",
       accent_region: video.accent_region || "",
-      suitable_for_journaling: video.suitable_for_journaling || false,
-      suitable_for_speaking: video.suitable_for_speaking || false,
       is_active: video.is_active !== false,
       thumbnail_url: video.thumbnail_url || "",
       notes: video.notes || ""
@@ -576,29 +573,15 @@ Return JSON only.`,
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Duration (min)</Label>
+                <Label>Duration (minutes) - auto-populated</Label>
                 <Input
                   type="number"
                   value={formData.duration_minutes}
                   onChange={(e) => setFormData({ ...formData, duration_minutes: e.target.value })}
                   className="bg-white/5 border-white/20 text-white"
                 />
-              </div>
-
-              <div>
-                <Label>Speaking Speed</Label>
-                <Select value={formData.speaking_speed} onValueChange={(val) => setFormData({ ...formData, speaking_speed: val })}>
-                  <SelectTrigger className="bg-white/5 border-white/20 text-white">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Slow">Slow</SelectItem>
-                    <SelectItem value="Normal">Normal</SelectItem>
-                    <SelectItem value="Fast">Fast</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
 
               <div>
@@ -622,27 +605,7 @@ Return JSON only.`,
               />
             </div>
 
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2 text-white/80 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.suitable_for_journaling}
-                  onChange={(e) => setFormData({ ...formData, suitable_for_journaling: e.target.checked })}
-                  className="w-4 h-4"
-                />
-                Suitable for journaling
-              </label>
-
-              <label className="flex items-center gap-2 text-white/80 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.suitable_for_speaking}
-                  onChange={(e) => setFormData({ ...formData, suitable_for_speaking: e.target.checked })}
-                  className="w-4 h-4"
-                />
-                Suitable for speaking
-              </label>
-
+            <div>
               <label className="flex items-center gap-2 text-white/80 cursor-pointer">
                 <input
                   type="checkbox"
