@@ -236,11 +236,6 @@ export default function Home() {
     },
   });
 
-  // Don't render if no language (Layout handles redirect)
-  if (!userProfile?.language) {
-    return null;
-  }
-
   // Master user = admin role AND not in onboarding
   const isMasterUser = currentUser?.role === 'admin' && userProfile?.is_new_user !== true;
 
@@ -374,7 +369,8 @@ export default function Home() {
   const isBaby = currentAge < 5;
   const hasDiaper = unlockedItems.includes("diaper");
 
-  if (profileLoading) {
+  // Don't render if loading or no language (Layout handles redirect)
+  if (profileLoading || !userProfile?.language) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
         <motion.div
