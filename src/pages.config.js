@@ -13,6 +13,7 @@ import Home from './pages/Home';
 import Journal from './pages/Journal';
 import LanguageSelect from './pages/LanguageSelect';
 import Level1World from './pages/Level1World';
+import ManageCoaches from './pages/ManageCoaches';
 import MonthsLesson from './pages/MonthsLesson';
 import Pictures from './pages/Pictures';
 import PicturesLesson2 from './pages/PicturesLesson2';
@@ -22,7 +23,6 @@ import Songs from './pages/Songs';
 import Store from './pages/Store';
 import StoryLearning from './pages/StoryLearning';
 import Videos from './pages/Videos';
-import ManageCoaches from './pages/ManageCoaches';
 import __Layout from './Layout.jsx';
 
 
@@ -42,6 +42,7 @@ export const PAGES = {
     "Journal": Journal,
     "LanguageSelect": LanguageSelect,
     "Level1World": Level1World,
+    "ManageCoaches": ManageCoaches,
     "MonthsLesson": MonthsLesson,
     "Pictures": Pictures,
     "PicturesLesson2": PicturesLesson2,
@@ -51,7 +52,6 @@ export const PAGES = {
     "Store": Store,
     "StoryLearning": StoryLearning,
     "Videos": Videos,
-    "ManageCoaches": ManageCoaches,
 }
 
 export const pagesConfig = {

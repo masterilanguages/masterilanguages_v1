@@ -376,7 +376,7 @@ export default function Home() {
 
 
 
-  const [expandedDay, setExpandedDay] = useState(1);
+  const [expandedDay, setExpandedDay] = useState(null);
   const [newTask, setNewTask] = useState({ name: "", duration: "", page: "" });
 
   const currentDay = userProfile?.current_day || 1;
