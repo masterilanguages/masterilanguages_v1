@@ -1139,7 +1139,7 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
                                   setTranscript(updated);
                                 }}
                                 onBlur={() => saveTranscriptEdit(idx, 'start', segment.start)}
-                                className="w-16 h-6 text-xs bg-cyan-500/30 border-cyan-400 text-cyan-400"
+                                className="w-16 h-6 text-xs bg-cyan-500/30 border-cyan-400 text-cyan-400 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                                 onClick={(e) => e.stopPropagation()}
                               />
                             ) : (
