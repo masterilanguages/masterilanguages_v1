@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Plus, Edit, Trash2, Search, Filter, Video, Users } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Filter, Video, Users, Play, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -40,6 +40,9 @@ export default function MediaLibrary() {
   const [selectedUser, setSelectedUser] = useState("");
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [showTranscript, setShowTranscript] = useState(false);
+  const [transcript, setTranscript] = useState([]);
+  const [loadingTranscript, setLoadingTranscript] = useState(false);
+  const [videoPlayer, setVideoPlayer] = useState(null);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -297,19 +300,56 @@ Return JSON only.`,
     return video ? { ...video, programId: prog.id, completed: prog.completed } : null;
   }).filter(Boolean);
 
-  const handleVideoClick = (video) => {
+  const handleVideoClick = async (video) => {
     setSelectedVideo(video);
     setShowTranscript(true);
+    setTranscript([]);
+    setLoadingTranscript(true);
+
+    const videoId = video.video_id || video.youtube_video_id || extractYouTubeId(video.video_url);
+    
+    if (!videoId) {
+      toast.error("Could not extract video ID");
+      setLoadingTranscript(false);
+      return;
+    }
+
+    try {
+      const result = await base44.functions.invoke('youtube-captions-download', { videoId });
+      
+      if (result.data?.transcript) {
+        setTranscript(result.data.transcript);
+      } else {
+        toast.error("No transcript available");
+      }
+    } catch (e) {
+      toast.error("Failed to load transcript");
+    }
+    setLoadingTranscript(false);
   };
 
-  const handleAddWordFromTranscript = (word, meaning) => {
-    createWordMutation.mutate({
-      word: word,
-      translation: meaning,
-      category: "wordbank",
-      times_practiced: 0,
-      mastered: false,
-    });
+  const handleAddWordFromTranscript = async (word) => {
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Translate this ${userProfile?.language || 'Hebrew'} word to English: "${word}". Return only the English translation, nothing else.`
+      });
+      
+      createWordMutation.mutate({
+        word: word,
+        translation: result,
+        category: "wordbank",
+        times_practiced: 0,
+        mastered: false,
+      });
+    } catch (e) {
+      toast.error("Translation failed");
+    }
+  };
+
+  const handleSeekTo = (seconds) => {
+    if (videoPlayer) {
+      videoPlayer.seekTo(seconds);
+    }
   };
 
   const getThumbnailUrl = (video) => {
@@ -810,49 +850,72 @@ Return JSON only.`,
 
       {/* Video Transcript Dialog */}
       <Dialog open={showTranscript} onOpenChange={setShowTranscript}>
-        <DialogContent className="bg-slate-900 border-white/20 text-white max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogContent className="bg-slate-900 border-white/20 text-white max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle>{selectedVideo?.title}</DialogTitle>
           </DialogHeader>
-          <div className="flex-1 overflow-y-auto space-y-4">
-            {selectedVideo?.youtube_video_id && (
-              <div className="aspect-video w-full bg-black rounded-lg overflow-hidden">
-                <iframe
-                  width="100%"
-                  height="100%"
-                  src={`https://www.youtube.com/embed/${selectedVideo.youtube_video_id}`}
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
-              </div>
-            )}
-            
-            {selectedVideo?.transcript_text ? (
-              <div className="bg-white/5 rounded-xl p-4">
-                <h3 className="text-white font-bold mb-3">Transcript - Click words to add to backpack</h3>
-                <div className="space-y-2">
-                  {selectedVideo.transcript_text.split(/[\s\n]+/).map((word, idx) => (
-                    <button
-                      key={idx}
-                      onClick={async () => {
-                        const result = await base44.integrations.Core.InvokeLLM({
-                          prompt: `Translate this ${userProfile?.language || 'Hebrew'} word to English: "${word}". Return only the English translation, nothing else.`
-                        });
-                        handleAddWordFromTranscript(word, result);
-                      }}
-                      className="inline-block mr-2 mb-2 px-2 py-1 bg-white/10 hover:bg-cyan-500/30 text-white rounded transition-all hover:scale-105"
-                    >
-                      {word}
-                    </button>
-                  ))}
+          <div className="flex-1 overflow-hidden flex gap-4">
+            {/* Video Player */}
+            <div className="w-1/2">
+              {(selectedVideo?.video_id || selectedVideo?.youtube_video_id || selectedVideo?.video_url) && (
+                <div className="aspect-video w-full bg-black rounded-lg overflow-hidden sticky top-0">
+                  <iframe
+                    ref={setVideoPlayer}
+                    width="100%"
+                    height="100%"
+                    src={`https://www.youtube.com/embed/${selectedVideo?.video_id || selectedVideo?.youtube_video_id || extractYouTubeId(selectedVideo?.video_url)}?enablejsapi=1`}
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
                 </div>
-              </div>
-            ) : (
-              <div className="bg-white/5 rounded-xl p-4 text-center">
-                <p className="text-white/60">No transcript available for this video</p>
-              </div>
-            )}
+              )}
+            </div>
+
+            {/* Transcript */}
+            <div className="w-1/2 overflow-y-auto space-y-3">
+              {loadingTranscript ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
+                </div>
+              ) : transcript.length > 0 ? (
+                <>
+                  <h3 className="text-white font-bold text-lg mb-2">Transcript - Click words to add to backpack</h3>
+                  {transcript.map((segment, idx) => (
+                    <div key={idx} className="bg-white/5 rounded-xl p-3 hover:bg-white/10 transition-all">
+                      <div className="flex items-start gap-3">
+                        <button
+                          onClick={() => handleSeekTo(segment.start)}
+                          className="flex-shrink-0 w-8 h-8 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 flex items-center justify-center transition-all"
+                        >
+                          <Play className="w-4 h-4 text-cyan-400" />
+                        </button>
+                        <div className="flex-1">
+                          <div className="text-xs text-white/40 mb-1">
+                            {Math.floor(segment.start / 60)}:{String(Math.floor(segment.start % 60)).padStart(2, '0')}
+                          </div>
+                          <div className="text-white leading-relaxed">
+                            {segment.text.split(/\s+/).map((word, wordIdx) => (
+                              <button
+                                key={wordIdx}
+                                onClick={() => handleAddWordFromTranscript(word)}
+                                className="inline-block mr-1.5 mb-1 hover:text-cyan-400 hover:bg-cyan-500/20 px-1 rounded transition-all"
+                              >
+                                {word}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              ) : (
+                <div className="bg-white/5 rounded-xl p-8 text-center">
+                  <p className="text-white/60">No transcript available for this video</p>
+                </div>
+              )}
+            </div>
           </div>
         </DialogContent>
       </Dialog>
