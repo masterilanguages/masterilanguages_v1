@@ -37,8 +37,6 @@ export default function MediaLibrary() {
   const [filterLanguage, setFilterLanguage] = useState("all");
   const [filterDifficulty, setFilterDifficulty] = useState("all");
   const [filterTopic, setFilterTopic] = useState("all");
-  const [showAssignDialog, setShowAssignDialog] = useState(false);
-  const [assigningVideo, setAssigningVideo] = useState(null);
   const [selectedUser, setSelectedUser] = useState("");
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [showTranscript, setShowTranscript] = useState(false);
@@ -148,10 +146,8 @@ export default function MediaLibrary() {
     mutationFn: (data) => base44.entities.UserProgram.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userPrograms'] });
-      setShowAssignDialog(false);
-      setAssigningVideo(null);
-      setSelectedUser("");
-      toast.success("Video assigned to user!");
+      queryClient.invalidateQueries({ queryKey: ['myProgram'] });
+      toast.success("Video assigned!");
     },
   });
 
@@ -272,25 +268,7 @@ Return JSON only.`,
     setShowAddDialog(true);
   };
 
-  const handleAssign = (video) => {
-    setAssigningVideo(video);
-    setShowAssignDialog(true);
-  };
 
-  const confirmAssign = () => {
-    if (!selectedUser) {
-      toast.error("Select a user");
-      return;
-    }
-
-    assignVideoMutation.mutate({
-      user_email: selectedUser,
-      media_library_id: assigningVideo.id,
-      assigned_by: currentUser.email,
-      assigned_at: new Date().toISOString(),
-      order: 0
-    });
-  };
 
   const toggleTopic = (topic) => {
     setFormData(prev => ({
@@ -540,41 +518,58 @@ Return JSON only.`,
                     </div>
                   )}
 
-                  <div className="flex gap-2">
+                  <div className="space-y-2">
                     {canAssign && (
-                      <Button
-                        onClick={() => handleAssign(video)}
-                        size="sm"
-                        className="flex-1 bg-green-500/20 border border-green-500/50 text-green-400 hover:bg-green-500/30"
-                      >
-                        <Users className="w-4 h-4 mr-1" />
-                        Assign
-                      </Button>
+                      <Select onValueChange={(userEmail) => {
+                        if (userEmail) {
+                          assignVideoMutation.mutate({
+                            user_email: userEmail,
+                            media_library_id: video.id,
+                            assigned_by: currentUser.email,
+                            assigned_at: new Date().toISOString(),
+                            order: 0
+                          });
+                        }
+                      }}>
+                        <SelectTrigger className="w-full bg-green-500/20 border-green-500/50 text-green-400 hover:bg-green-500/30">
+                          <Users className="w-4 h-4 mr-2" />
+                          <SelectValue placeholder="Assign to user..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {allUsers.map(user => (
+                            <SelectItem key={user.id} value={user.email}>
+                              {user.full_name || user.email}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     )}
-                    {canEdit && (
-                      <Button
-                        onClick={() => handleEdit(video)}
-                        size="sm"
-                        variant="outline"
-                        className="bg-blue-500/20 border-blue-500/50 text-blue-400 hover:bg-blue-500/30"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                    )}
-                    {canDelete && (
-                      <Button
-                        onClick={() => {
-                          if (confirm("Delete this video from library?")) {
-                            deleteVideoMutation.mutate(video.id);
-                          }
-                        }}
-                        size="sm"
-                        variant="outline"
-                        className="bg-red-500/20 border-red-500/50 text-red-400 hover:bg-red-500/30"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    )}
+                    <div className="flex gap-2">
+                      {canEdit && (
+                        <Button
+                          onClick={() => handleEdit(video)}
+                          size="sm"
+                          variant="outline"
+                          className="flex-1 bg-blue-500/20 border-blue-500/50 text-blue-400 hover:bg-blue-500/30"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                      )}
+                      {canDelete && (
+                        <Button
+                          onClick={() => {
+                            if (confirm("Delete this video from library?")) {
+                              deleteVideoMutation.mutate(video.id);
+                            }
+                          }}
+                          size="sm"
+                          variant="outline"
+                          className="flex-1 bg-red-500/20 border-red-500/50 text-red-400 hover:bg-red-500/30"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </motion.div>
@@ -811,42 +806,7 @@ Return JSON only.`,
         </DialogContent>
       </Dialog>
 
-      {/* Assign Dialog */}
-      <Dialog open={showAssignDialog} onOpenChange={setShowAssignDialog}>
-        <DialogContent className="bg-slate-900 border-white/20 text-white">
-          <DialogHeader>
-            <DialogTitle>Assign Video to User</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label>Video: {assigningVideo?.title}</Label>
-            </div>
-            <div>
-              <Label>Select User</Label>
-              <Select value={selectedUser} onValueChange={setSelectedUser}>
-                <SelectTrigger className="bg-white/5 border-white/20 text-white">
-                  <SelectValue placeholder="Choose user..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {allUsers.map(user => (
-                    <SelectItem key={user.id} value={user.email}>
-                      {user.full_name || user.email}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex gap-2">
-              <Button onClick={confirmAssign} className="flex-1 bg-green-500 hover:bg-green-600">
-                Assign
-              </Button>
-              <Button onClick={() => { setShowAssignDialog(false); setAssigningVideo(null); setSelectedUser(""); }} variant="outline" className="border-white/20">
-                Cancel
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+
 
       {/* Video Transcript Dialog */}
       <Dialog open={showTranscript} onOpenChange={setShowTranscript}>
