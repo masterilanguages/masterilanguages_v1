@@ -409,9 +409,8 @@ export default function Home() {
 
   const [expandedDay, setExpandedDay] = useState(null);
   const [newTask, setNewTask] = useState({ name: "", duration: "" });
-  const [showAddTaskDialog, setShowAddTaskDialog] = useState(false);
-  const [editingDayId, setEditingDayId] = useState(null);
-  const [editingTask, setEditingTask] = useState(null);
+  const [editingTaskId, setEditingTaskId] = useState(null);
+  const [editingTaskData, setEditingTaskData] = useState({ name: "", duration: "" });
   const [daysToShow, setDaysToShow] = useState(3);
 
   const currentDay = userProfile?.current_day || 1;
@@ -420,23 +419,17 @@ export default function Home() {
   const isDayUnlocked = (dayNum) => isMasterUser || dayNum <= currentDay;
   const getDayProgress = (dayId) => dayProgress.find(p => p.day_id === dayId);
 
-  const handleAddTask = () => {
-    if (editingTask) {
-      handleSaveEditedTask();
-    } else {
-      if (!editingDayId || !newTask.name.trim()) return;
-      
-      const day = days.find(d => d.id === editingDayId);
-      const updatedSubsections = [...(day.subsections || []), { 
-        id: Date.now().toString(), 
-        name: newTask.name,
-        duration: newTask.duration
-      }];
-      updateDayMutation.mutate({ id: editingDayId, data: { subsections: updatedSubsections } });
-      setNewTask({ name: "", duration: "" });
-      setShowAddTaskDialog(false);
-      setEditingDayId(null);
-    }
+  const handleAddTask = (dayId) => {
+    if (!newTask.name.trim()) return;
+    
+    const day = days.find(d => d.id === dayId);
+    const updatedSubsections = [...(day.subsections || []), { 
+      id: Date.now().toString(), 
+      name: newTask.name,
+      duration: newTask.duration
+    }];
+    updateDayMutation.mutate({ id: dayId, data: { subsections: updatedSubsections } });
+    setNewTask({ name: "", duration: "" });
   };
 
   const handleDeleteTask = (dayId, taskId) => {
@@ -445,27 +438,28 @@ export default function Home() {
     updateDayMutation.mutate({ id: dayId, data: { subsections: updatedSubsections } });
   };
 
-  const handleEditTask = (dayId, task) => {
-    setEditingDayId(dayId);
-    setEditingTask(task);
-    setNewTask({ name: task.name, duration: task.duration || "" });
-    setShowAddTaskDialog(true);
+  const handleStartEditTask = (task) => {
+    setEditingTaskId(task.id);
+    setEditingTaskData({ name: task.name, duration: task.duration || "" });
   };
 
-  const handleSaveEditedTask = () => {
-    if (!editingDayId || !newTask.name.trim()) return;
+  const handleSaveEditedTask = (dayId) => {
+    if (!editingTaskData.name.trim()) return;
     
-    const day = days.find(d => d.id === editingDayId);
+    const day = days.find(d => d.id === dayId);
     const updatedSubsections = day.subsections.map(s => 
-      s.id === editingTask.id 
-        ? { ...s, name: newTask.name, duration: newTask.duration }
+      s.id === editingTaskId 
+        ? { ...s, name: editingTaskData.name, duration: editingTaskData.duration }
         : s
     );
-    updateDayMutation.mutate({ id: editingDayId, data: { subsections: updatedSubsections } });
-    setNewTask({ name: "", duration: "" });
-    setShowAddTaskDialog(false);
-    setEditingDayId(null);
-    setEditingTask(null);
+    updateDayMutation.mutate({ id: dayId, data: { subsections: updatedSubsections } });
+    setEditingTaskId(null);
+    setEditingTaskData({ name: "", duration: "" });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingTaskId(null);
+    setEditingTaskData({ name: "", duration: "" });
   };
 
   const currentAge = userProfile?.age_level || 3;
@@ -938,6 +932,8 @@ export default function Home() {
                         <div className="p-6 pt-0 space-y-3">
                           {day.subsections?.map((task, taskIdx) => {
                             const isCompleted = progress?.subsections_completed?.includes(task.id);
+                            const isEditing = editingTaskId === task.id;
+
                             return (
                               <div
                                 key={task.id}
@@ -949,41 +945,78 @@ export default function Home() {
                                   {taskIdx + 1}
                                 </div>
                                 <button
-                                      onClick={() => toggleTaskMutation.mutate({ dayId: day.id, taskId: task.id, dayNumber: day.day_number })}
-                                      className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center transition-all ${
-                                        isCompleted ? 'bg-green-500 border-green-500' : 'border-white/40 hover:border-cyan-400'
-                                      }`}
-                                    >
-                                      {isCompleted && <Check className="w-5 h-5 text-white" />}
-                                    </button>
-                                    <button
-                                      onClick={isMasterUser ? () => handleEditTask(day.id, task) : async () => {
-                                    if (task.page === "BabyVideos") {
-                                      // Find video matching current day
-                                      const videos = await base44.entities.Video.filter({ 
-                                        language: userProfile?.language || 'hebrew',
-                                        level: day.day_number
-                                      });
-
-                                      if (videos.length > 0) {
-                                        navigate(`${createPageUrl("BabyVideos")}?videoId=custom-${videos[0].id}&single=true`);
-                                      } else {
-                                        navigate(createPageUrl("BabyVideos"));
-                                        toast.info(`No video found for Day ${day.day_number}`);
-                                      }
-                                    } else if (task.page) {
-                                      navigate(createPageUrl(task.page));
-                                    }
-                                  }}
-                                  className="flex-1 flex items-center gap-3 text-left"
+                                  onClick={() => toggleTaskMutation.mutate({ dayId: day.id, taskId: task.id, dayNumber: day.day_number })}
+                                  className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center transition-all ${
+                                    isCompleted ? 'bg-green-500 border-green-500' : 'border-white/40 hover:border-cyan-400'
+                                  }`}
                                 >
-                                  <div className="flex-1">
-                                    <p className={`text-white font-medium ${isCompleted ? 'line-through opacity-60' : ''}`}>{task.name}</p>
-                                    {task.duration && <p className="text-white/60 text-sm">Approx {task.duration}</p>}
-                                  </div>
-                                  {task.page && <ChevronRight className="w-5 h-5 text-white/40" />}
+                                  {isCompleted && <Check className="w-5 h-5 text-white" />}
                                 </button>
-                                {isMasterUser && (
+
+                                {isEditing ? (
+                                  <div className="flex-1 flex items-center gap-2">
+                                    <div className="flex-1 space-y-2">
+                                      <Input
+                                        value={editingTaskData.name}
+                                        onChange={(e) => setEditingTaskData({...editingTaskData, name: e.target.value})}
+                                        className="bg-white/5 border-white/20 text-white text-sm"
+                                        placeholder="Task name"
+                                      />
+                                      <Input
+                                        value={editingTaskData.duration}
+                                        onChange={(e) => setEditingTaskData({...editingTaskData, duration: e.target.value})}
+                                        className="bg-white/5 border-white/20 text-white text-sm"
+                                        placeholder="Duration (optional)"
+                                      />
+                                    </div>
+                                    <div className="flex gap-1">
+                                      <Button
+                                        onClick={() => handleSaveEditedTask(day.id)}
+                                        size="sm"
+                                        className="bg-green-500 hover:bg-green-600"
+                                      >
+                                        <Check className="w-4 h-4" />
+                                      </Button>
+                                      <Button
+                                        onClick={handleCancelEdit}
+                                        size="sm"
+                                        variant="outline"
+                                        className="border-white/20"
+                                      >
+                                        <X className="w-4 h-4" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <button
+                                    onClick={isMasterUser ? () => handleStartEditTask(task) : async () => {
+                                      if (task.page === "BabyVideos") {
+                                        const videos = await base44.entities.Video.filter({ 
+                                          language: userProfile?.language || 'hebrew',
+                                          level: day.day_number
+                                        });
+
+                                        if (videos.length > 0) {
+                                          navigate(`${createPageUrl("BabyVideos")}?videoId=custom-${videos[0].id}&single=true`);
+                                        } else {
+                                          navigate(createPageUrl("BabyVideos"));
+                                          toast.info(`No video found for Day ${day.day_number}`);
+                                        }
+                                      } else if (task.page) {
+                                        navigate(createPageUrl(task.page));
+                                      }
+                                    }}
+                                    className="flex-1 flex items-center gap-3 text-left"
+                                  >
+                                    <div className="flex-1">
+                                      <p className={`text-white font-medium ${isCompleted ? 'line-through opacity-60' : ''}`}>{task.name}</p>
+                                      {task.duration && <p className="text-white/60 text-sm">Approx {task.duration}</p>}
+                                    </div>
+                                    {task.page && <ChevronRight className="w-5 h-5 text-white/40" />}
+                                  </button>
+                                )}
+
+                                {isMasterUser && !isEditing && (
                                   <button
                                     onClick={() => handleDeleteTask(day.id, task.id)}
                                     className="text-red-400 hover:text-red-300"
@@ -996,15 +1029,13 @@ export default function Home() {
                           })}
 
                           {isMasterUser && (
-                            <Button 
-                              onClick={() => {
-                                setEditingDayId(day.id);
-                                setShowAddTaskDialog(true);
-                              }} 
-                              className="w-full bg-green-500 hover:bg-green-600"
-                            >
-                              <Plus className="w-4 h-4 mr-2" /> Add Task
-                            </Button>
+                            <div className="bg-white/10 rounded-xl p-4 space-y-2">
+                              <Input placeholder="Task name" value={newTask.name} onChange={(e) => setNewTask({...newTask, name: e.target.value})} className="bg-white/5 border-white/20 text-white" />
+                              <Input placeholder="Duration (optional)" value={newTask.duration} onChange={(e) => setNewTask({...newTask, duration: e.target.value})} className="bg-white/5 border-white/20 text-white" />
+                              <Button onClick={() => handleAddTask(day.id)} className="w-full bg-green-500 hover:bg-green-600" disabled={!newTask.name.trim()}>
+                                <Plus className="w-4 h-4 mr-2" /> Add Task
+                              </Button>
+                            </div>
                           )}
                         </div>
                       </motion.div>
@@ -1138,60 +1169,7 @@ export default function Home() {
         </DialogContent>
       </Dialog>
 
-      {/* Add Task Dialog */}
-      <Dialog open={showAddTaskDialog} onOpenChange={() => {
-        setShowAddTaskDialog(false);
-        setEditingTask(null);
-        setEditingDayId(null);
-        setNewTask({ name: "", duration: "" });
-      }}>
-        <DialogContent className="bg-slate-900 border-white/20 text-white">
-          <DialogHeader>
-            <DialogTitle>{editingTask ? 'Edit Task' : 'Add New Task'}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="text-white/60 text-sm mb-2 block">Task Name</label>
-              <Input 
-                placeholder="e.g., Watch a video" 
-                value={newTask.name} 
-                onChange={(e) => setNewTask({...newTask, name: e.target.value})} 
-                className="bg-white/5 border-white/20 text-white" 
-              />
-            </div>
-            <div>
-              <label className="text-white/60 text-sm mb-2 block">Duration (optional)</label>
-              <Input 
-                placeholder="e.g., 10 minutes" 
-                value={newTask.duration} 
-                onChange={(e) => setNewTask({...newTask, duration: e.target.value})} 
-                className="bg-white/5 border-white/20 text-white" 
-              />
-            </div>
-            <div className="flex gap-2">
-              <Button
-                onClick={() => {
-                  setShowAddTaskDialog(false);
-                  setEditingDayId(null);
-                  setEditingTask(null);
-                  setNewTask({ name: "", duration: "" });
-                }}
-                variant="outline"
-                className="flex-1 border-white/20 text-white"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleAddTask}
-                disabled={!newTask.name.trim()}
-                className="flex-1 bg-green-500 hover:bg-green-600"
-              >
-                {editingTask ? 'Save Changes' : 'Add Task'}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+
       </div>
       );
       }
