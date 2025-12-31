@@ -554,20 +554,20 @@ Return JSON with sentences array, each containing:
                         >
                           <div className="flex items-start justify-between gap-3 mb-2">
                             <div className="flex-1">
-                              <div dir="ltr" className="mb-2">
+                              <div dir="ltr" className="mb-3">
                                 <p className="text-white/60 text-sm">{sentence.english}</p>
                               </div>
                               {isRevealed && (
-                                <>
-                                  <div dir="ltr" className="mb-2">
+                                <div className="space-y-1">
+                                  <div dir="ltr">
                                     <p className="text-cyan-400 text-base">{sentence.transliteration}</p>
                                   </div>
-                                  <div dir="rtl" lang="he" className="mb-2 text-right">
+                                  <div dir="rtl" lang="he" className="text-right">
                                     <p className="text-white text-base" style={{ unicodeBidi: 'plaintext', direction: 'rtl' }}>
                                       {sentence.hebrew}
                                     </p>
                                   </div>
-                                </>
+                                </div>
                               )}
                             </div>
                             <div className="flex flex-col gap-2">
