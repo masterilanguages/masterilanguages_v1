@@ -75,6 +75,7 @@ export default function Home() {
       } catch (e) {}
     };
     fetchUser();
+    document.title = "Home - Lashon Languages";
   }, []);
 
   const { data: userProfile, isLoading: profileLoading } = useQuery({

@@ -21,6 +21,10 @@ export default function LanguageSelect() {
   const queryClient = useQueryClient();
   const [selectedLanguage, setSelectedLanguage] = useState(null);
 
+  useEffect(() => {
+    document.title = "Choose Language - Lashon Languages";
+  }, []);
+
   const selectLanguageMutation = useMutation({
     mutationFn: async (language) => {
       const currentUser = await base44.auth.me();

@@ -558,6 +558,10 @@ export default function BabyVideos() {
     },
   });
 
+  useEffect(() => {
+    document.title = "Videos - Lashon Languages";
+  }, []);
+
   const copyToMyVideosMutation = useMutation({
     mutationFn: async (video) => {
       const ytId = video.youtubeId;
