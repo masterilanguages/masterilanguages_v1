@@ -534,9 +534,9 @@ Return JSON only.`,
                              e.stopPropagation();
                              handleEdit(video);
                            }}
-                           className="text-xl opacity-40 hover:opacity-100 transition-opacity"
+                           className="text-xl transition-transform hover:scale-110"
                          >
-                           ✏️
+                           🖊️
                          </button>
                        )}
                        {canDelete && (
@@ -547,8 +547,7 @@ Return JSON only.`,
                                deleteVideoMutation.mutate(video.id);
                              }
                            }}
-                           className="text-xl opacity-40 hover:opacity-100 transition-opacity"
-                           style={{ filter: 'grayscale(100%) brightness(200%)' }}
+                           className="text-xl transition-transform hover:scale-110"
                          >
                            🗑️
                          </button>
@@ -619,9 +618,9 @@ Return JSON only.`,
                             e.stopPropagation();
                             handleEdit(video);
                           }}
-                          className="text-xl opacity-40 hover:opacity-100 transition-opacity"
+                          className="text-xl transition-transform hover:scale-110"
                         >
-                          ✏️
+                          🖊️
                         </button>
                       )}
                       {canDelete && (
@@ -632,8 +631,7 @@ Return JSON only.`,
                               deleteVideoMutation.mutate(video.id);
                             }
                           }}
-                          className="text-xl opacity-40 hover:opacity-100 transition-opacity"
-                          style={{ filter: 'grayscale(100%) brightness(200%)' }}
+                          className="text-xl transition-transform hover:scale-110"
                         >
                           🗑️
                         </button>
@@ -641,15 +639,15 @@ Return JSON only.`,
                     </div>
                   </div>
                   
-                  <div className="flex gap-2 mb-3 overflow-x-auto">
-                    <span className="text-xs bg-cyan-500/20 text-cyan-400 px-2 py-1 rounded whitespace-nowrap">
+                  <div className="flex gap-2 mb-2 overflow-x-auto whitespace-nowrap">
+                    <span className="text-xs bg-cyan-500/20 text-cyan-400 px-2 py-1 rounded">
                       {video.language}
                     </span>
-                    <span className="text-xs bg-purple-500/20 text-purple-400 px-2 py-1 rounded whitespace-nowrap">
+                    <span className="text-xs bg-purple-500/20 text-purple-400 px-2 py-1 rounded">
                       {video.difficulty_level}
                     </span>
                     {video.duration_minutes && (
-                      <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded whitespace-nowrap">
+                      <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">
                         {video.duration_minutes} min
                       </span>
                     )}
