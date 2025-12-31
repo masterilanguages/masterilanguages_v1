@@ -1124,29 +1124,39 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
                   {transcript.map((segment, idx) => (
                     <div key={idx} className="bg-white/5 rounded-xl p-3 hover:bg-white/10 transition-all">
                       <div className="flex items-start gap-3">
-                        <button
-                          onClick={() => handleSeekTo(segment.start)}
-                          className="flex-shrink-0 w-8 h-8 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 flex items-center justify-center text-xs text-cyan-400 font-mono transition-all cursor-pointer"
-                        >
-                          {editingSegment === idx ? (
-                            <Input
-                              type="number"
-                              value={segment.start}
-                              onChange={(e) => {
-                                const updated = [...transcript];
-                                updated[idx] = { ...segment, start: parseFloat(e.target.value) };
-                                setTranscript(updated);
-                              }}
-                              onBlur={() => saveTranscriptEdit(idx, 'start', segment.start)}
-                              className="w-16 h-6 text-xs bg-cyan-500/30 border-cyan-400 text-cyan-400"
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                          ) : (
-                            <>
-                              {Math.floor(segment.start / 60)}:{String(Math.floor(segment.start % 60)).padStart(2, '0')}
-                            </>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => handleSeekTo(segment.start)}
+                            className="flex-shrink-0 w-8 h-8 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 flex items-center justify-center text-xs text-cyan-400 font-mono transition-all cursor-pointer"
+                          >
+                            {editingSegment === idx ? (
+                              <Input
+                                type="number"
+                                value={segment.start}
+                                onChange={(e) => {
+                                  const updated = [...transcript];
+                                  updated[idx] = { ...segment, start: parseFloat(e.target.value) };
+                                  setTranscript(updated);
+                                }}
+                                onBlur={() => saveTranscriptEdit(idx, 'start', segment.start)}
+                                className="w-16 h-6 text-xs bg-cyan-500/30 border-cyan-400 text-cyan-400"
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            ) : (
+                              <>
+                                {Math.floor(segment.start / 60)}:{String(Math.floor(segment.start % 60)).padStart(2, '0')}
+                              </>
+                            )}
+                          </button>
+                          {canEdit && (
+                            <button
+                              onClick={() => setEditingSegment(editingSegment === idx ? null : idx)}
+                              className="flex-shrink-0 w-6 h-6 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all"
+                            >
+                              <Pencil className="w-3 h-3 text-white/60" />
+                            </button>
                           )}
-                        </button>
+                        </div>
                         <div className="flex-1 text-center space-y-0.5">
                           {/* Transliteration */}
                           {segment.transliteration && (
@@ -1193,14 +1203,6 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
                             </div>
                           )}
                         </div>
-                        {canEdit && (
-                          <button
-                            onClick={() => setEditingSegment(editingSegment === idx ? null : idx)}
-                            className="flex-shrink-0 w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all"
-                          >
-                            <Pencil className="w-4 h-4 text-white/60" />
-                          </button>
-                        )}
                       </div>
                     </div>
                   ))}
