@@ -497,17 +497,18 @@ Return JSON only.`,
                 className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden hover:border-white/30 transition-all"
               >
                 {/* Thumbnail */}
-                {getThumbnailUrl(video) ? (
-                  <img 
-                    src={getThumbnailUrl(video)} 
-                    alt={video.title}
-                    className="w-full h-48 object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-48 bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
-                    <Video className="w-16 h-16 text-white/40" />
-                  </div>
-                )}
+                <img 
+                  src={getThumbnailUrl(video) || `https://i.ytimg.com/vi/${extractYouTubeId(video.video_url) || 'default'}/hqdefault.jpg`}
+                  alt={video.title}
+                  className="w-full h-48 object-cover"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'flex';
+                  }}
+                />
+                <div className="w-full h-48 bg-gradient-to-br from-purple-500/20 to-pink-500/20 hidden items-center justify-center">
+                  <Video className="w-16 h-16 text-white/40" />
+                </div>
 
                 <div className="p-4">
                   <h3 className="text-white font-bold text-lg mb-2">{video.title}</h3>
