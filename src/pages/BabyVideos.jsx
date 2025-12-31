@@ -1107,7 +1107,6 @@ Create about 15-20 conversational lines that naturally introduce and use these v
                              {(provided, snapshot) => (
                                <div
                                  ref={provided.innerRef}
-                                 {...provided.draggableProps}
                                  className={`bg-gradient-to-br from-blue-500/10 to-cyan-500/10 backdrop-blur-xl rounded-2xl border border-blue-500/30 overflow-hidden relative ${
                                    snapshot.isDragging ? 'shadow-2xl scale-105' : ''
                                  }`}
@@ -1115,24 +1114,25 @@ Create about 15-20 conversational lines that naturally introduce and use these v
                                  {/* Trash button - top right */}
                                  {currentUser?.role === 'admin' && (
                                    <button
-                                     onClick={(e) => {
+                                     onClick={async (e) => {
                                        e.preventDefault();
                                        e.stopPropagation();
-                                       if (confirm('Delete this video?')) {
-                                         console.log('Trash button clicked, deleting video:', video.id);
-                                         deleteVideoMutation.mutate({ 
+                                       if (window.confirm('Delete this video?')) {
+                                         await deleteVideoMutation.mutateAsync({ 
                                            videoId: video.id, 
                                            deleteData: { deleted_at: new Date().toISOString(), is_active: false }
                                          });
+                                         toast.success('Video deleted!');
                                        }
                                      }}
-                                     className="absolute top-3 right-3 z-50 text-2xl hover:scale-110 transition-transform bg-red-500/80 hover:bg-red-500 backdrop-blur-sm rounded-lg w-10 h-10 flex items-center justify-center cursor-pointer shadow-lg"
+                                     className="absolute top-3 right-3 z-50 text-2xl hover:scale-110 active:scale-95 transition-transform bg-red-500/80 hover:bg-red-600 backdrop-blur-sm rounded-lg w-10 h-10 flex items-center justify-center cursor-pointer shadow-lg"
                                      title="Delete video"
-                                     style={{ pointerEvents: 'auto' }}
                                    >
                                      🗑️
                                    </button>
                                  )}
+
+                                 <div {...provided.draggableProps}>
 
                                  <div className="p-4 space-y-3">
                                    {/* Admin Controls */}
