@@ -16,8 +16,15 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
   const xpToNextLevel = 1000;
   const xpProgress = ((profile?.xp || 0) % xpToNextLevel) / xpToNextLevel * 100;
 
+  console.log('GameHeader render:', { 
+    hasProfile: !!profile, 
+    language: profile?.language, 
+    avatarId: profile?.avatar_id 
+  });
+
   // Don't render if profile is missing critical data
   if (!profile?.language || !profile?.avatar_id) {
+    console.log('GameHeader: hiding - incomplete profile');
     return null;
   }
 
