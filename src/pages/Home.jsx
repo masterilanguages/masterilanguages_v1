@@ -59,7 +59,6 @@ export default function Home() {
   const [showUserManager, setShowUserManager] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [managingUserEmail, setManagingUserEmail] = useState(localStorage.getItem('admin_managing_user'));
-  const [showLanguageSelector, setShowLanguageSelector] = useState(false);
   const [showCoachManager, setShowCoachManager] = useState(false);
   const [showAssignDialog, setShowAssignDialog] = useState(false);
   const [selectedCoach, setSelectedCoach] = useState("");
@@ -524,49 +523,6 @@ export default function Home() {
             </motion.div>
           </Link>
         </div>
-
-        {/* Language Change for Users */}
-        {!managingUserEmail && (
-          <div className="mt-4">
-            <Button
-              onClick={() => setShowLanguageSelector(!showLanguageSelector)}
-              className="w-full bg-gradient-to-r from-teal-500/20 to-green-500/20 border border-teal-500/50 text-white hover:from-teal-500/30 hover:to-green-500/30"
-            >
-              🌍 Change Learning Language
-            </Button>
-          </div>
-        )}
-
-        {/* Language Selector for All Users */}
-        <AnimatePresence>
-          {showLanguageSelector && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mt-2 bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-4 space-y-3"
-            >
-              <p className="text-white/60 text-sm">Select your learning language:</p>
-              <div className="grid grid-cols-2 gap-2">
-                {['hebrew', 'english', 'spanish', 'french', 'portuguese', 'italian'].map((lang) => (
-                  <Button
-                    key={lang}
-                    onClick={() => changeLanguageMutation.mutate(lang)}
-                    disabled={changeLanguageMutation.isPending}
-                    className={`${
-                      userProfile?.language === lang
-                        ? 'bg-cyan-500 text-white'
-                        : 'bg-white/10 text-white/70 hover:bg-white/20'
-                    }`}
-                  >
-                    {lang.charAt(0).toUpperCase() + lang.slice(1)}
-                  </Button>
-                ))}
-              </div>
-              <p className="text-white/40 text-xs">Current: {userProfile?.language}</p>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {/* Admin Controls */}
         {currentUser?.role === 'admin' && (
