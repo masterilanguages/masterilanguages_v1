@@ -43,6 +43,7 @@ export default function MediaLibrary() {
   const [transcript, setTranscript] = useState([]);
   const [loadingTranscript, setLoadingTranscript] = useState(false);
   const [videoPlayer, setVideoPlayer] = useState(null);
+  const recommendedRef = React.useRef(null);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -142,6 +143,28 @@ export default function MediaLibrary() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['mediaLibrary'] });
       toast.success("Video deleted from library");
+    },
+  });
+
+  const addToLibraryMutation = useMutation({
+    mutationFn: async (video) => {
+      const videoId = video.youtube_video_id || extractYouTubeId(video.video_url);
+      return base44.entities.MediaLibrary.create({
+        title: video.title,
+        language: userProfile?.language || "hebrew",
+        video_url: video.video_url,
+        video_id: videoId,
+        topics: [],
+        difficulty_level: "All",
+        tags: video.tags || "",
+        is_active: true,
+        thumbnail_url: getThumbnailUrl(video),
+        notes: ""
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['mediaLibrary'] });
+      toast.success("Added to library!");
     },
   });
 
@@ -388,15 +411,27 @@ Return JSON only.`,
             <h1 className="text-4xl font-bold text-white mb-2">Media Library</h1>
             <p className="text-white/60">Central repository for all learning videos</p>
           </div>
-          {canEdit && (
-            <Button
-              onClick={() => { resetForm(); setEditingVideo(null); setShowAddDialog(true); }}
-              className="bg-gradient-to-r from-cyan-500 to-blue-500"
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              Add Video
-            </Button>
-          )}
+          <div className="flex gap-2">
+            {allVideosData.length > 0 && (
+              <Button
+                onClick={() => recommendedRef.current?.scrollIntoView({ behavior: 'smooth' })}
+                variant="outline"
+                className="bg-purple-500/20 border-purple-500/50 text-purple-400 hover:bg-purple-500/30"
+              >
+                <Video className="w-5 h-5 mr-2" />
+                Recommended Videos
+              </Button>
+            )}
+            {canEdit && (
+              <Button
+                onClick={() => { resetForm(); setEditingVideo(null); setShowAddDialog(true); }}
+                className="bg-gradient-to-r from-cyan-500 to-blue-500"
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                Add Video
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Filters */}
@@ -626,7 +661,7 @@ Return JSON only.`,
 
         {/* Recommended Videos Section */}
         {allVideosData.length > 0 && (
-          <div className="mt-8">
+          <div ref={recommendedRef} className="mt-8">
             <h2 className="text-2xl font-bold text-white mb-4">Recommended Videos</h2>
             <div className="space-y-4">
               {allVideosData
@@ -669,7 +704,20 @@ Return JSON only.`,
                   <div className="p-4 flex-1">
                     <h3 className="text-white font-bold text-lg mb-1">{video.title}</h3>
                     {video.tags && (
-                      <p className="text-white/60 text-sm">{video.tags}</p>
+                      <p className="text-white/60 text-sm mb-3">{video.tags}</p>
+                    )}
+                    {canEdit && (
+                      <Button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          addToLibraryMutation.mutate(video);
+                        }}
+                        size="sm"
+                        className="bg-cyan-500/20 border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/30"
+                      >
+                        <Plus className="w-4 h-4 mr-1" />
+                        Add to Library
+                      </Button>
                     )}
                   </div>
                 </motion.div>
