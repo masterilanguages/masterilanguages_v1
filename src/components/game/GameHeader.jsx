@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Flame, BookOpen, Clock, LogOut } from "lucide-react";
+import { Flame, BookOpen, Clock, LogOut, Globe } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -12,13 +12,41 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [timeRemaining, setTimeRemaining] = useState(0);
-  const [showLogout, setShowLogout] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
   const xpToNextLevel = 1000;
   const xpProgress = ((profile?.xp || 0) % xpToNextLevel) / xpToNextLevel * 100;
+
+  const languageFlags = {
+    hebrew: '🇮🇱',
+    english: '🇺🇸',
+    spanish: '🇪🇸',
+    french: '🇫🇷',
+    portuguese: '🇵🇹',
+    italian: '🇮🇹'
+  };
+
+  const languageNames = {
+    hebrew: 'Hebrew',
+    english: 'English',
+    spanish: 'Spanish',
+    french: 'French',
+    portuguese: 'Portuguese',
+    italian: 'Italian'
+  };
 
   const updateProfileMutation = useMutation({
     mutationFn: (data) => base44.entities.UserProfile.update(profile?.id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['userProfile'] }),
+  });
+
+  const changeLanguageMutation = useMutation({
+    mutationFn: (newLanguage) => base44.entities.UserProfile.update(profile?.id, { language: newLanguage }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['userProfile'] });
+      queryClient.invalidateQueries({ queryKey: ['days'] });
+      toast.success("Language updated!");
+      setShowMenu(false);
+    },
   });
 
   // Calculate time remaining
@@ -122,7 +150,7 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
         {/* Avatar */}
         <div className="relative">
           <motion.button
-            onClick={() => setShowLogout(!showLogout)}
+            onClick={() => setShowMenu(!showMenu)}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="relative flex items-center gap-3 cursor-pointer"
@@ -145,7 +173,10 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
               </div>
             </div>
             <div className="hidden md:block">
-              <p className="text-white font-bold">{profile?.avatar_name || 'Player'}</p>
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">{languageFlags[profile?.language] || '🌍'}</span>
+                <p className="text-white font-bold">{profile?.avatar_name || 'Player'}</p>
+              </div>
               <div className="flex items-center gap-2">
                 <div className="w-24 h-2 bg-white/20 rounded-full overflow-hidden">
                   <motion.div
@@ -160,20 +191,48 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
           </motion.button>
 
           <AnimatePresence>
-            {showLogout && (
+            {showMenu && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="absolute top-full left-0 mt-2 z-50"
+                className="absolute top-full left-0 mt-2 z-50 bg-slate-900 border border-white/20 rounded-xl shadow-2xl overflow-hidden min-w-[200px]"
               >
-                <Button
-                  onClick={handleLogout}
-                  className="bg-red-500 hover:bg-red-600 text-white shadow-lg"
-                >
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Logout
-                </Button>
+                <div className="p-2">
+                  <div className="px-3 py-2 text-white/60 text-xs font-medium border-b border-white/10">
+                    Learning Language
+                  </div>
+                  <div className="space-y-1 mt-2">
+                    {Object.keys(languageFlags).map((lang) => (
+                      <button
+                        key={lang}
+                        onClick={() => changeLanguageMutation.mutate(lang)}
+                        disabled={changeLanguageMutation.isPending}
+                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-all ${
+                          profile?.language === lang
+                            ? 'bg-cyan-500/20 text-cyan-400'
+                            : 'text-white hover:bg-white/10'
+                        }`}
+                      >
+                        <span className="text-xl">{languageFlags[lang]}</span>
+                        <span className="text-sm font-medium">{languageNames[lang]}</span>
+                        {profile?.language === lang && (
+                          <span className="ml-auto text-xs">✓</span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="border-t border-white/10 mt-2 pt-2">
+                    <Button
+                      onClick={handleLogout}
+                      className="w-full bg-red-500/20 hover:bg-red-500/30 text-red-400 justify-start"
+                      variant="ghost"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Logout
+                    </Button>
+                  </div>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
