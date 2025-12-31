@@ -44,6 +44,7 @@ export default function MediaLibrary() {
   const [loadingTranscript, setLoadingTranscript] = useState(false);
   const [videoPlayer, setVideoPlayer] = useState(null);
   const [showRecommended, setShowRecommended] = useState(false);
+  const [showLibrary, setShowLibrary] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -510,17 +511,19 @@ Return JSON only.`,
                   onClick={() => handleVideoClick(video)}
                   className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden hover:border-cyan-500/50 transition-all cursor-pointer"
                 >
-                  {getThumbnailUrl(video) ? (
-                    <img 
-                      src={getThumbnailUrl(video)} 
-                      alt={video.title}
-                      className="w-full h-32 object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-32 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center">
-                      <Video className="w-12 h-12 text-white/40" />
-                    </div>
-                  )}
+                  <div className="w-full aspect-video bg-black">
+                    {getThumbnailUrl(video) ? (
+                      <img 
+                        src={getThumbnailUrl(video)} 
+                        alt={video.title}
+                        className="w-full h-full object-contain"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center">
+                        <Video className="w-12 h-12 text-white/40" />
+                      </div>
+                    )}
+                  </div>
                   <div className="p-3">
                    <div className="flex items-start justify-between gap-2 mb-2">
                      <h3 className="text-white font-bold text-base flex-1">{video.title}</h3>
@@ -562,11 +565,25 @@ Return JSON only.`,
           </div>
         )}
 
-        {/* Videos Grid */}
-        <h2 className="text-2xl font-bold text-white mb-4">Library Videos</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <AnimatePresence>
-            {filteredVideos.map((video) => (
+        {/* Library Videos Section */}
+        <div className="mb-8">
+          <button
+            onClick={() => setShowLibrary(!showLibrary)}
+            className="w-full bg-cyan-600/40 hover:bg-cyan-600/50 backdrop-blur-xl rounded-2xl border border-white/10 p-4 flex items-center justify-between transition-all mb-4"
+          >
+            <h2 className="text-xl font-bold text-white">
+              Library Videos ({filteredVideos.length})
+            </h2>
+            <ChevronDown className={`w-6 h-6 text-white transition-transform ${showLibrary ? 'rotate-180' : ''}`} />
+          </button>
+          {showLibrary && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+            >
+              {filteredVideos.map((video) => (
               <motion.div
                 key={video.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -575,17 +592,21 @@ Return JSON only.`,
                 className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden hover:border-white/30 transition-all"
               >
                 {/* Thumbnail */}
-                <img 
-                  src={getThumbnailUrl(video) || `https://i.ytimg.com/vi/${extractYouTubeId(video.video_url) || 'default'}/hqdefault.jpg`}
-                  alt={video.title}
-                  className="w-full h-32 object-cover"
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                    e.target.nextSibling.style.display = 'flex';
-                  }}
-                />
-                <div className="w-full h-32 bg-gradient-to-br from-purple-500/20 to-pink-500/20 hidden items-center justify-center">
-                  <Video className="w-12 h-12 text-white/40" />
+                <div className="w-full aspect-video bg-black">
+                  <img 
+                    src={getThumbnailUrl(video) || `https://i.ytimg.com/vi/${extractYouTubeId(video.video_url) || 'default'}/hqdefault.jpg`}
+                    alt={video.title}
+                    className="w-full h-full object-contain"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.parentElement.classList.add('bg-gradient-to-br', 'from-purple-500/20', 'to-pink-500/20');
+                      e.target.parentElement.classList.remove('bg-black');
+                      const icon = document.createElement('div');
+                      icon.innerHTML = '<svg class="w-12 h-12 text-white/40" fill="currentColor" viewBox="0 0 24 24"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>';
+                      icon.className = 'flex items-center justify-center h-full';
+                      e.target.parentElement.appendChild(icon);
+                    }}
+                  />
                 </div>
 
                 <div className="p-3">
@@ -677,16 +698,10 @@ Return JSON only.`,
                   </div>
                 </div>
               </motion.div>
-            ))}
-          </AnimatePresence>
+              ))}
+            </motion.div>
+          )}
         </div>
-
-        {filteredVideos.length === 0 && (
-          <div className="text-center py-16">
-            <Video className="w-16 h-16 text-white/20 mx-auto mb-4" />
-            <p className="text-white/60">No videos found</p>
-          </div>
-        )}
 
         {/* Recommended Videos Section */}
         {allVideosData.length > 0 && (
