@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import EditableWord from "../components/learning/EditableWord";
+import TranslatorWidget from "../components/TranslatorWidget";
 
 export default function Flashcards() {
   const queryClient = useQueryClient();
