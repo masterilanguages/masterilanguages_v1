@@ -824,7 +824,24 @@ export default function Home() {
                                   {isCompleted && <Check className="w-5 h-5 text-white" />}
                                 </button>
                                 <button
-                                  onClick={() => task.page && navigate(createPageUrl(task.page))}
+                                  onClick={async () => {
+                                    if (task.page === "BabyVideos") {
+                                      // Find video matching current day
+                                      const videos = await base44.entities.Video.filter({ 
+                                        language: userProfile?.language || 'hebrew',
+                                        level: day.day_number
+                                      });
+
+                                      if (videos.length > 0) {
+                                        navigate(`${createPageUrl("BabyVideos")}?videoId=custom-${videos[0].id}`);
+                                      } else {
+                                        navigate(createPageUrl("BabyVideos"));
+                                        toast.info(`No video found for Day ${day.day_number}`);
+                                      }
+                                    } else if (task.page) {
+                                      navigate(createPageUrl(task.page));
+                                    }
+                                  }}
                                   className="flex-1 flex items-center gap-3 text-left"
                                 >
                                   <div className="flex-1">
