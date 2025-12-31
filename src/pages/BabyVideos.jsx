@@ -493,20 +493,30 @@ export default function BabyVideos() {
 
   const deleteVideoMutation = useMutation({
     mutationFn: async ({ videoId, deleteData }) => {
+      console.log('Deleting video:', videoId, deleteData);
       // Soft delete the video
-      await base44.entities.Video.update(videoId, deleteData);
+      const result = await base44.entities.Video.update(videoId, deleteData);
+      console.log('Video updated:', result);
       
       // Find and disable any To-Do items pointing to this video
       const todos = await base44.entities.TodoItem.filter({ target_video_id: videoId.toString() });
+      console.log('Found todos:', todos);
       for (const todo of todos) {
         await base44.entities.TodoItem.update(todo.id, { is_active: false });
       }
+      
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customVideos'] });
       queryClient.invalidateQueries({ queryKey: ['todoItems'] });
-      toast.success("Video deleted and To-Do items disabled");
+      setExpandedVideoId(null);
+      toast.success("Video deleted!");
     },
+    onError: (error) => {
+      console.error('Delete error:', error);
+      toast.error(`Delete failed: ${error.message}`);
+    }
   });
 
   const reorderVideosMutation = useMutation({
