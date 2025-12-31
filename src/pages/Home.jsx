@@ -54,8 +54,6 @@ export default function Home() {
   const [timerSpeed, setTimerSpeed] = useState(1);
   const [currentUser, setCurrentUser] = useState(null);
   const [showExtras, setShowExtras] = useState(false);
-  const [showAdminPanel, setShowAdminPanel] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState(null);
   const [showUserManager, setShowUserManager] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [managingUserEmail, setManagingUserEmail] = useState(localStorage.getItem('admin_managing_user'));
@@ -545,12 +543,6 @@ export default function Home() {
               </div>
             )}
             <Button
-              onClick={() => setShowAdminPanel(!showAdminPanel)}
-              className="w-full bg-gradient-to-r from-red-500/20 to-orange-500/20 border border-red-500/50 text-white hover:from-red-500/30 hover:to-orange-500/30"
-            >
-              🔧 Admin: Manage Content by Language
-            </Button>
-            <Button
               onClick={() => setShowCoachManager(!showCoachManager)}
               className="w-full bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/50 text-white hover:from-cyan-500/30 hover:to-blue-500/30"
             >
@@ -564,41 +556,6 @@ export default function Home() {
             </Button>
           </div>
         )}
-
-        {/* Language Selection Panel */}
-        <AnimatePresence>
-          {showAdminPanel && currentUser?.role === 'admin' && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mt-2 bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-4 space-y-3"
-            >
-              <p className="text-white/60 text-sm">Select a language to add content:</p>
-              <div className="grid grid-cols-2 gap-2">
-                {['hebrew', 'english', 'spanish', 'french', 'portuguese', 'italian'].map((lang) => (
-                  <Button
-                    key={lang}
-                    onClick={() => {
-                      setSelectedLanguage(lang);
-                      // Update profile temporarily to switch context
-                      updateProfileMutation.mutate({ language: lang });
-                      toast.success(`Switched to ${lang.charAt(0).toUpperCase() + lang.slice(1)}`);
-                    }}
-                    className={`${
-                      userProfile?.language === lang
-                        ? 'bg-cyan-500 text-white'
-                        : 'bg-white/10 text-white/70 hover:bg-white/20'
-                    }`}
-                  >
-                    {lang.charAt(0).toUpperCase() + lang.slice(1)}
-                  </Button>
-                ))}
-              </div>
-              <p className="text-white/40 text-xs">Your current view is: {userProfile?.language}</p>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {/* Coach Manager Panel */}
         <AnimatePresence>
