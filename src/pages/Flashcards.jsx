@@ -691,6 +691,9 @@ export default function Flashcards() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Translator Widget */}
+      <TranslatorWidget />
     </div>
   );
 }
