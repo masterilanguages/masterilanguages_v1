@@ -172,12 +172,12 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
                 {profile?.age_level || 5}
               </div>
             </div>
-            <div className="hidden md:block">
+            <div>
               <div className="flex items-center gap-2">
                 <span className="text-2xl">{languageFlags[profile?.language] || '🌍'}</span>
-                <p className="text-white font-bold">{profile?.avatar_name || 'Player'}</p>
+                <p className="text-white font-bold hidden sm:inline">{profile?.avatar_name || 'Player'}</p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="hidden md:flex items-center gap-2">
                 <div className="w-24 h-2 bg-white/20 rounded-full overflow-hidden">
                   <motion.div
                     className="h-full bg-gradient-to-r from-cyan-400 to-purple-500"
