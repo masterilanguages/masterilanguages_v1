@@ -84,7 +84,6 @@ Provide:
             notes: { type: "string" }
           }
         };
-        result.hebrew = result.target_language; // Normalize for backwards compatibility
       } else {
         // Target language/transliteration to English
         const targetLangName = learningLanguage.charAt(0).toUpperCase() + learningLanguage.slice(1);
@@ -122,13 +121,15 @@ Provide:
             alternatives: { type: "array", items: { type: "string" } }
           }
         };
-        result.hebrew = result.target_language; // Normalize for backwards compatibility
       }
       
       const result = await base44.integrations.Core.InvokeLLM({
         prompt,
         response_json_schema: schema
       });
+      
+      // Normalize for backwards compatibility
+      result.hebrew = result.target_language;
       
       setTranslation({ ...result, direction: isEnglish ? 'en-he' : 'tr-en' });
     } catch (e) {
@@ -152,14 +153,16 @@ Provide:
 
   return (
     <>
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-4 left-4 z-50 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg flex items-center justify-center font-medium"
-      >
-        Translate
-      </motion.button>
+      {!isOpen && (
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setIsOpen(true)}
+          className="fixed bottom-4 left-4 z-50 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg flex items-center justify-center font-medium"
+        >
+          Translate
+        </motion.button>
+      )}
 
       <AnimatePresence>
         {isOpen && (
@@ -169,6 +172,15 @@ Provide:
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
             className="fixed bottom-20 left-4 z-50 w-72 bg-slate-900/95 backdrop-blur-xl border border-white/20 rounded-2xl p-4 shadow-2xl"
           >
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-white font-medium text-sm">Translate</h3>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="text-white/60 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
             <div className="flex gap-2 mb-3">
               <Input
                 value={inputText}
