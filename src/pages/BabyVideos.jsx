@@ -419,8 +419,10 @@ export default function BabyVideos() {
     refetchOnWindowFocus: false,
   });
 
-  // Check if current user is admin
+  // Check if current user is admin and if managing another user
   const [currentUser, setCurrentUser] = useState(null);
+  const [managingUserEmail, setManagingUserEmail] = useState(localStorage.getItem('admin_managing_user'));
+  
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -432,21 +434,27 @@ export default function BabyVideos() {
   }, []);
 
   const { data: customVideos = [] } = useQuery({
-    queryKey: ['customVideos', userProfile?.language],
+    queryKey: ['customVideos', userProfile?.language, managingUserEmail],
     queryFn: async () => {
       const videos = await base44.entities.Video.list();
-      // Filter by language and deleted status
+      // Filter by language, deleted status, and user (if admin is managing)
       const filtered = videos.filter(v => {
         const notDeleted = !v.deleted_at && v.is_active !== false;
         const matchesLanguage = !userProfile?.language || v.language === userProfile.language;
-        return notDeleted && matchesLanguage;
+        
+        // If admin is managing a user, show only that user's videos
+        const matchesUser = managingUserEmail 
+          ? v.created_by === managingUserEmail 
+          : v.created_by === currentUser?.email;
+        
+        return notDeleted && matchesLanguage && matchesUser;
       });
       // Sort by order field
       return filtered.sort((a, b) => (a.order || 0) - (b.order || 0));
     },
     staleTime: 2 * 60 * 1000,
     refetchOnWindowFocus: false,
-    enabled: !!userProfile,
+    enabled: !!userProfile && !!currentUser,
   });
 
   const updateCoinsMutation = useMutation({
@@ -763,6 +771,11 @@ Create about 15-20 conversational lines that naturally introduce and use these v
                 📺 {userProfile?.language === 'hebrew' ? 'Hebrew TV' : 'Videos'}
               </h1>
               <p className="text-white/60">Watch videos & rate words you learn</p>
+              {managingUserEmail && currentUser?.role === 'admin' && (
+                <p className="text-amber-400 text-sm font-medium mt-1">
+                  👤 Managing videos for: {managingUserEmail}
+                </p>
+              )}
             </div>
           </div>
           <Button
