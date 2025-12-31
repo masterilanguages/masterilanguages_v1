@@ -539,7 +539,7 @@ export default function Flashcards() {
 
             {/* Example sentences (state 1+) */}
             {revealState >= 1 && (
-              <div className="w-full mt-6 space-y-3" onClick={(e) => e.stopPropagation()}>
+              <div className="w-full max-w-md mx-auto mt-6 space-y-3" onClick={(e) => e.stopPropagation()}>
                 {generatingSentences ? (
                   <div className="text-center text-white/60 py-4">
                     <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2" />
@@ -562,13 +562,13 @@ export default function Flashcards() {
                             );
                           }}
                         >
-                          <div className="flex items-start justify-between gap-3 mb-2">
-                            <div className="flex-1">
-                              <div dir="ltr" className="mb-3">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1 space-y-2">
+                              <div dir="ltr">
                                 <p className="text-white/60 text-sm">{sentence.english}</p>
                               </div>
                               {isRevealed && (
-                                <div className="space-y-1">
+                                <>
                                   <div dir="ltr">
                                     <p className="text-cyan-400 text-base">{sentence.transliteration}</p>
                                   </div>
@@ -577,7 +577,7 @@ export default function Flashcards() {
                                       {sentence.hebrew}
                                     </p>
                                   </div>
-                                </div>
+                                </>
                               )}
                             </div>
                             <div className="flex flex-col gap-2">
