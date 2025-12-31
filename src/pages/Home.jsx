@@ -411,7 +411,8 @@ export default function Home() {
   const [newTask, setNewTask] = useState({ name: "", duration: "" });
   const [editingTaskId, setEditingTaskId] = useState(null);
   const [editingTaskData, setEditingTaskData] = useState({ name: "", duration: "" });
-  const [daysToShow, setDaysToShow] = useState(3);
+  const [daysToShow, setDaysToShow] = useState(7);
+  const [addingTaskToDayId, setAddingTaskToDayId] = useState(null);
 
   const currentDay = userProfile?.current_day || 1;
   const sortedDays = [...days].sort((a, b) => a.day_number - b.day_number);
@@ -430,6 +431,7 @@ export default function Home() {
     }];
     updateDayMutation.mutate({ id: dayId, data: { subsections: updatedSubsections } });
     setNewTask({ name: "", duration: "" });
+    setAddingTaskToDayId(null);
   };
 
   const handleDeleteTask = (dayId, taskId) => {
@@ -864,9 +866,7 @@ export default function Home() {
                 "from-indigo-500 to-purple-500",
               ];
               const gradient = gradients[idx % gradients.length];
-
-              // Scale down as more days are shown
-              const isCompact = daysToShow > 6;
+              const isCompact = true; // Always use compact style
 
               return (
                 <motion.div
@@ -937,7 +937,7 @@ export default function Home() {
                         transition={{ duration: 0.2 }}
                         className="overflow-hidden"
                       >
-                        <div className="p-6 pt-0 space-y-3">
+                        <div className="p-3 pt-0 space-y-2">
                           {day.subsections?.map((task, taskIdx) => {
                             const isCompleted = progress?.subsections_completed?.includes(task.id);
                             const isEditing = editingTaskId === task.id;
@@ -945,20 +945,20 @@ export default function Home() {
                             return (
                               <div
                                 key={task.id}
-                                className={`bg-gradient-to-br from-white/5 to-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-4 flex items-center gap-3 ${
+                                className={`bg-gradient-to-br from-white/5 to-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-3 flex items-center gap-2 ${
                                   isCompleted ? 'from-green-500/10 to-green-600/10 border-green-500/30' : ''
                                 }`}
                               >
-                                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-sm">
+                                <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-xs">
                                   {taskIdx + 1}
                                 </div>
                                 <button
                                   onClick={() => toggleTaskMutation.mutate({ dayId: day.id, taskId: task.id, dayNumber: day.day_number })}
-                                  className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center transition-all ${
+                                  className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
                                     isCompleted ? 'bg-green-500 border-green-500' : 'border-white/40 hover:border-cyan-400'
                                   }`}
                                 >
-                                  {isCompleted && <Check className="w-5 h-5 text-white" />}
+                                  {isCompleted && <Check className="w-4 h-4 text-white" />}
                                 </button>
 
                                 {isEditing ? (
@@ -1037,13 +1037,28 @@ export default function Home() {
                           })}
 
                           {isMasterUser && (
-                            <div className="bg-white/10 rounded-xl p-4 space-y-2">
-                              <Input placeholder="Task name" value={newTask.name} onChange={(e) => setNewTask({...newTask, name: e.target.value})} className="bg-white/5 border-white/20 text-white" />
-                              <Input placeholder="Duration (optional)" value={newTask.duration} onChange={(e) => setNewTask({...newTask, duration: e.target.value})} className="bg-white/5 border-white/20 text-white" />
-                              <Button onClick={() => handleAddTask(day.id)} className="w-full bg-green-500 hover:bg-green-600" disabled={!newTask.name.trim()}>
+                            addingTaskToDayId === day.id ? (
+                              <div className="bg-white/10 rounded-xl p-3 space-y-2">
+                                <Input placeholder="Task name" value={newTask.name} onChange={(e) => setNewTask({...newTask, name: e.target.value})} className="bg-white/5 border-white/20 text-white text-sm" />
+                                <Input placeholder="Duration (optional)" value={newTask.duration} onChange={(e) => setNewTask({...newTask, duration: e.target.value})} className="bg-white/5 border-white/20 text-white text-sm" />
+                                <div className="flex gap-2">
+                                  <Button onClick={() => handleAddTask(day.id)} className="flex-1 bg-green-500 hover:bg-green-600" size="sm" disabled={!newTask.name.trim()}>
+                                    Add
+                                  </Button>
+                                  <Button onClick={() => { setAddingTaskToDayId(null); setNewTask({ name: "", duration: "" }); }} variant="outline" className="border-white/20" size="sm">
+                                    Cancel
+                                  </Button>
+                                </div>
+                              </div>
+                            ) : (
+                              <Button 
+                                onClick={() => setAddingTaskToDayId(day.id)}
+                                className="w-full bg-green-500 hover:bg-green-600" 
+                                size="sm"
+                              >
                                 <Plus className="w-4 h-4 mr-2" /> Add Task
                               </Button>
-                            </div>
+                            )
                           )}
                         </div>
                       </motion.div>
@@ -1053,13 +1068,13 @@ export default function Home() {
                 );
                 })}
 
-                {sortedDays.length > 3 && (
+                {sortedDays.length > 7 && (
                   <div className="flex justify-center mt-6">
                     <Button
-                      onClick={() => setDaysToShow(prev => prev === 3 ? sortedDays.length : 3)}
+                      onClick={() => setDaysToShow(prev => prev === 7 ? sortedDays.length : 7)}
                       className="bg-white/10 border border-white/20 text-white hover:bg-white/20"
                     >
-                      {daysToShow === 3 ? 'Show More Days' : 'Hide More Days'}
+                      {daysToShow === 7 ? 'Show More Days' : 'Hide More Days'}
                     </Button>
                   </div>
                 )}
