@@ -4,7 +4,7 @@ import { Languages, X, Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { base44 } from "@/api/base44Client";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 export default function TranslatorWidget() {
@@ -14,6 +14,13 @@ export default function TranslatorWidget() {
   const [translation, setTranslation] = useState(null);
   const [isTranslating, setIsTranslating] = useState(false);
   const [learningLanguage, setLearningLanguage] = useState("hebrew");
+  const [wordAdded, setWordAdded] = useState(false);
+
+  const { data: words = [] } = useQuery({
+    queryKey: ['words'],
+    queryFn: () => base44.entities.Word.filter({ category: "wordbank" }),
+    staleTime: 10 * 60 * 1000,
+  });
 
   // Get user's learning language
   React.useEffect(() => {
@@ -30,8 +37,7 @@ export default function TranslatorWidget() {
       queryClient.invalidateQueries({ queryKey: ['words'] });
       queryClient.invalidateQueries({ queryKey: ['wordRatings'] });
       toast.success("Added to backpack! 🎒");
-      setTranslation(null);
-      setInputText("");
+      setWordAdded(true);
     },
   });
 
@@ -132,6 +138,7 @@ Provide:
       result.hebrew = result.target_language;
       
       setTranslation({ ...result, direction: isEnglish ? 'en-he' : 'tr-en' });
+      setWordAdded(false);
     } catch (e) {
       toast.error("Translation failed");
     }
@@ -262,18 +269,16 @@ Provide:
                   )}
                 </div>
 
-                <Button
+                <button
                   onClick={handleAddToBackpack}
-                  disabled={createWordMutation.isPending}
-                  className="w-full bg-gradient-to-r from-amber-500 to-orange-500"
+                  disabled={createWordMutation.isPending || wordAdded}
+                  className="relative w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
-                  {createWordMutation.isPending ? (
-                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                  ) : (
-                    <Plus className="w-4 h-4 mr-2" />
+                  <span className="text-3xl">🎒</span>
+                  {wordAdded && (
+                    <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-4xl">✓</span>
                   )}
-                  Add to Backpack
-                </Button>
+                </button>
               </>
             )}
           </motion.div>
