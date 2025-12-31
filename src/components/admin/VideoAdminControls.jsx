@@ -66,14 +66,18 @@ export default function VideoAdminControls({ video, onUpdate, onDelete, onReplac
   };
 
   const handleDelete = async () => {
+    console.log('handleDelete called');
     try {
-      await onDelete({
+      const deleteData = {
         deleted_at: new Date().toISOString(),
         is_active: false
-      });
+      };
+      console.log('calling onDelete with:', deleteData);
+      await onDelete(deleteData);
       setShowDeleteDialog(false);
       toast.success("Video deleted");
     } catch (e) {
+      console.error('handleDelete error:', e);
       toast.error("Failed to delete video");
     }
   };
