@@ -133,6 +133,7 @@ export default function MediaLibrary() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['mediaLibrary'] });
       setEditingVideo(null);
+      setShowAddDialog(false);
       resetForm();
       toast.success("Video updated!");
     },
