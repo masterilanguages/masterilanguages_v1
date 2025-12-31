@@ -11,7 +11,6 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import EditableWord from "../components/learning/EditableWord";
-import LearningCompanion from "../components/companion/LearningCompanion";
 
 export default function Flashcards() {
   const queryClient = useQueryClient();
@@ -248,24 +247,6 @@ Return JSON with sentences array, each containing:
     }
   };
 
-  // Companion expression and gear
-  const getCompanionExpression = () => {
-    if (!currentWord) return "neutral";
-    if (revealState === 0) return "watchful";
-    if (revealState === 1) return "happy";
-    if (revealState === 2 && currentWord.times_practiced >= 4) return "proud";
-    if (revealState === 2) return "happy";
-    return userProfile?.emotion_state || "neutral";
-  };
-
-  const getCompanionMessage = () => {
-    if (!currentWord) return null;
-    if (currentIndex === 0) return `Let's learn together, ${userProfile?.avatar_name || 'friend'}!`;
-    if (revealState === 2 && currentWord.times_practiced >= 4) return "You're doing amazing! 🎉";
-    if (revealState === 2 && currentWord.times_practiced >= 2) return "Keep it up!";
-    return null;
-  };
-
   const currentWord = sessionWords[currentIndex];
 
   React.useEffect(() => {
@@ -398,19 +379,7 @@ Return JSON with sentences array, each containing:
               </div>
             </div>
 
-            <div className="flex-1 flex flex-col items-center justify-start w-full mt-12 space-y-4">
-            {/* Learning Companion appears inline above content */}
-            <div className="flex justify-center w-full">
-              <LearningCompanion
-                expression={getCompanionExpression()}
-                gear={userProfile?.gear_state || []}
-                size="md"
-                message={getCompanionMessage()}
-                position="center"
-                animate={revealState === 2}
-              />
-            </div>
-
+            <div className="flex-1 flex flex-col items-center justify-center w-full mt-12">
             {/* English (state 1+) */}
             {revealState >= 1 && (
               <div className="text-center mb-4" onClick={(e) => e.stopPropagation()}>
