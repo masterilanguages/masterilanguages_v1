@@ -75,6 +75,19 @@ export default function MediaLibrary() {
     queryFn: () => base44.entities.MediaLibrary.list(),
   });
 
+  const { data: userProfile } = useQuery({
+    queryKey: ['userProfile'],
+    queryFn: async () => {
+      const profiles = await base44.entities.UserProfile.list();
+      return profiles[0] || null;
+    },
+  });
+
+  const { data: allVideosData = [] } = useQuery({
+    queryKey: ['allVideos'],
+    queryFn: () => base44.entities.Video.list(),
+  });
+
   const { data: allUsers = [] } = useQuery({
     queryKey: ['allUsers'],
     queryFn: async () => {
@@ -368,7 +381,46 @@ Return JSON only.`,
           </div>
         </div>
 
+        {/* Recommended Videos Section */}
+        {allVideosData.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-white mb-4">Recommended Videos</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {allVideosData.slice(0, 6).map((video) => (
+                <motion.a
+                  key={video.id}
+                  href={video.video_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden hover:border-white/30 transition-all"
+                >
+                  {video.thumbnail_url ? (
+                    <img 
+                      src={video.thumbnail_url} 
+                      alt={video.title}
+                      className="w-full h-48 object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-48 bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
+                      <Video className="w-16 h-16 text-white/40" />
+                    </div>
+                  )}
+                  <div className="p-4">
+                    <h3 className="text-white font-bold text-lg mb-2">{video.title}</h3>
+                    {video.tags && (
+                      <p className="text-white/60 text-sm">{video.tags}</p>
+                    )}
+                  </div>
+                </motion.a>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Videos Grid */}
+        <h2 className="text-2xl font-bold text-white mb-4">All Library Videos</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <AnimatePresence>
             {filteredVideos.map((video) => (
