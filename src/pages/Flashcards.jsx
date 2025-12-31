@@ -327,56 +327,32 @@ Return JSON with sentences array, each containing:
           >
             {/* Top bar inside card */}
             <div className="absolute top-4 left-4 right-4 z-10 flex items-center justify-between" onClick={(e) => e.stopPropagation()}>
-              <div className="flex flex-col gap-2">
-                <Button
-                  onClick={() => {
-                    if (confirm("Delete this word?")) {
-                      updateWordMutation.mutate({
-                        id: currentWord.id,
-                        data: { category: "deleted" }
-                      });
-                      handleSkip();
-                    }
-                  }}
-                  variant="ghost"
-                  size="icon"
-                  className="text-white bg-black/30 backdrop-blur-sm hover:bg-black/50 rounded-full"
-                >
-                  🗑️
-                </Button>
-                <Button
-                  onClick={() => setSelectedLevel(null)}
-                  variant="ghost"
-                  size="icon"
-                  className="text-white bg-black/30 backdrop-blur-sm hover:bg-black/50 rounded-full"
-                >
-                  &lt;
-                </Button>
-              </div>
-              <div className="flex items-center gap-3">
+              <Button
+                onClick={() => setSelectedLevel(null)}
+                variant="ghost"
+                size="icon"
+                className="text-white bg-black/30 backdrop-blur-sm hover:bg-black/50 rounded-full"
+              >
+                &lt;
+              </Button>
+              
+              <div className="flex items-center gap-2">
+                <div className="bg-black/30 backdrop-blur-sm rounded-full px-3 py-1.5">
+                  <span className="text-white text-sm font-medium">{currentIndex + 1}/{sessionWords.length}</span>
+                </div>
                 <div className="bg-black/30 backdrop-blur-sm rounded-full px-3 py-1.5 text-white text-sm font-medium">
                   Level {currentWord?.times_practiced || 0}
                 </div>
-                <div className="flex flex-col gap-2">
-                  <div className="bg-black/30 backdrop-blur-sm rounded-full px-3 py-1.5">
-                    <span className="text-white text-sm font-medium">{currentIndex + 1}/{sessionWords.length}</span>
-                  </div>
-                  <Button
-                    onClick={handleSkip}
-                    variant="ghost"
-                    size="icon"
-                    className="text-white bg-black/30 backdrop-blur-sm hover:bg-black/50 rounded-full"
-                  >
-                    &gt;
-                  </Button>
-                  <button
-                    onClick={() => setImageRegenDialog(true)}
-                    className="w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm hover:bg-black/50 flex items-center justify-center text-xl"
-                  >
-                    🎨
-                  </button>
-                </div>
               </div>
+
+              <Button
+                onClick={handleSkip}
+                variant="ghost"
+                size="icon"
+                className="text-white bg-black/30 backdrop-blur-sm hover:bg-black/50 rounded-full"
+              >
+                &gt;
+              </Button>
             </div>
 
             <div className="flex-1 flex flex-col items-center justify-center w-full mt-12">
