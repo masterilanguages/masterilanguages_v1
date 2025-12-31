@@ -334,6 +334,30 @@ Return JSON only.`,
     });
   };
 
+  const getThumbnailUrl = (video) => {
+    if (video.thumbnail_url) return video.thumbnail_url;
+    
+    // For MediaLibrary videos with video_id
+    if (video.video_id) {
+      return `https://img.youtube.com/vi/${video.video_id}/mqdefault.jpg`;
+    }
+    
+    // For Video entity with youtube_video_id
+    if (video.youtube_video_id) {
+      return `https://img.youtube.com/vi/${video.youtube_video_id}/mqdefault.jpg`;
+    }
+    
+    // Try to extract from video_url
+    if (video.video_url) {
+      const videoId = extractYouTubeId(video.video_url);
+      if (videoId) {
+        return `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+      }
+    }
+    
+    return null;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
       <div className="max-w-7xl mx-auto">
@@ -433,9 +457,9 @@ Return JSON only.`,
                   onClick={() => handleVideoClick(video)}
                   className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden hover:border-cyan-500/50 transition-all cursor-pointer"
                 >
-                  {video.thumbnail_url ? (
+                  {getThumbnailUrl(video) ? (
                     <img 
-                      src={video.thumbnail_url} 
+                      src={getThumbnailUrl(video)} 
                       alt={video.title}
                       className="w-full h-48 object-cover"
                     />
@@ -469,9 +493,9 @@ Return JSON only.`,
                 className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden hover:border-white/30 transition-all"
               >
                 {/* Thumbnail */}
-                {video.thumbnail_url ? (
+                {getThumbnailUrl(video) ? (
                   <img 
-                    src={video.thumbnail_url} 
+                    src={getThumbnailUrl(video)} 
                     alt={video.title}
                     className="w-full h-48 object-cover"
                   />
@@ -573,9 +597,9 @@ Return JSON only.`,
                   onClick={() => handleVideoClick(video)}
                   className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden hover:border-purple-500/50 transition-all cursor-pointer flex"
                 >
-                  {video.thumbnail_url ? (
+                  {getThumbnailUrl(video) ? (
                     <img 
-                      src={video.thumbnail_url} 
+                      src={getThumbnailUrl(video)} 
                       alt={video.title}
                       className="w-48 h-32 object-cover flex-shrink-0"
                     />
