@@ -119,13 +119,19 @@ export default function Flashcards() {
       - Include the target word
 
       Return JSON with sentences array, each containing:
-      - hebrew: the Hebrew sentence WITH nikud (vowel point diacritics for pronunciation)
-      - transliteration: Latin character phonetic spelling (e.g., "Hayom kafu bachuts")
+      - hebrew: the Hebrew sentence WITH nikud vowel points (e.g., הַיּוֹם קָפוּא בַּחוּץ)
+      - transliteration: ENGLISH/LATIN alphabet phonetic spelling ONLY - NO HEBREW CHARACTERS (e.g., "Hayom kafu bachuts")
       - english: English translation
 
-      CRITICAL: 
-      - hebrew field must include nikud vowel points (e.g., הַיּוֹם not היום)
-      - transliteration must use LATIN letters only (a-z), not Hebrew characters`,
+      CRITICAL REQUIREMENTS: 
+      1. hebrew field: Hebrew script with nikud diacritics (ְ ֱ ֲ ֳ ִ ֵ ֶ ַ ָ ֹ ֺ ֻ ּ ֽ)
+      2. transliteration field: MUST be Latin/English letters (a-z, A-Z) ONLY - absolutely NO Hebrew characters allowed
+      3. english field: English translation
+
+      Example:
+      - hebrew: "הַיּוֹם קָפוּא בַּחוּץ."
+      - transliteration: "Hayom kafu bachuts."
+      - english: "Today it is frozen outside."`,
         response_json_schema: {
           type: "object",
           properties: {
