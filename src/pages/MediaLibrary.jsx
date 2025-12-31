@@ -322,25 +322,34 @@ export default function MediaLibrary() {
                 exit={{ opacity: 0, y: -20 }}
                 className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden hover:border-white/30 transition-all"
               >
+                {/* Thumbnail */}
+                {video.thumbnail_url ? (
+                  <img 
+                    src={video.thumbnail_url} 
+                    alt={video.title}
+                    className="w-full h-48 object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-48 bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
+                    <Video className="w-16 h-16 text-white/40" />
+                  </div>
+                )}
+
                 <div className="p-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <h3 className="text-white font-bold text-lg mb-1">{video.title}</h3>
-                      <div className="flex flex-wrap gap-2 mb-2">
-                        <span className="text-xs bg-cyan-500/20 text-cyan-400 px-2 py-1 rounded">
-                          {video.language}
-                        </span>
-                        <span className="text-xs bg-purple-500/20 text-purple-400 px-2 py-1 rounded">
-                          {video.difficulty_level}
-                        </span>
-                        {video.duration_minutes && (
-                          <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">
-                            {video.duration_minutes} min
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <Video className="w-5 h-5 text-white/40" />
+                  <h3 className="text-white font-bold text-lg mb-2">{video.title}</h3>
+                  
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    <span className="text-xs bg-cyan-500/20 text-cyan-400 px-2 py-1 rounded">
+                      {video.language}
+                    </span>
+                    <span className="text-xs bg-purple-500/20 text-purple-400 px-2 py-1 rounded">
+                      {video.difficulty_level}
+                    </span>
+                    {video.duration_minutes && (
+                      <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">
+                        {video.duration_minutes} min
+                      </span>
+                    )}
                   </div>
 
                   {video.topics && video.topics.length > 0 && (
