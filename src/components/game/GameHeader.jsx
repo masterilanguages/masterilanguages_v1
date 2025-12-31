@@ -150,6 +150,12 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
 
   const sessionActive = profile?.session_start && profile?.session_duration;
 
+  // Don't render if profile is missing critical data
+  if (!profile?.language || !profile?.avatar_id) {
+    console.log('GameHeader: hiding - incomplete profile');
+    return null;
+  }
+
   return (
     <div className="bg-gradient-to-r from-slate-900/95 via-purple-900/95 to-slate-900/95 backdrop-blur-xl border-b border-white/10 px-4 py-3">
       <div className="flex items-center justify-between max-w-7xl mx-auto">
