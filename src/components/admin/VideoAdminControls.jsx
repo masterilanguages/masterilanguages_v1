@@ -105,7 +105,11 @@ export default function VideoAdminControls({ video, onUpdate, onDelete, onReplac
       </Button>
 
       <Button
-        onClick={(e) => { e.stopPropagation(); setShowDeleteDialog(true); }}
+        onClick={(e) => { 
+          e.stopPropagation(); 
+          console.log('Delete button clicked, video:', video); 
+          setShowDeleteDialog(true); 
+        }}
         variant="outline"
         size="sm"
         className="bg-red-500/20 border-red-500/50 text-red-400 hover:bg-red-500/30"
@@ -250,7 +254,14 @@ export default function VideoAdminControls({ video, onUpdate, onDelete, onReplac
             </div>
 
             <div className="flex gap-2">
-              <Button onClick={handleDelete} className="flex-1 bg-red-500 hover:bg-red-600">
+              <Button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  console.log('Delete Video button clicked');
+                  handleDelete();
+                }} 
+                className="flex-1 bg-red-500 hover:bg-red-600"
+              >
                 Delete Video
               </Button>
               <Button onClick={() => setShowDeleteDialog(false)} variant="outline" className="border-white/20">
