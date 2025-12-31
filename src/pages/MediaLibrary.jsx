@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Plus, Edit, Trash2, Search, Filter, Video, Users, Play, Loader2, ChevronDown, X, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import EditableWord from "../components/learning/EditableWord";
 
 const topics = [
   "Religion / Spirituality",
