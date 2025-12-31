@@ -536,6 +536,11 @@ export default function Home() {
             >
               👥 Admin: Manage Users
             </Button>
+            <Link to={createPageUrl("ManageCoaches")}>
+              <Button className="w-full bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/50 text-white hover:from-cyan-500/30 hover:to-blue-500/30">
+                👥 Admin: Manage Coaches
+              </Button>
+            </Link>
           </div>
         )}
 
