@@ -432,12 +432,12 @@ export default function BabyVideos() {
   }, []);
 
   const { data: customVideos = [] } = useQuery({
-    queryKey: ['customVideos', userProfile?.language, currentUser?.role],
+    queryKey: ['customVideos', userProfile?.language],
     queryFn: async () => {
       const videos = await base44.entities.Video.list();
       // Filter by language and deleted status
       const filtered = videos.filter(v => {
-        const notDeleted = !v.deleted_at || currentUser?.role === 'admin';
+        const notDeleted = !v.deleted_at && v.is_active !== false;
         const matchesLanguage = !userProfile?.language || v.language === userProfile.language;
         return notDeleted && matchesLanguage;
       });
