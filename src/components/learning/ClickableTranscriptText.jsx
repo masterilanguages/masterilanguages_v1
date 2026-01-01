@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function ClickableTranscriptText({ text, onAddWord, editable, onSave, language = "en", className = "" }) {
