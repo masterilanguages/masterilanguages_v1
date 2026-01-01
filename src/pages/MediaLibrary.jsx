@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import EditableWord from "../components/learning/EditableWord";
 import ClickableTranscriptText from "../components/learning/ClickableTranscriptText";
 import TranslatorWidget from "../components/TranslatorWidget";
+import GameHeader from "../components/game/GameHeader";
 
 const topics = [
   "Religion / Spirituality",
@@ -93,6 +94,14 @@ export default function MediaLibrary() {
     queryFn: async () => {
       const profiles = await base44.entities.UserProfile.list();
       return profiles[0] || null;
+    },
+  });
+
+  const { data: userCoins } = useQuery({
+    queryKey: ['userCoins'],
+    queryFn: async () => {
+      const coins = await base44.entities.UserCoins.list();
+      return coins[0] || null;
     },
   });
 
@@ -619,8 +628,9 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
 
   return (
     <>
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      <GameHeader profile={userProfile} coins={userCoins?.coins} onBuyCoins={() => {}} />
+      <div className="max-w-7xl mx-auto p-6">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-4xl font-bold text-white mb-2">Media Library</h1>
@@ -1203,6 +1213,7 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
       {/* Video Transcript Dialog - Fullscreen */}
       {showTranscript && (
         <div className="fixed inset-0 z-50 bg-slate-900">
+          <GameHeader profile={userProfile} coins={userCoins?.coins} onBuyCoins={() => {}} />
           <div className="h-full flex flex-col">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-white/10">
