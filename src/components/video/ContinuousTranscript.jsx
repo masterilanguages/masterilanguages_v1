@@ -16,6 +16,7 @@ export default function ContinuousTranscript({
   const [isTranslating, setIsTranslating] = useState(false);
   const [editingWord, setEditingWord] = useState(null);
   const [editValue, setEditValue] = useState("");
+  const [lastSeekIdx, setLastSeekIdx] = useState(null);
 
   // Flatten all words from all segments with their timestamps
   const allWords = transcript.flatMap((segment, segIdx) => {
@@ -111,7 +112,18 @@ export default function ContinuousTranscript({
           return (
             <span key={idx} className="relative inline-block">
               <motion.span
-                onClick={(e) => handleWordClick(wordObj, idx, e)}
+                onClick={(e) => {
+                  if (!canEdit) {
+                    if (lastSeekIdx === idx) {
+                      onSeekTo(wordObj.start, true); // play
+                    } else {
+                      onSeekTo(wordObj.start, false); // pause
+                      setLastSeekIdx(idx);
+                    }
+                  } else {
+                    handleWordClick(wordObj, idx, e);
+                  }
+                }}
                 animate={{
                   color: isActive ? '#22d3ee' : '#ffffff',
                   backgroundColor: isActive ? 'rgba(34, 211, 238, 0.2)' : 'transparent',

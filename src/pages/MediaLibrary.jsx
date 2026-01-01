@@ -545,18 +545,13 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
     }
   };
 
-  const handleSeekTo = async (seconds) => {
+  const handleSeekTo = async (seconds, shouldPlay = false) => {
     if (videoPlayer && videoPlayer.seekTo) {
-      const currentTime = await videoPlayer.getCurrentTime?.() || 0;
-      const playerState = await videoPlayer.getPlayerState?.();
-
-      // If playing and near this timestamp (within 2 seconds), pause
-      if (playerState === 1 && Math.abs(currentTime - seconds) < 2) {
-        videoPlayer.pauseVideo();
-      } else {
-        // Otherwise seek and play
-        videoPlayer.seekTo(seconds, true);
+      videoPlayer.seekTo(seconds, true);
+      if (shouldPlay) {
         videoPlayer.playVideo();
+      } else {
+        videoPlayer.pauseVideo();
       }
     }
   };
