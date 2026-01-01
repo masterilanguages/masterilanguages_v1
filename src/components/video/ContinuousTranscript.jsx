@@ -43,6 +43,16 @@ export default function ContinuousTranscript({
       return;
     }
 
+    // Seek and play/pause behavior
+    if (lastSeekIdx === idx) {
+      onSeekTo(wordObj.start, true); // play
+      setLastSeekIdx(null);
+    } else {
+      onSeekTo(wordObj.start, false); // pause
+      setLastSeekIdx(idx);
+    }
+
+    // Show translation
     setClickedWord(idx);
     setIsTranslating(true);
     
@@ -112,18 +122,7 @@ export default function ContinuousTranscript({
           return (
             <span key={idx} className="relative inline-block">
               <motion.span
-                onClick={(e) => {
-                  if (!canEdit) {
-                    if (lastSeekIdx === idx) {
-                      onSeekTo(wordObj.start, true); // play
-                    } else {
-                      onSeekTo(wordObj.start, false); // pause
-                      setLastSeekIdx(idx);
-                    }
-                  } else {
-                    handleWordClick(wordObj, idx, e);
-                  }
-                }}
+                onClick={(e) => handleWordClick(wordObj, idx, e)}
                 animate={{
                   color: isActive ? '#22d3ee' : '#ffffff',
                   backgroundColor: isActive ? 'rgba(34, 211, 238, 0.2)' : 'transparent',
