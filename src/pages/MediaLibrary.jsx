@@ -451,6 +451,99 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
     return video ? { ...video, programId: prog.id, completed: prog.completed } : null;
   }).filter(Boolean);
 
+  const processManualTranscript = async (video, text) => {
+    if (!text || !text.trim()) {
+      toast.error("Please paste a transcript");
+      return;
+    }
+
+    setLoadingTranscript(true);
+    toast.info("Processing transcript...");
+
+    try {
+      // Split into sentences/segments
+      const sentences = text
+        .split(/[.!?]\s+/)
+        .filter(s => s.trim().length > 0)
+        .map(s => s.trim());
+
+      // Estimate timestamps (assume ~3 seconds per sentence)
+      const rawSegments = sentences.map((text, idx) => ({
+        text,
+        start: idx * 3,
+        duration: 3
+      }));
+
+      // Process with AI
+      const processedSegments = [];
+      const batchSize = 5;
+
+      for (let i = 0; i < rawSegments.length; i += batchSize) {
+        const batch = rawSegments.slice(i, i + batchSize);
+
+        try {
+          const llmResult = await base44.integrations.Core.InvokeLLM({
+            prompt: `Process these Hebrew sentences. Return exactly ${batch.length} segments.
+
+  ${batch.map((s, idx) => `[${idx + 1}] "${s.text}"`).join('\n')}
+
+  For each provide:
+  - hebrew: Hebrew with nikud
+  - transliteration: Latin phonetic
+  - english: English translation`,
+            response_json_schema: {
+              type: "object",
+              properties: {
+                segments: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      hebrew: { type: "string" },
+                      transliteration: { type: "string" },
+                      english: { type: "string" }
+                    }
+                  }
+                }
+              }
+            }
+          });
+
+          batch.forEach((segment, idx) => {
+            const processed = llmResult.segments?.[idx] || {};
+            processedSegments.push({
+              text: segment.text,
+              hebrew: processed.hebrew || segment.text,
+              transliteration: processed.transliteration || segment.text,
+              english: processed.english || '',
+              start: segment.start
+            });
+          });
+
+          toast.info(`${Math.min(i + batchSize, rawSegments.length)} / ${rawSegments.length} done`);
+        } catch (e) {
+          console.error('Batch error:', e);
+          batch.forEach(segment => processedSegments.push(segment));
+        }
+      }
+
+      // Save
+      await updateVideoMutation.mutateAsync({
+        id: video.id,
+        data: { processed_transcript: processedSegments }
+      });
+
+      setTranscript(processedSegments);
+      setPastedTranscript("");
+      toast.success("Transcript processed!");
+    } catch (e) {
+      console.error('Error:', e);
+      toast.error(e.message || "Failed to process");
+    } finally {
+      setLoadingTranscript(false);
+    }
+  };
+
   const generateTranscriptFromYouTube = async (video) => {
     try {
       const videoId = video.video_id || video.youtube_video_id || extractYouTubeId(video.video_url);
@@ -1348,16 +1441,37 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
                   canEdit={canEdit}
                 />
               ) : (
-                <div className="max-w-3xl mx-auto bg-white/5 rounded-xl p-8 text-center space-y-4">
-                  <p className="text-white/60">No transcript available for this video</p>
-                  {canEdit && (
+                <div className="max-w-3xl mx-auto bg-white/5 rounded-xl p-8 space-y-6">
+                  <div className="text-center">
+                    <p className="text-white/60 mb-4">No transcript available</p>
+                    <p className="text-white/40 text-sm mb-6">Paste transcript from YouTube "Show transcript" or DownSub</p>
+                  </div>
+
+                  <Textarea
+                    value={pastedTranscript}
+                    onChange={(e) => setPastedTranscript(e.target.value)}
+                    placeholder="Paste transcript here..."
+                    className="bg-white/5 border-white/20 text-white min-h-[200px]"
+                  />
+
+                  <div className="flex gap-3">
                     <Button
-                      onClick={() => generateTranscriptFromYouTube(selectedVideo)}
-                      className="bg-gradient-to-r from-cyan-500 to-blue-500"
+                      onClick={() => processManualTranscript(selectedVideo, pastedTranscript)}
+                      disabled={!pastedTranscript.trim()}
+                      className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500"
                     >
-                      Generate from YouTube Captions
+                      Process Transcript
                     </Button>
-                  )}
+                    {canEdit && (
+                      <Button
+                        onClick={() => generateTranscriptFromYouTube(selectedVideo)}
+                        variant="outline"
+                        className="border-cyan-500/50 text-cyan-400"
+                      >
+                        Try YouTube Auto
+                      </Button>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
