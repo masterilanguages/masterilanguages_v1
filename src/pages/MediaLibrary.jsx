@@ -1254,41 +1254,44 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
                           </button>
                         )}
                         <div className="flex items-center gap-1">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (editingSegment !== idx) {
+                          {editingSegment === idx ? (
+                            <Input
+                              type="number"
+                              value={segment.start}
+                              onChange={(e) => {
+                                const updated = [...transcript];
+                                updated[idx] = { ...segment, start: parseFloat(e.target.value) };
+                                setTranscript(updated);
+                              }}
+                              onBlur={() => {
+                                saveTranscriptEdit(idx, 'start', segment.start);
+                                setEditingSegment(null);
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  saveTranscriptEdit(idx, 'start', segment.start);
+                                  setEditingSegment(null);
+                                }
+                                if (e.key === 'Escape') {
+                                  setEditingSegment(null);
+                                }
+                              }}
+                              className="flex-shrink-0 w-16 h-8 text-xs bg-cyan-500/30 border-cyan-400 text-cyan-400 rounded-lg px-2 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                              onClick={(e) => e.stopPropagation()}
+                              autoFocus
+                            />
+                          ) : (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 handleSeekTo(segment.start);
-                              }
-                            }}
-                            className="flex-shrink-0 w-8 h-8 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 flex items-center justify-center text-xs text-cyan-400 font-mono transition-all cursor-pointer"
-                          >
-                            {editingSegment === idx ? (
-                              <Input
-                                type="number"
-                                value={segment.start}
-                                onChange={(e) => {
-                                  const updated = [...transcript];
-                                  updated[idx] = { ...segment, start: parseFloat(e.target.value) };
-                                  setTranscript(updated);
-                                }}
-                                onBlur={() => saveTranscriptEdit(idx, 'start', segment.start)}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') {
-                                    e.preventDefault();
-                                    saveTranscriptEdit(idx, 'start', segment.start);
-                                    setEditingSegment(null);
-                                  }
-                                }}
-                                className="w-16 h-6 text-xs bg-cyan-500/30 border-cyan-400 text-cyan-400 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                                onClick={(e) => e.stopPropagation()}
-                              />
-                            ) : (
-                              <>
-                                {Math.floor(segment.start / 60)}:{String(Math.floor(segment.start % 60)).padStart(2, '0')}
-                              </>
-                            )}
-                          </button>
+                              }}
+                              className="flex-shrink-0 w-8 h-8 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 flex items-center justify-center text-xs text-cyan-400 font-mono transition-all cursor-pointer"
+                            >
+                              {Math.floor(segment.start / 60)}:{String(Math.floor(segment.start % 60)).padStart(2, '0')}
+                            </button>
+                          )}
                           {canEdit && (
                             <button
                               onClick={() => setEditingSegment(editingSegment === idx ? null : idx)}
