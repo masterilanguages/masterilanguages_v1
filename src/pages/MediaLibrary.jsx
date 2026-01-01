@@ -416,6 +416,19 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
     const matchesDifficulty = filterDifficulty === "all" || video.difficulty_level === filterDifficulty;
     const matchesTopic = filterTopic === "all" || (video.topics || []).includes(filterTopic);
     return matchesSearch && matchesLanguage && matchesDifficulty && matchesTopic && video.is_active !== false;
+  }).sort((a, b) => {
+    // Extract day numbers from titles (e.g., "day 1", "Day 2", etc.)
+    const dayRegex = /day\s*(\d+)/i;
+    const aDayMatch = a.title.match(dayRegex);
+    const bDayMatch = b.title.match(dayRegex);
+    
+    if (aDayMatch && bDayMatch) {
+      return parseInt(aDayMatch[1]) - parseInt(bDayMatch[1]);
+    }
+    if (aDayMatch) return -1;
+    if (bDayMatch) return 1;
+    
+    return a.title.localeCompare(b.title);
   });
 
   const canEdit = currentUser?.role === 'admin' || currentUser?.role === 'coach';
