@@ -92,14 +92,17 @@ export default function ContinuousTranscript({
     if (isNaN(newTime) || newTime < 0) return;
     
     const segment = transcript[wordObj.segmentIndex];
-    const updatedSegment = { ...segment, start: newTime };
+    const words = segment.transliteration.split(/\s+/).filter(w => w.trim());
+    const nextSegment = transcript[wordObj.segmentIndex + 1];
+    const nextStart = nextSegment?.start || Infinity;
+    const segmentDuration = nextStart - segment.start;
+    const wordDuration = segmentDuration / words.length;
     
-    // Update the transcript array
-    const updatedTranscript = [...transcript];
-    updatedTranscript[wordObj.segmentIndex] = updatedSegment;
+    // Calculate what the segment start should be to make this word have the desired timestamp
+    const adjustedSegmentStart = newTime - (wordObj.wordIndex * wordDuration);
     
     if (onEditWord) {
-      onEditWord(wordObj.segmentIndex, 'start', newTime);
+      onEditWord(wordObj.segmentIndex, 'start', adjustedSegmentStart);
     }
     
     setEditingTimestamp(null);
