@@ -49,6 +49,7 @@ export default function MediaLibrary() {
   const [showLibrary, setShowLibrary] = useState(false);
   const [editingSegment, setEditingSegment] = useState(null);
   const [editingWords, setEditingWords] = useState(null);
+  const [currentTime, setCurrentTime] = useState(0);
 
   const [formData, setFormData] = useState({
     title: "",
