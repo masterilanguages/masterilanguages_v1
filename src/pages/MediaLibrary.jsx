@@ -460,12 +460,20 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
 
     setLoadingTranscript(true);
     toast.info("Fetching YouTube captions...");
-    
+
     try {
       // Fetch YouTube captions
       const result = await base44.functions.invoke('youtubeTranscript', { videoId });
-      
-      if (!result.data?.transcript || result.data.transcript.length === 0) {
+
+      console.log('YouTube transcript result:', result);
+
+      if (result.status !== 200 || !result.data?.transcript) {
+        toast.error(result.data?.error || "Failed to fetch captions");
+        setLoadingTranscript(false);
+        return;
+      }
+
+      if (result.data.transcript.length === 0) {
         toast.error("No captions available on YouTube");
         setLoadingTranscript(false);
         return;
@@ -542,11 +550,12 @@ Return a JSON array with ${batch.length} objects.`,
       setLoadingTranscript(false);
       toast.success("Transcript generated and saved!");
     } catch (e) {
-      toast.error(e.response?.data?.error || "Failed to generate transcript");
-      console.error(e);
+      const errorMsg = e.response?.data?.error || e.data?.error || e.message || "Failed to generate transcript";
+      toast.error(errorMsg);
+      console.error('Transcript generation error:', e);
       setLoadingTranscript(false);
     }
-  };
+    };
 
   const handleVideoClick = async (video) => {
     setSelectedVideo(video);
