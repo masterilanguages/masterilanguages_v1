@@ -11,6 +11,7 @@ import { Plus, Edit, Trash2, Search, Filter, Video, Users, Play, Loader2, Chevro
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import EditableWord from "../components/learning/EditableWord";
+import ClickableTranscriptText from "../components/learning/ClickableTranscriptText";
 import TranslatorWidget from "../components/TranslatorWidget";
 
 const topics = [
@@ -50,7 +51,6 @@ export default function MediaLibrary() {
   const [editingSegment, setEditingSegment] = useState(null);
   const [editingWords, setEditingWords] = useState(null);
   const [currentTime, setCurrentTime] = useState(0);
-  const [clickedWord, setClickedWord] = useState(null);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -530,7 +530,6 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
         mastered: false,
         vocab_level: 0,
       });
-      setClickedWord(null);
     } catch (e) {
       toast.error("Translation failed");
     }
@@ -1325,12 +1324,12 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
                                 </button>
                               )}
                               <div className={editingWords === idx ? 'ring-2 ring-cyan-400 rounded px-1' : ''}>
-                                <EditableWord
+                                <ClickableTranscriptText
                                   text={segment.transliteration}
                                   onSave={(newText) => saveTranscriptEdit(idx, 'transliteration', newText)}
+                                  onAddWord={handleAddWordFromTranscript}
                                   className="text-cyan-400 font-medium text-lg"
                                   editable={editingWords === idx}
-                                  onClick={() => !editingWords && setClickedWord({ text: segment.transliteration, idx: `trans-${idx}` })}
                                 />
                               </div>
                             </div>
@@ -1339,12 +1338,12 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
                           {/* Translation */}
                           {segment.english && (
                             <div className={`text-white/70 text-sm ${editingWords === idx ? 'ring-2 ring-cyan-400 rounded px-1' : ''}`}>
-                              <EditableWord
+                              <ClickableTranscriptText
                                 text={segment.english}
                                 onSave={(newText) => saveTranscriptEdit(idx, 'english', newText)}
+                                onAddWord={handleAddWordFromTranscript}
                                 className="text-white/70 text-sm"
                                 editable={editingWords === idx}
-                                onClick={() => !editingWords && setClickedWord({ text: segment.english, idx: `eng-${idx}` })}
                               />
                             </div>
                           )}
@@ -1352,13 +1351,13 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
                           {/* Hebrew */}
                           {segment.hebrew && (
                             <div className={`text-white/90 ${editingWords === idx ? 'ring-2 ring-cyan-400 rounded px-1' : ''}`} dir="rtl">
-                              <EditableWord
+                              <ClickableTranscriptText
                                 text={segment.hebrew}
                                 language="he"
                                 onSave={(newText) => saveTranscriptEdit(idx, 'hebrew', newText)}
+                                onAddWord={handleAddWordFromTranscript}
                                 className="text-white/90"
                                 editable={editingWords === idx}
-                                onClick={() => !editingWords && setClickedWord({ text: segment.hebrew, idx: `heb-${idx}` })}
                               />
                             </div>
                           )}
@@ -1392,33 +1391,6 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
     </div>
 
     <TranslatorWidget />
-    
-    {/* Backpack Popup */}
-    {clickedWord && (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50"
-        onClick={() => setClickedWord(null)}
-      >
-        <motion.div
-          initial={{ y: 20 }}
-          animate={{ y: 0 }}
-          onClick={(e) => e.stopPropagation()}
-          className="bg-slate-800 rounded-2xl p-6 border border-cyan-500/50 shadow-2xl"
-        >
-          <p className="text-white/60 text-sm mb-2">Add to flashcards?</p>
-          <p className="text-white text-xl font-bold mb-4">{clickedWord.text}</p>
-          <button
-            onClick={() => handleAddWordFromTranscript(clickedWord.text)}
-            className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold py-3 px-6 rounded-xl flex items-center justify-center gap-2 transition-all"
-          >
-            <span className="text-2xl">🎒</span>
-            Add to Backpack
-          </button>
-        </motion.div>
-      </motion.div>
-    )}
     </>
     );
     }
