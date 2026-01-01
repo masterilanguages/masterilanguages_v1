@@ -451,6 +451,80 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
     return video ? { ...video, programId: prog.id, completed: prog.completed } : null;
   }).filter(Boolean);
 
+  const generateTranscriptFromYouTube = async (video) => {
+    const videoId = video.video_id || video.youtube_video_id || extractYouTubeId(video.video_url);
+    if (!videoId) {
+      toast.error("Could not extract video ID");
+      return;
+    }
+
+    toast.info("Fetching YouTube captions...");
+    
+    try {
+      // Fetch YouTube captions
+      const result = await base44.functions.invoke('youtube-captions-download', { videoId });
+      
+      if (!result.data?.transcript || result.data.transcript.length === 0) {
+        toast.error("No captions available on YouTube");
+        return;
+      }
+
+      const rawTranscript = result.data.transcript;
+      toast.info("Processing transcript with AI...");
+
+      // Process each segment through LLM
+      const processedSegments = [];
+      for (const segment of rawTranscript) {
+        try {
+          const llmResult = await base44.integrations.Core.InvokeLLM({
+            prompt: `Process this Hebrew text for a language learning app:
+
+Input text: "${segment.text}"
+Timestamp: ${segment.start} seconds
+
+Return JSON with:
+- hebrew: The text with proper Hebrew script and nikud (vowel points)
+- transliteration: Latin alphabet phonetic transliteration
+- english: English translation
+- start: use the timestamp ${segment.start}`,
+            response_json_schema: {
+              type: "object",
+              properties: {
+                hebrew: { type: "string" },
+                transliteration: { type: "string" },
+                english: { type: "string" },
+                start: { type: "number" }
+              }
+            }
+          });
+
+          processedSegments.push({
+            text: segment.text,
+            hebrew: llmResult.hebrew,
+            transliteration: llmResult.transliteration,
+            english: llmResult.english,
+            start: segment.start
+          });
+        } catch (e) {
+          // If processing fails, keep original
+          processedSegments.push(segment);
+        }
+      }
+
+      // Save to database
+      await updateVideoMutation.mutateAsync({
+        id: video.id,
+        data: { processed_transcript: processedSegments }
+      });
+
+      setTranscript(processedSegments);
+      toast.success("Transcript generated and saved!");
+    } catch (e) {
+      toast.error("Failed to generate transcript");
+      console.error(e);
+    }
+  };
+
   const handleVideoClick = async (video) => {
     setSelectedVideo(video);
     setShowTranscript(true);
@@ -1245,9 +1319,16 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
                   canEdit={canEdit}
                 />
               ) : (
-                <div className="max-w-3xl mx-auto bg-white/5 rounded-xl p-8 text-center">
+                <div className="max-w-3xl mx-auto bg-white/5 rounded-xl p-8 text-center space-y-4">
                   <p className="text-white/60">No transcript available for this video</p>
-                  <p className="text-white/40 text-sm mt-2">Add a transcript in the edit dialog to see it here</p>
+                  {canEdit && (
+                    <Button
+                      onClick={() => generateTranscriptFromYouTube(selectedVideo)}
+                      className="bg-gradient-to-r from-cyan-500 to-blue-500"
+                    >
+                      Generate from YouTube Captions
+                    </Button>
+                  )}
                 </div>
               )}
             </div>
