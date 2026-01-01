@@ -136,46 +136,24 @@ export default function ContinuousTranscript({
                     initial={{ opacity: 0, y: 5 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 5 }}
-                    className="absolute -top-14 left-1/2 -translate-x-1/2 bg-slate-900/95 rounded-md px-2 py-1.5 shadow-lg z-50"
+                    className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900/95 rounded-md px-2 py-1 shadow-lg z-50 flex items-center gap-1.5"
                   >
                     {isTranslating ? (
                       <p className="text-white/60 text-xs">...</p>
                     ) : (
-                      <div className="flex flex-col gap-1.5">
-                        <div className="flex items-center gap-1.5">
-                          <p className="text-white text-xs font-medium">{translation}</p>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onAddWord(wordObj.text);
-                              setClickedWord(null);
-                            }}
-                            className="text-base hover:scale-110 transition-transform"
-                          >
-                            🎒
-                          </button>
-                        </div>
-                        {canEdit && (
-                          <div className="flex items-center gap-1.5">
-                            <Input
-                              value={editValue}
-                              onChange={(e) => setEditValue(e.target.value)}
-                              onClick={(e) => e.stopPropagation()}
-                              className="w-24 h-6 bg-white/10 border-white/20 text-white text-xs px-1.5"
-                            />
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                saveEdit(wordObj);
-                                setClickedWord(null);
-                              }}
-                              className="text-green-400 hover:text-green-300"
-                            >
-                              ✓
-                            </button>
-                          </div>
-                        )}
-                      </div>
+                      <>
+                        <p className="text-white text-xs font-medium">{translation}</p>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onAddWord(wordObj.text);
+                            setClickedWord(null);
+                          }}
+                          className="text-base hover:scale-110 transition-transform"
+                        >
+                          🎒
+                        </button>
+                      </>
                     )}
                   </motion.div>
                 )}
