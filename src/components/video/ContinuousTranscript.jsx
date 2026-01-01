@@ -36,25 +36,20 @@ export default function ContinuousTranscript({
   });
 
   const handleWordClick = async (wordObj, idx, e) => {
-    // Check if Ctrl/Cmd key is pressed for editing (only if canEdit is true)
-    if (canEdit && (e.ctrlKey || e.metaKey)) {
-      setEditingWord(idx);
-      setEditValue(wordObj.text);
-      setClickedWord(null);
-      return;
-    }
-
     // Seek and play/pause behavior
-    if (lastSeekIdx === idx) {
+    if (lastSeekIdx === idx && clickedWord === idx) {
       onSeekTo(wordObj.start, true); // play
       setLastSeekIdx(null);
+      setClickedWord(null);
+      return;
     } else {
       onSeekTo(wordObj.start, false); // pause
       setLastSeekIdx(idx);
     }
 
-    // Show translation
+    // Show translation and edit field
     setClickedWord(idx);
+    setEditValue(wordObj.text);
     setIsTranslating(true);
     
     try {
