@@ -189,6 +189,21 @@ export default function MediaLibrary() {
     });
   };
 
+  const toggleApproval = async (segmentIdx) => {
+    if (!selectedVideo) return;
+    const updatedTranscript = [...transcript];
+    updatedTranscript[segmentIdx] = {
+      ...updatedTranscript[segmentIdx],
+      approved: !updatedTranscript[segmentIdx].approved
+    };
+    setTranscript(updatedTranscript);
+
+    await updateVideoMutation.mutateAsync({
+      id: selectedVideo.id,
+      data: { processed_transcript: updatedTranscript }
+    });
+  };
+
   const deleteVideoMutation = useMutation({
     mutationFn: (id) => base44.entities.MediaLibrary.delete(id),
     onSuccess: () => {
@@ -1203,6 +1218,22 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
                   {transcript.map((segment, idx) => (
                     <div key={idx} className="bg-white/5 rounded-xl p-3 hover:bg-white/10 transition-all">
                       <div className="flex items-start gap-3">
+                        {canEdit && (
+                          <button
+                            onClick={() => toggleApproval(idx)}
+                            className={`flex-shrink-0 w-6 h-6 rounded flex items-center justify-center border-2 transition-all ${
+                              segment.approved 
+                                ? 'bg-green-500 border-green-500' 
+                                : 'bg-white/5 border-white/30 hover:border-white/50'
+                            }`}
+                          >
+                            {segment.approved && (
+                              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                              </svg>
+                            )}
+                          </button>
+                        )}
                         <div className="flex items-center gap-1">
                           <button
                             onClick={(e) => {
