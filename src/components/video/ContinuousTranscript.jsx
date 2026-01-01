@@ -36,7 +36,8 @@ export default function ContinuousTranscript({
   });
 
   const handleWordClick = async (wordObj, idx, e) => {
-    if (canEdit) {
+    // Check if Ctrl/Cmd key is pressed for editing (only if canEdit is true)
+    if (canEdit && (e.ctrlKey || e.metaKey)) {
       setEditingWord(idx);
       setEditValue(wordObj.text);
       setClickedWord(null);
