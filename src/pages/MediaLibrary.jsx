@@ -536,6 +536,24 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
     }
   };
 
+  // Track current playback time
+  useEffect(() => {
+    if (!videoPlayer || !showTranscript) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const time = await videoPlayer.getCurrentTime?.();
+        if (typeof time === 'number') {
+          setCurrentTime(time);
+        }
+      } catch (e) {
+        // Player not ready
+      }
+    }, 100); // Update every 100ms for smooth highlighting
+
+    return () => clearInterval(interval);
+  }, [videoPlayer, showTranscript]);
+
   // Space bar to play/pause video
   useEffect(() => {
     const handleKeyPress = async (e) => {
