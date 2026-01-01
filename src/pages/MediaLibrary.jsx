@@ -1275,25 +1275,30 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
                             <div className="text-cyan-400 font-medium text-lg flex items-center justify-center gap-2">
                               {canEdit && (
                                 <button
-                                  onClick={() => setEditingWords(editingWords === idx ? null : idx)}
-                                  className={`flex-shrink-0 w-5 h-5 rounded flex items-center justify-center hover:bg-white/10 transition-all ${editingWords === idx ? 'bg-cyan-500/30' : ''}`}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setEditingWords(editingWords === idx ? null : idx);
+                                  }}
+                                  className={`flex-shrink-0 w-5 h-5 rounded flex items-center justify-center hover:bg-white/10 transition-all ${editingWords === idx ? 'bg-cyan-500/30 ring-2 ring-cyan-400' : ''}`}
                                   style={{ transform: 'scaleX(-1)' }}
                                 >
                                   <span className="text-sm">✏️</span>
                                 </button>
                               )}
-                              <EditableWord
-                                text={segment.transliteration}
-                                onSave={(newText) => saveTranscriptEdit(idx, 'transliteration', newText)}
-                                className="text-cyan-400 font-medium text-lg"
-                                editable={editingWords === idx}
-                              />
+                              <div className={editingWords === idx ? 'ring-2 ring-cyan-400 rounded px-1' : ''}>
+                                <EditableWord
+                                  text={segment.transliteration}
+                                  onSave={(newText) => saveTranscriptEdit(idx, 'transliteration', newText)}
+                                  className="text-cyan-400 font-medium text-lg"
+                                  editable={editingWords === idx}
+                                />
+                              </div>
                             </div>
                           )}
 
                           {/* Translation */}
                           {segment.english && (
-                            <div className="text-white/70 text-sm">
+                            <div className={`text-white/70 text-sm ${editingWords === idx ? 'ring-2 ring-cyan-400 rounded px-1' : ''}`}>
                               <EditableWord
                                 text={segment.english}
                                 onSave={(newText) => saveTranscriptEdit(idx, 'english', newText)}
@@ -1305,7 +1310,7 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
 
                           {/* Hebrew */}
                           {segment.hebrew && (
-                            <div className="text-white/90" dir="rtl">
+                            <div className={`text-white/90 ${editingWords === idx ? 'ring-2 ring-cyan-400 rounded px-1' : ''}`} dir="rtl">
                               <EditableWord
                                 text={segment.hebrew}
                                 language="he"
