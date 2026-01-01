@@ -602,13 +602,13 @@ export default function BabyVideos() {
         setRecommendedExpanded(true);
       }
       
-      // Scroll to video after a short delay
+      // Scroll to video after longer delay for mobile rendering
       setTimeout(() => {
         const videoElement = document.getElementById(`video-${parsedId}`);
         if (videoElement) {
-          videoElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          videoElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-      }, 500);
+      }, 1000);
     }
   }, [targetVideoId]);
 
