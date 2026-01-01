@@ -97,29 +97,31 @@ Provide:
         // Target language/transliteration to English
         const targetLangName = learningLanguage.charAt(0).toUpperCase() + learningLanguage.slice(1);
         prompt = `You are an expert transliterated-${targetLangName}→English interpreter for a language-learning app.
-Input is ${targetLangName} written in Latin letters (transliteration), possibly with inconsistent spelling.
-Your job:
-1. Normalize transliteration to the app's scheme
-2. Reconstruct the most likely ${targetLangName} spelling
-3. Translate to natural English
+      Input is ${targetLangName} written in Latin letters (transliteration), possibly with inconsistent spelling.
+      Your job:
+      1. Normalize transliteration to the app's scheme
+      2. Reconstruct the most likely ${targetLangName} spelling WITH FULL NIKUD (vowel points)
+      3. Translate to natural English
 
-Output MUST be valid JSON only (no markdown, no extra text).
-If ambiguous, choose the most likely and include 1–3 alternatives (as ${targetLangName} strings).
+      CRITICAL: For Hebrew, include nikud (vowel points) in the output to show proper pronunciation.
 
-Transliteration scheme: kh/ tz/ sh, etc. Normalize common variants:
-- ch → kh
-- ts → tz
-- w → v (often)
-- "ee" → i, "oo" → u
-- double letters simplified unless needed
+      Output MUST be valid JSON only (no markdown, no extra text).
+      If ambiguous, choose the most likely and include 1–3 alternatives (as ${targetLangName} strings with nikud).
 
-Input: "${inputText}"
+      Transliteration scheme: kh/ tz/ sh, etc. Normalize common variants:
+      - ch → kh
+      - ts → tz
+      - w → v (often)
+      - "ee" → i, "oo" → u
+      - double letters simplified unless needed
 
-Provide:
-- "english" translation
-- "target_language" reconstructed ${targetLangName} text
-- "transliteration" normalized transliteration
-- "alternatives" as ${targetLangName} strings if ambiguous`;
+      Input: "${inputText}"
+
+      Provide:
+      - "english" translation
+      - "target_language" reconstructed ${targetLangName} text WITH NIKUD
+      - "transliteration" normalized transliteration
+      - "alternatives" as ${targetLangName} strings with nikud if ambiguous`;
         
         schema = {
           type: "object",
