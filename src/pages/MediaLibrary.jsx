@@ -1214,14 +1214,6 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
                             )}
                           </button>
                         )}
-                        {canDelete && (
-                          <button
-                            onClick={() => deleteSegment(idx)}
-                            className="flex-shrink-0 w-6 h-6 rounded flex items-center justify-center bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 hover:border-red-500/50 transition-all"
-                          >
-                            <Trash2 className="w-3 h-3 text-red-400" />
-                          </button>
-                        )}
                         <div className="flex items-center gap-1">
                           <button
                             onClick={(e) => {
@@ -1262,8 +1254,17 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
                             <button
                               onClick={() => setEditingSegment(editingSegment === idx ? null : idx)}
                               className="flex-shrink-0 w-6 h-6 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all"
+                              style={{ transform: 'scaleX(-1)' }}
                             >
-                              <Pencil className="w-3 h-3 text-white/60" />
+                              <span className="text-base">✏️</span>
+                            </button>
+                          )}
+                          {canDelete && (
+                            <button
+                              onClick={() => deleteSegment(idx)}
+                              className="flex-shrink-0 w-6 h-6 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all"
+                            >
+                              <span className="text-base" style={{ filter: 'grayscale(100%) brightness(200%)' }}>🗑️</span>
                             </button>
                           )}
                         </div>
