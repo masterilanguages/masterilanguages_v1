@@ -597,6 +597,11 @@ export default function BabyVideos() {
       
       setExpandedVideoId(parsedId);
       
+      // Auto-expand recommended section if this is a recommended video (ID is a number)
+      if (!isNaN(targetVideoId)) {
+        setRecommendedExpanded(true);
+      }
+      
       // Scroll to video after a short delay
       setTimeout(() => {
         const videoElement = document.getElementById(`video-${parsedId}`);
