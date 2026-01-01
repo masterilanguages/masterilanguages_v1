@@ -1356,9 +1356,10 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
                           )}
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                      </div>
+                      );
+                      })}
+                      </div>
               ) : (
                 <div className="max-w-3xl mx-auto bg-white/5 rounded-xl p-8 text-center">
                   <p className="text-white/60">No transcript available for this video</p>
