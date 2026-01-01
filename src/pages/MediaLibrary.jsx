@@ -452,56 +452,55 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
   }).filter(Boolean);
 
   const generateTranscriptFromYouTube = async (video) => {
-    const videoId = video.video_id || video.youtube_video_id || extractYouTubeId(video.video_url);
-    if (!videoId) {
-      toast.error("Could not extract video ID");
-      return;
-    }
-
-    setLoadingTranscript(true);
-    toast.info("Fetching YouTube captions...");
-
     try {
+      const videoId = video.video_id || video.youtube_video_id || extractYouTubeId(video.video_url);
+      console.log('Starting transcript generation for video ID:', videoId);
+
+      if (!videoId) {
+        toast.error("Could not extract video ID");
+        return;
+      }
+
+      setLoadingTranscript(true);
+      toast.info("Fetching YouTube captions...");
+
       // Fetch YouTube captions
       const result = await base44.functions.invoke('youtubeTranscript', { videoId });
 
-      console.log('YouTube transcript result:', result);
+      console.log('Function response:', result);
 
-      if (result.status !== 200 || !result.data?.transcript) {
-        toast.error(result.data?.error || "Failed to fetch captions");
+      if (!result || !result.data) {
+        toast.error("No response from function");
         setLoadingTranscript(false);
         return;
       }
 
-      if (result.data.transcript.length === 0) {
-        toast.error("No captions available on YouTube");
+      if (!result.data.transcript || result.data.transcript.length === 0) {
+        toast.error(result.data.error || "No captions available");
         setLoadingTranscript(false);
         return;
       }
 
       const rawTranscript = result.data.transcript;
-      toast.info(`Processing ${rawTranscript.length} segments with AI...`);
+      toast.info(`Processing ${rawTranscript.length} segments...`);
 
-      // Process in batches to avoid overwhelming the LLM
+      // Process in batches
       const processedSegments = [];
       const batchSize = 5;
-      
+
       for (let i = 0; i < rawTranscript.length; i += batchSize) {
         const batch = rawTranscript.slice(i, i + batchSize);
-        const batchTexts = batch.map(s => s.text).join(' ');
-        
+
         try {
           const llmResult = await base44.integrations.Core.InvokeLLM({
-            prompt: `Process these Hebrew captions for a language learning app. Keep the same number of segments.
+            prompt: `Process these Hebrew captions. Return exactly ${batch.length} segments.
 
-Segments: ${batch.map((s, idx) => `[${idx + 1}] "${s.text}"`).join('\n')}
+  ${batch.map((s, idx) => `[${idx + 1}] "${s.text}"`).join('\n')}
 
-For each segment, return:
-- hebrew: Proper Hebrew script with nikud (vowel points)
-- transliteration: Latin alphabet phonetic
-- english: English translation
-
-Return a JSON array with ${batch.length} objects.`,
+  For each segment provide:
+  - hebrew: Hebrew with nikud
+  - transliteration: Latin phonetic
+  - english: English translation`,
             response_json_schema: {
               type: "object",
               properties: {
@@ -520,7 +519,6 @@ Return a JSON array with ${batch.length} objects.`,
             }
           });
 
-          // Merge processed data with timestamps
           batch.forEach((segment, idx) => {
             const processed = llmResult.segments?.[idx] || {};
             processedSegments.push({
@@ -532,30 +530,28 @@ Return a JSON array with ${batch.length} objects.`,
             });
           });
 
-          toast.info(`Processed ${Math.min(i + batchSize, rawTranscript.length)} / ${rawTranscript.length} segments...`);
+          toast.info(`${Math.min(i + batchSize, rawTranscript.length)} / ${rawTranscript.length} done`);
         } catch (e) {
-          console.error('Batch processing error:', e);
-          // Keep originals for this batch
+          console.error('Batch error:', e);
           batch.forEach(segment => processedSegments.push(segment));
         }
       }
 
-      // Save to database
+      // Save
       await updateVideoMutation.mutateAsync({
         id: video.id,
         data: { processed_transcript: processedSegments }
       });
 
       setTranscript(processedSegments);
-      setLoadingTranscript(false);
-      toast.success("Transcript generated and saved!");
+      toast.success("Transcript generated!");
     } catch (e) {
-      const errorMsg = e.response?.data?.error || e.data?.error || e.message || "Failed to generate transcript";
-      toast.error(errorMsg);
-      console.error('Transcript generation error:', e);
+      console.error('Full error:', e);
+      toast.error(e.message || "Failed to generate transcript");
+    } finally {
       setLoadingTranscript(false);
     }
-    };
+  };
 
   const handleVideoClick = async (video) => {
     setSelectedVideo(video);
