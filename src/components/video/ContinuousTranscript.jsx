@@ -81,17 +81,28 @@ export default function ContinuousTranscript({
           if (editingWord === idx) {
             return (
               <span key={idx} className="relative inline-block">
-                <Input
-                  value={editValue}
-                  onChange={(e) => setEditValue(e.target.value)}
-                  onBlur={() => saveEdit(wordObj)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') saveEdit(wordObj);
-                    if (e.key === 'Escape') setEditingWord(null);
-                  }}
-                  className="inline-block w-24 h-8 bg-cyan-500/20 border-cyan-400 text-white text-base"
-                  autoFocus
-                />
+                <span className="inline-flex items-center gap-1">
+                  <Input
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    onBlur={() => saveEdit(wordObj)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') saveEdit(wordObj);
+                      if (e.key === 'Escape') setEditingWord(null);
+                    }}
+                    className="inline-block w-24 h-8 bg-cyan-500/20 border-cyan-400 text-white text-base"
+                    autoFocus
+                  />
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAddWord(wordObj.text);
+                    }}
+                    className="text-xl hover:scale-110 transition-transform"
+                  >
+                    🎒
+                  </button>
+                </span>
                 <span> </span>
               </span>
             );
