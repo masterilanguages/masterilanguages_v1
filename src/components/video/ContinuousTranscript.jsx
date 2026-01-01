@@ -136,13 +136,33 @@ export default function ContinuousTranscript({
                     initial={{ scale: 0, y: 10 }}
                     animate={{ scale: 1, y: 0 }}
                     exit={{ scale: 0, y: 10 }}
-                    className="absolute -top-12 left-1/2 -translate-x-1/2 bg-slate-800 border border-white/20 rounded-lg px-3 py-2 shadow-lg z-50 whitespace-nowrap flex items-center gap-2"
+                    className="absolute -top-16 left-1/2 -translate-x-1/2 bg-slate-800 border border-white/20 rounded-lg px-3 py-2 shadow-lg z-50 whitespace-nowrap"
                   >
                     {isTranslating ? (
                       <p className="text-white/60 text-sm">...</p>
                     ) : (
-                      <>
+                      <div className="space-y-2">
                         <p className="text-white text-sm">{translation}</p>
+                        {canEdit && (
+                          <div className="flex items-center gap-2">
+                            <Input
+                              value={editValue}
+                              onChange={(e) => setEditValue(e.target.value)}
+                              onClick={(e) => e.stopPropagation()}
+                              className="w-32 h-7 bg-white/10 border-white/20 text-white text-sm"
+                            />
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                saveEdit(wordObj);
+                                setClickedWord(null);
+                              }}
+                              className="text-green-400 hover:text-green-300 text-xl"
+                            >
+                              ✓
+                            </button>
+                          </div>
+                        )}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -153,7 +173,7 @@ export default function ContinuousTranscript({
                         >
                           🎒
                         </button>
-                      </>
+                      </div>
                     )}
                   </motion.div>
                 )}
