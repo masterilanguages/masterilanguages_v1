@@ -17,6 +17,8 @@ export default function ContinuousTranscript({
   const [editingWord, setEditingWord] = useState(null);
   const [editValue, setEditValue] = useState("");
   const [lastSeekIdx, setLastSeekIdx] = useState(null);
+  const [editingTimestamp, setEditingTimestamp] = useState(null);
+  const [timestampValue, setTimestampValue] = useState("");
 
   // Flatten all words from all segments with their timestamps
   const allWords = transcript.flatMap((segment, segIdx) => {
@@ -85,6 +87,24 @@ export default function ContinuousTranscript({
     setEditingWord(null);
   };
 
+  const saveTimestamp = (wordObj) => {
+    const newTime = parseFloat(timestampValue);
+    if (isNaN(newTime) || newTime < 0) return;
+    
+    const segment = transcript[wordObj.segmentIndex];
+    const updatedSegment = { ...segment, start: newTime };
+    
+    // Update the transcript array
+    const updatedTranscript = [...transcript];
+    updatedTranscript[wordObj.segmentIndex] = updatedSegment;
+    
+    if (onEditWord) {
+      onEditWord(wordObj.segmentIndex, 'start', newTime);
+    }
+    
+    setEditingTimestamp(null);
+  };
+
   return (
     <div className="max-w-4xl mx-auto bg-white/5 rounded-2xl p-6">
       <p className="text-lg leading-relaxed text-center" style={{ lineHeight: '1.8' }}>
@@ -147,6 +167,11 @@ export default function ContinuousTranscript({
                   setEditingWord(idx);
                   setEditValue(wordObj.text);
                 }}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  setEditingTimestamp(idx);
+                  setTimestampValue(wordObj.start.toFixed(2));
+                }}
                 animate={{
                   color: isActive ? '#22d3ee' : '#ffffff',
                   backgroundColor: isActive ? 'rgba(34, 211, 238, 0.2)' : 'transparent',
@@ -159,13 +184,13 @@ export default function ContinuousTranscript({
               </motion.span>
 
               <AnimatePresence>
-          {clickedWord === idx && (
-            <motion.div
+              {clickedWord === idx && (
+              <motion.div
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 5 }}
               className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900/95 rounded-md px-2 py-1 shadow-lg z-50 flex items-center gap-1.5"
-            >
+              >
               {isTranslating ? (
                 <p className="text-white/60 text-xs">...</p>
               ) : (
@@ -183,12 +208,35 @@ export default function ContinuousTranscript({
                   </button>
                 </>
               )}
-            </motion.div>
-          )}
-          </AnimatePresence>
+              </motion.div>
+              )}
+              {editingTimestamp === idx && (
+              <motion.div
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 5 }}
+              className="absolute -bottom-12 left-1/2 -translate-x-1/2 bg-slate-900/95 rounded-md px-2 py-1 shadow-lg z-50 flex items-center gap-1.5"
+              >
+              <Input
+                type="number"
+                step="0.1"
+                value={timestampValue}
+                onChange={(e) => setTimestampValue(e.target.value)}
+                onBlur={() => saveTimestamp(wordObj)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') saveTimestamp(wordObj);
+                  if (e.key === 'Escape') setEditingTimestamp(null);
+                }}
+                className="w-20 h-6 bg-white/10 border-white/20 text-white text-xs px-1.5"
+                autoFocus
+              />
+              <span className="text-white/60 text-xs">sec</span>
+              </motion.div>
+              )}
+              </AnimatePresence>
               <span> </span>
-            </span>
-          );
+              </span>
+              );
         })}
       </p>
     </div>
