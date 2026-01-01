@@ -148,39 +148,7 @@ export default function MediaLibrary() {
   const saveTranscriptEdit = async (segmentIdx, field, value) => {
     if (!selectedVideo) return;
     const updatedTranscript = [...transcript];
-
-    // If editing English, auto-update Hebrew and transliteration
-    if (field === 'english') {
-      try {
-        const result = await base44.integrations.Core.InvokeLLM({
-          prompt: `Given this English translation: "${value}"
-
-  Generate the proper Hebrew text with nikud and Latin transliteration.
-
-  Return JSON only.`,
-          response_json_schema: {
-            type: "object",
-            properties: {
-              hebrew: { type: "string" },
-              transliteration: { type: "string" }
-            }
-          }
-        });
-
-        updatedTranscript[segmentIdx] = { 
-          ...updatedTranscript[segmentIdx], 
-          english: value,
-          hebrew: result.hebrew,
-          transliteration: result.transliteration
-        };
-      } catch (e) {
-        // If LLM fails, just update the English field
-        updatedTranscript[segmentIdx] = { ...updatedTranscript[segmentIdx], [field]: value };
-      }
-    } else {
-      updatedTranscript[segmentIdx] = { ...updatedTranscript[segmentIdx], [field]: value };
-    }
-
+    updatedTranscript[segmentIdx] = { ...updatedTranscript[segmentIdx], [field]: value };
     setTranscript(updatedTranscript);
 
     await updateVideoMutation.mutateAsync({
