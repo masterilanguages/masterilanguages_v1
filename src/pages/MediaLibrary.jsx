@@ -261,18 +261,18 @@ export default function MediaLibrary() {
     try {
       const response = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`);
       const data = await response.json();
-      
+
       const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
-      
+
       // Get video duration and detect language/topics using LLM
       const analysisResult = await base44.integrations.Core.InvokeLLM({
-        prompt: `Analyze this YouTube video title: "${data.title}"
-        
-1. Detect the PRIMARY language (return one of: hebrew, english, spanish, french, portuguese, italian)
-2. Suggest 2-4 relevant topics from this list: Religion / Spirituality, Sports / Fitness, Cooking / Food, Nutrition, Health / Wellness, Meditation / Mindfulness, Music, Travel, Culture, Education / Learning, Business / Career, Personal Growth, Relationships, News / Current Events
-3. Get the video duration from the page
+        prompt: `Analyze this YouTube video with URL: ${url}
 
-Return JSON only.`,
+    1. Detect the PRIMARY language of the video (return one of: hebrew, english, spanish, french, portuguese, italian)
+    2. Suggest 2-4 relevant topics from this list: Religion / Spirituality, Sports / Fitness, Cooking / Food, Nutrition, Health / Wellness, Meditation / Mindfulness, Music, Travel, Culture, Education / Learning, Business / Career, Personal Growth, Relationships, News / Current Events
+    3. CRITICAL: Find the exact video duration/length and return it in MINUTES as a decimal number (e.g., 2.5 for 2 minutes 30 seconds, NOT seconds)
+
+    Return JSON only.`,
         add_context_from_internet: true,
         response_json_schema: {
           type: "object",
@@ -283,7 +283,7 @@ Return JSON only.`,
           }
         }
       });
-      
+
       setFormData(prev => ({
         ...prev,
         title: data.title || prev.title,
