@@ -65,22 +65,29 @@ export default function ContinuousTranscript({
   };
 
   const saveEdit = (wordObj) => {
-    if (editValue.trim() && editValue !== wordObj.text) {
-      const segment = transcript[wordObj.segmentIndex];
-      const words = segment.transliteration.split(/\s+/);
+    const segment = transcript[wordObj.segmentIndex];
+    const words = segment.transliteration.split(/\s+/);
+    
+    if (!editValue.trim()) {
+      // Delete the word if empty
+      words.splice(wordObj.wordIndex, 1);
+    } else if (editValue !== wordObj.text) {
+      // Update the word
       words[wordObj.wordIndex] = editValue.trim();
-      const newTransliteration = words.join(' ');
-      
-      if (onEditWord) {
-        onEditWord(wordObj.segmentIndex, 'transliteration', newTransliteration);
-      }
     }
+    
+    const newTransliteration = words.join(' ');
+    
+    if (onEditWord) {
+      onEditWord(wordObj.segmentIndex, 'transliteration', newTransliteration);
+    }
+    
     setEditingWord(null);
   };
 
   return (
-    <div className="max-w-4xl mx-auto bg-white/5 rounded-2xl p-8">
-      <p className="text-2xl leading-relaxed text-center" style={{ lineHeight: '2.5' }}>
+    <div className="max-w-4xl mx-auto bg-white/5 rounded-2xl p-6">
+      <p className="text-lg leading-relaxed text-center" style={{ lineHeight: '1.8' }}>
         {allWords.map((wordObj, idx) => {
           const isActive = currentTime >= wordObj.start && 
                           currentTime < (allWords[idx + 1]?.start || Infinity);

@@ -1223,7 +1223,7 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
             </div>
 
             {/* Video Player */}
-            <div className="w-full bg-black flex items-center justify-center" style={{ height: '60vh' }}>
+            <div className="w-full bg-black flex items-center justify-center" style={{ height: '30vh' }}>
               {(selectedVideo?.video_id || selectedVideo?.youtube_video_id || selectedVideo?.video_url) && (
                 <div id="youtube-player" className="w-full h-full" />
               )}
