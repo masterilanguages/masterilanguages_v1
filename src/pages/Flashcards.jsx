@@ -546,7 +546,7 @@ export default function Flashcards() {
 
             {/* Example sentences (state 1+) */}
             {revealState >= 1 && (
-              <div className="w-full max-w-md mx-auto mt-4 mb-16 space-y-2" onClick={(e) => e.stopPropagation()}>
+              <div className="w-full max-w-md mx-auto mt-4 mb-20 space-y-1" onClick={(e) => e.stopPropagation()}>
                 {generatingSentences ? (
                   <div className="text-center text-white/60 py-4">
                     <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2" />
@@ -562,7 +562,7 @@ export default function Flashcards() {
                       return (
                         <div 
                           key={idx} 
-                          className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-2 cursor-pointer"
+                          className="bg-white/5 backdrop-blur-sm rounded-lg border border-white/10 p-1.5 cursor-pointer"
                           onClick={(e) => {
                             e.stopPropagation();
                             setRevealedSentences(prev => 
@@ -582,7 +582,7 @@ export default function Flashcards() {
                                     updated[idx] = { ...sentence, english: newText };
                                     setExampleSentences(updated);
                                   }}
-                                  className="text-white/60 text-sm"
+                                  className="text-white/60 text-xs"
                                 />
                               </div>
                               {isRevealed && (
@@ -595,7 +595,7 @@ export default function Flashcards() {
                                         updated[idx] = { ...sentence, transliteration: newText };
                                         setExampleSentences(updated);
                                       }}
-                                      className="text-cyan-400 text-base"
+                                      className="text-cyan-400 text-sm"
                                     />
                                   </div>
                                   <div dir="rtl" lang="he">
@@ -607,7 +607,7 @@ export default function Flashcards() {
                                         updated[idx] = { ...sentence, hebrew: newText };
                                         setExampleSentences(updated);
                                       }}
-                                      className="text-white text-base"
+                                      className="text-white text-sm"
                                     />
                                   </div>
                                 </>
