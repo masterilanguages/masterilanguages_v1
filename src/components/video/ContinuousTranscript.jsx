@@ -86,39 +86,60 @@ export default function ContinuousTranscript({
                           currentTime < (allWords[idx + 1]?.start || Infinity);
           
           if (editingWord === idx) {
-            return (
-              <span key={idx} className="relative inline-block">
-                <span className="inline-flex items-center gap-1">
-                  <Input
-                    value={editValue}
-                    onChange={(e) => setEditValue(e.target.value)}
-                    onBlur={() => saveEdit(wordObj)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') saveEdit(wordObj);
-                      if (e.key === 'Escape') setEditingWord(null);
-                    }}
-                    className="inline-block w-24 h-8 bg-cyan-500/20 border-cyan-400 text-white text-base"
-                    autoFocus
-                  />
+          return (
+          <span key={idx} className="relative inline-block">
+          <Input
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+          onBlur={() => saveEdit(wordObj)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') saveEdit(wordObj);
+            if (e.key === 'Escape') setEditingWord(null);
+          }}
+          className="inline-block w-24 h-8 bg-cyan-500/20 border-cyan-400 text-white text-base"
+          autoFocus
+          />
+          <AnimatePresence>
+          {clickedWord === idx && (
+            <motion.div
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 5 }}
+              className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900/95 rounded-md px-2 py-1 shadow-lg z-50 flex items-center gap-1.5"
+            >
+              {isTranslating ? (
+                <p className="text-white/60 text-xs">...</p>
+              ) : (
+                <>
+                  <p className="text-white text-xs font-medium">{translation}</p>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       onAddWord(wordObj.text);
                     }}
-                    className="text-xl hover:scale-110 transition-transform"
+                    className="text-base hover:scale-110 transition-transform"
                   >
                     🎒
                   </button>
-                </span>
-                <span> </span>
-              </span>
-            );
+                </>
+              )}
+            </motion.div>
+          )}
+          </AnimatePresence>
+          <span> </span>
+          </span>
+          );
           }
-          
+
           return (
             <span key={idx} className="relative inline-block">
               <motion.span
                 onClick={(e) => handleWordClick(wordObj, idx, e)}
+                onDoubleClick={(e) => {
+                  e.stopPropagation();
+                  setEditingWord(idx);
+                  setEditValue(wordObj.text);
+                }}
                 animate={{
                   color: isActive ? '#22d3ee' : '#ffffff',
                   backgroundColor: isActive ? 'rgba(34, 211, 238, 0.2)' : 'transparent',
@@ -129,55 +150,35 @@ export default function ContinuousTranscript({
               >
                 {wordObj.text}
               </motion.span>
-              
+
               <AnimatePresence>
-                {clickedWord === idx && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 5 }}
-                    className="absolute -top-14 left-1/2 -translate-x-1/2 bg-slate-900/95 rounded-md px-2 py-1.5 shadow-lg z-50"
+          {clickedWord === idx && (
+            <motion.div
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 5 }}
+              className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900/95 rounded-md px-2 py-1 shadow-lg z-50 flex items-center gap-1.5"
+            >
+              {isTranslating ? (
+                <p className="text-white/60 text-xs">...</p>
+              ) : (
+                <>
+                  <p className="text-white text-xs font-medium">{translation}</p>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAddWord(wordObj.text);
+                      setClickedWord(null);
+                    }}
+                    className="text-base hover:scale-110 transition-transform"
                   >
-                    {isTranslating ? (
-                      <p className="text-white/60 text-xs">...</p>
-                    ) : (
-                      <div className="flex flex-col gap-1.5">
-                        <div className="flex items-center gap-1.5">
-                          <p className="text-white text-xs font-medium">{translation}</p>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onAddWord(wordObj.text);
-                              setClickedWord(null);
-                            }}
-                            className="text-base hover:scale-110 transition-transform"
-                          >
-                            🎒
-                          </button>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <Input
-                            value={editValue}
-                            onChange={(e) => setEditValue(e.target.value)}
-                            onClick={(e) => e.stopPropagation()}
-                            className="w-24 h-6 bg-white/10 border-white/20 text-white text-xs px-1.5"
-                          />
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              saveEdit(wordObj);
-                              setClickedWord(null);
-                            }}
-                            className="text-green-400 hover:text-green-300"
-                          >
-                            ✓
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                    🎒
+                  </button>
+                </>
+              )}
+            </motion.div>
+          )}
+          </AnimatePresence>
               <span> </span>
             </span>
           );
