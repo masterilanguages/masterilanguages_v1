@@ -1444,8 +1444,19 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
             </div>
 
             <div className="flex gap-2">
-              <Button onClick={handleSubmit} className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-500">
-                {editingVideo ? "Update Video" : "Add to Library"}
+              <Button 
+                onClick={handleSubmit} 
+                disabled={createVideoMutation.isPending || updateVideoMutation.isPending}
+                className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-500"
+              >
+                {(createVideoMutation.isPending || updateVideoMutation.isPending) ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    {editingVideo ? "Updating..." : "Adding..."}
+                  </>
+                ) : (
+                  editingVideo ? "Update Video" : "Add to Library"
+                )}
               </Button>
               <Button onClick={() => { setShowAddDialog(false); setEditingVideo(null); resetForm(); }} variant="outline" className="border-white/20">
                 Cancel
