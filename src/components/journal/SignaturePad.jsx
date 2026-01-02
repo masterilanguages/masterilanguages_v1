@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Eraser } from "lucide-react";
 
-export default function SignaturePad({ value, onChange }) {
+export default function SignaturePad({ value, onChange, disabled }) {
   const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
 

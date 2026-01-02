@@ -357,7 +357,7 @@ Make them useful for a Hebrew learner writing a journal.`,
           <div className="relative" style={{ zIndex: 2 }}>
           {/* Word Count - Top Right */}
           <div className="absolute top-2 right-4 bg-amber-50 rounded px-2 py-1 border border-amber-200 text-xs">
-            <span className="text-amber-900 font-medium">Word Count </span>
+            <span className="text-amber-900 font-medium">Words: </span>
             <span className={`font-bold ${wordCount >= 250 ? 'text-green-600' : 'text-amber-600'}`}>
               {wordCount}/250
             </span>
@@ -368,7 +368,7 @@ Make them useful for a Hebrew learner writing a journal.`,
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="Write about your day..."
-            className="bg-transparent border-none text-slate-800 min-h-[350px] mb-6 text-base ml-20 focus:outline-none resize-none"
+            className="bg-transparent border-none text-slate-800 min-h-[350px] mb-6 text-base ml-20 pr-24 focus:outline-none resize-none"
             style={{ 
               fontFamily: 'Georgia, serif',
               lineHeight: '32px',
@@ -468,9 +468,15 @@ Make them useful for a Hebrew learner writing a journal.`,
             </div>
           )}
 
-          {/* Signature */}
-          <div className="mb-3 ml-20">
-            <SignaturePad value={signature} onChange={setSignature} />
+          {/* Signature - Bottom Right */}
+          <div className="flex justify-end mb-3">
+            <div className="w-48">
+              <SignaturePad 
+                value={signature} 
+                onChange={setSignature}
+                disabled={wordCount < 250}
+              />
+            </div>
           </div>
 
           {/* Privacy Toggle */}
