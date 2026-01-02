@@ -330,14 +330,23 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
             <span className="font-bold text-orange-400">{profile?.daily_streak || 0}</span>
           </motion.div>
 
+          {/* Flashcards */}
+          <Link to={createPageUrl("Flashcards")}>
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              className="flex items-center gap-1.5 bg-blue-500 rounded-lg px-2.5 py-1.5"
+            >
+              <span className="text-base">🧠</span>
+            </motion.div>
+          </Link>
+
           {/* Backpack */}
           <Link to={createPageUrl("Backpack")}>
             <motion.div
               whileHover={{ scale: 1.05 }}
-              className="flex items-center gap-2 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/50 rounded-xl px-4 py-2"
+              className="flex items-center gap-1.5 bg-amber-500 rounded-lg px-2.5 py-1.5"
             >
-              <span className="text-lg">🎒</span>
-              <span className="font-bold text-amber-400 hidden md:inline">My Backpack</span>
+              <span className="text-base">🎒</span>
             </motion.div>
           </Link>
 
@@ -345,10 +354,9 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
           <Link to={createPageUrl("Songs")}>
             <motion.div
               whileHover={{ scale: 1.05 }}
-              className="flex items-center gap-2 bg-gradient-to-r from-pink-500/20 to-rose-500/20 border border-pink-500/50 rounded-xl px-4 py-2"
+              className="flex items-center gap-1.5 bg-pink-500 rounded-lg px-2.5 py-1.5"
             >
-              <span className="text-lg">🎵</span>
-              <span className="font-bold text-pink-400 hidden md:inline">Songs</span>
+              <span className="text-base">🎵</span>
             </motion.div>
           </Link>
 
@@ -356,9 +364,9 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
           <Link to={createPageUrl("Journal")}>
             <motion.div
               whileHover={{ scale: 1.05 }}
-              className="flex items-center gap-2 bg-purple-500/20 border border-purple-500/50 rounded-xl px-3 py-2"
+              className="flex items-center gap-1.5 bg-purple-500 rounded-lg px-2.5 py-1.5"
             >
-              <BookOpen className="w-5 h-5 text-purple-400" />
+              <span className="text-base">📓</span>
             </motion.div>
           </Link>
         </div>
