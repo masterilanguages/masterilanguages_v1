@@ -531,7 +531,7 @@ Make them useful for a Hebrew learner writing a journal.`,
               className="w-4 h-4"
             />
             <label htmlFor="isPublic" className="text-white/80 text-sm cursor-pointer flex-1">
-              📢 Share with other students in "Coach Mark's Hebrew Journal"
+              I don't mind if others see my journal entry, it will motivate them to write as well
             </label>
           </div>
 
