@@ -24,6 +24,8 @@ export default function Journal() {
   const [selectedWord, setSelectedWord] = useState("");
   const [editingWord, setEditingWord] = useState(null);
   const [editValues, setEditValues] = useState({});
+  const [isPublic, setIsPublic] = useState(false);
+  const [showPublicFeed, setShowPublicFeed] = useState(false);
   const today = new Date().toISOString().split('T')[0];
 
   const { data: userProfile } = useQuery({
@@ -52,6 +54,14 @@ export default function Journal() {
     queryFn: () => base44.entities.Word.filter({ category: "wordbank" })
   });
 
+  const { data: publicEntries = [] } = useQuery({
+    queryKey: ['publicJournalEntries'],
+    queryFn: async () => {
+      const allEntries = await base44.entities.JournalEntry.list('-date');
+      return allEntries.filter(e => e.is_public === true);
+    }
+  });
+
   const todayEntry = entries.find(e => e.date === today);
 
   // Get 10 most recent level 0 words (and allow levels 0-4 for future assignments)
@@ -65,6 +75,7 @@ export default function Journal() {
     mutationFn: (entry) => base44.entities.JournalEntry.create(entry),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['journalEntries'] });
+      queryClient.invalidateQueries({ queryKey: ['publicJournalEntries'] });
       setShowFeedback(true);
       toast.success("Journal entry saved! 📖");
     }
@@ -74,6 +85,7 @@ export default function Journal() {
     mutationFn: ({ id, data }) => base44.entities.JournalEntry.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['journalEntries'] });
+      queryClient.invalidateQueries({ queryKey: ['publicJournalEntries'] });
       toast.success("Entry updated! ✓");
     }
   });
@@ -93,6 +105,7 @@ export default function Journal() {
       setText(todayEntry.text || "");
       setQuestionsAsked(todayEntry.ai_questions_asked || []);
       setUsedWords(todayEntry.used_vocab_ids || []);
+      setIsPublic(todayEntry.is_public || false);
     }
   }, [todayEntry]);
 
@@ -204,7 +217,9 @@ Return just the question.`,
       used_vocab_ids: usedWords,
       suggested_vocab_ids: suggestedVocab.map(v => v.id),
       ai_questions_asked: questionsAsked,
-      last_edited_at: new Date().toISOString()
+      last_edited_at: new Date().toISOString(),
+      is_public: isPublic,
+      author_name: userProfile?.avatar_name || "Anonymous"
     };
 
     if (todayEntry) {
@@ -506,6 +521,20 @@ Make them useful for a Hebrew learner writing a journal.`,
             }}
           />
 
+          {/* Privacy Toggle */}
+          <div className="mb-4 flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl p-3">
+            <input
+              type="checkbox"
+              id="isPublic"
+              checked={isPublic}
+              onChange={(e) => setIsPublic(e.target.checked)}
+              className="w-4 h-4"
+            />
+            <label htmlFor="isPublic" className="text-white/80 text-sm cursor-pointer flex-1">
+              📢 Share with other students in "Coach Mark's Hebrew Journal"
+            </label>
+          </div>
+
           <div className="flex gap-3">
             <Button
               onClick={() => getSynonyms(selectedWord)}
@@ -544,10 +573,59 @@ Make them useful for a Hebrew learner writing a journal.`,
           </p>
         </motion.div>
 
+        {/* Coach Mark's Hebrew Journal - Public Feed */}
+        {publicEntries.length > 0 && (
+          <div className="mb-6">
+            <button
+              onClick={() => setShowPublicFeed(!showPublicFeed)}
+              className="w-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-xl p-4 mb-3 flex items-center justify-between hover:bg-purple-500/30 transition-all"
+            >
+              <div className="flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-purple-400" />
+                <h3 className="text-white font-medium">Coach Mark's Hebrew Journal</h3>
+                <span className="text-purple-400 text-sm">({publicEntries.length} entries)</span>
+              </div>
+              <span className="text-white/60">{showPublicFeed ? '▼' : '▶'}</span>
+            </button>
+
+            {showPublicFeed && (
+              <div className="space-y-3">
+                {publicEntries.slice(0, 10).map((entry, idx) => (
+                  <motion.div
+                    key={entry.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.05 }}
+                    className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 backdrop-blur-xl rounded-2xl border border-purple-500/30 p-4"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-purple-400 font-medium">{entry.author_name || "Anonymous"}</span>
+                        <span className="text-white/40 text-xs">
+                          {new Date(entry.date).toLocaleDateString('en-US', { 
+                            month: 'short', 
+                            day: 'numeric' 
+                          })}
+                        </span>
+                      </div>
+                      {entry.used_vocab_ids?.length > 0 && (
+                        <span className="text-green-400 text-xs">
+                          ✓ {entry.used_vocab_ids.length} words
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-white/80 whitespace-pre-wrap line-clamp-4">{entry.text}</p>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Previous Entries */}
         {entries.filter(e => e.date !== today).length > 0 && (
           <div className="space-y-3">
-            <h3 className="text-white/60 text-sm font-medium">Previous Entries</h3>
+            <h3 className="text-white/60 text-sm font-medium">My Previous Entries</h3>
             {entries
               .filter(e => e.date !== today)
               .slice(0, 10)
