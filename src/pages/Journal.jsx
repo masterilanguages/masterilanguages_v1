@@ -204,8 +204,8 @@ Return just the question.`,
       return;
     }
 
-    if (wordCount < 250) {
-      toast.error(`Write at least 250 words! (${wordCount}/250)`);
+    if (wordCount < 100) {
+      toast.error(`Write at least 100 words! (${wordCount}/100)`);
       return;
     }
 
@@ -250,7 +250,7 @@ Return just the question.`,
     }
   };
 
-  const allWordsUsed = usedWords.length === 10 && wordCount >= 250;
+  const allWordsUsed = usedWords.length === 10 && wordCount >= 100;
 
   const getSynonyms = async (word) => {
     if (!word.trim()) return;
@@ -335,8 +335,8 @@ Make them useful for a Hebrew learner writing a journal.`,
           {/* Word Count - Top Right */}
           <div className="absolute top-4 right-4 bg-amber-50 rounded px-2 py-1 border border-amber-200 text-xs">
             <span className="text-amber-900 font-medium">Words: </span>
-            <span className={`font-bold ${wordCount >= 250 ? 'text-green-600' : 'text-amber-600'}`}>
-              {wordCount}/250
+            <span className={`font-bold ${wordCount >= 100 ? 'text-green-600' : 'text-amber-600'}`}>
+              {wordCount}/100
             </span>
           </div>
 
@@ -444,7 +444,7 @@ Make them useful for a Hebrew learner writing a journal.`,
               <SignaturePad 
                 value={signature} 
                 onChange={setSignature}
-                disabled={wordCount < 250}
+                disabled={wordCount < 100}
               />
             </div>
           </div>
@@ -485,7 +485,7 @@ Make them useful for a Hebrew learner writing a journal.`,
               {allWordsUsed ? (
                 <>{todayEntry ? "Update" : "Save"} 📖</>
               ) : (
-                <>⚠️ Write 250 words with 10 vocab words ({wordCount}/250, {usedWords.length}/10) 🔒</>
+                <>⚠️ Write 100 words with 10 vocab words ({wordCount}/100, {usedWords.length}/10) 🔒</>
               )}
             </Button>
           </div>
