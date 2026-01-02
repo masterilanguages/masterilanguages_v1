@@ -100,7 +100,7 @@ export default function SignaturePad({ value, onChange }) {
         className="border-2 border-dashed border-slate-300 rounded-lg bg-white w-full"
         style={{ 
           touchAction: 'none', 
-          cursor: 'url("data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22><text x=%2212%22 y=%2212%22 font-size=%2220%22 transform=%22rotate(-45 12 12)%22>✒️</text></svg>") 12 12, auto'
+          cursor: 'url("data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22><text x=%220%22 y=%2220%22 font-size=%2220%22>✒️</text></svg>") 0 20, auto'
         }}
       />
     </div>
