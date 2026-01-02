@@ -22,6 +22,8 @@ export default function Journal() {
   const [synonyms, setSynonyms] = useState(null);
   const [loadingSynonyms, setLoadingSynonyms] = useState(false);
   const [selectedWord, setSelectedWord] = useState("");
+  const [editingWord, setEditingWord] = useState(null);
+  const [editValues, setEditValues] = useState({});
   const today = new Date().toISOString().split('T')[0];
 
   const { data: userProfile } = useQuery({
@@ -73,6 +75,15 @@ export default function Journal() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['journalEntries'] });
       toast.success("Entry updated! ✓");
+    }
+  });
+
+  const updateWordMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.Word.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['backpackWords'] });
+      toast.success("Word updated!");
+      setEditingWord(null);
     }
   });
 
@@ -161,10 +172,10 @@ Return just the question.`,
   // Auto-generate question after writing
   useEffect(() => {
     const sentences = text.split(/[.!?]+/).filter(s => s.trim());
-    if (sentences.length > 0 && sentences.length % 2 === 0 && !aiQuestion && !generatingQuestion) {
+    if (sentences.length > 0 && text.length > 100 && !aiQuestion && !generatingQuestion) {
       const timer = setTimeout(() => {
         generateQuestion();
-      }, 2000);
+      }, 3000);
       return () => clearTimeout(timer);
     }
   }, [text]);
@@ -297,10 +308,68 @@ Make them useful for a Hebrew learner writing a journal.`,
               <div className="flex flex-wrap gap-2">
                 {suggestedVocab.map((word) => {
                   const isUsed = usedWords.includes(word.id);
+                  const isEditing = editingWord === word.id;
+                  
+                  if (isEditing) {
+                    return (
+                      <div
+                        key={word.id}
+                        className="px-3 py-2 rounded-lg bg-cyan-500/20 border border-cyan-500/50"
+                      >
+                        <input
+                          autoFocus
+                          value={editValues.phonetic ?? word.phonetic}
+                          onChange={(e) => setEditValues({ ...editValues, phonetic: e.target.value })}
+                          className="w-full bg-white/10 text-cyan-400 text-sm font-medium px-1 rounded mb-1"
+                          placeholder="Phonetic"
+                        />
+                        <input
+                          value={editValues.translation ?? word.translation}
+                          onChange={(e) => setEditValues({ ...editValues, translation: e.target.value })}
+                          className="w-full bg-white/10 text-white/80 text-xs px-1 rounded mb-1"
+                          placeholder="Translation"
+                        />
+                        <input
+                          value={editValues.word ?? word.word}
+                          onChange={(e) => setEditValues({ ...editValues, word: e.target.value })}
+                          className="w-full bg-white/10 text-white/60 text-xs px-1 rounded"
+                          placeholder="Hebrew"
+                        />
+                        <div className="flex gap-1 mt-2">
+                          <button
+                            onClick={() => {
+                              updateWordMutation.mutate({ id: word.id, data: editValues });
+                            }}
+                            className="text-xs bg-green-500/30 px-2 py-1 rounded hover:bg-green-500/50"
+                          >
+                            ✓
+                          </button>
+                          <button
+                            onClick={() => {
+                              setEditingWord(null);
+                              setEditValues({});
+                            }}
+                            className="text-xs bg-red-500/30 px-2 py-1 rounded hover:bg-red-500/50"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  }
+                  
                   return (
                     <div
                       key={word.id}
-                      className={`px-3 py-2 rounded-lg transition-all ${
+                      onClick={() => {
+                        setEditingWord(word.id);
+                        setEditValues({
+                          phonetic: word.phonetic,
+                          translation: word.translation,
+                          word: word.word
+                        });
+                      }}
+                      className={`px-3 py-2 rounded-lg transition-all cursor-pointer hover:bg-white/20 ${
                         isUsed 
                           ? "bg-green-500/20 border border-green-500/50" 
                           : "bg-white/10 border border-white/20"
@@ -438,18 +507,6 @@ Make them useful for a Hebrew learner writing a journal.`,
           />
 
           <div className="flex gap-3">
-            <Button
-              onClick={generateQuestion}
-              disabled={generatingQuestion || !text.trim()}
-              variant="outline"
-              className="border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10"
-            >
-              {generatingQuestion ? (
-                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Thinking...</>
-              ) : (
-                <><Sparkles className="w-4 h-4 mr-2" /> Ask me about what I wrote</>
-              )}
-            </Button>
             <Button
               onClick={() => getSynonyms(selectedWord)}
               disabled={loadingSynonyms || !selectedWord}
