@@ -213,7 +213,7 @@ Provide:
                   <button
                     onClick={handleAddToBackpack}
                     disabled={createWordMutation.isPending || wordAdded}
-                    className="relative w-10 h-10 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center"
+                    className="relative hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed transition-transform"
                   >
                     <span className="text-2xl">🎒</span>
                     {wordAdded && (
@@ -233,7 +233,7 @@ Provide:
               <Input
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
-                placeholder={`English or ${learningLanguage.charAt(0).toUpperCase() + learningLanguage.slice(1)}...`}
+                placeholder="ask about a word"
                 className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
                 onKeyDown={(e) => e.key === 'Enter' && handleTranslate()}
               />
