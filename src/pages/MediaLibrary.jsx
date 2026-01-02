@@ -331,9 +331,9 @@ export default function MediaLibrary() {
       return;
     }
 
-    let processedTranscript = null;
+    let processedTranscript = undefined;
     
-    // Process transcript if provided
+    // Process transcript only if new phonetics provided
     if (formData.transcript_phonetics && formData.transcript_phonetics.trim()) {
       toast.info("Processing transcript...");
       try {
@@ -385,8 +385,12 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
       ...formData,
       duration_minutes: formData.duration_minutes ? parseFloat(formData.duration_minutes) : null,
       default_day: formData.default_day ? parseInt(formData.default_day) : null,
-      processed_transcript: processedTranscript
     };
+
+    // Only include processed_transcript if it was updated
+    if (processedTranscript !== undefined) {
+      data.processed_transcript = processedTranscript;
+    }
 
     if (editingVideo) {
       updateVideoMutation.mutate({ id: editingVideo.id, data });
