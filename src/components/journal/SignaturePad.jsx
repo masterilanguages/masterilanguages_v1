@@ -24,30 +24,36 @@ export default function SignaturePad({ value, onChange }) {
     }
   }, []);
 
-  const startDrawing = (e) => {
+  const getCoordinates = (e) => {
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY
+    };
+  };
+
+  const startDrawing = (e) => {
+    const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
+    const coords = getCoordinates(e);
     
     setIsDrawing(true);
     ctx.beginPath();
-    ctx.moveTo(
-      e.clientX - rect.left,
-      e.clientY - rect.top
-    );
+    ctx.moveTo(coords.x, coords.y);
   };
 
   const draw = (e) => {
     if (!isDrawing) return;
     
     const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
     const ctx = canvas.getContext('2d');
+    const coords = getCoordinates(e);
     
-    ctx.lineTo(
-      e.clientX - rect.left,
-      e.clientY - rect.top
-    );
+    ctx.lineTo(coords.x, coords.y);
     ctx.stroke();
   };
 
@@ -85,14 +91,17 @@ export default function SignaturePad({ value, onChange }) {
       </div>
       <canvas
         ref={canvasRef}
-        width={300}
-        height={80}
+        width={400}
+        height={100}
         onMouseDown={startDrawing}
         onMouseMove={draw}
         onMouseUp={stopDrawing}
         onMouseLeave={stopDrawing}
         className="border-2 border-dashed border-slate-300 rounded-lg bg-white w-full"
-        style={{ touchAction: 'none', cursor: 'url("data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2216%22 height=%2216%22><circle cx=%228%22 cy=%228%22 r=%221%22 fill=%22black%22/></svg>") 8 8, crosshair' }}
+        style={{ 
+          touchAction: 'none', 
+          cursor: 'url("data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2220%22 height=%2220%22 viewBox=%220 0 20 20%22><path d=%22M2 18 L18 2%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22/><circle cx=%2218%22 cy=%222%22 r=%222%22 fill=%22%23000%22/></svg>") 2 2, auto' 
+        }}
       />
     </div>
   );
