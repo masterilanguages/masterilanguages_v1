@@ -75,32 +75,34 @@ export default function SignaturePad({ value, onChange, disabled }) {
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-1">
       <div className="flex items-center justify-between">
-        <p className="text-slate-700 text-sm font-medium">✍️ Your Signature</p>
+        <p className="text-slate-700 text-[10px] font-medium">Sign:</p>
         <Button
           type="button"
           onClick={clear}
+          disabled={disabled}
           variant="outline"
           size="sm"
-          className="border-slate-300 text-slate-600 hover:bg-slate-50"
+          className="border-slate-300 text-slate-600 hover:bg-slate-50 h-5 text-[10px] px-2"
         >
-          <Eraser className="w-3 h-3 mr-1" />
           Clear
         </Button>
       </div>
       <canvas
         ref={canvasRef}
-        width={400}
-        height={100}
-        onMouseDown={startDrawing}
-        onMouseMove={draw}
-        onMouseUp={stopDrawing}
-        onMouseLeave={stopDrawing}
-        className="border-2 border-dashed border-slate-300 rounded-lg bg-white w-full"
+        width={200}
+        height={60}
+        onMouseDown={disabled ? null : startDrawing}
+        onMouseMove={disabled ? null : draw}
+        onMouseUp={disabled ? null : stopDrawing}
+        onMouseLeave={disabled ? null : stopDrawing}
+        className={`border-2 border-dashed rounded-lg bg-white w-full ${
+          disabled ? 'opacity-50 cursor-not-allowed border-slate-200' : 'border-slate-300'
+        }`}
         style={{ 
           touchAction: 'none', 
-          cursor: 'url("data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22><text x=%220%22 y=%2220%22 font-size=%2220%22>✒️</text></svg>") 0 20, auto'
+          cursor: disabled ? 'not-allowed' : 'url("data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22><text x=%220%22 y=%2220%22 font-size=%2220%22>✒️</text></svg>") 0 20, auto'
         }}
       />
     </div>
