@@ -560,7 +560,7 @@ Make them useful for a Hebrew learner writing a journal.`,
               {allWordsUsed ? (
                 <>{todayEntry ? "Update Today's Journal" : "Save Journal Entry"} 📖</>
               ) : (
-                <>Write 250 words + use 10 level 0 words ({wordCount}/250, {usedWords.length}/10) 🔒</>
+                <>To submit, write 250 words including 10 of the Level 0-4 words above ({wordCount}/250, {usedWords.length}/10) 🔒</>
               )}
             </Button>
           </div>
@@ -645,11 +645,28 @@ Make them useful for a Hebrew learner writing a journal.`,
                         day: 'numeric' 
                       })}
                     </span>
-                    {entry.used_vocab_ids?.length > 0 && (
-                      <span className="text-green-400 text-xs">
-                        ✓ {entry.used_vocab_ids.length} words used
-                      </span>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {entry.used_vocab_ids?.length > 0 && (
+                        <span className="text-green-400 text-xs">
+                          ✓ {entry.used_vocab_ids.length} words used
+                        </span>
+                      )}
+                      <button
+                        onClick={() => {
+                          updateEntryMutation.mutate({
+                            id: entry.id,
+                            data: { is_public: !entry.is_public, author_name: userProfile?.avatar_name || "Anonymous" }
+                          });
+                        }}
+                        className={`text-xs px-2 py-1 rounded ${
+                          entry.is_public 
+                            ? 'bg-purple-500/30 text-purple-400 hover:bg-purple-500/50' 
+                            : 'bg-white/10 text-white/60 hover:bg-white/20'
+                        }`}
+                      >
+                        {entry.is_public ? '📢 Public' : '🔒 Private'}
+                      </button>
+                    </div>
                   </div>
                   <p className="text-white/80 whitespace-pre-wrap line-clamp-3">{entry.text}</p>
                 </motion.div>
