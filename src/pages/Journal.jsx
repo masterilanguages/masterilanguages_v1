@@ -355,11 +355,11 @@ Make them useful for a Hebrew learner writing a journal.`,
           
           {/* Content layer - above lines */}
           <div className="relative" style={{ zIndex: 2 }}>
-          {/* Word Count */}
-          <div className="mb-6 flex items-center justify-between bg-amber-50 rounded-lg p-2 border border-amber-200 ml-20">
-            <span className="text-amber-900 text-xs font-medium">Word Count</span>
-            <span className={`font-bold text-sm ${wordCount >= 250 ? 'text-green-600' : 'text-amber-600'}`}>
-              {wordCount} / 250
+          {/* Word Count - Top Right */}
+          <div className="absolute top-2 right-4 bg-amber-50 rounded px-2 py-1 border border-amber-200 text-xs">
+            <span className="text-amber-900 font-medium">Word Count </span>
+            <span className={`font-bold ${wordCount >= 250 ? 'text-green-600' : 'text-amber-600'}`}>
+              {wordCount}/250
             </span>
           </div>
 
