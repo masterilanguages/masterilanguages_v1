@@ -474,9 +474,7 @@ Make them useful for a Hebrew learner writing a journal.`,
               {allWordsUsed ? (
                 <>{todayEntry ? "Update Today's Journal" : "Save Journal Entry"} 📖</>
               ) : (
-                <>
-                  {wordCount < 250 ? `${wordCount}/250 words` : `${usedWords.length}/10 words used`} 🔒
-                </>
+                <>Write 250 words + use 10 level 0 words ({wordCount}/250, {usedWords.length}/10) 🔒</>
               )}
             </Button>
           </div>
