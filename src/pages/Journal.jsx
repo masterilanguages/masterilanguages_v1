@@ -474,7 +474,9 @@ Make them useful for a Hebrew learner writing a journal.`,
               {allWordsUsed ? (
                 <>{todayEntry ? "Update Today's Journal" : "Save Journal Entry"} 📖</>
               ) : (
-                <>Write 250 words + use 10 level 0 words ({wordCount}/250, {usedWords.length}/10) 🔒</>
+                <>
+                  {wordCount < 250 ? `${wordCount}/250 words` : `${usedWords.length}/10 words used`} 🔒
+                </>
               )}
             </Button>
           </div>
@@ -482,7 +484,7 @@ Make them useful for a Hebrew learner writing a journal.`,
           <p className="text-white/40 text-xs mt-3 text-center">
             {allWordsUsed 
               ? (todayEntry ? "You can edit today's entry anytime" : "You can write only one entry per day")
-              : `⚠️ You must use all ${suggestedVocab.length} suggested words to save your journal`
+              : `⚠️ Write 250+ words and use all 10 level 0 words to save`
             }
           </p>
         </motion.div>
