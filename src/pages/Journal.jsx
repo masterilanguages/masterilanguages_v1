@@ -282,10 +282,18 @@ Make them useful for a Hebrew learner writing a journal.`,
           animate={{ opacity: 1, y: 0 }}
           className="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 p-6 mb-6"
         >
+          {/* Word Count */}
+          <div className="mb-4 flex items-center justify-between bg-white/5 rounded-xl p-3 border border-white/10">
+            <span className="text-white/60 text-sm">Word Count</span>
+            <span className={`font-bold text-lg ${wordCount >= 250 ? 'text-green-400' : 'text-amber-400'}`}>
+              {wordCount} / 250
+            </span>
+          </div>
+
           {/* Suggested Vocab */}
           {suggestedVocab.length > 0 && !showFeedback && (
             <div className="mb-6 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-xl p-4">
-              <p className="text-white/80 text-sm mb-3">💡 Try using these words from your backpack:</p>
+              <p className="text-white/80 text-sm mb-3">💡 Use these 10 level 0 words from your backpack:</p>
               <div className="flex flex-wrap gap-2">
                 {suggestedVocab.map((word) => {
                   const isUsed = usedWords.includes(word.id);
