@@ -283,20 +283,19 @@ Make them useful for a Hebrew learner writing a journal.`,
   const unusedVocab = suggestedVocab.filter(v => !usedWords.includes(v.id));
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-yellow-50 to-amber-100">
-      <GameHeader profile={userProfile} coins={userCoins?.coins} onBuyCoins={() => {}} />
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
 
       <div className="max-w-4xl mx-auto px-4 py-6">
         <div className="flex items-center gap-4 mb-8">
-        <Link to={createPageUrl("Home")} className="text-amber-800 hover:text-amber-900">
+        <Link to={createPageUrl("Home")} className="text-white/60 hover:text-white">
           <ArrowLeft className="w-6 h-6" />
         </Link>
         <div>
-          <h1 className="text-3xl font-bold text-amber-900 flex items-center gap-2" style={{ fontFamily: 'Georgia, serif' }}>
+          <h1 className="text-3xl font-bold text-white flex items-center gap-2" style={{ fontFamily: 'Georgia, serif' }}>
             <BookOpen className="w-8 h-8" />
             Daily Journal
           </h1>
-          <p className="text-amber-700">
+          <p className="text-white/60">
             {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
           </p>
         </div>
@@ -306,22 +305,31 @@ Make them useful for a Hebrew learner writing a journal.`,
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-3xl border-2 border-amber-200 shadow-2xl p-8 mb-6 relative"
-          style={{
-            backgroundImage: `repeating-linear-gradient(transparent, transparent 31px, #fbbf24 31px, #fbbf24 32px)`,
-            backgroundSize: '100% 32px',
-            backgroundPosition: '0 48px'
-          }}
+          className="bg-white rounded-3xl border-2 border-amber-200 shadow-2xl p-8 mb-6 relative overflow-hidden"
         >
+          {/* Notebook lines background layer - behind everything */}
+          <div 
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              backgroundImage: `repeating-linear-gradient(transparent, transparent 31px, #fbbf24 31px, #fbbf24 32px)`,
+              backgroundSize: '100% 32px',
+              backgroundPosition: '0 48px',
+              zIndex: 0
+            }}
+          />
+          
           {/* Red vertical line like notebook paper */}
-          <div className="absolute left-16 top-0 bottom-0 w-0.5 bg-red-400 opacity-40" />
+          <div className="absolute left-16 top-0 bottom-0 w-0.5 bg-red-400 opacity-40" style={{ zIndex: 0 }} />
           
           {/* Spiral binding holes */}
-          <div className="absolute left-4 top-8 bottom-8 flex flex-col justify-around">
+          <div className="absolute left-4 top-8 bottom-8 flex flex-col justify-around" style={{ zIndex: 1 }}>
             {[...Array(12)].map((_, i) => (
               <div key={i} className="w-3 h-3 rounded-full bg-amber-300 border-2 border-amber-400" />
             ))}
           </div>
+          
+          {/* Content layer - above lines */}
+          <div className="relative" style={{ zIndex: 2 }}>
           {/* Word Count */}
           <div className="mb-4 flex items-center justify-between bg-amber-50 rounded-xl p-3 border border-amber-200 ml-20 relative z-10">
             <span className="text-amber-900 text-sm font-medium">Word Count</span>
@@ -590,6 +598,7 @@ Make them useful for a Hebrew learner writing a journal.`,
               : `⚠️ You must write 250 words and use all 10 level 0 words to save your journal`
             }
           </p>
+          </div>
         </motion.div>
 
         {/* Coach Mark's Hebrew Journal - Public Feed */}
@@ -597,14 +606,14 @@ Make them useful for a Hebrew learner writing a journal.`,
           <div className="mb-6">
             <button
               onClick={() => setShowPublicFeed(!showPublicFeed)}
-              className="w-full bg-purple-100 border-2 border-purple-300 rounded-xl p-4 mb-3 flex items-center justify-between hover:bg-purple-200 transition-all"
+              className="w-full bg-white/5 backdrop-blur-xl border border-white/20 rounded-xl p-4 mb-3 flex items-center justify-between hover:bg-white/10 transition-all"
             >
               <div className="flex items-center gap-2">
-                <BookOpen className="w-5 h-5 text-purple-700" />
-                <h3 className="text-purple-900 font-medium">Coach Mark's Hebrew Journal</h3>
-                <span className="text-purple-700 text-sm">({publicEntries.length} entries)</span>
+                <BookOpen className="w-5 h-5 text-purple-400" />
+                <h3 className="text-white font-medium">Coach Mark's Hebrew Journal</h3>
+                <span className="text-purple-400 text-sm">({publicEntries.length} entries)</span>
               </div>
-              <span className="text-purple-700">{showPublicFeed ? '▼' : '▶'}</span>
+              <span className="text-white/60">{showPublicFeed ? '▼' : '▶'}</span>
             </button>
 
             {showPublicFeed && (
@@ -615,12 +624,12 @@ Make them useful for a Hebrew learner writing a journal.`,
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.05 }}
-                    className="bg-white rounded-2xl border-2 border-purple-200 p-4 shadow-md"
+                    className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-4"
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-purple-700 font-medium">{entry.author_name || "Anonymous"}</span>
-                        <span className="text-slate-500 text-xs">
+                        <span className="text-purple-400 font-medium">{entry.author_name || "Anonymous"}</span>
+                        <span className="text-white/40 text-xs">
                           {new Date(entry.date).toLocaleDateString('en-US', { 
                             month: 'short', 
                             day: 'numeric' 
@@ -628,12 +637,12 @@ Make them useful for a Hebrew learner writing a journal.`,
                         </span>
                       </div>
                       {entry.used_vocab_ids?.length > 0 && (
-                        <span className="text-green-600 text-xs">
+                        <span className="text-green-400 text-xs">
                           ✓ {entry.used_vocab_ids.length} words
                         </span>
                       )}
                     </div>
-                    <p className="text-slate-700 whitespace-pre-wrap line-clamp-4" style={{ fontFamily: 'Georgia, serif' }}>{entry.text}</p>
+                    <p className="text-white/80 whitespace-pre-wrap line-clamp-4" style={{ fontFamily: 'Georgia, serif' }}>{entry.text}</p>
                   </motion.div>
                 ))}
               </div>
@@ -644,7 +653,7 @@ Make them useful for a Hebrew learner writing a journal.`,
         {/* Previous Entries */}
         {entries.filter(e => e.date !== today).length > 0 && (
           <div className="space-y-3">
-            <h3 className="text-amber-800 text-sm font-medium">My Previous Entries</h3>
+            <h3 className="text-white/60 text-sm font-medium">My Previous Entries</h3>
             {entries
               .filter(e => e.date !== today)
               .slice(0, 10)
@@ -654,10 +663,10 @@ Make them useful for a Hebrew learner writing a journal.`,
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.05 }}
-                  className="bg-white rounded-2xl border-2 border-amber-200 p-4 shadow-md"
+                  className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-4"
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-amber-900 font-medium">
+                    <span className="text-white font-medium">
                       {new Date(entry.date).toLocaleDateString('en-US', { 
                         weekday: 'long', 
                         month: 'short', 
@@ -666,7 +675,7 @@ Make them useful for a Hebrew learner writing a journal.`,
                     </span>
                     <div className="flex items-center gap-2">
                       {entry.used_vocab_ids?.length > 0 && (
-                        <span className="text-green-600 text-xs">
+                        <span className="text-green-400 text-xs">
                           ✓ {entry.used_vocab_ids.length} words used
                         </span>
                       )}
@@ -677,17 +686,17 @@ Make them useful for a Hebrew learner writing a journal.`,
                             data: { is_public: !entry.is_public, author_name: userProfile?.avatar_name || "Anonymous" }
                           });
                         }}
-                        className={`text-xs px-2 py-1 rounded border-2 ${
+                        className={`text-xs px-2 py-1 rounded ${
                           entry.is_public 
-                            ? 'bg-purple-100 text-purple-700 border-purple-300 hover:bg-purple-200' 
-                            : 'bg-slate-100 text-slate-600 border-slate-300 hover:bg-slate-200'
+                            ? 'bg-purple-500/30 text-purple-400 hover:bg-purple-500/50' 
+                            : 'bg-white/10 text-white/60 hover:bg-white/20'
                         }`}
                       >
                         {entry.is_public ? '📢 Public' : '🔒 Private'}
                       </button>
                     </div>
                   </div>
-                  <p className="text-slate-700 whitespace-pre-wrap line-clamp-3" style={{ fontFamily: 'Georgia, serif' }}>{entry.text}</p>
+                  <p className="text-white/80 whitespace-pre-wrap line-clamp-3" style={{ fontFamily: 'Georgia, serif' }}>{entry.text}</p>
                 </motion.div>
               ))}
           </div>

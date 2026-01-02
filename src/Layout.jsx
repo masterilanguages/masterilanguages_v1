@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import TranslatorWidget from "@/components/TranslatorWidget";
+import GameHeader from "@/components/game/GameHeader";
 
 export default function Layout({ children, currentPageName }) {
   const navigate = useNavigate();
@@ -44,6 +45,16 @@ export default function Layout({ children, currentPageName }) {
     },
     staleTime: 0,  // Don't use stale data for profile checks
     cacheTime: 0,  // Don't cache profile data
+    enabled: isAuthChecked && !!currentUser,
+  });
+
+  const { data: userCoins } = useQuery({
+    queryKey: ['userCoins', currentUser?.email],
+    queryFn: async () => {
+      if (!currentUser?.email) return { coins: 0 };
+      const coins = await base44.entities.UserCoins.list();
+      return coins[0] || { coins: 0 };
+    },
     enabled: isAuthChecked && !!currentUser,
   });
 
@@ -116,6 +127,9 @@ export default function Layout({ children, currentPageName }) {
     }
   }
   
+  // Show header on all pages except onboarding
+  const showHeader = !isOnboardingPage && userProfile?.language && userProfile?.avatar_id;
+
   return (
     <>
       {isDev && isAuthChecked && (
@@ -127,8 +141,9 @@ export default function Layout({ children, currentPageName }) {
           auth: {currentUser ? 'yes' : 'no'}
         </div>
       )}
-          {children}
-          <TranslatorWidget />
-        </>
-      );
-      }
+      {showHeader && <GameHeader profile={userProfile} coins={userCoins?.coins} onBuyCoins={() => {}} />}
+      {children}
+      <TranslatorWidget />
+    </>
+  );
+  }
