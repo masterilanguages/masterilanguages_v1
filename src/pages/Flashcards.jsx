@@ -331,6 +331,48 @@ export default function Flashcards() {
   // Full-screen flashcard session
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex flex-col">
+      {/* Top menu bar */}
+      <div className="bg-black/30 backdrop-blur-xl border-b border-white/10 px-4 py-3">
+        <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
+          <Link to={createPageUrl("Home")}>
+            <Button variant="ghost" size="sm" className="text-white hover:text-cyan-400">
+              🏠 Home
+            </Button>
+          </Link>
+          
+          <div className="flex items-center gap-2 overflow-x-auto">
+            {levelData.map(({ level, label, gradient }) => {
+              const count = getWordsForLevel(level).length;
+              return (
+                <button
+                  key={level}
+                  onClick={() => count > 0 && startSession(level)}
+                  disabled={count === 0}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                    selectedLevel === level
+                      ? `bg-gradient-to-r ${gradient} text-white shadow-lg`
+                      : count > 0
+                      ? 'bg-white/10 text-white hover:bg-white/20'
+                      : 'bg-white/5 text-white/40 cursor-not-allowed'
+                  }`}
+                >
+                  {level} ({count})
+                </button>
+              );
+            })}
+          </div>
+
+          <Button
+            onClick={() => setSelectedLevel(null)}
+            variant="ghost"
+            size="sm"
+            className="text-white hover:text-red-400"
+          >
+            ✕ Exit
+          </Button>
+        </div>
+      </div>
+
       {/* Main card area */}
       <div className="flex-1 flex items-center justify-center p-4 py-8">
         <AnimatePresence mode="wait">
