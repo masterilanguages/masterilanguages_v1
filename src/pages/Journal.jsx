@@ -52,14 +52,12 @@ export default function Journal() {
 
   const todayEntry = entries.find(e => e.date === today);
 
-  // Get suggested vocab (latest 5-10, prioritize lower-ranked)
+  // Get 10 most recent level 0 words (and allow levels 0-4 for future assignments)
   const suggestedVocab = backpackWords
-    .sort((a, b) => {
-      const rankDiff = (a.times_practiced || 0) - (b.times_practiced || 0);
-      if (rankDiff !== 0) return rankDiff;
-      return new Date(b.created_date) - new Date(a.created_date);
-    })
-    .slice(0, 8);
+    .filter(w => w.vocab_level >= 0 && w.vocab_level <= 4)
+    .filter(w => w.vocab_level === 0)
+    .sort((a, b) => new Date(b.created_date) - new Date(a.created_date))
+    .slice(0, 10);
 
   const createEntryMutation = useMutation({
     mutationFn: (entry) => base44.entities.JournalEntry.create(entry),
