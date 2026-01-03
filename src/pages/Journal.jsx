@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { ArrowLeft, BookOpen, Sparkles, Loader2, CheckCircle } from "lucide-react";
+import { ArrowLeft, BookOpen, Sparkles, Loader2, CheckCircle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
@@ -633,9 +633,9 @@ Make them useful for a Hebrew learner writing a journal.`,
               ))}
           </div>
         )}
-        </div>
+      </div>
 
-        {/* Translation Tooltip */}
+      {/* Translation Tooltip */}
         {(wordTranslation || translatingWord) && (
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
@@ -668,8 +668,8 @@ Make them useful for a Hebrew learner writing a journal.`,
                 </button>
               </div>
             )}
-          </motion.div>
-        )}
-        </div>
-        );
-        }
+            </motion.div>
+            )}
+            </div>
+            );
+            }
