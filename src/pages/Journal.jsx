@@ -28,6 +28,9 @@ export default function Journal() {
   const [isPublic, setIsPublic] = useState(false);
   const [showPublicFeed, setShowPublicFeed] = useState(false);
   const [signature, setSignature] = useState("");
+  const [wordTranslation, setWordTranslation] = useState(null);
+  const [translationPosition, setTranslationPosition] = useState({ x: 0, y: 0 });
+  const [translatingWord, setTranslatingWord] = useState(false);
   const today = new Date().toISOString().split('T')[0];
 
   const { data: userProfile } = useQuery({
@@ -303,6 +306,44 @@ Make them useful for a Hebrew learner writing a journal.`,
 
   const unusedVocab = suggestedVocab.filter(v => !usedWords.includes(v.id));
 
+  const getWordAtPosition = (text, position) => {
+    const before = text.slice(0, position);
+    const after = text.slice(position);
+    const wordBefore = before.match(/[\u0590-\u05FF\w]+$/)?.[0] || "";
+    const wordAfter = after.match(/^[\u0590-\u05FF\w]+/)?.[0] || "";
+    return wordBefore + wordAfter;
+  };
+
+  const handleTextClick = async (e) => {
+    const textarea = e.target;
+    const cursorPos = textarea.selectionStart;
+    const clickedWord = getWordAtPosition(text, cursorPos);
+    
+    if (!clickedWord || clickedWord.length < 2) return;
+    
+    const rect = textarea.getBoundingClientRect();
+    const textBeforeCursor = text.slice(0, cursorPos);
+    const lines = textBeforeCursor.split('\n');
+    const currentLine = lines.length - 1;
+    const lineHeight = 28.8; // 1.8 line-height * 16px base
+    const y = rect.top + (currentLine * lineHeight) + 40;
+    const x = rect.left + 100;
+    
+    setTranslationPosition({ x, y });
+    setTranslatingWord(true);
+    
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Translate this word to English: "${clickedWord}". Return only the translation, nothing else.`
+      });
+      setWordTranslation({ word: clickedWord, translation: result });
+    } catch (e) {
+      toast.error("Translation failed");
+    } finally {
+      setTranslatingWord(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
       <div className="max-w-4xl mx-auto px-4 py-6">
@@ -344,6 +385,7 @@ Make them useful for a Hebrew learner writing a journal.`,
           <Textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
+            onClick={handleTextClick}
             placeholder="Write about your day..."
             className="bg-transparent border-none text-slate-800 min-h-[400px] mb-4 text-base w-full focus:outline-none resize-none"
             style={{ 
@@ -592,6 +634,42 @@ Make them useful for a Hebrew learner writing a journal.`,
           </div>
         )}
         </div>
+
+        {/* Translation Tooltip */}
+        {(wordTranslation || translatingWord) && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            style={{
+              position: 'fixed',
+              left: translationPosition.x,
+              top: translationPosition.y,
+              zIndex: 1000
+            }}
+            className="bg-slate-800 text-white rounded-lg shadow-2xl p-3 border border-cyan-400"
+          >
+            {translatingWord ? (
+              <div className="flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span className="text-sm">Translating...</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <div>
+                  <p className="text-cyan-400 font-bold text-sm">{wordTranslation.word}</p>
+                  <p className="text-white text-xs">{wordTranslation.translation}</p>
+                </div>
+                <button
+                  onClick={() => setWordTranslation(null)}
+                  className="text-white/60 hover:text-white"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+          </motion.div>
+        )}
         </div>
         );
         }
