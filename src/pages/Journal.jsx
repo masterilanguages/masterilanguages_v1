@@ -1,16 +1,18 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { ArrowLeft, BookOpen, Sparkles, Loader2, CheckCircle, X } from "lucide-react";
+import { ArrowLeft, BookOpen, Loader2, CheckCircle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import TranslatorWidget from "../components/TranslatorWidget";
-import SignaturePad from "../components/journal/SignaturePad";
-import JournalLeaderboard from "../components/journal/JournalLeaderboard";
+
+// Lazy load heavy components for faster initial load
+const TranslatorWidget = lazy(() => import("../components/TranslatorWidget"));
+const SignaturePad = lazy(() => import("../components/journal/SignaturePad"));
+const JournalLeaderboard = lazy(() => import("../components/journal/JournalLeaderboard"));
 
 export default function Journal() {
   const queryClient = useQueryClient();
