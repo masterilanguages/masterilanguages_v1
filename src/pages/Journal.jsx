@@ -668,6 +668,11 @@ Make them useful for a Hebrew learner writing a journal.`,
             )}
             </motion.div>
             )}
+
+      {/* Translator Widget - Lazy loaded */}
+      <Suspense fallback={null}>
+        <TranslatorWidget />
+      </Suspense>
             </div>
             );
             }
