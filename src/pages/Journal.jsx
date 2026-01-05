@@ -62,19 +62,22 @@ export default function Journal() {
   const { data: publicEntries = [] } = useQuery({
     queryKey: ['publicJournalEntries'],
     queryFn: async () => {
-      const allEntries = await base44.entities.JournalEntry.list('-date');
-      return allEntries.filter(e => e.is_public === true);
-    }
+      const allEntries = await base44.entities.JournalEntry.filter({ is_public: true }, '-date', 10);
+      return allEntries;
+    },
+    staleTime: 60000, // Cache for 1 minute
   });
 
-  const todayEntry = entries.find(e => e.date === today);
+  const todayEntry = useMemo(() => entries.find(e => e.date === today), [entries, today]);
 
-  // Get 10 most recent level 0 words (and allow levels 0-4 for future assignments)
-  const suggestedVocab = backpackWords
-    .filter(w => w.vocab_level >= 0 && w.vocab_level <= 4)
-    .filter(w => w.vocab_level === 0)
-    .sort((a, b) => new Date(b.created_date) - new Date(a.created_date))
-    .slice(0, 10);
+  // Get 10 most recent level 0 words - memoized
+  const suggestedVocab = useMemo(() => 
+    backpackWords
+      .filter(w => w.vocab_level === 0)
+      .sort((a, b) => new Date(b.created_date) - new Date(a.created_date))
+      .slice(0, 10),
+    [backpackWords]
+  );
 
   const createEntryMutation = useMutation({
     mutationFn: (entry) => base44.entities.JournalEntry.create(entry),
@@ -115,35 +118,24 @@ export default function Journal() {
     }
   }, [todayEntry]);
 
-  // Check which vocab words are used (strict matching)
+  // Check which vocab words are used - debounced for performance
   useEffect(() => {
-    const textLower = text.toLowerCase();
-    const textWords = textLower.split(/\s+/).filter(w => w.length > 0);
+    const timer = setTimeout(() => {
+      const textLower = text.toLowerCase();
+      const textWords = new Set(textLower.split(/\s+/).filter(w => w.length > 0));
+      
+      const found = suggestedVocab
+        .filter(v => {
+          if (v.word && textWords.has(v.word.toLowerCase())) return true;
+          if (v.phonetic && textWords.has(v.phonetic.toLowerCase())) return true;
+          if (v.translation && textWords.has(v.translation.toLowerCase())) return true;
+          return false;
+        })
+        .map(v => v.id);
+      setUsedWords(found);
+    }, 300); // Debounce 300ms
     
-    const found = suggestedVocab
-      .filter(v => {
-        // Check Hebrew word (exact match or full word contained)
-        if (v.word) {
-          const hebrewLower = v.word.toLowerCase();
-          if (textWords.includes(hebrewLower)) return true;
-        }
-        
-        // Check phonetic/transliteration (exact word match only)
-        if (v.phonetic) {
-          const phoneticLower = v.phonetic.toLowerCase();
-          if (textWords.includes(phoneticLower)) return true;
-        }
-        
-        // Check translation (exact word match only)
-        if (v.translation) {
-          const translationLower = v.translation.toLowerCase();
-          if (textWords.includes(translationLower)) return true;
-        }
-        
-        return false;
-      })
-      .map(v => v.id);
-    setUsedWords(found);
+    return () => clearTimeout(timer);
   }, [text, suggestedVocab]);
 
   const generateQuestion = async () => {
@@ -362,10 +354,12 @@ Make them useful for a Hebrew learner writing a journal.`,
           </div>
         </div>
 
-        {/* Leaderboard */}
-        <div className="mb-6">
-          <JournalLeaderboard entries={entries} />
-        </div>
+        {/* Leaderboard - Lazy loaded */}
+        <Suspense fallback={<div className="mb-6 h-32 bg-white/5 rounded-2xl animate-pulse" />}>
+          <div className="mb-6">
+            <JournalLeaderboard entries={entries} />
+          </div>
+        </Suspense>
 
         {/* Today's Entry - Clean Style */}
         <motion.div
@@ -480,14 +474,16 @@ Make them useful for a Hebrew learner writing a journal.`,
             </div>
           )}
 
-          {/* Signature - Bottom Right */}
+          {/* Signature - Bottom Right - Lazy loaded */}
           <div className="flex justify-end mb-3">
             <div className="w-48">
-              <SignaturePad 
-                value={signature} 
-                onChange={setSignature}
-                disabled={wordCount < 100}
-              />
+              <Suspense fallback={<div className="h-20 bg-slate-100 rounded-lg animate-pulse" />}>
+                <SignaturePad 
+                  value={signature} 
+                  onChange={setSignature}
+                  disabled={wordCount < 100}
+                />
+              </Suspense>
             </div>
           </div>
 
@@ -582,19 +578,19 @@ Make them useful for a Hebrew learner writing a journal.`,
           </div>
         )}
 
-        {/* Previous Entries */}
+        {/* Previous Entries - Reduced animations */}
         {entries.filter(e => e.date !== today).length > 0 && (
           <div className="space-y-3">
             <h3 className="text-white/60 text-sm font-medium">My Previous Entries</h3>
             {entries
               .filter(e => e.date !== today)
-              .slice(0, 10)
+              .slice(0, 5)
               .map((entry, idx) => (
                 <motion.div
                   key={entry.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.05 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: idx * 0.02 }}
                   className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-4"
                 >
                   <div className="flex items-center justify-between mb-2">
