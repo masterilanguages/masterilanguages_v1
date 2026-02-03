@@ -201,6 +201,8 @@ Examples: Penny, Bucks, Clever, NestEgg, Lucky, Earnie, Value`,
       
       setSuggestedNames(result.names || nameExamples[selectedAvatar.type] || nameExamples.custom);
     } catch (e) {
+      console.error('Name generation error:', e);
+      toast.error('Using default names');
       setSuggestedNames(nameExamples[selectedAvatar.type] || nameExamples.custom);
     }
     setGeneratingNames(false);
@@ -217,6 +219,8 @@ Examples: Penny, Bucks, Clever, NestEgg, Lucky, Earnie, Value`,
     try {
       const basePrompt = `Create a cute, friendly ${selectedAvatar.label} character avatar with a big head and small body. ${description}. The character should have a warm, approachable expression with visible eyes. Style: cartoon, kawaii, simple shapes, soft colors, clean edges, PG-rated. Character only on transparent background - no text, no icons, no decorative elements, no borders, no circles, no glows. Just the character cutout.`;
       
+      toast.info("Generating 3 avatar options...");
+      
       // Generate 3 variations
       const promises = [
         base44.integrations.Core.GenerateImage({ prompt: basePrompt + " Variation A: outfit focus." }),
@@ -225,16 +229,19 @@ Examples: Penny, Bucks, Clever, NestEgg, Lucky, Earnie, Value`,
       ];
       
       const results = await Promise.all(promises);
+      console.log('Avatar generation results:', results);
       const validImages = results.filter(r => r?.url).map(r => r.url);
       
       if (validImages.length > 0) {
         setAvatarOptions(validImages);
+        toast.success(`${validImages.length} avatars ready!`);
       } else {
-        toast.error("Let's try again.");
+        console.error('No valid images:', results);
+        toast.error("Generation failed. Try again.");
       }
     } catch (e) {
-      console.error("Avatar generation failed:", e);
-      toast.error("Let's try again.");
+      console.error("Avatar generation error:", e);
+      toast.error("Error: " + (e.message || "Try again"));
     }
     
     setGeneratingAvatars(false);
