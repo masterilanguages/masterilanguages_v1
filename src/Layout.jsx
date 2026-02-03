@@ -102,12 +102,6 @@ export default function Layout({ children, currentPageName }) {
       navigate(createPageUrl("LanguageSelect"), { replace: true });
       return;
     }
-    
-    // If new user without avatar, redirect to AvatarSelect
-    if (userProfile.is_new_user === true && !userProfile.avatar_id) {
-      console.log("→ Redirecting to AvatarSelect - no avatar");
-      navigate(createPageUrl("AvatarSelect"), { replace: true });
-    }
   }, [isOnboardingPage, isAuthChecked, currentUser, profileLoading, userProfile, navigate, currentPageName]);
 
   // Show loading during initial auth check
@@ -117,7 +111,7 @@ export default function Layout({ children, currentPageName }) {
 
   // Block rendering only for authenticated users who need onboarding
   if (!isOnboardingPage && currentUser && !profileLoading) {
-    if (!userProfile || !userProfile.language || userProfile.language === "" || (userProfile.is_new_user === true && !userProfile.avatar_id)) {
+    if (!userProfile || !userProfile.language || userProfile.language === "") {
       return <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
         <div className="text-white text-center">
           <p className="mb-2">Redirecting to onboarding...</p>
@@ -128,7 +122,7 @@ export default function Layout({ children, currentPageName }) {
   }
   
   // Show header on all pages except onboarding
-  const showHeader = !isOnboardingPage && userProfile?.language && userProfile?.avatar_id;
+  const showHeader = !isOnboardingPage && userProfile?.language;
 
   return (
     <>
