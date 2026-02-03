@@ -151,7 +151,7 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
   const sessionActive = profile?.session_start && profile?.session_duration;
 
   // Don't render if profile is missing critical data
-  if (!profile?.language || !profile?.avatar_id) {
+  if (!profile?.language) {
     console.log('GameHeader: hiding - incomplete profile');
     return null;
   }
@@ -159,7 +159,7 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
   return (
     <div className="bg-gradient-to-r from-slate-900/95 via-purple-900/95 to-slate-900/95 backdrop-blur-xl border-b border-white/10 px-4 py-3">
       <div className="flex items-center justify-between max-w-7xl mx-auto">
-        {/* Avatar */}
+        {/* Menu Button */}
         <div className="relative">
           <motion.button
             onClick={() => setShowMenu(!showMenu)}
@@ -167,38 +167,9 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
             whileTap={{ scale: 0.95 }}
             className="relative flex items-center gap-3 cursor-pointer"
           >
-            <div className="relative">
-              <div className="w-12 h-auto flex items-end justify-center overflow-visible bg-transparent">
-                {profile?.avatar_image_url ? (
-                  <img 
-                    src={profile.avatar_image_url} 
-                    alt={profile.avatar_name} 
-                    className="w-full h-auto object-contain bg-transparent" 
-                    style={{ borderRadius: 0, clipPath: 'none', mask: 'none', backgroundColor: 'transparent' }}
-                  />
-                ) : (
-                  <span className="text-3xl">👤</span>
-                )}
-              </div>
-              <div className="absolute -bottom-1 -right-1 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full px-2 py-0.5 text-xs font-bold text-black">
-                {profile?.age_level || 5}
-              </div>
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-2xl">{languageFlags[profile?.language] || '🌍'}</span>
-                <p className="text-white font-bold hidden sm:inline">{profile?.avatar_name || 'Player'}</p>
-              </div>
-              <div className="hidden md:flex items-center gap-2">
-                <div className="w-24 h-2 bg-white/20 rounded-full overflow-hidden">
-                  <motion.div
-                    className="h-full bg-gradient-to-r from-cyan-400 to-purple-500"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${xpProgress}%` }}
-                  />
-                </div>
-                <span className="text-xs text-white/60">{profile?.xp || 0} XP</span>
-              </div>
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">{languageFlags[profile?.language] || '🌍'}</span>
+              <p className="text-white font-bold">{languageNames[profile?.language] || 'Language'}</p>
             </div>
           </motion.button>
 
