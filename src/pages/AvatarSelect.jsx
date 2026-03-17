@@ -101,19 +101,13 @@ export default function AvatarSelect() {
   const [selectedAvatarImage, setSelectedAvatarImage] = useState(null);
   const [profile, setProfile] = useState(null);
 
-  const loadProfile = async () => {
-    const profiles = await base44.entities.UserProfile.list();
-    if (profiles.length > 0) {
-      setProfile(profiles[0]);
-    }
-  };
-
-  React.useEffect(() => {
-    loadProfile();
+  useEffect(() => {
+    base44.entities.UserProfile.list().then(profiles => {
+      if (profiles.length > 0) setProfile(profiles[0]);
+    });
   }, []);
 
-  // Redirect to language select if no language chosen
-  React.useEffect(() => {
+  useEffect(() => {
     if (profile && profile.is_new_user && !profile.language) {
       navigate(createPageUrl("LanguageSelect"));
     }
