@@ -6,9 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Sparkles } from "lucide-react";
 
 const avatars = [
   { id: "turtle", type: "turtle", emoji: "🐢", label: "Turtle" },
