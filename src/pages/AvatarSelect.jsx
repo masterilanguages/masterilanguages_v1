@@ -160,33 +160,20 @@ export default function AvatarSelect() {
     
     try {
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Based on this character: ${avatarTypeName} - ${description}
-        
-Generate 3 short, fun, motivational names (max 8 characters each) that relate to earning, saving, or progress. 
-Names should be positive, easy to pronounce in English/Spanish, and have money/reward energy.
-
-Examples: Penny, Bucks, Clever, NestEgg, Lucky, Earnie, Value`,
+        prompt: `Based on this character: ${selectedAvatar.label} - ${description}
+Generate 3 short, fun names (max 8 chars each). Positive, easy to pronounce.
+Examples: Penny, Bucks, Clever, Lucky, Earnie`,
         response_json_schema: {
           type: "object",
-          properties: {
-            names: {
-              type: "array",
-              items: { type: "string" }
-            }
-          }
+          properties: { names: { type: "array", items: { type: "string" } } }
         }
       });
-      
       setSuggestedNames(result.names || nameExamples[selectedAvatar.type] || nameExamples.custom);
     } catch (e) {
-      console.error('Name generation error:', e);
-      toast.error('Using default names');
       setSuggestedNames(nameExamples[selectedAvatar.type] || nameExamples.custom);
     }
     setGeneratingNames(false);
     setStep(3);
-    
-    // Start generating 3 avatar variations
     generateAvatarOptions(description);
   };
 
