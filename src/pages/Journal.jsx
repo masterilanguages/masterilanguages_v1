@@ -12,7 +12,7 @@ import { toast } from "sonner";
 // Lazy load heavy components for faster initial load
 const TranslatorWidget = lazy(() => import("../components/TranslatorWidget"));
 const SignaturePad = lazy(() => import("../components/journal/SignaturePad"));
-const JournalLeaderboard = lazy(() => import("../components/journal/JournalLeaderboard"));
+
 
 export default function Journal() {
   const queryClient = useQueryClient();

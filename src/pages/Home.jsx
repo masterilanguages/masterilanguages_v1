@@ -16,7 +16,7 @@ import TranslatorWidget from "../components/TranslatorWidget";
 import ActivityCard from "../components/game/ActivityCard";
 import BabyGame from "../components/game/BabyGame";
 import AvatarMenu from "../components/game/AvatarMenu";
-import JournalLeaderboard from "../components/journal/JournalLeaderboard";
+
 
 
 
