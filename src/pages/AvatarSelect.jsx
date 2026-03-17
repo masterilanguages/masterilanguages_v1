@@ -138,13 +138,13 @@ export default function AvatarSelect() {
     },
   });
 
-  const handleAvatarSelect = async (avatar) => {
+  const handleAvatarSelect = (avatar) => {
     setSelectedAvatar(avatar);
     setSelectedTraits([]);
     setSelectedAccessories([]);
     setSelectedVibe("");
     setExtraDetails("");
-    setStep(2); // Always go to description step
+    setStep(2);
   };
 
   const handleDescriptionDone = async () => {
