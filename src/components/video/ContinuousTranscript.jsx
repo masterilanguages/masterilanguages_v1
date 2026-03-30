@@ -14,6 +14,7 @@ export default function ContinuousTranscript({
 }) {
   const [clickedWord, setClickedWord] = useState(null);
   const [translation, setTranslation] = useState("");
+  const [editingTranslation, setEditingTranslation] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
   const [editingWord, setEditingWord] = useState(null);
   const [editValue, setEditValue] = useState("");
@@ -73,6 +74,7 @@ export default function ContinuousTranscript({
     // Show translation and edit field
     setClickedWord(idx);
     setEditValue(wordObj.text);
+    setEditingTranslation(false);
     setIsTranslating(true);
     
     try {
@@ -220,7 +222,25 @@ export default function ContinuousTranscript({
                                 <p className="text-white/60 text-xs">...</p>
                               ) : (
                                 <>
-                                  <p className="text-white text-xs font-medium">{translation}</p>
+                                  {editingTranslation ? (
+                                    <input
+                                      autoFocus
+                                      value={translation}
+                                      onChange={(e) => setTranslation(e.target.value)}
+                                      onBlur={() => setEditingTranslation(false)}
+                                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === 'Escape') setEditingTranslation(false); }}
+                                      className="text-white text-xs bg-white/10 border border-white/30 rounded px-1 py-0.5 w-28 outline-none"
+                                      onClick={(e) => e.stopPropagation()}
+                                    />
+                                  ) : (
+                                    <p
+                                      className="text-white text-xs font-medium cursor-pointer hover:text-cyan-300 underline underline-offset-2"
+                                      title="Click to edit translation"
+                                      onClick={(e) => { e.stopPropagation(); setEditingTranslation(true); }}
+                                    >
+                                      {translation}
+                                    </p>
+                                  )}
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
@@ -269,22 +289,40 @@ export default function ContinuousTranscript({
                             className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900/95 rounded-md px-2 py-1 shadow-lg z-50 flex items-center gap-1.5"
                           >
                             {isTranslating ? (
-                              <p className="text-white/60 text-xs">...</p>
-                            ) : (
-                              <>
-                                <p className="text-white text-xs font-medium">{translation}</p>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onAddWord(wordObj.text);
-                                    setClickedWord(null);
-                                  }}
-                                  className="text-base hover:scale-110 transition-transform"
-                                >
-                                  🎒
-                                </button>
-                              </>
-                            )}
+                               <p className="text-white/60 text-xs">...</p>
+                             ) : (
+                               <>
+                                 {editingTranslation ? (
+                                   <input
+                                     autoFocus
+                                     value={translation}
+                                     onChange={(e) => setTranslation(e.target.value)}
+                                     onBlur={() => setEditingTranslation(false)}
+                                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === 'Escape') setEditingTranslation(false); }}
+                                     className="text-white text-xs bg-white/10 border border-white/30 rounded px-1 py-0.5 w-28 outline-none"
+                                     onClick={(e) => e.stopPropagation()}
+                                   />
+                                 ) : (
+                                   <p
+                                     className="text-white text-xs font-medium cursor-pointer hover:text-cyan-300 underline underline-offset-2"
+                                     title="Click to edit translation"
+                                     onClick={(e) => { e.stopPropagation(); setEditingTranslation(true); }}
+                                   >
+                                     {translation}
+                                   </p>
+                                 )}
+                                 <button
+                                   onClick={(e) => {
+                                     e.stopPropagation();
+                                     onAddWord(wordObj.text);
+                                     setClickedWord(null);
+                                   }}
+                                   className="text-base hover:scale-110 transition-transform"
+                                 >
+                                   🎒
+                                 </button>
+                               </>
+                             )}
                           </motion.div>
                         )}
                       </AnimatePresence>
