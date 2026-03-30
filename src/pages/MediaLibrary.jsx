@@ -114,6 +114,16 @@ export default function MediaLibrary() {
     queryFn: () => base44.entities.Video.list(),
   });
 
+  const { data: userVideos = [] } = useQuery({
+    queryKey: ['userVideos'],
+    queryFn: async () => {
+      const videos = await base44.entities.Video.list();
+      return videos
+        .filter(v => !v.deleted_at && v.is_active !== false)
+        .sort((a, b) => (a.order || 0) - (b.order || 0));
+    },
+  });
+
   const { data: myProgram = [] } = useQuery({
     queryKey: ['myProgram'],
     queryFn: async () => {
@@ -990,7 +1000,45 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
           </div>
         </div>
 
-        {/* My Videos Section */}
+        {/* User's Custom Videos (from Video entity / BabyVideos) */}
+        {userVideos.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-white mb-4">My Videos</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {userVideos.map((video) => {
+                const ytId = video.youtube_video_id || (video.video_url ? video.video_url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|shorts\/))([^&?]+)/)?.[1] : null);
+                const thumb = ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : null;
+                return (
+                  <motion.div
+                    key={video.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    onClick={() => handleVideoClick({ ...video, video_id: ytId })}
+                    className="bg-white/5 backdrop-blur-xl rounded-2xl border border-blue-500/30 overflow-hidden hover:border-blue-400/60 transition-all cursor-pointer"
+                  >
+                    <div className="w-full aspect-video bg-black">
+                      {thumb ? (
+                        <img src={thumb} alt={video.title} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center">
+                          <Video className="w-12 h-12 text-white/40" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="text-white font-bold text-base flex-1">{video.title}</h3>
+                        <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded flex-shrink-0">My Video</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Assigned Videos Section */}
         {myVideos.length > 0 && (
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-white mb-4">My Videos</h2>
