@@ -241,7 +241,7 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
           <p className="font-bold text-base tracking-widest uppercase" style={{ color: '#c9a84c', fontFamily: 'Georgia, serif', letterSpacing: '0.15em' }}>Language Masteri</p>
         </div>
 
-        {/* Right: Streak + Timer */}
+        {/* Right: Streak + Timer + Login */}
         <div className="flex items-center gap-2 flex-shrink-0">
           <motion.div
             whileHover={{ scale: 1.05 }}
@@ -251,6 +251,17 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
             <Flame className="w-4 h-4" style={{ color: '#c9a84c' }} />
             <span className="text-xs font-bold" style={{ color: '#c9a84c' }}>{profile?.daily_streak || 0}</span>
           </motion.div>
+
+          <motion.button
+            onClick={handleLogout}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium"
+            style={{ background: '#ff444415', border: '1px solid #ff444430', color: '#ff6b6b' }}
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Logout</span>
+          </motion.button>
 
           {sessionActive ? (
             <motion.button
