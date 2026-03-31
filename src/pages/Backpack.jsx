@@ -129,13 +129,11 @@ export default function Backpack() {
   const level0Words = wordRatings.filter(w => (w.times_practiced || 0) === 0);
   const level1Words = wordRatings.filter(w => w.times_practiced === 1);
   const level2Words = wordRatings.filter(w => w.times_practiced === 2);
-  const level3Words = wordRatings.filter(w => w.times_practiced === 3);
-  const level4Words = wordRatings.filter(w => w.times_practiced === 4);
+  const level3Words = wordRatings.filter(w => w.times_practiced === 3 || w.times_practiced === 4);
   const level5Words = wordRatings.filter(w => w.times_practiced >= 5);
 
   const tabs = [
-    { id: "level5", label: "Level 5", color: "green" },
-    { id: "level4", label: "Level 4", color: "blue" },
+    { id: "level5", label: "✓ Masteri", color: "green" },
     { id: "level3", label: "Level 3", color: "purple" },
     { id: "level2", label: "Level 2", color: "yellow" },
     { id: "level1", label: "Level 1", color: "orange" },
@@ -146,7 +144,6 @@ export default function Backpack() {
   const getDisplayWords = () => {
     let words = [];
     if (activeTab === "level5") words = level5Words;
-    else if (activeTab === "level4") words = level4Words;
     else if (activeTab === "level3") words = level3Words;
     else if (activeTab === "level2") words = level2Words;
     else if (activeTab === "level1") words = level1Words;
@@ -313,13 +310,13 @@ export default function Backpack() {
           </Link>
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-2 mb-4 overflow-x-auto">
+        {/* Tabs - Single Row */}
+        <div className="flex gap-1 mb-4 justify-center overflow-x-auto">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2 rounded-xl font-medium whitespace-nowrap transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
                 activeTab === tab.id
                   ? "bg-stone-700 text-stone-100 border border-stone-600"
                   : "bg-white/60 text-stone-500 hover:bg-white/80 border border-stone-200"
