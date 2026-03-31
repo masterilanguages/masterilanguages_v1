@@ -53,7 +53,7 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
     { id: "home", to: "Home", emoji: "🏠", label: "Home" },
     { id: "words", to: "Flashcards", emoji: "🎒", label: "Words" },
     { id: "schedule", to: "Home", emoji: "📅", label: "Schedule" },
-    { id: "songs", to: "Songs", emoji: "🎵", label: "Songs" },
+    { id: "songs", to: "BabyVideos", emoji: "🎵", label: "Songs" },
     { id: "videos", to: "MediaLibrary", emoji: "📺", label: "Videos" },
     { id: "journal", to: "Journal", emoji: "📓", label: "Journal" },
     ...(currentUser?.role === 'admin' || currentUser?.role === 'coach' ? [

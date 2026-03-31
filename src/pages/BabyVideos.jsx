@@ -2,8 +2,9 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play, ArrowLeft, Coins, Check, Backpack, Volume2, Star, BookOpen, Plus, ChevronRight, Loader2, FileText, GripVertical, ChevronDown } from "lucide-react";
+import { Play, ArrowLeft, Coins, Check, Backpack, Volume2, Star, BookOpen, Plus, ChevronRight, Loader2, FileText, GripVertical, ChevronDown, Music, Upload, Trash2 } from "lucide-react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import KaraokeTranscript from "../components/transcript/KaraokeTranscript";
 import { Input } from "@/components/ui/input";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -374,9 +375,15 @@ export default function BabyVideos() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState("videos");
   const [expandedVideoId, setExpandedVideoId] = useState(null);
   const [showVocabForVideo, setShowVocabForVideo] = useState(null);
   const [selectedVideo, setSelectedVideo] = useState(null);
+  // Songs state
+  const [expandedSongId, setExpandedSongId] = useState(null);
+  const [addingSong, setAddingSong] = useState(false);
+  const [newSongUrl, setNewSongUrl] = useState("");
+  const [uploadingAudio, setUploadingAudio] = useState(false);
   const [backpackOpen, setBackpackOpen] = useState(false);
   const [showFluent, setShowFluent] = useState(false);
   const [showExercises, setShowExercises] = useState(false);
@@ -465,6 +472,90 @@ export default function BabyVideos() {
     refetchOnWindowFocus: false,
     enabled: !!userProfile && !!currentUser,
   });
+
+  // Songs queries
+  const { data: songs = [] } = useQuery({
+    queryKey: ['songs'],
+    queryFn: async () => {
+      const allSongs = await base44.entities.Song.list();
+      return allSongs.sort((a, b) => (a.order || 0) - (b.order || 0));
+    },
+  });
+
+  const { data: songProgress = [] } = useQuery({
+    queryKey: ['songProgress'],
+    queryFn: () => base44.entities.SongProgress.list(),
+  });
+
+  // Songs mutations
+  const createSongProgressMutation = useMutation({
+    mutationFn: (data) => base44.entities.SongProgress.create(data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['songProgress'] }),
+  });
+  const updateSongProgressMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.SongProgress.update(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['songProgress'] }),
+  });
+  const createSongMutation = useMutation({
+    mutationFn: (song) => base44.entities.Song.create(song),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['songs'] }); setAddingSong(false); setNewSongUrl(""); toast.success("Song added! 🎵"); },
+  });
+  const updateSongMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.Song.update(id, data),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['songs'] }); toast.success("Updated!"); },
+  });
+  const deleteSongMutation = useMutation({
+    mutationFn: (id) => base44.entities.Song.delete(id),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['songs'] }); toast.success("Song deleted"); },
+  });
+  const reorderSongsMutation = useMutation({
+    mutationFn: async (reorderedSongs) => {
+      await Promise.all(reorderedSongs.map((song, index) => base44.entities.Song.update(song.id, { order: index })));
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['songs'] }); },
+  });
+
+  const addWordToBackpack = async (word, songId, songTitle) => {
+    const existingWord = wordRatings.find(w => w.word === word.hebrew);
+    if (existingWord) { toast.info("Already in backpack!"); return; }
+    await createWordMutation.mutateAsync({ word: word.hebrew, translation: word.english, phonetic: word.transliteration, category: `vocab for song ${songTitle}`, times_practiced: 1, mastered: false });
+    toast.success(`Added "${word.transliteration}" to backpack! 🎒`);
+    const progress = songProgress.find(p => p.song_id === songId);
+    const song = songs.find(s => s.id === songId);
+    if (song) {
+      const allWordsAdded = song.transcript.every(w => wordRatings.find(wr => wr.word === w.hebrew) || w.hebrew === word.hebrew);
+      if (progress) {
+        await updateSongProgressMutation.mutateAsync({ id: progress.id, data: { words_added: [...(progress.words_added || []), word.hebrew], completed: allWordsAdded } });
+        if (allWordsAdded) toast.success("🎉 Song completed! All words added!");
+      } else {
+        await createSongProgressMutation.mutateAsync({ song_id: songId, words_added: [word.hebrew], completed: allWordsAdded });
+      }
+    }
+  };
+
+  const handleSongsDragEnd = (result) => {
+    if (!result.destination) return;
+    const reordered = Array.from(songs);
+    const [removed] = reordered.splice(result.source.index, 1);
+    reordered.splice(result.destination.index, 0, removed);
+    reorderSongsMutation.mutate(reordered);
+  };
+
+  const handleAddSong = () => {
+    const ytId = extractYouTubeId(newSongUrl);
+    if (!ytId && !newSongUrl.includes('http')) { toast.error("Invalid YouTube URL"); return; }
+    createSongMutation.mutate({ title: `Song ${songs.length + 1}`, youtube_url: newSongUrl, youtube_id: ytId, transcript: [], level: 1, order: songs.length });
+  };
+
+  const handleAudioUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('audio/')) { toast.error("Please upload an audio file"); return; }
+    setUploadingAudio(true);
+    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    createSongMutation.mutate({ title: `Song ${songs.length + 1}`, audio_url: file_url, transcript: [], level: 1, order: songs.length });
+    setUploadingAudio(false);
+  };
 
   const updateCoinsMutation = useMutation({
     mutationFn: (data) => base44.entities.UserCoins.update(userCoins?.id, data),
@@ -836,6 +927,26 @@ Create about 15-20 conversational lines that naturally introduce and use these v
           </div>
         </div>
 
+        {/* Tab Switcher */}
+        {!selectedVideo && (
+          <div className="flex gap-2 mb-6 p-1 rounded-xl" style={{ background: '#ffffff18', border: '1px solid #ffffff20' }}>
+            <button
+              onClick={() => setActiveTab("videos")}
+              className="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all"
+              style={activeTab === "videos" ? { background: '#5a6b5a', color: '#f5f0e8' } : { color: '#6b7c5a' }}
+            >
+              📺 Videos
+            </button>
+            <button
+              onClick={() => setActiveTab("songs")}
+              className="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all"
+              style={activeTab === "songs" ? { background: '#5a6b5a', color: '#f5f0e8' } : { color: '#6b7c5a' }}
+            >
+              🎵 Songs
+            </button>
+          </div>
+        )}
+
         {/* Video Player */}
         {selectedVideo ? (
           <motion.div
@@ -1110,6 +1221,149 @@ Create about 15-20 conversational lines that naturally introduce and use these v
               )}
             </div>
           </motion.div>
+        ) : activeTab === "songs" ? (
+          /* ===== SONGS TAB ===== */
+          <div className="space-y-4">
+            {currentUser?.role === 'admin' && (
+              <div className="flex justify-end">
+                <Button onClick={() => setAddingSong(!addingSong)} className="bg-green-500 hover:bg-green-600">
+                  <Plus className="w-4 h-4 mr-2" /> Add Song
+                </Button>
+              </div>
+            )}
+            {addingSong && (
+              <div className="bg-white/70 backdrop-blur-xl rounded-2xl border border-stone-200 p-6">
+                <h3 className="font-bold mb-4" style={{ color: '#3a4a3a' }}>Add New Song</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-stone-500 text-sm mb-2 block">YouTube URL</label>
+                    <div className="flex gap-2">
+                      <input value={newSongUrl} onChange={(e) => setNewSongUrl(e.target.value)} placeholder="Paste YouTube URL..." className="flex-1 px-3 py-2 rounded-lg bg-white border border-stone-200 text-stone-800 outline-none focus:border-stone-400" />
+                      <Button onClick={handleAddSong} disabled={!newSongUrl.trim()}>Add Video</Button>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="flex-1 h-px bg-stone-200" />
+                    <span className="text-stone-400 text-sm">OR</span>
+                    <div className="flex-1 h-px bg-stone-200" />
+                  </div>
+                  <div>
+                    <label className="text-stone-500 text-sm mb-2 block">Upload Audio File</label>
+                    <label className="block">
+                      <input type="file" accept="audio/*" onChange={handleAudioUpload} className="hidden" />
+                      <Button variant="outline" className="w-full cursor-pointer" disabled={uploadingAudio}>
+                        <Upload className="w-4 h-4 mr-2" />{uploadingAudio ? "Uploading..." : "Choose Audio File"}
+                      </Button>
+                    </label>
+                  </div>
+                  <Button onClick={() => setAddingSong(false)} variant="outline" className="w-full">Cancel</Button>
+                </div>
+              </div>
+            )}
+            {songs.length === 0 ? (
+              <div className="text-center py-12">
+                <Music className="w-16 h-16 text-stone-300 mx-auto mb-4" />
+                <p style={{ color: '#6b7c5a' }}>No songs yet! Come back soon.</p>
+              </div>
+            ) : (
+              <DragDropContext onDragEnd={handleSongsDragEnd}>
+                <Droppable droppableId="songs">
+                  {(provided) => (
+                    <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-4">
+                      {songs.map((song, index) => {
+                        const isExpanded = expandedSongId === song.id;
+                        const progress = songProgress.find(p => p.song_id === song.id);
+                        const isCompleted = progress?.completed || false;
+                        const ytId = extractYouTubeId(song.youtube_url);
+                        const hasVideo = !!song.youtube_url;
+                        const hasAudio = !!song.audio_url;
+                        return (
+                          <Draggable key={song.id} draggableId={song.id} index={index} isDragDisabled={currentUser?.role !== 'admin'}>
+                            {(provided, snapshot) => (
+                              <div ref={provided.innerRef} {...provided.draggableProps} className={`bg-white/70 backdrop-blur-xl rounded-2xl border border-stone-200 overflow-hidden ${snapshot.isDragging ? 'shadow-2xl scale-105' : ''}`}>
+                                <div className="flex gap-4 p-4">
+                                  {currentUser?.role === 'admin' && (
+                                    <div {...provided.dragHandleProps} className="cursor-grab active:cursor-grabbing flex items-center">
+                                      <GripVertical className="w-5 h-5 text-stone-400" />
+                                    </div>
+                                  )}
+                                  <div onClick={() => setExpandedSongId(isExpanded ? null : song.id)} className="flex-1 flex gap-4 cursor-pointer hover:opacity-80 transition-all rounded-lg">
+                                    <div className="relative w-32 h-20 flex-shrink-0 rounded-xl overflow-hidden bg-black">
+                                      {ytId ? (
+                                        <img src={`https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`} alt={song.title} className="w-full h-full object-cover" onError={(e) => { e.target.src = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`; }} />
+                                      ) : (
+                                        <div className="w-full h-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
+                                          <Music className="w-10 h-10 text-white" />
+                                        </div>
+                                      )}
+                                      <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                                        <Music className="w-8 h-8 text-white" />
+                                      </div>
+                                    </div>
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2">
+                                        {isCompleted && <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center"><Check className="w-3 h-3 text-white" /></div>}
+                                        <h3 className="font-bold" style={{ color: '#3a4a3a' }}>{song.title}</h3>
+                                      </div>
+                                      <p className="text-stone-500 text-sm mt-1">Level {song.level} • {hasVideo ? '📺 Video' : '🎵 Audio'} • {song.transcript?.length || 0} words</p>
+                                      {isCompleted && <span className="inline-block mt-1 px-2 py-0.5 bg-green-500/20 text-green-600 text-xs rounded-full">✓ Completed</span>}
+                                    </div>
+                                    <ChevronRight className={`w-5 h-5 text-stone-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+                                  </div>
+                                  {currentUser?.role === 'admin' && (
+                                    <button onClick={(e) => { e.stopPropagation(); deleteSongMutation.mutate(song.id); }} className="w-8 h-8 rounded bg-red-500/20 hover:bg-red-500/30 flex items-center justify-center">
+                                      <Trash2 className="w-4 h-4 text-red-400" />
+                                    </button>
+                                  )}
+                                </div>
+                                {isExpanded && (
+                                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="p-4 bg-stone-50/80 border-t border-stone-200 space-y-4">
+                                    {hasVideo && ytId && (
+                                      <div className="aspect-video bg-black rounded-xl overflow-hidden">
+                                        <iframe id={`youtube-player-${song.id}`} width="100%" height="100%" src={`https://www.youtube.com/embed/${ytId}?enablejsapi=1`} title={song.title} frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
+                                      </div>
+                                    )}
+                                    {hasAudio && !hasVideo && (
+                                      <div className="bg-white/60 rounded-xl p-4">
+                                        <audio id={`audio-player-${song.id}`} controls className="w-full">
+                                          <source src={song.audio_url} type="audio/mpeg" />
+                                        </audio>
+                                      </div>
+                                    )}
+                                    {song.transcript && song.transcript.length > 0 && song.transcript[0].start_ms !== undefined ? (
+                                      <KaraokeTranscript
+                                        lines={song.transcript.map((line, idx) => ({ id: `line_${idx}`, start_ms: line.start_ms || idx * 5000, end_ms: line.end_ms || (idx + 1) * 5000, transliteration: line.transliteration, english: line.english, hebrew: line.hebrew }))}
+                                        audioRef={hasAudio && !hasVideo ? { current: document.getElementById(`audio-player-${song.id}`) } : null}
+                                        videoRef={hasVideo ? { current: document.getElementById(`youtube-player-${song.id}`) } : null}
+                                        onLineUpdate={(lineIndex, updatedLine) => {
+                                          const newTranscript = [...song.transcript];
+                                          newTranscript[lineIndex] = { ...song.transcript[lineIndex], ...updatedLine };
+                                          updateSongMutation.mutate({ id: song.id, data: { transcript: newTranscript } });
+                                        }}
+                                        onAddToBackpack={(hebrew, transliteration, english) => addWordToBackpack({ hebrew, transliteration, english }, song.id, song.title)}
+                                      />
+                                    ) : (
+                                      <VideoTranscript
+                                        videoId={song.id}
+                                        videoUrl={song.youtube_url || song.audio_url}
+                                        onPauseVideo={() => { const iframe = document.getElementById(`youtube-player-${song.id}`); if (iframe?.contentWindow) iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*'); }}
+                                        onSeekVideo={(seconds) => { const iframe = document.getElementById(`youtube-player-${song.id}`); if (iframe?.contentWindow) { iframe.contentWindow.postMessage(`{"event":"command","func":"seekTo","args":[${seconds}, true]}`, '*'); iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*'); } }}
+                                      />
+                                    )}
+                                  </motion.div>
+                                )}
+                              </div>
+                            )}
+                          </Draggable>
+                        );
+                      })}
+                      {provided.placeholder}
+                    </div>
+                  )}
+                </Droppable>
+              </DragDropContext>
+            )}
+          </div>
         ) : (
                 <div className="space-y-4">
                   {/* Add Custom Video Section - hide in single video mode */}
