@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Flame, BookOpen, Clock, LogOut, Globe } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -14,6 +14,9 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [showMenu, setShowMenu] = useState(false);
   const [currentUser, setCurrentUser] = React.useState(null);
+  const [orderedNav, setOrderedNav] = React.useState([]);
+  const [draggingId, setDraggingId] = React.useState(null);
+  const [isEditMode, setIsEditMode] = React.useState(false);
 
   React.useEffect(() => {
     base44.auth.me().then(setCurrentUser).catch(() => {});
@@ -161,20 +164,55 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
     return null;
   }
 
-  const navItems = [
-    { to: "Home", emoji: "🏠", label: "Home" },
-    { to: "Flashcards", emoji: "🎒", label: "Words" },
-    { to: "Home", emoji: "📅", label: "Schedule" },
-    { to: "Songs", emoji: "🎵", label: "Songs" },
-    { to: "MediaLibrary", emoji: "📺", label: "Videos" },
-    { to: "Journal", emoji: "📓", label: "Journal" },
+  const baseNavItems = [
+    { id: "home", to: "Home", emoji: "🏠", label: "Home" },
+    { id: "words", to: "Flashcards", emoji: "🎒", label: "Words" },
+    { id: "schedule", to: "Home", emoji: "📅", label: "Schedule" },
+    { id: "songs", to: "Songs", emoji: "🎵", label: "Songs" },
+    { id: "videos", to: "MediaLibrary", emoji: "📺", label: "Videos" },
+    { id: "journal", to: "Journal", emoji: "📓", label: "Journal" },
     ...(currentUser?.role === 'admin' || currentUser?.role === 'coach' ? [
-      { to: "ManageCoaches", emoji: "👥", label: "Coaches" },
+      { id: "coaches", to: "ManageCoaches", emoji: "👥", label: "Coaches" },
     ] : []),
     ...(currentUser?.role === 'admin' ? [
-      { to: "Home", emoji: "👤", label: "Users" },
+      { id: "users", to: "Home", emoji: "👤", label: "Users" },
     ] : []),
   ];
+
+  // Load saved order from localStorage
+  const savedOrder = (() => {
+    try { return JSON.parse(localStorage.getItem('nav_order') || '[]'); } catch { return []; }
+  })();
+  const navItems = savedOrder.length
+    ? [...baseNavItems].sort((a, b) => {
+        const ai = savedOrder.indexOf(a.id);
+        const bi = savedOrder.indexOf(b.id);
+        return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+      })
+    : baseNavItems;
+
+  React.useEffect(() => {
+    if (profile?.language) setOrderedNav(navItems);
+  }, [currentUser?.role, profile?.language]);
+
+  const handleDragStart = (id) => setDraggingId(id);
+  const handleDragOver = (e, id) => {
+    e.preventDefault();
+    if (draggingId === id) return;
+    setOrderedNav(prev => {
+      const from = prev.findIndex(n => n.id === draggingId);
+      const to = prev.findIndex(n => n.id === id);
+      if (from === -1 || to === -1) return prev;
+      const next = [...prev];
+      const [item] = next.splice(from, 1);
+      next.splice(to, 0, item);
+      return next;
+    });
+  };
+  const handleDragEnd = () => {
+    setDraggingId(null);
+    localStorage.setItem('nav_order', JSON.stringify(orderedNav.map(n => n.id)));
+  };
 
   return (
     <div style={{ background: 'linear-gradient(to right, #5a6b5a, #6b7c63, #5a6b5a)', borderBottom: '1px solid #a8b89840' }} className="backdrop-blur-xl">
@@ -306,18 +344,45 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
       {/* Nav bar: all icons centered below brand */}
       <div style={{ borderTop: '1px solid #c9a84c20' }} className="px-4 py-1.5">
         <div className="flex items-center justify-center gap-1 max-w-7xl mx-auto">
-          {navItems.map(({ to, emoji, label }, idx) => (
-            <Link key={`${to}-${idx}`} to={createPageUrl(to)}>
+          {orderedNav.map(({ id, to, emoji, label }) => (
+            isEditMode ? (
               <motion.div
-                whileHover={{ scale: 1.05 }}
-                className="flex flex-col items-center px-4 py-1 rounded-lg transition-all"
-                style={{ background: '#ffffff12', border: '1px solid #ffffff25' }}
+                key={id}
+                draggable
+                onDragStart={() => handleDragStart(id)}
+                onDragOver={(e) => handleDragOver(e, id)}
+                onDragEnd={handleDragEnd}
+                animate={{ scale: draggingId === id ? 0.9 : 1 }}
+                className="flex flex-col items-center px-4 py-1 rounded-lg cursor-grab active:cursor-grabbing select-none"
+                style={{ background: draggingId === id ? '#ffffff30' : '#ffffff20', border: '1px solid #c9a84c60', opacity: draggingId === id ? 0.5 : 1 }}
               >
                 <span className="text-base">{emoji}</span>
                 <span className="text-xs font-medium" style={{ color: '#e8f0e4', fontFamily: 'Jost, sans-serif', letterSpacing: '0.05em' }}>{label}</span>
               </motion.div>
-            </Link>
+            ) : (
+              <Link key={id} to={createPageUrl(to)}>
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  className="flex flex-col items-center px-4 py-1 rounded-lg transition-all"
+                  style={{ background: '#ffffff12', border: '1px solid #ffffff25' }}
+                >
+                  <span className="text-base">{emoji}</span>
+                  <span className="text-xs font-medium" style={{ color: '#e8f0e4', fontFamily: 'Jost, sans-serif', letterSpacing: '0.05em' }}>{label}</span>
+                </motion.div>
+              </Link>
+            )
           ))}
+          <motion.button
+            onClick={() => setIsEditMode(v => !v)}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="flex flex-col items-center px-3 py-1 rounded-lg transition-all ml-1"
+            style={{ background: isEditMode ? '#c9a84c30' : '#ffffff08', border: `1px solid ${isEditMode ? '#c9a84c80' : '#ffffff15'}` }}
+            title="Reorder buttons"
+          >
+            <span className="text-base">✏️</span>
+            <span className="text-xs font-medium" style={{ color: isEditMode ? '#c9a84c' : '#e8f0e460', fontFamily: 'Jost, sans-serif' }}>{isEditMode ? 'Done' : 'Edit'}</span>
+          </motion.button>
         </div>
       </div>
     </div>
