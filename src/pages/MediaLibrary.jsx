@@ -918,19 +918,20 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
       <MediaLibraryHeader />
       <div className="max-w-7xl mx-auto p-6">
         <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-4xl font-bold mb-2" style={{ color: '#3d4a2e', fontFamily: 'Cormorant Garamond, Georgia, serif' }}>Media Library</h1>
-            <p style={{ color: '#6b7c5a' }}>Central repository for all learning videos</p>
+          <h1 className="text-4xl font-bold mb-2" style={{ color: '#3d4a2e', fontFamily: 'Cormorant Garamond, Georgia, serif' }}>Media Library</h1>
+          <div className="flex gap-2 p-1 rounded-lg" style={{ background: '#ffffff18', border: '1px solid #ffffff20', width: 'fit-content' }}>
+            <button className="px-3 py-1.5 rounded text-sm font-semibold bg-white/20" style={{ color: '#3d4a2e' }}>🎵 Songs</button>
+            {canEdit && (
+              <Button
+                onClick={() => { resetForm(); setEditingVideo(null); setMediaType("video"); setShowAddDialog(true); }}
+                className="px-3 py-1.5"
+                style={{ background: '#ffffff18', border: '1px solid #ffffff20', color: '#6b7c5a' }}
+              >
+                <Plus className="w-4 h-4 mr-1" />
+                Add Media
+              </Button>
+            )}
           </div>
-          {canEdit && (
-            <Button
-              onClick={() => { resetForm(); setEditingVideo(null); setMediaType("video"); setShowAddDialog(true); }}
-              className="bg-gradient-to-r from-cyan-500 to-blue-500"
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              Add Media
-            </Button>
-          )}
         </div>
 
         {/* Filter Buttons */}
