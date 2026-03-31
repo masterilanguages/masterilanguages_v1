@@ -376,6 +376,7 @@ export default function BabyVideos() {
   const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(new URLSearchParams(window.location.search).get('tab') === 'songs' ? 'songs' : 'videos');
+  const [videoTypeFilter, setVideoTypeFilter] = useState('all'); // all, video, audio, song
   const [expandedVideoId, setExpandedVideoId] = useState(null);
   const [showVocabForVideo, setShowVocabForVideo] = useState(null);
   const [selectedVideo, setSelectedVideo] = useState(null);
@@ -942,6 +943,22 @@ Create about 15-20 conversational lines that naturally introduce and use these v
             >
               🎵 Songs
             </button>
+            <button
+              onClick={() => setActiveTab("audio")}
+              className="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all"
+              style={activeTab === "audio" ? { background: '#5a6b5a', color: '#f5f0e8' } : { color: '#6b7c5a' }}
+            >
+              🎧 Audio Training
+            </button>
+          </div>
+        )}
+
+        {/* Audio Training Tab */}
+        {!selectedVideo && activeTab === "audio" && (
+          <div className="space-y-4">
+            <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6 text-center">
+              <p className="text-white/60">Audio training content coming soon</p>
+            </div>
           </div>
         )}
 
@@ -1408,11 +1425,31 @@ Create about 15-20 conversational lines that naturally introduce and use these v
                   {/* Custom Videos - 3-per-row grid */}
                   {customVideos.length > 0 && !singleVideoMode && (
                     <div className="mb-6">
-                      <h2 className="text-lg font-bold mb-4" style={{ color: '#3d4a2e', fontFamily: 'Cormorant Garamond, Georgia, serif' }}>Your Videos</h2>
+                      <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-lg font-bold" style={{ color: '#3d4a2e', fontFamily: 'Cormorant Garamond, Georgia, serif' }}>Your Media</h2>
+                        <div className="flex gap-2 p-1 rounded-lg" style={{ background: '#ffffff18', border: '1px solid #ffffff20' }}>
+                          <button onClick={() => setVideoTypeFilter('all')} className={`px-3 py-1.5 rounded text-sm font-semibold transition-all ${videoTypeFilter === 'all' ? 'bg-white/20' : 'text-white/60 hover:text-white/80'}`} style={{ color: videoTypeFilter === 'all' ? '#3d4a2e' : undefined }}>All</button>
+                          <button onClick={() => setVideoTypeFilter('video')} className={`px-3 py-1.5 rounded text-sm font-semibold transition-all ${videoTypeFilter === 'video' ? 'bg-white/20' : 'text-white/60 hover:text-white/80'}`} style={{ color: videoTypeFilter === 'video' ? '#3d4a2e' : undefined }}>📹 Videos</button>
+                          <button onClick={() => setVideoTypeFilter('audio')} className={`px-3 py-1.5 rounded text-sm font-semibold transition-all ${videoTypeFilter === 'audio' ? 'bg-white/20' : 'text-white/60 hover:text-white/80'}`} style={{ color: videoTypeFilter === 'audio' ? '#3d4a2e' : undefined }}>🎵 Audio</button>
+                          <button onClick={() => setVideoTypeFilter('song')} className={`px-3 py-1.5 rounded text-sm font-semibold transition-all ${videoTypeFilter === 'song' ? 'bg-white/20' : 'text-white/60 hover:text-white/80'}`} style={{ color: videoTypeFilter === 'song' ? '#3d4a2e' : undefined }}>🎶 Songs</button>
+                        </div>
+                      </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {customVideos.map((video) => {
                           const ytId = extractYouTubeId(video.video_url);
                           if (!ytId) return null;
+                          
+                          // Determine media type
+                          let mediaType = 'video';
+                          if (video.video_url?.includes('.mp3') || video.video_url?.includes('audio')) {
+                            mediaType = 'audio';
+                          } else if (video.video_url?.includes('.wav') || video.video_url?.includes('.ogg')) {
+                            mediaType = 'audio';
+                          }
+                          
+                          // Filter by selected type
+                          if (videoTypeFilter !== 'all' && mediaType !== videoTypeFilter) return null;
+                          
                           const isExpanded = expandedVideoId === `custom-${video.id}` || expandedVideoId == video.id;
 
                           return (
