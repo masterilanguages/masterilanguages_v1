@@ -276,7 +276,7 @@ export default function Flashcards() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0d1a0f 0%, #0f1f14 50%, #121a0e 100%)' }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(160deg, #0b1a12 0%, #0e2218 50%, #12271a 100%)' }}>
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
@@ -289,7 +289,7 @@ export default function Flashcards() {
   // Filter screen
   if (selectedLevel === null) {
     return (
-      <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #0d1a0f 0%, #0f1f14 50%, #121a0e 100%)' }}>
+      <div className="min-h-screen" style={{ background: 'linear-gradient(160deg, #0b1a12 0%, #0e2218 50%, #12271a 100%)' }}>
         <div className="max-w-4xl mx-auto px-4 py-6">
           <div className="mb-6">
             <h1 className="text-3xl font-bold text-white mb-2">Flashcards</h1>
@@ -330,7 +330,7 @@ export default function Flashcards() {
 
   // Full-screen flashcard session
   return (
-    <div className="fixed inset-0 flex flex-col" style={{ background: 'linear-gradient(135deg, #0d1a0f 0%, #0f1f14 50%, #121a0e 100%)' }}>
+    <div className="fixed inset-0 flex flex-col" style={{ background: 'linear-gradient(160deg, #0b1a12 0%, #0e2218 50%, #12271a 100%)' }}>
       {/* Top menu bar */}
       <div className="bg-black/30 backdrop-blur-xl border-b border-white/10 px-4 py-3">
         <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">

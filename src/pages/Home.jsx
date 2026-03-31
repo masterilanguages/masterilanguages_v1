@@ -494,13 +494,19 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #0d1a0f 0%, #0f1f14 40%, #121a0e 70%, #0d1509 100%)' }}>
+    <div className="min-h-screen" style={{ background: 'linear-gradient(160deg, #0b1a12 0%, #0e2218 30%, #12271a 60%, #0f1e14 100%)' }}>
       {/* Animated background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-0 w-full h-full" style={{ background: 'radial-gradient(ellipse at 20% 20%, #1a3a1a40 0%, transparent 60%), radial-gradient(ellipse at 80% 80%, #2d4a1a30 0%, transparent 60%), radial-gradient(ellipse at 50% 50%, #0a2a1520 0%, transparent 70%)' }} />
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full blur-3xl" style={{ background: '#4a7c3f18' }} />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full blur-3xl" style={{ background: '#c9a84c14' }} />
-        <div className="absolute top-3/4 left-1/2 w-64 h-64 rounded-full blur-3xl" style={{ background: '#2d6a2d12' }} />
+        {/* Warm sunrise top-left */}
+        <div className="absolute -top-20 -left-20 w-[500px] h-[500px] rounded-full blur-3xl" style={{ background: 'radial-gradient(circle, #c9a84c22 0%, transparent 70%)' }} />
+        {/* Lush forest center-right */}
+        <div className="absolute top-1/3 right-0 w-96 h-96 rounded-full blur-3xl" style={{ background: 'radial-gradient(circle, #3a7d4420 0%, transparent 70%)' }} />
+        {/* Sky-water teal bottom-left */}
+        <div className="absolute bottom-0 left-1/4 w-80 h-80 rounded-full blur-3xl" style={{ background: 'radial-gradient(circle, #2a6e6e18 0%, transparent 70%)' }} />
+        {/* Warm earth bottom-right */}
+        <div className="absolute bottom-1/4 right-1/4 w-72 h-72 rounded-full blur-3xl" style={{ background: 'radial-gradient(circle, #a0622a15 0%, transparent 70%)' }} />
+        {/* Soft moss mid */}
+        <div className="absolute top-1/2 left-1/2 w-96 h-96 -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl" style={{ background: 'radial-gradient(circle, #4a8c5030 0%, transparent 60%)' }} />
       </div>
 
 
