@@ -59,6 +59,7 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
     ] : []),
     ...(currentUser?.role === 'admin' ? [
       { id: "users", to: "Home", emoji: "👤", label: "Users" },
+      { id: "clock", to: "Home", emoji: "🕐", label: "Clock" },
     ] : []),
   ];
 
