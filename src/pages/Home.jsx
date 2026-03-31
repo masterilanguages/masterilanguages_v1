@@ -767,10 +767,10 @@ export default function Home() {
                                     className="flex-1 flex items-center gap-3 text-left"
                                   >
                                     <div className="flex-1">
-                                      <p className={`text-white font-medium ${isCompleted ? 'line-through opacity-60' : ''}`}>{task.name}</p>
-                                      {task.duration && <p className="text-white/60 text-sm">Approx {task.duration}</p>}
+                                      <p className={`font-medium ${isCompleted ? 'line-through opacity-60' : ''}`} style={{ color: '#3d4a2e' }}>{task.name}</p>
+                                      {task.duration && <p className="text-sm" style={{ color: '#6b7c5a' }}>Approx {task.duration}</p>}
                                     </div>
-                                    {task.page && <ChevronRight className="w-5 h-5 text-white/40" />}
+                                    {task.page && <ChevronRight className="w-5 h-5" style={{ color: '#c8b8a8' }} />}
                                   </button>
                                 )}
 
