@@ -175,6 +175,15 @@ export default function Home() {
     refetchOnMount: false,
   });
 
+  const { data: wordRatings = [] } = useQuery({
+    queryKey: ['wordRatings'],
+    queryFn: () => base44.entities.Word.filter({ category: "wordbank" }),
+    enabled: profileLoaded,
+    staleTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
+
   const { data: allUsers = [] } = useQuery({
     queryKey: ['allUsers'],
     queryFn: async () => {
@@ -481,8 +490,8 @@ export default function Home() {
   const hasDiaper = unlockedItems.includes("diaper");
 
   // Calculate word levels
-  const fluentWords = wordRatings.filter(w => w.times_practiced >= 5);
-  const learningWords = wordRatings.filter(w => w.times_practiced > 0 && w.times_practiced < 5);
+  const fluentWords = (wordRatings || []).filter(w => w.times_practiced >= 5);
+  const learningWords = (wordRatings || []).filter(w => w.times_practiced > 0 && w.times_practiced < 5);
 
   // Don't render if loading or no language (Layout handles redirect)
   if (profileLoading || !userProfile?.language) {
