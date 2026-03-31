@@ -889,8 +889,6 @@ Create about 15-20 conversational lines that naturally introduce and use these v
 
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(160deg, #f0ece4 0%, #e8e4d8 50%, #eae6da 100%)' }}>
-      <GameHeader profile={userProfile} coins={userCoins?.coins} onBuyCoins={() => {}} />
-
       <div className="max-w-4xl mx-auto px-4 py-6">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
