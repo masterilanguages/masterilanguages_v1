@@ -506,158 +506,24 @@ export default function Home() {
 
       <div className="max-w-4xl mx-auto px-4 pt-4">
 
-        {/* Admin Controls */}
-        {currentUser?.role === 'admin' && (
-          <div className="mt-4 space-y-2">
-            {managingUserEmail && (
-              <div className="bg-amber-500/20 border border-amber-500/50 rounded-lg p-3 text-center">
-                <p className="text-amber-400 font-medium text-sm">👤 Managing: {managingUserEmail}</p>
-                <Button
-                  onClick={() => {
-                    localStorage.removeItem('admin_managing_user');
-                    setManagingUserEmail(null);
-                    toast.success("Returned to admin view");
-                    window.location.reload();
-                  }}
-                  size="sm"
-                  className="mt-2 bg-red-500 hover:bg-red-600"
-                >
-                  Exit User View
-                </Button>
-              </div>
-            )}
+        {/* Managing user banner */}
+        {managingUserEmail && currentUser?.role === 'admin' && (
+          <div className="mt-4 bg-amber-500/20 border border-amber-500/50 rounded-lg p-3 text-center">
+            <p className="text-amber-400 font-medium text-sm">👤 Managing: {managingUserEmail}</p>
             <Button
-              onClick={() => setShowCoachManager(!showCoachManager)}
-              className="w-full bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/50 text-white hover:from-cyan-500/30 hover:to-blue-500/30"
+              onClick={() => {
+                localStorage.removeItem('admin_managing_user');
+                setManagingUserEmail(null);
+                toast.success("Returned to admin view");
+                window.location.reload();
+              }}
+              size="sm"
+              className="mt-2 bg-red-500 hover:bg-red-600"
             >
-              👥 Admin: Manage Coaches
-            </Button>
-            <Button
-              onClick={() => setShowUserManager(!showUserManager)}
-              className="w-full bg-gradient-to-r from-indigo-500/20 to-purple-500/20 border border-indigo-500/50 text-white hover:from-indigo-500/30 hover:to-purple-500/30"
-            >
-              👥 Admin: Manage Users
+              Exit User View
             </Button>
           </div>
         )}
-
-        {/* Coach Manager Panel */}
-        <AnimatePresence>
-          {showCoachManager && currentUser?.role === 'admin' && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mt-2 bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-4 space-y-3 max-h-96 overflow-y-auto"
-            >
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-white/60 text-sm font-medium">Coach Assignments</p>
-                <Button
-                  onClick={() => setShowAssignDialog(true)}
-                  size="sm"
-                  className="bg-gradient-to-r from-green-500 to-emerald-500"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Assign Coach
-                </Button>
-              </div>
-
-              {coachAssignments.length === 0 ? (
-                <div className="text-center py-4">
-                  <p className="text-white/40 text-sm">No coach assignments yet</p>
-                </div>
-              ) : (
-                Object.entries(
-                  coachAssignments.reduce((acc, assignment) => {
-                    if (!acc[assignment.coach_email]) acc[assignment.coach_email] = [];
-                    acc[assignment.coach_email].push(assignment);
-                    return acc;
-                  }, {})
-                ).map(([coachEmail, assignments]) => (
-                  <div key={coachEmail} className="bg-white/5 rounded-lg p-3 space-y-2">
-                    <div className="flex items-center gap-2 text-cyan-400 font-medium text-sm">
-                      <span>👨‍🏫</span>
-                      <span>{coachEmail}</span>
-                      <span className="text-white/40">({assignments.length})</span>
-                    </div>
-                    {assignments.map((assignment) => (
-                      <div
-                        key={assignment.id}
-                        className="flex items-center justify-between bg-white/5 rounded p-2 text-sm"
-                      >
-                        <span className="text-white/80">{assignment.student_email}</span>
-                        <button
-                          onClick={() => deleteAssignmentMutation.mutate(assignment.id)}
-                          className="text-red-400 hover:text-red-300"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                ))
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* User Manager Panel */}
-        <AnimatePresence>
-          {showUserManager && currentUser?.role === 'admin' && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mt-2 bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-4 space-y-3 max-h-96 overflow-y-auto"
-            >
-              <p className="text-white/60 text-sm font-medium">Select user to manage their content:</p>
-              {allUsers.map((user) => {
-                const profile = allProfiles.find(p => p.created_by === user.email);
-                return (
-                  <div
-                    key={user.id}
-                    className={`w-full p-3 rounded-lg border transition-all ${
-                      managingUserEmail === user.email
-                        ? 'bg-amber-500/20 border-amber-500/50'
-                        : 'bg-white/5 border-white/10'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <p className="text-white font-medium">{user.full_name || user.email}</p>
-                        <p className="text-white/60 text-xs">{user.email}</p>
-                        {profile && (
-                          <div className="flex gap-2 mt-1">
-                            <span className="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded">
-                              {profile.language || 'no language'}
-                            </span>
-                            <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded">
-                              Day {profile.current_day || 1}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          onClick={() => {
-                            localStorage.setItem('admin_managing_user', user.email);
-                            setManagingUserEmail(user.email);
-                            toast.success(`Now managing ${user.full_name || user.email}`);
-                            window.location.reload();
-                          }}
-                          className="bg-green-500 hover:bg-green-600"
-                        >
-                          Login as User
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
 
 
