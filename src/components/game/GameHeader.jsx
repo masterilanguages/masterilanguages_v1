@@ -13,6 +13,11 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
   const navigate = useNavigate();
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [showMenu, setShowMenu] = useState(false);
+  const [currentUser, setCurrentUser] = React.useState(null);
+
+  React.useEffect(() => {
+    base44.auth.me().then(setCurrentUser).catch(() => {});
+  }, []);
   const xpToNextLevel = 1000;
   const xpProgress = ((profile?.xp || 0) % xpToNextLevel) / xpToNextLevel * 100;
 
@@ -162,6 +167,12 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
     { to: "Songs", emoji: "🎵", label: "Songs" },
     { to: "BabyVideos", emoji: "📺", label: "Videos" },
     { to: "Journal", emoji: "📓", label: "Journal" },
+    ...(currentUser?.role === 'admin' || currentUser?.role === 'coach' ? [
+      { to: "ManageCoaches", emoji: "👥", label: "Coaches" },
+    ] : []),
+    ...(currentUser?.role === 'admin' ? [
+      { to: "Home", emoji: "👤", label: "Users" },
+    ] : []),
   ];
 
   return (
@@ -294,8 +305,8 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
       {/* Nav bar: all icons centered below brand */}
       <div style={{ borderTop: '1px solid #c9a84c20' }} className="px-4 py-1.5">
         <div className="flex items-center justify-center gap-1 max-w-7xl mx-auto">
-          {navItems.map(({ to, emoji, label }) => (
-            <Link key={to} to={createPageUrl(to)}>
+          {navItems.map(({ to, emoji, label }, idx) => (
+            <Link key={`${to}-${idx}`} to={createPageUrl(to)}>
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 className="flex flex-col items-center px-4 py-1 rounded-lg transition-all"
