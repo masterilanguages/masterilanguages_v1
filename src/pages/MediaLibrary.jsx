@@ -1067,31 +1067,21 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
                   <div className="p-3">
                    <div className="flex items-start justify-between gap-2 mb-2">
                      <h3 className="text-white font-bold text-base flex-1">{video.title}</h3>
-                     <div className="flex gap-2">
+                     <div className="flex gap-1 flex-shrink-0">
                        {canEdit && (
                          <button
-                           onClick={(e) => {
-                             e.stopPropagation();
-                             handleEdit(video);
-                           }}
-                           className="text-xl transition-transform hover:scale-110"
-                           style={{ transform: 'scaleX(-1)' }}
+                           onClick={(e) => { e.stopPropagation(); handleEdit(video); }}
+                           className="text-white/60 hover:text-white transition-colors p-1"
                          >
-                           ✏️
+                           <Pencil className="w-4 h-4" />
                          </button>
                        )}
                        {canDelete && (
                          <button
-                           onClick={(e) => {
-                             e.stopPropagation();
-                             if (confirm("Delete this video from your list?")) {
-                               deleteVideoMutation.mutate(video.id);
-                             }
-                           }}
-                           className="text-xl transition-transform hover:scale-110"
-                           style={{ filter: 'grayscale(100%) brightness(200%)' }}
+                           onClick={(e) => { e.stopPropagation(); if (confirm("Delete this video from your list?")) { deleteVideoMutation.mutate(video.id); } }}
+                           className="text-white/60 hover:text-white transition-colors p-1"
                          >
-                           🗑️
+                           <Trash2 className="w-4 h-4" />
                          </button>
                        )}
                      </div>
@@ -1154,31 +1144,21 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
                 <div className="p-3">
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <h3 className="text-white font-bold text-base flex-1">{video.title}</h3>
-                    <div className="flex gap-2">
+                    <div className="flex gap-1 flex-shrink-0">
                       {canEdit && (
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEdit(video);
-                          }}
-                          className="text-xl transition-transform hover:scale-110"
-                          style={{ transform: 'scaleX(-1)' }}
+                          onClick={(e) => { e.stopPropagation(); handleEdit(video); }}
+                          className="text-white/60 hover:text-white transition-colors p-1"
                         >
-                          ✏️
+                          <Pencil className="w-4 h-4" />
                         </button>
                       )}
                       {canDelete && (
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (confirm("Delete this video from library?")) {
-                              deleteVideoMutation.mutate(video.id);
-                            }
-                          }}
-                          className="text-xl transition-transform hover:scale-110"
-                          style={{ filter: 'grayscale(100%) brightness(200%)' }}
+                          onClick={(e) => { e.stopPropagation(); if (confirm("Delete this video from library?")) { deleteVideoMutation.mutate(video.id); } }}
+                          className="text-white/60 hover:text-white transition-colors p-1"
                         >
-                          🗑️
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       )}
                     </div>
