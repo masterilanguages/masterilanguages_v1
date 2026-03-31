@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Flame, BookOpen, Clock, LogOut, Globe } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Flame, Clock, LogOut, Globe } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
@@ -13,39 +13,22 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
   const navigate = useNavigate();
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [showMenu, setShowMenu] = useState(false);
-  const [currentUser, setCurrentUser] = React.useState(null);
-  const [orderedNav, setOrderedNav] = React.useState([]);
-  const [draggingId, setDraggingId] = React.useState(null);
-  const [isEditMode, setIsEditMode] = React.useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [orderedNav, setOrderedNav] = useState([]);
+  const [draggingId, setDraggingId] = useState(null);
+  const longPressTimer = useRef(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     base44.auth.me().then(setCurrentUser).catch(() => {});
   }, []);
-  const xpToNextLevel = 1000;
-  const xpProgress = ((profile?.xp || 0) % xpToNextLevel) / xpToNextLevel * 100;
-
-  console.log('GameHeader render:', { 
-    hasProfile: !!profile, 
-    language: profile?.language, 
-    avatarId: profile?.avatar_id 
-  });
 
   const languageFlags = {
-    hebrew: '🇮🇱',
-    english: '🇺🇸',
-    spanish: '🇪🇸',
-    french: '🇫🇷',
-    portuguese: '🇵🇹',
-    italian: '🇮🇹'
+    hebrew: '🇮🇱', english: '🇺🇸', spanish: '🇪🇸',
+    french: '🇫🇷', portuguese: '🇵🇹', italian: '🇮🇹'
   };
-
   const languageNames = {
-    hebrew: 'Hebrew',
-    english: 'English',
-    spanish: 'Spanish',
-    french: 'French',
-    portuguese: 'Portuguese',
-    italian: 'Italian'
+    hebrew: 'Hebrew', english: 'English', spanish: 'Spanish',
+    french: 'French', portuguese: 'Portuguese', italian: 'Italian'
   };
 
   const updateProfileMutation = useMutation({
@@ -63,107 +46,7 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
     },
   });
 
-  // Calculate time remaining
-  useEffect(() => {
-    if (!profile?.session_start || !profile?.session_duration) {
-      setTimeRemaining(0);
-      return;
-    }
-
-    // If paused, don't update timer
-    if (profile.session_paused) {
-      const startTime = new Date(profile.session_start).getTime();
-      const durationMs = profile.session_duration * 60 * 1000;
-      const pausedAt = new Date(profile.session_paused_at).getTime();
-      const pausedTotal = (profile.session_paused_total || 0) * 1000;
-      const endTime = startTime + durationMs + pausedTotal;
-      const remaining = Math.max(0, Math.floor((endTime - pausedAt) / 1000));
-      setTimeRemaining(remaining);
-      return;
-    }
-
-    const updateTimer = () => {
-      const startTime = new Date(profile.session_start).getTime();
-      const durationMs = profile.session_duration * 60 * 1000;
-      const pausedTotal = (profile.session_paused_total || 0) * 1000;
-      const endTime = startTime + durationMs + pausedTotal;
-      const now = Date.now();
-      const remaining = Math.max(0, Math.floor((endTime - now) / 1000));
-      
-      setTimeRemaining(remaining);
-      
-      if (remaining === 0 && profile.session_start) {
-        toast.info("Session time expired!");
-      }
-    };
-
-    updateTimer();
-    const interval = setInterval(updateTimer, 1000);
-    return () => clearInterval(interval);
-  }, [profile?.session_start, profile?.session_duration, profile?.session_paused, profile?.session_paused_at, profile?.session_paused_total]);
-
-  const startSession = (minutes) => {
-    updateProfileMutation.mutate({
-      session_start: new Date().toISOString(),
-      session_duration: minutes
-    });
-    toast.success(`${minutes} min session started!`);
-  };
-
-  const endSession = () => {
-    updateProfileMutation.mutate({
-      session_start: null,
-      session_duration: null,
-      session_paused: false,
-      session_paused_at: null,
-      session_paused_total: 0
-    });
-    toast.success("Session ended");
-  };
-
-  const togglePause = () => {
-    if (profile.session_paused) {
-      // Resume: add paused duration to total
-      const pausedAt = new Date(profile.session_paused_at).getTime();
-      const now = Date.now();
-      const pausedDuration = Math.floor((now - pausedAt) / 1000);
-      const newTotal = (profile.session_paused_total || 0) + pausedDuration;
-      
-      updateProfileMutation.mutate({
-        session_paused: false,
-        session_paused_at: null,
-        session_paused_total: newTotal
-      });
-      toast.success("Session resumed");
-    } else {
-      // Pause
-      updateProfileMutation.mutate({
-        session_paused: true,
-        session_paused_at: new Date().toISOString()
-      });
-      toast.info("Session paused");
-    }
-  };
-
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const handleLogout = async () => {
-    await base44.auth.logout();
-    window.location.href = '/';
-  };
-
-  const sessionActive = profile?.session_start && profile?.session_duration;
-
-  // Don't render if profile is missing critical data
-  if (!profile?.language) {
-    console.log('GameHeader: hiding - incomplete profile');
-    return null;
-  }
-
+  // Build nav items (must be before useEffect that uses them)
   const baseNavItems = [
     { id: "home", to: "Home", emoji: "🏠", label: "Home" },
     { id: "words", to: "Flashcards", emoji: "🎒", label: "Words" },
@@ -179,22 +62,87 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
     ] : []),
   ];
 
-  // Load saved order from localStorage
-  const savedOrder = (() => {
+  const getSavedOrder = () => {
     try { return JSON.parse(localStorage.getItem('nav_order') || '[]'); } catch { return []; }
-  })();
-  const navItems = savedOrder.length
-    ? [...baseNavItems].sort((a, b) => {
-        const ai = savedOrder.indexOf(a.id);
-        const bi = savedOrder.indexOf(b.id);
-        return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
-      })
-    : baseNavItems;
+  };
 
-  React.useEffect(() => {
-    if (profile?.language) setOrderedNav(navItems);
+  const getSortedNavItems = (items) => {
+    const savedOrder = getSavedOrder();
+    if (!savedOrder.length) return items;
+    return [...items].sort((a, b) => {
+      const ai = savedOrder.indexOf(a.id);
+      const bi = savedOrder.indexOf(b.id);
+      return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+    });
+  };
+
+  useEffect(() => {
+    if (profile?.language) setOrderedNav(getSortedNavItems(baseNavItems));
   }, [currentUser?.role, profile?.language]);
 
+  // Timer
+  useEffect(() => {
+    if (!profile?.session_start || !profile?.session_duration) {
+      setTimeRemaining(0);
+      return;
+    }
+    if (profile.session_paused) {
+      const startTime = new Date(profile.session_start).getTime();
+      const durationMs = profile.session_duration * 60 * 1000;
+      const pausedAt = new Date(profile.session_paused_at).getTime();
+      const pausedTotal = (profile.session_paused_total || 0) * 1000;
+      const endTime = startTime + durationMs + pausedTotal;
+      setTimeRemaining(Math.max(0, Math.floor((endTime - pausedAt) / 1000)));
+      return;
+    }
+    const updateTimer = () => {
+      const startTime = new Date(profile.session_start).getTime();
+      const durationMs = profile.session_duration * 60 * 1000;
+      const pausedTotal = (profile.session_paused_total || 0) * 1000;
+      const endTime = startTime + durationMs + pausedTotal;
+      const remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+      setTimeRemaining(remaining);
+      if (remaining === 0 && profile.session_start) toast.info("Session time expired!");
+    };
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [profile?.session_start, profile?.session_duration, profile?.session_paused, profile?.session_paused_at, profile?.session_paused_total]);
+
+  const startSession = (minutes) => {
+    updateProfileMutation.mutate({ session_start: new Date().toISOString(), session_duration: minutes });
+    toast.success(`${minutes} min session started!`);
+  };
+
+  const endSession = () => {
+    updateProfileMutation.mutate({ session_start: null, session_duration: null, session_paused: false, session_paused_at: null, session_paused_total: 0 });
+    toast.success("Session ended");
+  };
+
+  const togglePause = () => {
+    if (profile.session_paused) {
+      const pausedAt = new Date(profile.session_paused_at).getTime();
+      const newTotal = (profile.session_paused_total || 0) + Math.floor((Date.now() - pausedAt) / 1000);
+      updateProfileMutation.mutate({ session_paused: false, session_paused_at: null, session_paused_total: newTotal });
+      toast.success("Session resumed");
+    } else {
+      updateProfileMutation.mutate({ session_paused: true, session_paused_at: new Date().toISOString() });
+      toast.info("Session paused");
+    }
+  };
+
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const handleLogout = async () => {
+    await base44.auth.logout();
+    window.location.href = '/';
+  };
+
+  // Drag handlers
   const handleDragStart = (id) => setDraggingId(id);
   const handleDragOver = (e, id) => {
     e.preventDefault();
@@ -214,12 +162,15 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
     localStorage.setItem('nav_order', JSON.stringify(orderedNav.map(n => n.id)));
   };
 
+  const sessionActive = profile?.session_start && profile?.session_duration;
+
+  if (!profile?.language) return null;
+
   return (
     <div style={{ background: 'linear-gradient(to right, #5a6b5a, #6b7c63, #5a6b5a)', borderBottom: '1px solid #a8b89840' }} className="backdrop-blur-xl">
-      {/* Top row: language selector | brand name | logout/settings */}
+      {/* Top row */}
       <div className="flex items-center justify-between max-w-7xl mx-auto px-4 py-2">
-
-        {/* Left: Language selector */}
+        {/* Language selector */}
         <div className="relative flex-shrink-0">
           <motion.button
             onClick={() => setShowMenu(!showMenu)}
@@ -231,7 +182,6 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
             <span className="text-xl">{languageFlags[profile?.language] || '🌍'}</span>
             <span className="font-semibold text-sm" style={{ color: '#c9a84c' }}>{languageNames[profile?.language] || 'Language'}</span>
           </motion.button>
-
           <AnimatePresence>
             {showMenu && (
               <motion.div
@@ -261,23 +211,11 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
                     ))}
                   </div>
                   <div className="mt-2 pt-2" style={{ borderTop: '1px solid #c9a84c20' }}>
-                    <Button
-                      onClick={() => { setShowMenu(false); navigate(createPageUrl("LanguageSelect")); }}
-                      className="w-full justify-start text-sm mb-1"
-                      style={{ background: '#c9a84c15', color: '#c9a84c' }}
-                      variant="ghost"
-                    >
-                      <Globe className="w-4 h-4 mr-2" />
-                      Start Onboarding
+                    <Button onClick={() => { setShowMenu(false); navigate(createPageUrl("LanguageSelect")); }} className="w-full justify-start text-sm mb-1" style={{ background: '#c9a84c15', color: '#c9a84c' }} variant="ghost">
+                      <Globe className="w-4 h-4 mr-2" />Start Onboarding
                     </Button>
-                    <Button
-                      onClick={handleLogout}
-                      className="w-full justify-start text-sm"
-                      style={{ background: '#ff444415', color: '#ff6b6b' }}
-                      variant="ghost"
-                    >
-                      <LogOut className="w-4 h-4 mr-2" />
-                      Logout
+                    <Button onClick={handleLogout} className="w-full justify-start text-sm" style={{ background: '#ff444415', color: '#ff6b6b' }} variant="ghost">
+                      <LogOut className="w-4 h-4 mr-2" />Logout
                     </Button>
                   </div>
                 </div>
@@ -286,54 +224,28 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
           </AnimatePresence>
         </div>
 
-        {/* Center: Brand name */}
+        {/* Brand */}
         <div className="text-center">
           <p className="font-bold text-base tracking-widest uppercase" style={{ color: '#f5f0e8', fontFamily: 'Cormorant Garamond, Georgia, serif', letterSpacing: '0.2em', fontWeight: 300 }}>Language Masteri</p>
         </div>
 
-        {/* Right: Streak + Timer + Login */}
+        {/* Streak + Timer + Logout */}
         <div className="flex items-center gap-2 flex-shrink-0">
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            className="flex items-center gap-1 px-2 py-1 rounded-lg"
-            style={{ background: '#ffffff15', border: '1px solid #ffffff25' }}
-          >
+          <motion.div whileHover={{ scale: 1.05 }} className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: '#ffffff15', border: '1px solid #ffffff25' }}>
             <Flame className="w-4 h-4" style={{ color: '#e8f0e0' }} />
             <span className="text-xs font-bold" style={{ color: '#e8f0e0' }}>{profile?.daily_streak || 0}</span>
           </motion.div>
-
-          <motion.button
-            onClick={handleLogout}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium"
-            style={{ background: '#ff444415', border: '1px solid #ff444430', color: '#ff6b6b' }}
-          >
+          <motion.button onClick={handleLogout} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium" style={{ background: '#ff444415', border: '1px solid #ff444430', color: '#ff6b6b' }}>
             <LogOut className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Logout</span>
           </motion.button>
-
           {sessionActive ? (
-            <motion.button
-              onClick={togglePause}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onDoubleClick={endSession}
-              className="flex items-center gap-1 px-2 py-1 rounded-lg"
-              style={{ background: profile.session_paused ? '#b8860b' : timeRemaining < 300 ? '#8b1a1a' : '#2d5a3d', border: '1px solid #c9a84c50' }}
-              title="Click to pause/resume • Double-click to end"
-            >
+            <motion.button onClick={togglePause} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onDoubleClick={endSession} className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: profile.session_paused ? '#b8860b' : timeRemaining < 300 ? '#8b1a1a' : '#2d5a3d', border: '1px solid #c9a84c50' }} title="Click to pause/resume • Double-click to end">
               <Clock className="w-4 h-4 text-white" />
               <span className="text-white font-bold text-xs">{formatTime(timeRemaining)}</span>
             </motion.button>
           ) : (
-            <motion.button
-              onClick={() => startSession(30)}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="flex items-center gap-1 px-2 py-1 rounded-lg"
-              style={{ background: '#ffffff18', border: '1px solid #ffffff30' }}
-            >
+            <motion.button onClick={() => startSession(30)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: '#ffffff18', border: '1px solid #ffffff30' }}>
               <Clock className="w-4 h-4 text-white" />
               <span className="text-white font-bold text-xs">Timer</span>
             </motion.button>
@@ -341,48 +253,45 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
         </div>
       </div>
 
-      {/* Nav bar: all icons centered below brand */}
-      <div style={{ borderTop: '1px solid #c9a84c20' }} className="px-4 py-1.5">
-        <div className="flex items-center justify-center gap-1 max-w-7xl mx-auto">
-          {orderedNav.map(({ id, to, emoji, label }) => (
-            isEditMode ? (
-              <motion.div
+      {/* Nav grid: 4 per row, hold to drag */}
+      <div style={{ borderTop: '1px solid #c9a84c20' }} className="px-4 py-2">
+        <div className="grid grid-cols-4 gap-1.5 max-w-sm mx-auto">
+          {orderedNav.map(({ id, to, emoji, label }) => {
+            const isDragging = draggingId === id;
+
+            const handlePointerDown = () => {
+              longPressTimer.current = setTimeout(() => {
+                setDraggingId(id);
+              }, 400);
+            };
+            const handlePointerUp = () => {
+              clearTimeout(longPressTimer.current);
+            };
+
+            return (
+              <div
                 key={id}
-                draggable
+                draggable={isDragging}
                 onDragStart={() => handleDragStart(id)}
                 onDragOver={(e) => handleDragOver(e, id)}
                 onDragEnd={handleDragEnd}
-                animate={{ scale: draggingId === id ? 0.9 : 1 }}
-                className="flex flex-col items-center px-4 py-1 rounded-lg cursor-grab active:cursor-grabbing select-none"
-                style={{ background: draggingId === id ? '#ffffff30' : '#ffffff20', border: '1px solid #c9a84c60', opacity: draggingId === id ? 0.5 : 1 }}
+                onPointerDown={handlePointerDown}
+                onPointerUp={handlePointerUp}
+                onPointerLeave={handlePointerUp}
+                onClick={() => { if (!isDragging) navigate(createPageUrl(to)); }}
+                className="flex flex-col items-center py-2 rounded-xl select-none transition-all active:scale-95"
+                style={{
+                  background: isDragging ? '#ffffff30' : '#ffffff12',
+                  border: `1px solid ${isDragging ? '#c9a84c80' : '#ffffff25'}`,
+                  cursor: isDragging ? 'grabbing' : 'pointer',
+                  opacity: isDragging ? 0.6 : 1,
+                }}
               >
-                <span className="text-base">{emoji}</span>
-                <span className="text-xs font-medium" style={{ color: '#e8f0e4', fontFamily: 'Jost, sans-serif', letterSpacing: '0.05em' }}>{label}</span>
-              </motion.div>
-            ) : (
-              <Link key={id} to={createPageUrl(to)}>
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  className="flex flex-col items-center px-4 py-1 rounded-lg transition-all"
-                  style={{ background: '#ffffff12', border: '1px solid #ffffff25' }}
-                >
-                  <span className="text-base">{emoji}</span>
-                  <span className="text-xs font-medium" style={{ color: '#e8f0e4', fontFamily: 'Jost, sans-serif', letterSpacing: '0.05em' }}>{label}</span>
-                </motion.div>
-              </Link>
-            )
-          ))}
-          <motion.button
-            onClick={() => setIsEditMode(v => !v)}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="flex flex-col items-center px-3 py-1 rounded-lg transition-all ml-1"
-            style={{ background: isEditMode ? '#c9a84c30' : '#ffffff08', border: `1px solid ${isEditMode ? '#c9a84c80' : '#ffffff15'}` }}
-            title="Reorder buttons"
-          >
-            <span className="text-base">✏️</span>
-            <span className="text-xs font-medium" style={{ color: isEditMode ? '#c9a84c' : '#e8f0e460', fontFamily: 'Jost, sans-serif' }}>{isEditMode ? 'Done' : 'Edit'}</span>
-          </motion.button>
+                <span className="text-lg">{emoji}</span>
+                <span className="text-xs font-medium mt-0.5" style={{ color: isDragging ? '#c9a84c' : '#e8f0e4', fontFamily: 'Jost, sans-serif', letterSpacing: '0.03em' }}>{label}</span>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
