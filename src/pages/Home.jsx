@@ -615,23 +615,32 @@ export default function Home() {
 
             {/* BACKPACK SECTION */}
             <div>
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center justify-between mb-4">
                 <h2 className="text-2xl font-bold" style={{ color: '#3d4a2e', fontFamily: 'Cormorant Garamond, Georgia, serif' }}>🎒 Words Backpack</h2>
                 <Link to={createPageUrl("Backpack")}>
                   <Button variant="ghost" className="text-sm" style={{ color: '#6b7c5a' }}>View All →</Button>
                 </Link>
               </div>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="flex flex-wrap gap-4 justify-center">
                 {[
-                  { level: 1, count: learningWords.length, icon: '🌱', color: '#6b7c5a' },
-                  { level: 2, count: fluentWords.filter(w => w.times_practiced < 10).length, icon: '🌿', color: '#5a6b5a' },
-                  { level: 3, count: fluentWords.filter(w => w.times_practiced >= 10).length, icon: '⭐', color: '#3d4a2e' },
+                  { name: 'New', count: wordRatings.filter(w => w.times_practiced === 0).length, icon: '✨', color: '#8a9a6a' },
+                  { name: 'Level 1', count: wordRatings.filter(w => w.times_practiced > 0 && w.times_practiced < 3).length, icon: '🌱', color: '#6b7c5a' },
+                  { name: 'Level 2', count: wordRatings.filter(w => w.times_practiced >= 3 && w.times_practiced < 5).length, icon: '🌿', color: '#5a6b5a' },
+                  { name: 'Level 3', count: fluentWords.filter(w => w.times_practiced >= 5 && w.times_practiced < 10).length, icon: '⭐', color: '#3d4a2e' },
+                  { name: 'Mastered', count: wordRatings.filter(w => w.times_practiced >= 10).length, icon: '✓', color: '#4a7c4a' },
                 ].map((level) => (
-                  <div key={level.level} className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 p-4 text-center">
-                    <div className="text-2xl mb-1">{level.icon}</div>
-                    <p className="text-xs font-bold" style={{ color: level.color }}>Level {level.level}</p>
-                    <p className="text-lg font-bold" style={{ color: '#3d4a2e' }}>{level.count}</p>
-                  </div>
+                  <Link key={level.name} to={createPageUrl("Backpack")} className="no-underline">
+                    <motion.div
+                      whileHover={{ scale: 1.08 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="w-20 h-20 rounded-full flex flex-col items-center justify-center cursor-pointer transition-all shadow-lg"
+                      style={{ background: `linear-gradient(135deg, ${level.color}40, ${level.color}20)`, border: `2px solid ${level.color}80` }}
+                    >
+                      <div className="text-xl mb-1">{level.icon}</div>
+                      <p className="text-xs font-bold" style={{ color: level.color }}>{level.count}</p>
+                    </motion.div>
+                    <p className="text-center text-xs mt-2" style={{ color: level.color, fontWeight: 600 }}>{level.name}</p>
+                  </Link>
                 ))}
               </div>
             </div>
