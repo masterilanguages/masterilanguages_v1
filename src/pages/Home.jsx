@@ -907,7 +907,7 @@ export default function Home() {
                 className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
               >
                 <option value="">Select student...</option>
-                {allUsers.map((user) => (
+                {allUsers.filter(user => !['dorong@base44.com', 'liorben@base44.com'].includes(user.email)).map((user) => (
                   <option key={user.id} value={user.email}>
                     {user.email}
                   </option>
