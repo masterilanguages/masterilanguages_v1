@@ -238,16 +238,12 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
           <p className="font-bold text-base tracking-widest uppercase" style={{ color: '#f5f0e8', fontFamily: 'Cormorant Garamond, Georgia, serif', letterSpacing: '0.2em', fontWeight: 300 }}>Language Masteri</p>
         </div>
 
-        {/* Streak + Timer + Logout */}
+        {/* Streak + Timer + Progress + Logout */}
         <div className="flex items-center gap-2 flex-shrink-0">
           <motion.div whileHover={{ scale: 1.05 }} className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: '#ffffff15', border: '1px solid #ffffff25' }}>
             <Flame className="w-4 h-4" style={{ color: '#e8f0e0' }} />
             <span className="text-xs font-bold" style={{ color: '#e8f0e0' }}>{profile?.daily_streak || 0}</span>
           </motion.div>
-          <motion.button onClick={handleLogout} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium" style={{ background: '#ff444415', border: '1px solid #ff444430', color: '#ff6b6b' }}>
-            <LogOut className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Logout</span>
-          </motion.button>
           {sessionActive ? (
             <motion.button onClick={togglePause} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onDoubleClick={endSession} className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: profile.session_paused ? '#b8860b' : timeRemaining < 300 ? '#8b1a1a' : '#2d5a3d', border: '1px solid #c9a84c50' }} title="Click to pause/resume • Double-click to end">
               <Clock className="w-4 h-4 text-white" />
@@ -259,6 +255,22 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
               <span className="text-white font-bold text-xs">Timer</span>
             </motion.button>
           )}
+          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: '#ffffff18', border: '1px solid #ffffff30' }}>
+            <span className="text-white font-bold text-xs">🏆 Progress</span>
+          </motion.button>
+          <motion.button onClick={() => setShowMenu(!showMenu)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: '#ffffff18', border: '1px solid #ffffff30' }}>
+            <span className="text-white font-bold text-xs">👥 People</span>
+          </motion.button>
+          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: '#ffffff18', border: '1px solid #ffffff30' }}>
+            <span className="text-white font-bold text-xs">💳 Payments</span>
+          </motion.button>
+          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: '#ffffff18', border: '1px solid #ffffff30' }}>
+            <span className="text-white font-bold text-xs">⚙️ Settings</span>
+          </motion.button>
+          <motion.button onClick={handleLogout} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium" style={{ background: '#ff444415', border: '1px solid #ff444430', color: '#ff6b6b' }}>
+            <LogOut className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Logout</span>
+          </motion.button>
         </div>
       </div>
 
