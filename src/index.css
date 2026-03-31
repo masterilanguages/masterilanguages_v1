@@ -158,3 +158,48 @@ button:focus-visible {
     @apply bg-background text-foreground;
   }
 }
+
+/* Global: replace all white text with olive green */
+.text-white {
+  color: #3d4a2e !important;
+}
+.text-white\/90 {
+  color: #4a5a35 !important;
+}
+.text-white\/80 {
+  color: #5a6b3a !important;
+}
+.text-white\/70 {
+  color: #6b7c4a !important;
+}
+.text-white\/60 {
+  color: #7a8a5a !important;
+}
+.text-white\/50 {
+  color: #8a9a6a !important;
+}
+.text-white\/40 {
+  color: #9aaa7a !important;
+}
+.text-white\/30 {
+  color: #aaba8a !important;
+}
+.text-white\/20 {
+  color: #bacb9a !important;
+}
+
+/* Restore white text on colored/dark gradient buttons and backgrounds */
+[class*="bg-gradient-to"] .text-white,
+[class*="bg-green-"] .text-white,
+[class*="bg-cyan-"] .text-white,
+[class*="bg-blue-"] .text-white,
+[class*="bg-red-"] .text-white,
+[class*="bg-amber-"] .text-white,
+[class*="bg-purple-"] .text-white,
+[class*="bg-slate-"] .text-white,
+[class*="bg-black"] .text-white,
+button[class*="bg-gradient"] .text-white,
+.bg-green-500 .text-white,
+.bg-green-600 .text-white {
+  color: #f5f0e8 !important;
+}

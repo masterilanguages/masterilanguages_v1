@@ -248,8 +248,8 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
             className="flex items-center gap-1 px-2 py-1 rounded-lg"
             style={{ background: '#ffffff15', border: '1px solid #ffffff25' }}
           >
-            <Flame className="w-4 h-4" style={{ color: '#f5f0e8' }} />
-            <span className="text-xs font-bold" style={{ color: '#f5f0e8' }}>{profile?.daily_streak || 0}</span>
+            <Flame className="w-4 h-4" style={{ color: '#e8f0e0' }} />
+            <span className="text-xs font-bold" style={{ color: '#e8f0e0' }}>{profile?.daily_streak || 0}</span>
           </motion.div>
 
           <motion.button
