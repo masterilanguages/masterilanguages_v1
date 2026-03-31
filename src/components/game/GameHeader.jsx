@@ -164,6 +164,7 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
   const navItems = [
     { to: "Home", emoji: "🏠", label: "Home" },
     { to: "Flashcards", emoji: "🎒", label: "Words" },
+    { to: "Home", emoji: "📅", label: "Schedule" },
     { to: "Songs", emoji: "🎵", label: "Songs" },
     { to: "MediaLibrary", emoji: "📺", label: "Videos" },
     { to: "Journal", emoji: "📓", label: "Journal" },
