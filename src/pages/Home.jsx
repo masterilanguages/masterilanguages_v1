@@ -316,6 +316,10 @@ export default function Home() {
 
   // Master user = admin role AND not in onboarding
   const isMasterUser = currentUser?.role === 'admin' && userProfile?.is_new_user !== true;
+  
+  // Calculate word levels early
+  const fluentWords = wordRatings.filter(w => w.times_practiced >= 5);
+  const learningWords = wordRatings.filter(w => w.times_practiced > 0 && w.times_practiced < 5);
 
   // Timer logic
   useEffect(() => {
@@ -557,287 +561,121 @@ export default function Home() {
           </motion.div>
         ) : (
           <div className="space-y-6">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h2 className="text-2xl font-bold" style={{ color: '#3d4a2e', fontFamily: 'Cormorant Garamond, Georgia, serif' }}>Schedule</h2>
+            {/* SCHEDULE SECTION */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-2xl font-bold" style={{ color: '#3d4a2e', fontFamily: 'Cormorant Garamond, Georgia, serif' }}>📅 Schedule</h2>
+                <Link to={createPageUrl("Home") + "?showSchedule=true"}>
+                  <Button variant="ghost" className="text-sm" style={{ color: '#6b7c5a' }}>View All →</Button>
+                </Link>
               </div>
-              {isMasterUser && (
-                <div className="flex gap-2">
-                  <Button onClick={() => addDefaultTasksMutation.mutate()} className="bg-blue-500 hover:bg-blue-600">
-                    Add Default Tasks to All
-                  </Button>
-                  <Button onClick={() => {
-                    const nextDayNum = Math.max(...days.map(d => d.day_number), 0) + 1;
-                    const defaultTasks = [
-                      { id: "video", name: "Watch a video", duration: "20 minutes", page: "BabyVideos" },
-                      { id: "flashcards", name: "Vocab Flashcards", duration: "10 minutes", page: "Practice" },
-                      { id: "journal", name: "Journal", duration: "5 minutes", page: "Journal" },
-                      { id: "speak", name: "Speak 1 minute", duration: "1 minute", page: "Practice" }
+              {sortedDays.length === 0 ? (
+                <div className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 p-4 text-center">
+                  <p style={{ color: '#6b7c5a' }} className="text-sm">No days available yet</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {sortedDays.slice(0, 3).map((day, idx) => {
+                    const dayColors = [
+                      { bg: '#5a6b5a', text: '#f5f0e8' },
+                      { bg: '#6b7c63', text: '#f5f0e8' },
+                      { bg: '#4a5a4a', text: '#f5f0e8' },
                     ];
-                    createDayMutation.mutate({
-                      day_number: nextDayNum,
-                      language: userProfile?.language,
-                      title: `Day ${nextDayNum}`,
-                      subsections: defaultTasks
-                    });
-                  }} className="bg-green-500 hover:bg-green-600">
-                    + Add Day
-                  </Button>
+                    const dayColor = dayColors[idx % dayColors.length];
+                    const progress = getDayProgress(day.id);
+                    const allCompleted = day.subsections?.length > 0 && 
+                      day.subsections.every(task => progress?.subsections_completed?.includes(task.id));
+
+                    return (
+                      <div
+                        key={day.id}
+                        className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 p-3 flex items-center justify-between cursor-pointer hover:border-white/20 transition-all"
+                        style={{ backgroundColor: dayColor.bg + '40' }}
+                        onClick={() => setExpandedDay(expandedDay === day.day_number ? null : day.day_number)}
+                      >
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-bold text-sm" style={{ color: '#3d4a2e' }}>{day.title || `Day ${day.day_number}`}</h3>
+                          {allCompleted && <span className="text-xs">✓</span>}
+                        </div>
+                        <span className="text-xs" style={{ color: '#6b7c5a' }}>{day.subsections?.length || 0} tasks</span>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
 
-            {sortedDays.length === 0 ? (
-              <div className="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 p-8 text-center">
-                <p className="text-white/60 mb-4">No days available yet for {userProfile?.language}.</p>
-                {isMasterUser && (
-                  <Button onClick={() => {
-                    const defaultTasks = [
-                      { id: "video", name: "Watch a video", duration: "20 minutes", page: "BabyVideos" },
-                      { id: "flashcards", name: "Vocab Flashcards", duration: "10 minutes", page: "Practice" },
-                      { id: "journal", name: "Journal", duration: "5 minutes", page: "Journal" },
-                      { id: "speak", name: "Speak 1 minute", duration: "1 minute", page: "Practice" }
-                    ];
-                    createDayMutation.mutate({
-                      day_number: 1,
-                      language: userProfile?.language,
-                      title: "Day 1",
-                      subsections: defaultTasks
-                    });
-                  }} className="bg-green-500 hover:bg-green-600">
-                    Create First Day
-                    </Button>
-                    )}
-                    </div>
-                    ) : sortedDays.slice(0, 3).map((day, idx) => {
-              const unlocked = isDayUnlocked(day.day_number);
-              const progress = getDayProgress(day.id);
-              const isExpanded = expandedDay === day.day_number;
-              const allCompleted = day.subsections?.length > 0 && 
-                day.subsections.every(task => progress?.subsections_completed?.includes(task.id));
-
-              const dayColors = [
-                { bg: '#5a6b5a', text: '#f5f0e8' },
-                { bg: '#6b7c63', text: '#f5f0e8' },
-                { bg: '#4a5a4a', text: '#f5f0e8' },
-                { bg: '#7a8a73', text: '#f5f0e8' },
-                { bg: '#3d4a2e', text: '#f5f0e8' },
-                { bg: '#6b7c5a', text: '#f5f0e8' },
-                { bg: '#5a6b52', text: '#f5f0e8' },
-                { bg: '#7a8a6a', text: '#f5f0e8' },
-                { bg: '#4a5a42', text: '#f5f0e8' },
-                { bg: '#6a7a62', text: '#f5f0e8' },
-              ];
-              const dayColor = dayColors[idx % dayColors.length];
-              const isCompact = true; // Always use compact style
-
-              return (
-                <motion.div
-                  key={day.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={`bg-white/5 backdrop-blur-xl ${isCompact ? 'rounded-xl' : 'rounded-3xl'} border border-white/10 overflow-hidden ${
-                    !unlocked ? 'opacity-50' : ''
-                  }`}
-                >
-                  <button
-                    onClick={() => unlocked && setExpandedDay(isExpanded ? null : day.day_number)}
-                    disabled={!unlocked}
-                    className={`w-full ${isCompact ? 'p-2' : 'p-4'} transition-all`}
-                    style={{ backgroundColor: dayColor.bg }}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        {!unlocked && (
-                          <div className={`${isCompact ? 'w-6 h-6' : 'w-10 h-10'} rounded-full flex items-center justify-center bg-white/10`}>
-                            <Lock className={`${isCompact ? 'w-3 h-3' : 'w-5 h-5'} text-white/60`} />
-                          </div>
-                        )}
-                        <div className="text-left flex-1">
-                          <div className="flex items-center gap-2">
-                            <h3 className={`font-bold ${isCompact ? 'text-base' : 'text-xl'}`} style={{ color: dayColor.text }}>{day.title || `Day ${day.day_number}`}</h3>
-                            {allCompleted && !isCompact && (
-                              <>
-                                <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ backgroundColor: '#5a6b5a' }}>
-                                  <Check className="w-4 h-4" style={{ color: dayColor.text }} />
-                                </div>
-                                <span className="font-medium text-sm" style={{ color: '#5a6b5a' }}>Completed 🔥</span>
-                              </>
-                            )}
-                            {allCompleted && isCompact && (
-                              <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ backgroundColor: '#5a6b5a' }}>
-                                <Check className="w-3 h-3" style={{ color: dayColor.text }} />
-                              </div>
-                            )}
-                          </div>
-                          {day.description && !isCompact && <p className="text-white/80 text-sm">{day.description}</p>}
-                        </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                        {isMasterUser && !isCompact && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (confirm('Delete this day?')) {
-                                deleteDayMutation.mutate(day.id);
-                              }
-                            }}
-                            className="text-red-400 hover:text-red-300 p-2"
-                          >
-                            <Trash2 className="w-5 h-5" />
-                          </button>
-                        )}
-                        {unlocked && <ChevronDown className={`${isCompact ? 'w-4 h-4' : 'w-6 h-6'} transition-transform ${isExpanded ? 'rotate-180' : ''}`} style={{ color: dayColor.text }} />}
-                        </div>
-                        </div>
-                        </button>
-
-                  <AnimatePresence>
-                    {isExpanded && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="overflow-hidden"
-                      >
-                        <div className="p-3 pt-0 space-y-2">
-                          {day.subsections?.map((task, taskIdx) => {
-                            const isCompleted = progress?.subsections_completed?.includes(task.id);
-                            const isEditing = editingTask?.dayId === day.id && editingTask?.taskId === task.id;
-
-                            return (
-                              <div
-                                key={task.id}
-                                className={`bg-gradient-to-br from-white/5 to-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-3 flex items-center gap-2 ${
-                                  isCompleted ? 'from-green-500/10 to-green-600/10 border-green-500/30' : ''
-                                }`}
-                              >
-                                <button
-                                  onClick={() => toggleTaskMutation.mutate({ dayId: day.id, taskId: task.id, dayNumber: day.day_number })}
-                                  className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
-                                    isCompleted ? 'bg-green-500 border-green-500' : 'border-white/40 hover:border-cyan-400'
-                                  }`}
-                                >
-                                  {isCompleted && <Check className="w-4 h-4 text-white" />}
-                                </button>
-
-                                {isEditing ? (
-                                  <div className="flex-1 flex items-center gap-2">
-                                    <div className="flex-1 space-y-2">
-                                      <Input
-                                        value={editingTaskData.name}
-                                        onChange={(e) => setEditingTaskData({...editingTaskData, name: e.target.value})}
-                                        onKeyDown={(e) => {
-                                          if (e.key === 'Enter') handleSaveEditedTask(day.id);
-                                          if (e.key === 'Escape') handleCancelEdit();
-                                        }}
-                                        className="bg-white/5 border-white/20 text-white text-sm"
-                                        placeholder="Task name"
-                                      />
-                                      <Input
-                                        value={editingTaskData.duration}
-                                        onChange={(e) => setEditingTaskData({...editingTaskData, duration: e.target.value})}
-                                        onKeyDown={(e) => {
-                                          if (e.key === 'Enter') handleSaveEditedTask(day.id);
-                                          if (e.key === 'Escape') handleCancelEdit();
-                                        }}
-                                        className="bg-white/5 border-white/20 text-white text-sm"
-                                        placeholder="Duration (optional)"
-                                      />
-                                      <Input
-                                        value={editingTaskData.page}
-                                        onChange={(e) => setEditingTaskData({...editingTaskData, page: e.target.value})}
-                                        onKeyDown={(e) => {
-                                          if (e.key === 'Enter') handleSaveEditedTask(day.id);
-                                          if (e.key === 'Escape') handleCancelEdit();
-                                        }}
-                                        className="bg-white/5 border-white/20 text-white text-sm"
-                                        placeholder="Link URL (optional)"
-                                      />
-                                      </div>
-                                  </div>
-                                ) : (
-                                  <button
-                                    onClick={() => {
-                                      if (task.page) {
-                                        window.open(task.page, '_blank');
-                                      }
-                                    }}
-                                    className="flex-1 flex items-center gap-3 text-left"
-                                  >
-                                    <div className="flex-1">
-                                      <p className={`font-medium ${isCompleted ? 'line-through opacity-60' : ''}`} style={{ color: '#3d4a2e' }}>{task.name}</p>
-                                      {task.duration && <p className="text-sm" style={{ color: '#6b7c5a' }}>Approx {task.duration}</p>}
-                                    </div>
-                                    {task.page && <ChevronRight className="w-5 h-5" style={{ color: '#c8b8a8' }} />}
-                                  </button>
-                                )}
-
-                                {isMasterUser && !isEditing && (
-                                  <div className="flex gap-1">
-                                    <button
-                                      onClick={() => handleStartEditTask(day.id, task)}
-                                      className="text-cyan-400 hover:text-cyan-300 p-1"
-                                    >
-                                      <span className="text-xs">✏️</span>
-                                    </button>
-                                    <button
-                                      onClick={() => handleDeleteTask(day.id, task.id)}
-                                      className="text-red-400 hover:text-red-300"
-                                    >
-                                      <Trash2 className="w-4 h-4" />
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
-
-                          {isMasterUser && (
-                            addingTaskToDayId === day.id ? (
-                              <div className="bg-white/10 rounded-xl p-3 space-y-2">
-                                <Input placeholder="Task name" value={newTask.name} onChange={(e) => setNewTask({...newTask, name: e.target.value})} className="bg-white/5 border-white/20 text-white text-sm" />
-                                <Input placeholder="Duration (optional)" value={newTask.duration} onChange={(e) => setNewTask({...newTask, duration: e.target.value})} className="bg-white/5 border-white/20 text-white text-sm" />
-                                <Input placeholder="Link URL (optional)" value={newTask.page} onChange={(e) => setNewTask({...newTask, page: e.target.value})} className="bg-white/5 border-white/20 text-white text-sm" />
-                                <div className="flex gap-2">
-                                  <Button onClick={() => handleAddTask(day.id)} className="flex-1 bg-green-500 hover:bg-green-600" size="sm" disabled={!newTask.name.trim()}>
-                                    Add
-                                  </Button>
-                                  <Button onClick={() => { setAddingTaskToDayId(null); setNewTask({ name: "", duration: "", page: "" }); }} variant="outline" className="border-white/20" size="sm">
-                                    Cancel
-                                  </Button>
-                                </div>
-                              </div>
-                            ) : (
-                              <Button 
-                                onClick={() => setAddingTaskToDayId(day.id)}
-                                className="w-full bg-green-500 hover:bg-green-600" 
-                                size="sm"
-                              >
-                                <Plus className="w-4 h-4 mr-2" /> Add Task
-                              </Button>
-                            )
-                          )}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
-                );
-                })}
-
-                {sortedDays.length > 0 && (
-                  <div className="flex items-center gap-3 mt-3 px-2">
-                    <span className="text-white/30 text-lg font-bold tracking-widest">• • •</span>
-                    <div className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white/40 text-sm font-medium flex items-center gap-2">
-                      <Lock className="w-3 h-3" />
-                      Day 100
-                    </div>
+            {/* BACKPACK SECTION */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-2xl font-bold" style={{ color: '#3d4a2e', fontFamily: 'Cormorant Garamond, Georgia, serif' }}>🎒 Words Backpack</h2>
+                <Link to={createPageUrl("Backpack")}>
+                  <Button variant="ghost" className="text-sm" style={{ color: '#6b7c5a' }}>View All →</Button>
+                </Link>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { level: 1, count: learningWords.length, icon: '🌱', color: '#6b7c5a' },
+                  { level: 2, count: fluentWords.filter(w => w.times_practiced < 10).length, icon: '🌿', color: '#5a6b5a' },
+                  { level: 3, count: fluentWords.filter(w => w.times_practiced >= 10).length, icon: '⭐', color: '#3d4a2e' },
+                ].map((level) => (
+                  <div key={level.level} className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 p-4 text-center">
+                    <div className="text-2xl mb-1">{level.icon}</div>
+                    <p className="text-xs font-bold" style={{ color: level.color }}>Level {level.level}</p>
+                    <p className="text-lg font-bold" style={{ color: '#3d4a2e' }}>{level.count}</p>
                   </div>
-                )}
+                ))}
+              </div>
+            </div>
+
+            {/* JOURNAL SECTION */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-2xl font-bold" style={{ color: '#3d4a2e', fontFamily: 'Cormorant Garamond, Georgia, serif' }}>📓 Journal</h2>
+                <Link to={createPageUrl("Journal")}>
+                  <Button variant="ghost" className="text-sm" style={{ color: '#6b7c5a' }}>Write Entry →</Button>
+                </Link>
+              </div>
+              {journalEntries.length === 0 ? (
+                <div className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 p-4 text-center">
+                  <p style={{ color: '#6b7c5a' }} className="text-sm">No journal entries yet. Start writing! ✍️</p>
                 </div>
-                )}
+              ) : (
+                <div className="space-y-2">
+                  {journalEntries.slice(0, 2).map((entry) => (
+                    <div key={entry.id} className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 p-3">
+                      <p style={{ color: '#3d4a2e' }} className="text-xs font-bold">{entry.date}</p>
+                      <p style={{ color: '#6b7c5a' }} className="text-sm line-clamp-2 mt-1">{entry.text}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* PROGRESS SECTION */}
+            <div>
+              <h2 className="text-2xl font-bold mb-3" style={{ color: '#3d4a2e', fontFamily: 'Cormorant Garamond, Georgia, serif' }}>🏆 Progress</h2>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 p-4 text-center">
+                  <p style={{ color: '#6b7c5a' }} className="text-xs mb-1">Current Day</p>
+                  <p className="text-3xl font-bold" style={{ color: '#3d4a2e' }}>{currentDay}</p>
+                </div>
+                <div className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 p-4 text-center">
+                  <p style={{ color: '#6b7c5a' }} className="text-xs mb-1">Daily Streak 🔥</p>
+                  <p className="text-3xl font-bold" style={{ color: '#3d4a2e' }}>{userProfile?.daily_streak || 0}</p>
+                </div>
+                <div className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 p-4 text-center">
+                  <p style={{ color: '#6b7c5a' }} className="text-xs mb-1">Total Words</p>
+                  <p className="text-3xl font-bold" style={{ color: '#3d4a2e' }}>{wordRatings.length}</p>
+                </div>
+                <div className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 p-4 text-center">
+                  <p style={{ color: '#6b7c5a' }} className="text-xs mb-1">Coins 🪙</p>
+                  <p className="text-3xl font-bold" style={{ color: '#3d4a2e' }}>{coins.toLocaleString()}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
                 </div>
 
       {/* Buy Coins Dialog */}
