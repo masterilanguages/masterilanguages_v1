@@ -1549,16 +1549,23 @@ Create about 15-20 conversational lines that naturally introduce and use these v
             {/* Recommended Videos Dropdown - Only show for Hebrew and not in single video mode */}
             {userProfile?.language === 'hebrew' && !singleVideoMode && (
               <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden">
-                <button
-                  onClick={() => setRecommendedExpanded(!recommendedExpanded)}
-                  className="w-full flex items-center justify-between p-4 text-left hover:bg-white/5 transition-all"
-                >
+                <div className="flex items-center justify-between p-4 border-b border-white/10">
                   <h2 className="font-medium" style={{ color: '#3d4a2e', fontFamily: 'Cormorant Garamond, Georgia, serif' }}>Recommended Videos ({level1Videos.length})</h2>
-                  <ChevronDown className={`w-5 h-5 text-white/60 transition-transform ${recommendedExpanded ? 'rotate-180' : ''}`} />
-                </button>
+                  <button
+                    onClick={() => setRecommendedExpanded(!recommendedExpanded)}
+                    className="text-white/60 hover:text-white transition-all"
+                  >
+                    <ChevronDown className={`w-5 h-5 transition-transform ${recommendedExpanded ? 'rotate-180' : ''}`} />
+                  </button>
+                </div>
 
                 {recommendedExpanded && (
-                  <div className="border-t border-white/10 p-4">
+                  <div className="p-4 space-y-4">
+                    <div className="flex gap-2 p-1 rounded-lg" style={{ background: '#ffffff18', border: '1px solid #ffffff20' }}>
+                      <button onClick={() => setVideoTypeFilter('all')} className={`px-3 py-1.5 rounded text-sm font-semibold transition-all ${videoTypeFilter === 'all' ? 'bg-white/20' : 'text-white/60 hover:text-white/80'}`} style={{ color: videoTypeFilter === 'all' ? '#3d4a2e' : undefined }}>All</button>
+                      <button onClick={() => setVideoTypeFilter('video')} className={`px-3 py-1.5 rounded text-sm font-semibold transition-all ${videoTypeFilter === 'video' ? 'bg-white/20' : 'text-white/60 hover:text-white/80'}`} style={{ color: videoTypeFilter === 'video' ? '#3d4a2e' : undefined }}>📹 Videos</button>
+                      <button onClick={() => setVideoTypeFilter('audio')} className={`px-3 py-1.5 rounded text-sm font-semibold transition-all ${videoTypeFilter === 'audio' ? 'bg-white/20' : 'text-white/60 hover:text-white/80'}`} style={{ color: videoTypeFilter === 'audio' ? '#3d4a2e' : undefined }}>🎧 Audio Training</button>
+                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {level1Videos.map((video) => {
                         const isExpanded = expandedVideoId == video.id || expandedVideoId === video.id;
