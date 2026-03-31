@@ -295,7 +295,6 @@ export default function Home() {
       queryClient.invalidateQueries({ queryKey: ['userProfile'] });
       queryClient.invalidateQueries({ queryKey: ['days'] });
       toast.success("Language updated!");
-      setShowLanguageSelector(false);
     },
   });
 

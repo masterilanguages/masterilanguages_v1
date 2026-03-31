@@ -243,15 +243,8 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
             <span className="font-bold text-orange-400">{profile?.daily_streak || 0}</span>
           </motion.div>
 
-          {/* Flashcards */}
+          {/* Backpack / Flashcards */}
           <Link to={createPageUrl("Flashcards")}>
-            <motion.div whileHover={{ scale: 1.05 }} className="flex items-center gap-1.5 bg-blue-500 rounded-lg px-2.5 py-1.5">
-              <span className="text-base">🧠</span>
-            </motion.div>
-          </Link>
-
-          {/* Backpack */}
-          <Link to={createPageUrl("Backpack")}>
             <motion.div whileHover={{ scale: 1.05 }} className="flex items-center gap-1.5 bg-amber-500 rounded-lg px-2.5 py-1.5">
               <span className="text-base">🎒</span>
             </motion.div>

@@ -13,14 +13,14 @@ export default function VideoTranscriptWord({
   const [value, setValue] = useState(word || "");
   const inputRef = useRef(null);
 
-  if (!word) return null;
-
   useEffect(() => {
     if (isEditing && inputRef.current) {
       inputRef.current.focus();
       inputRef.current.select();
     }
   }, [isEditing]);
+
+  if (!word) return null;
 
   const handleSave = () => {
     if (value && value.trim() && value !== word && onEdit) {
