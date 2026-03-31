@@ -316,10 +316,6 @@ export default function Home() {
 
   // Master user = admin role AND not in onboarding
   const isMasterUser = currentUser?.role === 'admin' && userProfile?.is_new_user !== true;
-  
-  // Calculate word levels early
-  const fluentWords = wordRatings.filter(w => w.times_practiced >= 5);
-  const learningWords = wordRatings.filter(w => w.times_practiced > 0 && w.times_practiced < 5);
 
   // Timer logic
   useEffect(() => {
@@ -483,6 +479,10 @@ export default function Home() {
   const currentAge = userProfile?.age_level || 3;
   const isBaby = currentAge < 5;
   const hasDiaper = unlockedItems.includes("diaper");
+
+  // Calculate word levels
+  const fluentWords = wordRatings.filter(w => w.times_practiced >= 5);
+  const learningWords = wordRatings.filter(w => w.times_practiced > 0 && w.times_practiced < 5);
 
   // Don't render if loading or no language (Layout handles redirect)
   if (profileLoading || !userProfile?.language) {
