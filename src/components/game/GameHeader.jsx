@@ -165,7 +165,7 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
   ];
 
   return (
-    <div style={{ background: 'linear-gradient(to right, #2d2a1e, #3a3520, #2d2a1e)', borderBottom: '1px solid #c9a84c40' }} className="backdrop-blur-xl">
+    <div style={{ background: 'linear-gradient(to right, #0a0a0a, #111111, #0a0a0a)', borderBottom: '1px solid #c9a84c40' }} className="backdrop-blur-xl">
       {/* Top row: language selector | brand name | logout/settings */}
       <div className="flex items-center justify-between max-w-7xl mx-auto px-4 py-2">
 
@@ -189,7 +189,7 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 className="absolute top-full left-0 mt-2 z-50 rounded-xl shadow-2xl overflow-hidden min-w-[200px]"
-                style={{ background: '#1e1c12', border: '1px solid #c9a84c40' }}
+                style={{ background: '#0d0d0d', border: '1px solid #c9a84c40' }}
               >
                 <div className="p-2">
                   <div className="px-3 py-2 text-xs font-medium border-b" style={{ color: '#c9a84c80', borderColor: '#c9a84c20' }}>
