@@ -797,7 +797,7 @@ Create about 15-20 conversational lines that naturally introduce and use these v
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className="min-h-screen" style={{ background: 'linear-gradient(160deg, #0b1a12 0%, #0e2218 50%, #12271a 100%)' }}>
       <GameHeader profile={userProfile} coins={userCoins?.coins} onBuyCoins={() => {}} />
 
       <div className="max-w-4xl mx-auto px-4 py-6">
@@ -1153,156 +1153,125 @@ Create about 15-20 conversational lines that naturally introduce and use these v
                     </div>
                   )}
 
-                  {/* Custom Videos First */}
+                  {/* Custom Videos - 3-per-row grid */}
                   {customVideos.length > 0 && !singleVideoMode && (
-              <div className="mb-4">
-                <h2 className="text-white/60 text-sm font-medium mb-3">Your Videos</h2>
-                <DragDropContext onDragEnd={handleVideoDragEnd}>
-                  <Droppable droppableId="custom-videos">
-                    {(provided) => (
-                     <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-3">
-                       {customVideos.map((video, index) => {
-                         const ytId = extractYouTubeId(video.video_url);
-                         if (!ytId) return null;
+                    <div className="mb-6">
+                      <h2 className="text-white/80 text-lg font-bold mb-4">Your Videos</h2>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {customVideos.map((video) => {
+                          const ytId = extractYouTubeId(video.video_url);
+                          if (!ytId) return null;
+                          const isExpanded = expandedVideoId === `custom-${video.id}` || expandedVideoId == video.id;
 
-                         const isExpanded = expandedVideoId === `custom-${video.id}` || expandedVideoId == video.id;
+                          return (
+                            <motion.div
+                              key={video.id}
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              onClick={() => setExpandedVideoId(isExpanded ? null : `custom-${video.id}`)}
+                              className="bg-white/5 backdrop-blur-xl rounded-2xl border border-blue-500/30 overflow-hidden hover:border-blue-400/60 transition-all cursor-pointer"
+                            >
+                              {/* Thumbnail */}
+                              <div className="w-full aspect-video bg-black relative">
+                                <img
+                                  src={`https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`}
+                                  alt={video.title}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => { e.target.src = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`; }}
+                                />
+                                <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                                  <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                                    <Play className="w-6 h-6 text-white fill-white" />
+                                  </div>
+                                </div>
+                              </div>
 
-                         return (
-                           <Draggable key={`custom-${video.id}`} draggableId={`custom-${video.id}`} index={index}>
-                              {(provided, snapshot) => (
-                                <div
-                                  ref={provided.innerRef}
-                                  className={`bg-gradient-to-br from-blue-500/10 to-cyan-500/10 backdrop-blur-xl rounded-2xl border border-blue-500/30 overflow-visible relative ${
-                                    snapshot.isDragging ? 'shadow-2xl scale-105' : ''
-                                  }`}
-                                >
-                                  <div {...provided.draggableProps} className="p-4 space-y-3">
-                                    {/* Trash button - top right - Admin/Coach can delete */}
+                              {/* Info */}
+                              <div className="p-3">
+                                <div className="flex items-start justify-between gap-2 mb-1">
+                                  <h3 className="text-white font-bold text-sm flex-1 leading-tight">
+                                    <EditableWord
+                                      text={video.title}
+                                      onSave={(newTitle) => updateVideoMutation.mutate({ id: video.id, data: { title: newTitle } })}
+                                      className="text-white font-bold"
+                                    />
+                                  </h3>
+                                  <div className="flex gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                                     {(currentUser?.role === 'admin' || coachAssignments.length > 0) && (
-                                      <button
-                                        onClick={async (e) => {
-                                          e.stopPropagation();
-                                          console.log('DELETE clicked for video:', video.id);
-                                          if (window.confirm('Delete this video?')) {
-                                            await deleteVideoMutation.mutateAsync({ 
-                                              videoId: video.id, 
-                                              deleteData: { deleted_at: new Date().toISOString(), is_active: false }
-                                            });
-                                          }
-                                        }}
-                                        className="absolute top-2 right-2 z-[100] text-xl hover:scale-110 active:scale-95 transition-transform bg-red-500 hover:bg-red-600 rounded-lg w-9 h-9 flex items-center justify-center shadow-xl border-2 border-white/20"
-                                        title="Delete video"
-                                        style={{ pointerEvents: 'all' }}
-                                      >
-                                        🗑️
-                                      </button>
+                                      <>
+                                        <VideoAdminControls
+                                          video={video}
+                                          onUpdate={(data) => updateVideoMutation.mutate({ id: video.id, data })}
+                                        />
+                                        <button
+                                          onClick={async (e) => {
+                                            e.stopPropagation();
+                                            if (window.confirm('Delete this video?')) {
+                                              await deleteVideoMutation.mutateAsync({
+                                                videoId: video.id,
+                                                deleteData: { deleted_at: new Date().toISOString(), is_active: false }
+                                              });
+                                            }
+                                          }}
+                                          className="text-white/60 hover:text-red-400 transition-colors p-1"
+                                          title="Delete video"
+                                        >
+                                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                        </button>
+                                      </>
                                     )}
-                                   {/* Admin/Coach Controls */}
-                                   {(currentUser?.role === 'admin' || coachAssignments.length > 0) && (
-                                     <div className="flex justify-between items-center mb-2">
-                                       <span className="text-xs text-white/40">
-                                         {currentUser?.role === 'admin' ? 'Admin Controls' : 'Coach Controls'}
-                                       </span>
-                                       <VideoAdminControls
-                                         video={video}
-                                         onUpdate={(data) => updateVideoMutation.mutate({ id: video.id, data })}
-                                       />
-                                     </div>
-                                   )}
+                                  </div>
+                                </div>
+                                <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded">My Video</span>
+                              </div>
 
-                                   {/* Video Header */}
-                                   <div className="flex gap-4 cursor-pointer hover:bg-white/5 transition-all rounded-lg p-2">
-                                     <div {...provided.dragHandleProps} className="cursor-grab active:cursor-grabbing flex items-start pt-2">
-                                       <GripVertical className="w-5 h-5 text-white/40 hover:text-white/60" />
-                                     </div>
-                                     <div 
-                                       onClick={() => setExpandedVideoId(isExpanded ? null : `custom-${video.id}`)}
-                                       className="flex-1 flex gap-4"
-                                     >
-                                       <div className="relative w-40 h-24 flex-shrink-0 rounded-xl overflow-hidden bg-black">
-                                         <img 
-                                           src={`https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`}
-                                           alt={video.title}
-                                           className="w-full h-full object-cover"
-                                           onError={(e) => {
-                                             e.target.src = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
-                                           }}
-                                         />
-                                         <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                                           <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                                             <Play className="w-5 h-5 text-white fill-white" />
-                                           </div>
-                                         </div>
-                                       </div>
-                                       <div className="flex-1">
-                                         <span className="bg-blue-500 px-2 py-0.5 rounded-full text-xs text-white font-medium">
-                                           My Video
-                                         </span>
-                                         <h3 className="text-white font-bold mt-1">
-                                           <EditableWord
-                                             text={video.title}
-                                             onSave={(newTitle) => updateVideoMutation.mutate({ id: video.id, data: { title: newTitle } })}
-                                             className="text-white font-bold"
-                                           />
-                                         </h3>
-                                       </div>
-                                       <ChevronRight className={`w-5 h-5 text-white/40 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
-                                     </div>
-                                   </div>
-
-                                   {/* Expanded Content */}
-                                   {isExpanded && (
-                                     <motion.div
-                                       initial={{ opacity: 0, height: 0 }}
-                                       animate={{ opacity: 1, height: "auto" }}
-                                       className="p-4 bg-slate-800/50 border-t border-white/20 space-y-4"
-                                     >
-                                       <div className="aspect-video bg-black rounded-xl overflow-hidden">
-                                         <iframe
-                                           id={`youtube-player-${video.id}`}
-                                           width="100%"
-                                           height="100%"
-                                           src={`https://www.youtube.com/embed/${ytId}?enablejsapi=1`}
-                                           title={video.title}
-                                           frameBorder="0"
-                                           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                           allowFullScreen
-                                         />
-                                       </div>
-
-                                       <VideoTranscript 
-                                         videoId={video.id}
-                                         videoUrl={video.video_url}
-                                         iframeId={`youtube-player-${video.id}`}
-                                         onPauseVideo={() => {
-                                           const iframe = document.getElementById(`youtube-player-${video.id}`);
-                                           if (iframe && iframe.contentWindow) {
-                                             iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
-                                           }
-                                         }}
-                                         onSeekVideo={(seconds) => {
-                                           const iframe = document.getElementById(`youtube-player-${video.id}`);
-                                           if (iframe && iframe.contentWindow) {
-                                             iframe.contentWindow.postMessage(`{"event":"command","func":"seekTo","args":[${seconds}, true]}`, '*');
-                                             iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
-                                           }
-                                         }}
-                                       />
-                                     </motion.div>
-                                   )}
-                                 </div>
-                               </div>
-                             )}
-                           </Draggable>
-                         );
-                       })}
-                       {provided.placeholder}
-                     </div>
-                    )}
-                    </Droppable>
-                    </DragDropContext>
+                              {/* Expanded inline player */}
+                              <AnimatePresence>
+                                {isExpanded && (
+                                  <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: "auto" }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="border-t border-white/10 bg-black/40 p-3 space-y-3"
+                                  >
+                                    <div className="aspect-video bg-black rounded-xl overflow-hidden">
+                                      <iframe
+                                        id={`youtube-player-${video.id}`}
+                                        width="100%"
+                                        height="100%"
+                                        src={`https://www.youtube.com/embed/${ytId}?enablejsapi=1`}
+                                        title={video.title}
+                                        frameBorder="0"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        allowFullScreen
+                                      />
+                                    </div>
+                                    <VideoTranscript
+                                      videoId={video.id}
+                                      videoUrl={video.video_url}
+                                      iframeId={`youtube-player-${video.id}`}
+                                      onPauseVideo={() => {
+                                        const iframe = document.getElementById(`youtube-player-${video.id}`);
+                                        if (iframe?.contentWindow) iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+                                      }}
+                                      onSeekVideo={(seconds) => {
+                                        const iframe = document.getElementById(`youtube-player-${video.id}`);
+                                        if (iframe?.contentWindow) {
+                                          iframe.contentWindow.postMessage(`{"event":"command","func":"seekTo","args":[${seconds}, true]}`, '*');
+                                          iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+                                        }
+                                      }}
+                                    />
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </motion.div>
+                          );
+                        })}
+                      </div>
                     </div>
-                    )}
+                  )}
 
             {/* Recommended Videos Dropdown - Only show for Hebrew and not in single video mode */}
             {userProfile?.language === 'hebrew' && !singleVideoMode && (
@@ -1316,177 +1285,170 @@ Create about 15-20 conversational lines that naturally introduce and use these v
                 </button>
 
                 {recommendedExpanded && (
-                  <div className="border-t border-white/10 p-4 space-y-3">
-                    {level1Videos.map((video) => {
-              // Handle both string and number comparisons
-              const isExpanded = expandedVideoId == video.id || expandedVideoId === video.id;
-              const hasTranscript = fullTranscripts[video.id];
-              const isLoading = loadingTranscript === video.id;
-              const showingVocab = showVocabForVideo === video.id;
-              
-              return (
-                <div
-                  key={video.id}
-                  id={`video-${video.id}`}
-                  className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden"
-                >
-                  {/* Video Header - Clickable */}
-                  <div 
-                    onClick={() => {
-                      const newExpanded = expandedVideoId === video.id ? null : video.id;
-                      setExpandedVideoId(newExpanded);
-                      if (newExpanded !== video.id) setShowVocabForVideo(null);
-                      // Auto-generate transcript when expanding
-                      if (newExpanded && !fullTranscripts[video.id] && loadingTranscript !== video.id) {
-                        generateFullTranscript(video);
-                      }
-                    }}
-                    className="flex gap-4 p-4 cursor-pointer hover:bg-white/5 transition-all"
-                  >
-                    <div className="relative w-40 h-24 flex-shrink-0 rounded-xl overflow-hidden bg-black">
-                      <img 
-                        src={video.thumbnail}
-                        alt={video.title}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.target.src = `https://via.placeholder.com/160x90/1e1b4b/ffffff?text=Video`;
-                        }}
-                      />
-                      <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                        <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                          <Play className="w-5 h-5 text-white fill-white" />
-                        </div>
-                      </div>
-                      <span className="absolute bottom-1 right-1 bg-black/70 text-white text-xs px-1 rounded">
-                        {video.duration}
-                      </span>
+                  <div className="border-t border-white/10 p-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {level1Videos.map((video) => {
+                        const isExpanded = expandedVideoId == video.id || expandedVideoId === video.id;
+                        const hasTranscript = fullTranscripts[video.id];
+                        const isLoading = loadingTranscript === video.id;
+                        const showingVocab = showVocabForVideo === video.id;
+
+                        return (
+                          <motion.div
+                            key={video.id}
+                            id={`video-${video.id}`}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden hover:border-white/30 transition-all"
+                          >
+                            {/* Thumbnail */}
+                            <div
+                              className="w-full aspect-video bg-black relative cursor-pointer"
+                              onClick={() => {
+                                const newExpanded = expandedVideoId === video.id ? null : video.id;
+                                setExpandedVideoId(newExpanded);
+                                if (newExpanded !== video.id) setShowVocabForVideo(null);
+                                if (newExpanded && !fullTranscripts[video.id] && loadingTranscript !== video.id) {
+                                  generateFullTranscript(video);
+                                }
+                              }}
+                            >
+                              <img
+                                src={video.thumbnail}
+                                alt={video.title}
+                                className="w-full h-full object-cover"
+                                onError={(e) => { e.target.src = `https://via.placeholder.com/320x180/1e1b4b/ffffff?text=Video`; }}
+                              />
+                              <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                                <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                                  <Play className="w-6 h-6 text-white fill-white" />
+                                </div>
+                              </div>
+                              <span className="absolute bottom-1 right-1 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded">{video.duration}</span>
+                            </div>
+
+                            {/* Info */}
+                            <div className="p-3">
+                              <div className="flex items-start justify-between gap-2 mb-1">
+                                <h3 className="text-white font-bold text-sm flex-1 leading-tight">{video.title}</h3>
+                              </div>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded">{video.category}</span>
+                                <span className="text-xs text-white/50">{video.transcript.length} words</span>
+                                <span className="text-xs text-yellow-400 font-bold">+{video.coins} 🪙</span>
+                              </div>
+
+                              {/* Action Buttons */}
+                              <div className="flex gap-2 mt-3">
+                                <button
+                                  onClick={() => copyToMyVideosMutation.mutate(video)}
+                                  disabled={copyToMyVideosMutation.isPending}
+                                  className="flex-1 flex items-center justify-center gap-1 bg-cyan-500/20 border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/30 py-1.5 rounded-lg text-xs font-bold transition-all"
+                                >
+                                  <Plus className="w-3 h-3" />
+                                  Add
+                                </button>
+                                <button
+                                  onClick={() => setShowVocabForVideo(showingVocab ? null : video.id)}
+                                  className="flex-1 flex items-center justify-center gap-1 bg-amber-500/20 border border-amber-500/50 text-amber-400 hover:bg-amber-500/30 py-1.5 rounded-lg text-xs font-bold transition-all"
+                                >
+                                  <BookOpen className="w-3 h-3" />
+                                  Vocab
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Expanded content */}
+                            <AnimatePresence>
+                              {isExpanded && (
+                                <motion.div
+                                  initial={{ opacity: 0, height: 0 }}
+                                  animate={{ opacity: 1, height: "auto" }}
+                                  exit={{ opacity: 0, height: 0 }}
+                                  className="border-t border-white/10 bg-black/40 p-3 space-y-3"
+                                >
+                                  <div className="aspect-video bg-black rounded-xl overflow-hidden">
+                                    <iframe
+                                      width="100%"
+                                      height="100%"
+                                      src={`https://www.youtube.com/embed/${video.youtubeId}`}
+                                      title={video.title}
+                                      frameBorder="0"
+                                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                      allowFullScreen
+                                    />
+                                  </div>
+
+                                  {isLoading && (
+                                    <div className="flex items-center justify-center gap-2 py-3 text-white/60">
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                      <span className="text-sm">Generating transcript...</span>
+                                    </div>
+                                  )}
+
+                                  {hasTranscript && (
+                                    <div className="space-y-1 max-h-48 overflow-y-auto bg-white/5 rounded-xl p-2">
+                                      <p className="text-white/50 text-xs font-medium mb-1">📝 Transcript (tap to add):</p>
+                                      {fullTranscripts[video.id].map((line, idx) => {
+                                        const inBackpack = wordRatings.find(w => w.word === line.hebrew);
+                                        return (
+                                          <button
+                                            key={idx}
+                                            onClick={() => addTranscriptWordToBackpack(line)}
+                                            className={`w-full text-left rounded-lg p-1.5 transition-all text-xs ${
+                                              inBackpack ? "bg-green-500/10 border border-green-500/30" : "bg-white/5 hover:bg-white/10 border border-transparent hover:border-cyan-400/50"
+                                            }`}
+                                          >
+                                            <p className="text-cyan-400 font-bold" dir="rtl">{line.hebrew}</p>
+                                            <p className="text-white/60">{line.transliteration} — {line.english}</p>
+                                            {inBackpack && <span className="text-green-400">✓ in backpack</span>}
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+
+                            {/* Vocab words */}
+                            <AnimatePresence>
+                              {showingVocab && (
+                                <motion.div
+                                  initial={{ opacity: 0, height: 0 }}
+                                  animate={{ opacity: 1, height: "auto" }}
+                                  exit={{ opacity: 0, height: 0 }}
+                                  className="border-t border-white/10 bg-black/40 p-3 space-y-1 max-h-56 overflow-y-auto"
+                                >
+                                  {video.transcript.map((item, idx) => {
+                                    const inBackpack = wordRatings.find(w => w.word === item.hebrew);
+                                    return (
+                                      <div key={idx} className={`flex items-center justify-between p-2 rounded-lg text-xs ${inBackpack ? "bg-green-500/10 border border-green-500/30" : "bg-white/5 border border-white/10"}`}>
+                                        <div>
+                                          <span className="text-cyan-400 font-bold text-base" dir="rtl">{item.hebrew}</span>
+                                          <p className="text-white/60">{item.transliteration} — {item.meaning}</p>
+                                        </div>
+                                        <button
+                                          onClick={() => addToBackpack(item)}
+                                          disabled={!!inBackpack}
+                                          className={`px-2 py-1 rounded-lg text-xs transition-all ${inBackpack ? "bg-green-500/20 text-green-400 cursor-not-allowed" : "bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30"}`}
+                                        >
+                                          {inBackpack ? "✓" : "+ Add"}
+                                        </button>
+                                      </div>
+                                    );
+                                  })}
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </motion.div>
+                        );
+                      })}
                     </div>
-                    <div className="flex-1">
-                      <span className="bg-purple-500/80 px-2 py-0.5 rounded-full text-xs text-white font-medium">
-                        {video.category}
-                      </span>
-                      <h3 className="text-white font-bold mt-1">{video.title}</h3>
-                      <div className="flex items-center gap-3 mt-2 text-sm">
-                        <span className="text-white/60">{video.transcript.length} words</span>
-                        <div className="flex items-center gap-1 text-yellow-400">
-                          <Coins className="w-4 h-4" />
-                          <span className="font-bold">+{video.coins}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <ChevronRight className={`w-5 h-5 text-white/40 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
                   </div>
-
-                  {/* Expanded Content */}
-                  {isExpanded && (
-                    <div className="p-4 bg-slate-800/50 border-t border-white/20 space-y-4">
-                      {/* Video Player */}
-                      <div className="aspect-video bg-black rounded-xl overflow-hidden">
-                        <iframe
-                          width="100%"
-                          height="100%"
-                          src={`https://www.youtube.com/embed/${video.youtubeId}`}
-                          title={video.title}
-                          frameBorder="0"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                        />
-                      </div>
-
-                      {/* Transcript Loading/Display */}
-                      {isLoading && (
-                        <div className="flex items-center justify-center gap-2 py-4 text-white/60">
-                          <Loader2 className="w-5 h-5 animate-spin" />
-                          Generating transcript...
-                        </div>
-                      )}
-
-                      {hasTranscript && (
-                        <div className="space-y-1 max-h-64 overflow-y-auto bg-white/5 rounded-xl p-3">
-                          <p className="text-white/50 text-xs font-medium mb-2">📝 Full Transcript (tap any line to add):</p>
-                          {fullTranscripts[video.id].map((line, idx) => {
-                            const inBackpack = wordRatings.find(w => w.word === line.hebrew);
-                            return (
-                              <button
-                                key={idx}
-                                onClick={() => addTranscriptWordToBackpack(line)}
-                                className={`w-full text-left rounded-lg p-2 transition-all ${
-                                  inBackpack 
-                                    ? "bg-green-500/10 border border-green-500/30" 
-                                    : "bg-white/5 hover:bg-white/10 border border-transparent hover:border-cyan-400/50"
-                                }`}
-                              >
-                                <p className="text-cyan-400 font-bold leading-tight" dir="rtl">{line.hebrew}</p>
-                                <p className="text-white/70 text-xs leading-tight">{line.transliteration}</p>
-                                <p className="text-white/50 text-xs leading-tight">{line.english}</p>
-                                {inBackpack && <span className="text-green-400 text-xs">✓ in backpack</span>}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-
-                      {/* Action Buttons */}
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => copyToMyVideosMutation.mutate(video)}
-                          disabled={copyToMyVideosMutation.isPending}
-                          className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white py-3 rounded-xl font-bold hover:from-cyan-600 hover:to-blue-600 disabled:opacity-50"
-                        >
-                          <Plus className="w-5 h-5" />
-                          Add to My Videos
-                        </button>
-                        <button
-                          onClick={() => setShowVocabForVideo(showingVocab ? null : video.id)}
-                          className={`flex-1 flex items-center justify-center gap-2 ${showingVocab ? 'bg-amber-600' : 'bg-gradient-to-r from-amber-500 to-orange-500'} text-white py-3 rounded-xl font-bold`}
-                        >
-                          <BookOpen className="w-5 h-5" />
-                          {showingVocab ? 'Hide Vocab' : 'Show Vocab'}
-                        </button>
-                      </div>
-
-                      {/* Vocabulary Words - Inline */}
-                      {showingVocab && (
-                       <div className="bg-white/5 rounded-xl p-4 space-y-2 max-h-80 overflow-y-auto">
-                         {video.transcript.map((item, idx) => {
-                           const inBackpack = wordRatings.find(w => w.word === item.hebrew);
-                           return (
-                             <div
-                               key={idx}
-                               className={`flex items-center justify-between p-3 rounded-lg ${
-                                 inBackpack ? "bg-green-500/10 border border-green-500/30" : "bg-white/5 border border-white/10"
-                               }`}
-                             >
-                               <div>
-                                 <span className="text-cyan-400 font-bold text-lg" dir="rtl">{item.hebrew}</span>
-                                 <p className="text-white/70 text-sm">{item.transliteration}</p>
-                                 <p className="text-white/50 text-xs">{item.meaning}</p>
-                               </div>
-                               <button
-                                 onClick={() => addToBackpack(item)}
-                                 disabled={!!inBackpack}
-                                 className={`px-3 py-1 rounded-lg text-sm transition-all ${
-                                   inBackpack 
-                                     ? "bg-green-500/20 text-green-400 cursor-not-allowed" 
-                                     : "bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30"
-                                 }`}
-                               >
-                                 {inBackpack ? "✓ Added" : "+ Add to My Videos"}
-                               </button>
-                             </div>
-                           );
-                         })}
-                         </div>
-                         )}
-                         </div>
-                         )}
-                         </div>
-                         );
-                         })}
-                         </div>
-                         )}
-                         </div>
-                         )}
+                )}
+                </div>
+                )}
                          </div>
                          )}
 
