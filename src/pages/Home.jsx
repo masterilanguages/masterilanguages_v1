@@ -616,19 +616,19 @@ export default function Home() {
               const allCompleted = day.subsections?.length > 0 && 
                 day.subsections.every(task => progress?.subsections_completed?.includes(task.id));
 
-              const gradients = [
-                "from-pink-500 to-rose-500",
-                "from-amber-500 to-orange-500",
-                "from-sky-500 to-cyan-500",
-                "from-blue-500 to-indigo-500",
-                "from-purple-500 to-violet-500",
-                "from-cyan-500 to-blue-500",
-                "from-red-500 to-pink-500",
-                "from-yellow-500 to-orange-500",
-                "from-teal-500 to-cyan-500",
-                "from-indigo-500 to-purple-500",
+              const dayColors = [
+                { bg: '#5a6b5a', text: '#f5f0e8' },
+                { bg: '#6b7c63', text: '#f5f0e8' },
+                { bg: '#4a5a4a', text: '#f5f0e8' },
+                { bg: '#7a8a73', text: '#f5f0e8' },
+                { bg: '#3d4a2e', text: '#f5f0e8' },
+                { bg: '#6b7c5a', text: '#f5f0e8' },
+                { bg: '#5a6b52', text: '#f5f0e8' },
+                { bg: '#7a8a6a', text: '#f5f0e8' },
+                { bg: '#4a5a42', text: '#f5f0e8' },
+                { bg: '#6a7a62', text: '#f5f0e8' },
               ];
-              const gradient = gradients[idx % gradients.length];
+              const dayColor = dayColors[idx % dayColors.length];
               const isCompact = true; // Always use compact style
 
               return (
@@ -643,7 +643,8 @@ export default function Home() {
                   <button
                     onClick={() => unlocked && setExpandedDay(isExpanded ? null : day.day_number)}
                     disabled={!unlocked}
-                    className={`w-full bg-gradient-to-r ${gradient} ${isCompact ? 'p-2' : 'p-4'} transition-all`}
+                    className={`w-full ${isCompact ? 'p-2' : 'p-4'} transition-all`}
+                    style={{ backgroundColor: dayColor.bg }}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -654,18 +655,18 @@ export default function Home() {
                         )}
                         <div className="text-left flex-1">
                           <div className="flex items-center gap-2">
-                            <h3 className={`text-white font-bold ${isCompact ? 'text-base' : 'text-xl'}`}>{day.title || `Day ${day.day_number}`}</h3>
+                            <h3 className={`font-bold ${isCompact ? 'text-base' : 'text-xl'}`} style={{ color: dayColor.text }}>{day.title || `Day ${day.day_number}`}</h3>
                             {allCompleted && !isCompact && (
                               <>
-                                <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
-                                  <Check className="w-4 h-4 text-white" />
+                                <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ backgroundColor: '#5a6b5a' }}>
+                                  <Check className="w-4 h-4" style={{ color: dayColor.text }} />
                                 </div>
-                                <span className="text-green-400 font-medium text-sm">Completed 🔥</span>
+                                <span className="font-medium text-sm" style={{ color: '#5a6b5a' }}>Completed 🔥</span>
                               </>
                             )}
                             {allCompleted && isCompact && (
-                              <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
-                                <Check className="w-3 h-3 text-white" />
+                              <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ backgroundColor: '#5a6b5a' }}>
+                                <Check className="w-3 h-3" style={{ color: dayColor.text }} />
                               </div>
                             )}
                           </div>
@@ -686,7 +687,7 @@ export default function Home() {
                             <Trash2 className="w-5 h-5" />
                           </button>
                         )}
-                        {unlocked && <ChevronDown className={`${isCompact ? 'w-4 h-4' : 'w-6 h-6'} text-white transition-transform ${isExpanded ? 'rotate-180' : ''}`} />}
+                        {unlocked && <ChevronDown className={`${isCompact ? 'w-4 h-4' : 'w-6 h-6'} transition-transform ${isExpanded ? 'rotate-180' : ''}`} style={{ color: dayColor.text }} />}
                         </div>
                         </div>
                         </button>
