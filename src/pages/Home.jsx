@@ -10,9 +10,6 @@ import { Input } from "@/components/ui/input";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import GameHeader from "../components/game/GameHeader";
-import TranslatorWidget from "../components/TranslatorWidget";
-
 import ActivityCard from "../components/game/ActivityCard";
 import BabyGame from "../components/game/BabyGame";
 import AvatarMenu from "../components/game/AvatarMenu";
