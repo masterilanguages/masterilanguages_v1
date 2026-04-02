@@ -51,12 +51,31 @@ export default function ManageCoaches() {
 
   const createAssignmentMutation = useMutation({
     mutationFn: (data) => base44.entities.CoachAssignment.create(data),
-    onSuccess: () => {
+    onSuccess: async (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['coachAssignments'] });
       setShowAssignDialog(false);
+
+      // Send congratulations emails to both coach and student
+      try {
+        await Promise.all([
+          base44.integrations.Core.SendEmail({
+            to: variables.coach_email,
+            subject: "🎉 You've been assigned a new student!",
+            body: `Congratulations! You have been assigned as a coach to ${variables.student_email} on Language Masteri.\n\nYou can now support their Hebrew learning journey. Log in to view their progress and get started!\n\nWelcome aboard,\nThe Language Masteri Team`
+          }),
+          base44.integrations.Core.SendEmail({
+            to: variables.student_email,
+            subject: "🎉 You've been matched with a coach!",
+            body: `Congratulations! You have been matched with a coach: ${variables.coach_email} on Language Masteri.\n\nYour coach is here to support your Hebrew learning journey. Log in to get started!\n\nWelcome,\nThe Language Masteri Team`
+          })
+        ]);
+      } catch (e) {
+        console.error("Failed to send assignment emails:", e);
+      }
+
       setSelectedCoach("");
       setSelectedStudent("");
-      toast.success("Coach assigned!");
+      toast.success("Coach assigned! Congratulations emails sent.");
     },
   });
 
