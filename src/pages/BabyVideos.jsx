@@ -850,42 +850,19 @@ export default function BabyVideos() {
     
     setLoadingTranscript(video.id);
     try {
-      const vocabList = video.transcript.map(t => `${t.hebrew} (${t.transliteration}) = ${t.meaning}`).join(", ");
-      
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Generate a realistic Hebrew lesson transcript for a video titled "${video.title}" about ${video.category}.
-        
-The video teaches these vocabulary words: ${vocabList}
+      const result = await base44.functions.invoke('youtubeTranscript', { videoId: video.youtubeId });
+      const rawTranscript = result?.data?.transcript;
 
-Create a natural, conversational transcript as if a Hebrew teacher is teaching these words. Include:
-- Hebrew sentences with vowels (nikkud)
-- Transliteration 
-- English translation
+      if (!rawTranscript || rawTranscript.length === 0) {
+        toast.error("No transcript available for this video");
+        setLoadingTranscript(null);
+        return;
+      }
 
-Format each line as an object with: hebrew, transliteration, english
-
-Create about 15-20 conversational lines that naturally introduce and use these vocabulary words.`,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            lines: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  hebrew: { type: "string" },
-                  transliteration: { type: "string" },
-                  english: { type: "string" }
-                }
-              }
-            }
-          }
-        }
-      });
-      
-      setFullTranscripts(prev => ({ ...prev, [video.id]: result.lines }));
+      // Store raw segments with timestamps directly
+      setFullTranscripts(prev => ({ ...prev, [video.id]: rawTranscript }));
     } catch (e) {
-      toast.error("Failed to generate transcript");
+      toast.error("Failed to fetch transcript");
     }
     setLoadingTranscript(null);
   };
@@ -1699,22 +1676,20 @@ Create about 15-20 conversational lines that naturally introduce and use these v
                                   )}
 
                                   {hasTranscript && (
-                                    <div className="space-y-1 max-h-48 overflow-y-auto bg-white/5 rounded-xl p-2">
-                                      <p className="text-white/50 text-xs font-medium mb-1">📝 Transcript (tap to add):</p>
+                                    <div className="space-y-1 max-h-64 overflow-y-auto bg-white/5 rounded-xl p-2">
+                                      <p className="text-white/50 text-xs font-medium mb-1">📝 Transcript</p>
                                       {fullTranscripts[video.id].map((line, idx) => {
-                                        const inBackpack = wordRatings.find(w => w.word === line.hebrew);
+                                        const mins = Math.floor((line.start || 0) / 60);
+                                        const secs = Math.floor((line.start || 0) % 60).toString().padStart(2, '0');
+                                        const timestamp = `${mins}:${secs}`;
                                         return (
-                                          <button
+                                          <div
                                             key={idx}
-                                            onClick={() => addTranscriptWordToBackpack(line)}
-                                            className={`w-full text-left rounded-lg p-1.5 transition-all text-xs ${
-                                              inBackpack ? "bg-green-500/10 border border-green-500/30" : "bg-white/5 hover:bg-white/10 border border-transparent hover:border-cyan-400/50"
-                                            }`}
+                                            className="flex gap-2 items-start rounded-lg p-1.5 bg-white/5 border border-transparent text-xs"
                                           >
-                                            <p className="text-cyan-400 font-bold" dir="rtl">{line.hebrew}</p>
-                                            <p className="text-white/60">{line.transliteration} — {line.english}</p>
-                                            {inBackpack && <span className="text-green-400">✓ in backpack</span>}
-                                          </button>
+                                            <span className="text-amber-400/70 font-mono flex-shrink-0 mt-0.5">{timestamp}</span>
+                                            <p className="text-white/80" dir="rtl">{line.text}</p>
+                                          </div>
                                         );
                                       })}
                                     </div>
