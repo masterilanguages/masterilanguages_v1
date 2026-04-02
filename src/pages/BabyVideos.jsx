@@ -18,6 +18,7 @@ import VideoTranscript from "../components/video/VideoTranscript";
 import EditableWord from "../components/learning/EditableWord";
 import VideoAdminControls from "../components/admin/VideoAdminControls";
 import GrammarTab from "../components/grammar/GrammarTab";
+import CoreVocabTab from "../components/grammar/CoreVocabTab";
 
 // Videos with transcripts - Piece of Hebrew channel
 const level1Videos = [
@@ -951,6 +952,13 @@ Create about 15-20 conversational lines that naturally introduce and use these v
             >
               📖 Grammar
             </button>
+            <button
+              onClick={() => setActiveTab("corevocab")}
+              className="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all"
+              style={activeTab === "corevocab" ? { background: '#5a6b5a', color: '#f5f0e8' } : { color: '#6b7c5a' }}
+            >
+              📚 Core Vocab
+            </button>
           </div>
         )}
 
@@ -1228,6 +1236,9 @@ Create about 15-20 conversational lines that naturally introduce and use these v
               )}
             </div>
           </motion.div>
+        ) : activeTab === "corevocab" ? (
+          /* ===== CORE VOCAB TAB ===== */
+          <CoreVocabTab />
         ) : activeTab === "grammar" ? (
           /* ===== GRAMMAR TAB ===== */
           <GrammarTab />
