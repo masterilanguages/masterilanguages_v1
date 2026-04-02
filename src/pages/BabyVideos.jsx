@@ -17,6 +17,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import VideoTranscript from "../components/video/VideoTranscript";
 import EditableWord from "../components/learning/EditableWord";
 import VideoAdminControls from "../components/admin/VideoAdminControls";
+import GrammarTab from "../components/grammar/GrammarTab";
 
 // Videos with transcripts - Piece of Hebrew channel
 const level1Videos = [
@@ -1229,53 +1230,7 @@ Create about 15-20 conversational lines that naturally introduce and use these v
           </motion.div>
         ) : activeTab === "grammar" ? (
           /* ===== GRAMMAR TAB ===== */
-          <div className="space-y-4">
-            {/* Livchor Future Conjugation Card */}
-            <div className="bg-white/70 backdrop-blur-xl rounded-2xl border border-stone-200 overflow-hidden">
-              <div className="p-5 border-b border-stone-200" style={{ background: 'linear-gradient(135deg, #5a6b5a20, #6b7c6320)' }}>
-                <h3 className="text-xl font-bold" style={{ color: '#3d4a2e', fontFamily: 'Cormorant Garamond, Georgia, serif' }}>
-                  לִבְחֹר — Livchor
-                </h3>
-                <p className="text-stone-500 text-sm mt-1">To Choose · Future Tense Conjugations</p>
-              </div>
-
-              {/* Rule Box */}
-              <div className="mx-4 mt-4 p-3 rounded-xl text-sm" style={{ background: '#f5f0e820', border: '1px solid #5a6b5a30' }}>
-                <p className="font-semibold mb-1" style={{ color: '#3d4a2e' }}>📌 Rule</p>
-                <p style={{ color: '#5a6b5a' }}>Future tense uses <strong>prefixes</strong> (and sometimes <strong>suffixes</strong>) on the root <strong>ב-ח-ר</strong> (B-Ch-R).</p>
-                <div className="grid grid-cols-2 gap-1 mt-2 text-xs" style={{ color: '#6b7c5a' }}>
-                  <span>• <strong>Ev-</strong> → I</span>
-                  <span>• <strong>Ti-</strong> → You (m) / She</span>
-                  <span>• <strong>Ti-...-i</strong> → You (f)</span>
-                  <span>• <strong>Yi-</strong> → He / They</span>
-                  <span>• <strong>Ni-</strong> → We</span>
-                  <span>• <strong>Ti-...-u</strong> → You (pl)</span>
-                </div>
-              </div>
-
-              {/* Conjugation Table */}
-              <div className="p-4">
-                <div className="space-y-2">
-                  {[
-                    { subject: 'I', transliteration: 'Ev-char', hebrew: 'אֶבְחַר' },
-                    { subject: 'You (m)', transliteration: 'Ti-vchar', hebrew: 'תִּבְחַר' },
-                    { subject: 'You (f)', transliteration: 'Ti-vchar-i', hebrew: 'תִּבְחֲרִי' },
-                    { subject: 'He', transliteration: 'Yi-vchar', hebrew: 'יִבְחַר' },
-                    { subject: 'She', transliteration: 'Ti-vchar', hebrew: 'תִּבְחַר' },
-                    { subject: 'We', transliteration: 'Ni-vchar', hebrew: 'נִבְחַר' },
-                    { subject: 'You (pl)', transliteration: 'Ti-vchar-u', hebrew: 'תִּבְחֲרוּ' },
-                    { subject: 'They', transliteration: 'Yi-vchar-u', hebrew: 'יִבְחֲרוּ' },
-                  ].map((row, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-3 rounded-xl" style={{ background: idx % 2 === 0 ? '#ffffff60' : '#f5f0e840', border: '1px solid #e8e4d850' }}>
-                      <span className="text-sm font-medium w-20 flex-shrink-0" style={{ color: '#6b7c5a' }}>{row.subject}</span>
-                      <span className="text-base font-semibold flex-1 text-center" style={{ color: '#3d4a2e' }}>{row.transliteration}</span>
-                      <span className="text-xl font-bold text-right" style={{ color: '#5a6b3a', direction: 'rtl' }}>{row.hebrew}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
+          <GrammarTab />
         ) : activeTab === "songs" ? (
           /* ===== SONGS TAB ===== */
           <div className="space-y-4">

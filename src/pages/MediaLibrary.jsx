@@ -11,6 +11,7 @@ import { Plus, Edit, Trash2, Search, Filter, Video, Users, Play, Loader2, Chevro
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import EditableWord from "../components/learning/EditableWord";
+import GrammarTab from "../components/grammar/GrammarTab";
 import ClickableTranscriptText from "../components/learning/ClickableTranscriptText";
 import TranslatorWidget from "../components/TranslatorWidget";
 import MediaLibraryHeader from "../components/MediaLibraryHeader";
@@ -1003,46 +1004,7 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
         </div>
 
         {/* Grammar Tab */}
-        {activeMediaTab === 'grammar' && (
-          <div className="space-y-4">
-            <div className="bg-white/70 backdrop-blur-xl rounded-2xl border border-stone-200 overflow-hidden">
-              <div className="p-5 border-b border-stone-200" style={{ background: 'linear-gradient(135deg, #5a6b5a20, #6b7c6320)' }}>
-                <h3 className="text-xl font-bold" style={{ color: '#3d4a2e', fontFamily: 'Cormorant Garamond, Georgia, serif' }}>לִבְחֹר — Livchor</h3>
-                <p className="text-stone-500 text-sm mt-1">To Choose · Future Tense Conjugations</p>
-              </div>
-              <div className="mx-4 mt-4 p-3 rounded-xl text-sm" style={{ background: '#f5f0e820', border: '1px solid #5a6b5a30' }}>
-                <p className="font-semibold mb-1" style={{ color: '#3d4a2e' }}>📌 Rule</p>
-                <p style={{ color: '#5a6b5a' }}>Future tense uses <strong>prefixes</strong> (and sometimes <strong>suffixes</strong>) on the root <strong>ב-ח-ר</strong> (B-Ch-R).</p>
-                <div className="grid grid-cols-2 gap-1 mt-2 text-xs" style={{ color: '#6b7c5a' }}>
-                  <span>• <strong>Ev-</strong> → I</span>
-                  <span>• <strong>Ti-</strong> → You (m) / She</span>
-                  <span>• <strong>Ti-...-i</strong> → You (f)</span>
-                  <span>• <strong>Yi-</strong> → He / They</span>
-                  <span>• <strong>Ni-</strong> → We</span>
-                  <span>• <strong>Ti-...-u</strong> → You (pl)</span>
-                </div>
-              </div>
-              <div className="p-4 space-y-2">
-                {[
-                  { subject: 'I', transliteration: 'Ev-char', hebrew: 'אֶבְחַר' },
-                  { subject: 'You (m)', transliteration: 'Ti-vchar', hebrew: 'תִּבְחַר' },
-                  { subject: 'You (f)', transliteration: 'Ti-vchar-i', hebrew: 'תִּבְחֲרִי' },
-                  { subject: 'He', transliteration: 'Yi-vchar', hebrew: 'יִבְחַר' },
-                  { subject: 'She', transliteration: 'Ti-vchar', hebrew: 'תִּבְחַר' },
-                  { subject: 'We', transliteration: 'Ni-vchar', hebrew: 'נִבְחַר' },
-                  { subject: 'You (pl)', transliteration: 'Ti-vchar-u', hebrew: 'תִּבְחֲרוּ' },
-                  { subject: 'They', transliteration: 'Yi-vchar-u', hebrew: 'יִבְחֲרוּ' },
-                ].map((row, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-3 rounded-xl" style={{ background: idx % 2 === 0 ? '#ffffff60' : '#f5f0e840', border: '1px solid #e8e4d850' }}>
-                    <span className="text-sm font-medium w-20 flex-shrink-0" style={{ color: '#6b7c5a' }}>{row.subject}</span>
-                    <span className="text-base font-semibold flex-1 text-center" style={{ color: '#3d4a2e' }}>{row.transliteration}</span>
-                    <span className="text-xl font-bold" style={{ color: '#5a6b3a', direction: 'rtl' }}>{row.hebrew}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
+        {activeMediaTab === 'grammar' && <GrammarTab />}
 
         {/* User's Custom Videos (from Video entity / BabyVideos) */}
         {(activeMediaTab === 'videos' || activeMediaTab === 'audio') && userVideos.length > 0 && (
