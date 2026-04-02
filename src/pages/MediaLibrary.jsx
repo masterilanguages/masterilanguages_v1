@@ -523,18 +523,27 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
     toast.info("Processing transcript...");
 
     try {
-      // Split into sentences/segments
-      const sentences = text
-        .split(/[.!?]\s+/)
-        .filter(s => s.trim().length > 0)
-        .map(s => s.trim());
-
-      // Estimate timestamps (assume ~3 seconds per sentence)
-      const rawSegments = sentences.map((text, idx) => ({
-        text,
-        start: idx * 3,
-        duration: 3
-      }));
+      // Try to parse [timestamp] text format first (YouTube transcript format)
+      const timestampLineRegex = /\[(\d+):(\d+)\]\s*(.+)/g;
+      const timestampMatches = [...text.matchAll(timestampLineRegex)];
+      
+      let rawSegments;
+      if (timestampMatches.length > 0) {
+        // Parse lines with [MM:SS] timestamps
+        rawSegments = timestampMatches.map(match => ({
+          text: match[3].trim(),
+          start: parseInt(match[1]) * 60 + parseInt(match[2]),
+          duration: 5
+        }));
+      } else {
+        // Fallback: split by newlines, then by sentences
+        const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+        rawSegments = lines.map((line, idx) => ({
+          text: line,
+          start: idx * 5,
+          duration: 5
+        }));
+      }
 
       // Process with AI
       const processedSegments = [];
