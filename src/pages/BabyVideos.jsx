@@ -959,6 +959,13 @@ Create about 15-20 conversational lines that naturally introduce and use these v
             >
               📚 Core Vocab
             </button>
+            <button
+              onClick={() => setActiveTab("corevocab")}
+              className="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all"
+              style={activeTab === "corevocab" ? { background: '#5a6b5a', color: '#f5f0e8' } : { color: '#6b7c5a' }}
+            >
+              📚 Core Vocab
+            </button>
           </div>
         )}
 
@@ -1236,6 +1243,9 @@ Create about 15-20 conversational lines that naturally introduce and use these v
               )}
             </div>
           </motion.div>
+        ) : activeTab === "corevocab" ? (
+          /* ===== CORE VOCAB TAB ===== */
+          <CoreVocabTab />
         ) : activeTab === "corevocab" ? (
           /* ===== CORE VOCAB TAB ===== */
           <CoreVocabTab />

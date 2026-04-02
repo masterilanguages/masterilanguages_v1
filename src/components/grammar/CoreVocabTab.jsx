@@ -7,199 +7,204 @@ const SECTIONS = [
     id: "time",
     emoji: "⏰",
     title: "Time & Structure",
-    color: "#5a6b5a",
     items: [
-      { hebrew: "הַיּוֹם", transliteration: "hayóm", english: "today" },
-      { hebrew: "מָחָר", transliteration: "machár", english: "tomorrow" },
-      { hebrew: "אֶתְמוֹל", transliteration: "etmól", english: "yesterday" },
-      { hebrew: "עַכְשָׁיו", transliteration: "achsháv", english: "now" },
-      { hebrew: "תָּמִיד", transliteration: "tamíd", english: "always" },
-      { hebrew: "יוֹם רִאשׁוֹן", transliteration: "yom rishón", english: "Sunday" },
-      { hebrew: "יוֹם שֵׁנִי", transliteration: "yom shení", english: "Monday" },
-      { hebrew: "יוֹם שְׁלִישִׁי", transliteration: "yom shlishí", english: "Tuesday" },
-      { hebrew: "יוֹם רְבִיעִי", transliteration: "yom rviʼí", english: "Wednesday" },
-      { hebrew: "יוֹם חֲמִישִׁי", transliteration: "yom chamishí", english: "Thursday" },
-      { hebrew: "יוֹם שִׁשִּׁי", transliteration: "yom shishí", english: "Friday" },
-      { hebrew: "שַׁבָּת", transliteration: "shabát", english: "Saturday / Shabbat" },
-      { hebrew: "יָנוּאָר", transliteration: "yanúar", english: "January" },
-      { hebrew: "פֶבְרוּאָר", transliteration: "febrúar", english: "February" },
-      { hebrew: "מָרְץ", transliteration: "mártz", english: "March" },
-      { hebrew: "אַפְרִיל", transliteration: "apríl", english: "April" },
-      { hebrew: "מַאי", transliteration: "mái", english: "May" },
-      { hebrew: "יוּנִי", transliteration: "yúni", english: "June" },
-      { hebrew: "יוּלִי", transliteration: "yúli", english: "July" },
-      { hebrew: "אוֹגוּסְט", transliteration: "ogúst", english: "August" },
-      { hebrew: "סֶפְטֶמְבֶּר", transliteration: "septémber", english: "September" },
-      { hebrew: "אוֹקְטוֹבֶר", transliteration: "október", english: "October" },
-      { hebrew: "נוֹבֶמְבֶּר", transliteration: "novémber", english: "November" },
-      { hebrew: "דֶצֶמְבֶּר", transliteration: "detsémbær", english: "December" },
-      { hebrew: "אֶחָד", transliteration: "echád", english: "1 (one)" },
-      { hebrew: "שְׁנַיִם", transliteration: "shnaím", english: "2 (two)" },
-      { hebrew: "שְׁלוֹשָׁה", transliteration: "shlosháh", english: "3 (three)" },
-      { hebrew: "אַרְבָּעָה", transliteration: "arbaʼáh", english: "4 (four)" },
-      { hebrew: "חֲמִישָׁה", transliteration: "chamishàh", english: "5 (five)" },
-      { hebrew: "שִׁשָּׁה", transliteration: "shisháh", english: "6 (six)" },
-      { hebrew: "שִׁבְעָה", transliteration: "shivʼáh", english: "7 (seven)" },
-      { hebrew: "שְׁמוֹנָה", transliteration: "shmoná", english: "8 (eight)" },
-      { hebrew: "תִּשְׁעָה", transliteration: "tisháh", english: "9 (nine)" },
-      { hebrew: "עֶשֶׂר", transliteration: "éser", english: "10 (ten)" },
-      { hebrew: "עֶשְׂרִים", transliteration: "esrím", english: "20 (twenty)" },
-      { hebrew: "חֲמִישִּׁים", transliteration: "chamishím", english: "50 (fifty)" },
-      { hebrew: "מֵאָה", transliteration: "meʼáh", english: "100 (hundred)" },
-      { hebrew: "אֶלֶף", transliteration: "élef", english: "1000 (thousand)" },
+      { hebrew: "הַיּוֹם", roman: "hayóm", english: "today" },
+      { hebrew: "מָחָר", roman: "machár", english: "tomorrow" },
+      { hebrew: "אֶתְמוֹל", roman: "etmól", english: "yesterday" },
+      { hebrew: "עַכְשָׁו", roman: "achsháv", english: "now" },
+      { hebrew: "תָּמִיד", roman: "tamíd", english: "always" },
+      { hebrew: "רֶגַע", roman: "réga", english: "moment" },
+      { hebrew: "שָׁעָה", roman: "shaá", english: "hour" },
+      { hebrew: "דַּקָּה", roman: "daká", english: "minute" },
+    ],
+  },
+  {
+    id: "days",
+    emoji: "📅",
+    title: "Days of the Week",
+    items: [
+      { hebrew: "יוֹם רִאשׁוֹן", roman: "yom rishón", english: "Sunday" },
+      { hebrew: "יוֹם שֵׁנִי", roman: "yom shení", english: "Monday" },
+      { hebrew: "יוֹם שְׁלִישִׁי", roman: "yom shlishí", english: "Tuesday" },
+      { hebrew: "יוֹם רְבִיעִי", roman: "yom rvií", english: "Wednesday" },
+      { hebrew: "יוֹם חֲמִישִׁי", roman: "yom chamishí", english: "Thursday" },
+      { hebrew: "יוֹם שִׁשִּׁי", roman: "yom shishí", english: "Friday" },
+      { hebrew: "שַׁבָּת", roman: "shabát", english: "Saturday / Shabbat" },
+    ],
+  },
+  {
+    id: "months",
+    emoji: "🗓️",
+    title: "Months",
+    items: [
+      { hebrew: "יָנוּאָר", roman: "yanúar", english: "January" },
+      { hebrew: "פֶבְרוּאָר", roman: "fevrúar", english: "February" },
+      { hebrew: "מָרְץ", roman: "mártz", english: "March" },
+      { hebrew: "אַפְרִיל", roman: "apríl", english: "April" },
+      { hebrew: "מַאי", roman: "mái", english: "May" },
+      { hebrew: "יוּנִי", roman: "yúni", english: "June" },
+      { hebrew: "יוּלִי", roman: "yúli", english: "July" },
+      { hebrew: "אוֹגוּסְט", roman: "ogúst", english: "August" },
+      { hebrew: "סֶפְטֶמְבֶּר", roman: "septémber", english: "September" },
+      { hebrew: "אוֹקְטוֹבֶר", roman: "október", english: "October" },
+      { hebrew: "נוֹבֶמְבֶּר", roman: "novémber", english: "November" },
+      { hebrew: "דֶּצֶמְבֶּר", roman: "detsémber", english: "December" },
+    ],
+  },
+  {
+    id: "numbers",
+    emoji: "🔢",
+    title: "Numbers (0–20 + key)",
+    items: [
+      { hebrew: "אֶפֶס", roman: "éfes", english: "0" },
+      { hebrew: "אֶחָד", roman: "echád", english: "1" },
+      { hebrew: "שְׁתַּיִם", roman: "shtáyim", english: "2" },
+      { hebrew: "שָׁלוֹשׁ", roman: "shalósh", english: "3" },
+      { hebrew: "אַרְבַּע", roman: "árba", english: "4" },
+      { hebrew: "חָמֵשׁ", roman: "chamésḥ", english: "5" },
+      { hebrew: "שֵׁשׁ", roman: "shesh", english: "6" },
+      { hebrew: "שֶׁבַע", roman: "shéva", english: "7" },
+      { hebrew: "שְׁמוֹנֶה", roman: "shmoné", english: "8" },
+      { hebrew: "תֵּשַׁע", roman: "tésha", english: "9" },
+      { hebrew: "עֶשֶׂר", roman: "éser", english: "10" },
+      { hebrew: "אַחַד עָשָׂר", roman: "achád asar", english: "11" },
+      { hebrew: "שְׁנֵים עָשָׂר", roman: "shném asar", english: "12" },
+      { hebrew: "עֶשְׂרִים", roman: "esrím", english: "20" },
+      { hebrew: "שְׁלוֹשִׁים", roman: "shloshím", english: "30" },
+      { hebrew: "אַרְבָּעִים", roman: "arbaím", english: "40" },
+      { hebrew: "חֲמִישִׁים", roman: "chamishím", english: "50" },
+      { hebrew: "מֵאָה", roman: "meá", english: "100" },
+      { hebrew: "אֶלֶף", roman: "élef", english: "1,000" },
     ],
   },
   {
     id: "questions",
     emoji: "❓",
     title: "Question Words",
-    color: "#6b5a2e",
     items: [
-      { hebrew: "מָה", transliteration: "ma", english: "what" },
-      { hebrew: "מִי", transliteration: "mi", english: "who" },
-      { hebrew: "אֵיפֹה", transliteration: "eifó", english: "where" },
-      { hebrew: "מָתַי", transliteration: "matái", english: "when" },
-      { hebrew: "לָמָּה", transliteration: "láma", english: "why" },
-      { hebrew: "אֵיךְ", transliteration: "eich", english: "how" },
-      { hebrew: "כַּמָּה", transliteration: "kamá", english: "how much / how many" },
-    ],
-  },
-  {
-    id: "core_verbs",
-    emoji: "⚡",
-    title: "Core Verbs",
-    color: "#3a4a6b",
-    items: [
-      { hebrew: "לִהְיוֹת", transliteration: "lihiót", english: "to be" },
-      { hebrew: "לַעֲשׂוֹת", transliteration: "laʼasót", english: "to do / make" },
-      { hebrew: "לָלֶכֶת", transliteration: "laléchæt", english: "to go / walk" },
-      { hebrew: "לָבוֹא", transliteration: "lavó", english: "to come" },
-      { hebrew: "לָקַחַת", transliteration: "lakáchat", english: "to take" },
-      { hebrew: "לָתֵת", transliteration: "latét", english: "to give" },
-      { hebrew: "לִבְחֹר", transliteration: "livchór", english: "to choose" },
-      { hebrew: "לִשְׁלֹחַ", transliteration: "lishlóach", english: "to send" },
-      { hebrew: "לְדַבֵּר", transliteration: "ledabér", english: "to speak / talk" },
-      { hebrew: "לִרְאוֹת", transliteration: "lirʼót", english: "to see" },
-      { hebrew: "לֶאֱהֹב", transliteration: "leʼehóv", english: "to love" },
-      { hebrew: "לוֹמַר", transliteration: "lomár", english: "to say" },
-      { hebrew: "לָשֶׁבֶת", transliteration: "lashévet", english: "to sit" },
-      { hebrew: "לֶאֱכֹל", transliteration: "leʼekhól", english: "to eat" },
-      { hebrew: "לִשְׁתּוֹת", transliteration: "lishtót", english: "to drink" },
-      { hebrew: "לִישׁוֹן", transliteration: "lishón", english: "to sleep" },
-      { hebrew: "לַחְשׁוֹב", transliteration: "lachshóv", english: "to think" },
-      { hebrew: "לִכְתּוֹב", transliteration: "lichtóv", english: "to write" },
-      { hebrew: "לִקְרֹא", transliteration: "likró", english: "to read / call" },
-      { hebrew: "לַעֲזֹר", transliteration: "laʼazór", english: "to help" },
+      { hebrew: "מָה", roman: "ma", english: "what" },
+      { hebrew: "מִי", roman: "mi", english: "who" },
+      { hebrew: "אֵיפֹה", roman: "eifó", english: "where" },
+      { hebrew: "מָתַי", roman: "matái", english: "when" },
+      { hebrew: "לָמָּה", roman: "láma", english: "why" },
+      { hebrew: "אֵיךְ", roman: "eich", english: "how" },
+      { hebrew: "כַּמָּה", roman: "kamá", english: "how much / many" },
+      { hebrew: "אֵיזֶה", roman: "éize", english: "which" },
     ],
   },
   {
     id: "pronouns",
     emoji: "👤",
     title: "Pronouns",
-    color: "#5a3a6b",
     items: [
-      { hebrew: "אֲנִי", transliteration: "aní", english: "I" },
-      { hebrew: "אַתָּה", transliteration: "atá", english: "you (male)" },
-      { hebrew: "אַת", transliteration: "át", english: "you (female)" },
-      { hebrew: "הוּא", transliteration: "hu", english: "he" },
-      { hebrew: "הִיא", transliteration: "hi", english: "she" },
-      { hebrew: "אֲנַחְנוּ", transliteration: "anáchnu", english: "we" },
-      { hebrew: "אַתֶּם", transliteration: "atém", english: "you all (male)" },
-      { hebrew: "אַתֶּן", transliteration: "atén", english: "you all (female)" },
-      { hebrew: "הֵם", transliteration: "hem", english: "they (male)" },
-      { hebrew: "הֵן", transliteration: "hen", english: "they (female)" },
+      { hebrew: "אֲנִי", roman: "aní", english: "I" },
+      { hebrew: "אַתָּה", roman: "atá", english: "you (m)" },
+      { hebrew: "אַת", roman: "at", english: "you (f)" },
+      { hebrew: "הוּא", roman: "hu", english: "he" },
+      { hebrew: "הִיא", roman: "hi", english: "she" },
+      { hebrew: "אֲנַחְנוּ", roman: "anáchnu", english: "we" },
+      { hebrew: "אַתֶּם", roman: "atém", english: "you (pl m)" },
+      { hebrew: "אַתֶּן", roman: "atén", english: "you (pl f)" },
+      { hebrew: "הֵם", roman: "hem", english: "they (m)" },
+      { hebrew: "הֵן", roman: "hen", english: "they (f)" },
     ],
   },
   {
     id: "connectors",
     emoji: "🔗",
     title: "Connectors",
-    color: "#6b3a3a",
     items: [
-      { hebrew: "וְ", transliteration: "ve", english: "and" },
-      { hebrew: "אֲבָל", transliteration: "avál", english: "but" },
-      { hebrew: "כִּי", transliteration: "ki", english: "because" },
-      { hebrew: "אָז", transliteration: "az", english: "so / then" },
-      { hebrew: "גַּם", transliteration: "gam", english: "also / too" },
-      { hebrew: "רַק", transliteration: "rak", english: "only / just" },
-      { hebrew: "אוֹ", transliteration: "o", english: "or" },
-      { hebrew: "אִם", transliteration: "im", english: "if" },
-      { hebrew: "כְּשֶׁ", transliteration: "kshe", english: "when (conjunction)" },
-      { hebrew: "לְכֵן", transliteration: "lachén", english: "therefore" },
+      { hebrew: "וְ", roman: "ve", english: "and" },
+      { hebrew: "אֲבָל", roman: "avál", english: "but" },
+      { hebrew: "כִּי", roman: "ki", english: "because" },
+      { hebrew: "אָז", roman: "az", english: "so / then" },
+      { hebrew: "גַּם", roman: "gam", english: "also / too" },
+      { hebrew: "רַק", roman: "rak", english: "only / just" },
+      { hebrew: "אוֹ", roman: "o", english: "or" },
+      { hebrew: "אִם", roman: "im", english: "if" },
+      { hebrew: "כְּשֶׁ", roman: "kshe", english: "when (conjunction)" },
     ],
   },
   {
     id: "prepositions",
     emoji: "📍",
     title: "Prepositions",
-    color: "#3a5a6b",
     items: [
-      { hebrew: "בְּ", transliteration: "be", english: "in / at" },
-      { hebrew: "לְ", transliteration: "le", english: "to / for" },
-      { hebrew: "מִ / מֵ", transliteration: "mi / me", english: "from" },
-      { hebrew: "עִם", transliteration: "im", english: "with" },
-      { hebrew: "עַל", transliteration: "al", english: "on / about" },
-      { hebrew: "אֶל", transliteration: "el", english: "to (toward)" },
-      { hebrew: "שֶׁל", transliteration: "shel", english: "of / belonging to" },
-      { hebrew: "בִּין", transliteration: "bein", english: "between" },
-      { hebrew: "לִפְנֵי", transliteration: "lifnéi", english: "before / in front of" },
-      { hebrew: "אַחֲרֵי", transliteration: "acharéi", english: "after" },
+      { hebrew: "בְּ", roman: "be", english: "in / at" },
+      { hebrew: "לְ", roman: "le", english: "to / for" },
+      { hebrew: "מִ", roman: "mi", english: "from" },
+      { hebrew: "עִם", roman: "im", english: "with" },
+      { hebrew: "עַל", roman: "al", english: "on / about" },
+      { hebrew: "אֶל", roman: "el", english: "to (direction)" },
+      { hebrew: "שֶׁל", roman: "shel", english: "of / belonging to" },
+      { hebrew: "בֵּין", roman: "bein", english: "between" },
+      { hebrew: "אַחֲרֵי", roman: "acharéi", english: "after" },
+      { hebrew: "לִפְנֵי", roman: "lifnéi", english: "before / in front of" },
     ],
   },
   {
     id: "adjectives",
     emoji: "🎨",
     title: "Descriptors (Adjectives)",
-    color: "#6b5a3a",
     items: [
-      { hebrew: "טוֹב", transliteration: "tov", english: "good" },
-      { hebrew: "רַע", transliteration: "ra", english: "bad" },
-      { hebrew: "גָּדוֹל", transliteration: "gadól", english: "big" },
-      { hebrew: "קָטָן", transliteration: "katán", english: "small" },
-      { hebrew: "חָדָשׁ", transliteration: "chadásh", english: "new" },
-      { hebrew: "יָשָׁן", transliteration: "yashán", english: "old" },
-      { hebrew: "יָפֶה", transliteration: "yafé", english: "beautiful / nice" },
-      { hebrew: "חָזָק", transliteration: "chazák", english: "strong" },
-      { hebrew: "קַל", transliteration: "kal", english: "easy / light" },
-      { hebrew: "קָשֶׁה", transliteration: "kashé", english: "hard / difficult" },
-      { hebrew: "מְהִיר", transliteration: "mahír", english: "fast" },
-      { hebrew: "אִטִּי", transliteration: "ití", english: "slow" },
-      { hebrew: "חָם", transliteration: "cham", english: "hot / warm" },
-      { hebrew: "קַר", transliteration: "kar", english: "cold" },
-      { hebrew: "מְעַנְיֵן", transliteration: "meʼanyén", english: "interesting" },
+      { hebrew: "טוֹב", roman: "tov", english: "good" },
+      { hebrew: "רַע", roman: "ra", english: "bad" },
+      { hebrew: "גָּדוֹל", roman: "gadól", english: "big" },
+      { hebrew: "קָטָן", roman: "katán", english: "small" },
+      { hebrew: "חָדָשׁ", roman: "chadásh", english: "new" },
+      { hebrew: "יָשָׁן", roman: "yashán", english: "old" },
+      { hebrew: "יָפֶה", roman: "yafé", english: "beautiful / nice" },
+      { hebrew: "קָשֶׁה", roman: "kashe", english: "hard / difficult" },
+      { hebrew: "קַל", roman: "kal", english: "easy / light" },
+      { hebrew: "מְעַנְיֵן", roman: "me'anyén", english: "interesting" },
     ],
   },
   {
     id: "nouns",
     emoji: "🏠",
     title: "Daily Life Nouns",
-    color: "#4a6b3a",
     items: [
-      { hebrew: "בַּיִת", transliteration: "báyit", english: "house / home" },
-      { hebrew: "עֲבוֹדָה", transliteration: "avodá", english: "work / job" },
-      { hebrew: "כֶּסֶף", transliteration: "késef", english: "money" },
-      { hebrew: "זְמַן", transliteration: "zmán", english: "time" },
-      { hebrew: "יוֹם", transliteration: "yom", english: "day" },
-      { hebrew: "אֹכֶל", transliteration: "ókhel", english: "food" },
-      { hebrew: "מַיִם", transliteration: "máyim", english: "water" },
-      { hebrew: "אָדָם", transliteration: "adám", english: "person / man" },
-      { hebrew: "אִשָּׁה", transliteration: "isháh", english: "woman / wife" },
-      { hebrew: "יֶלֶד", transliteration: "yéled", english: "child / boy" },
-      { hebrew: "מִשְׁפָּחָה", transliteration: "mishpachá", english: "family" },
-      { hebrew: "חָבֵר", transliteration: "chavér", english: "friend (male)" },
-      { hebrew: "עִיר", transliteration: "ír", english: "city" },
-      { hebrew: "אוֹכֶל", transliteration: "ókhel", english: "food" },
-      { hebrew: "בִּגְדֵי", transliteration: "bigdéi", english: "clothes" },
-      { hebrew: "מַחְשֵׁב", transliteration: "machshév", english: "computer" },
-      { hebrew: "טֶלֶפוֹן", transliteration: "telefón", english: "phone" },
-      { hebrew: "מְכוֹנִית", transliteration: "mekhonít", english: "car" },
-      { hebrew: "דֶּרֶךְ", transliteration: "dérech", english: "road / way" },
-      { hebrew: "שָׁנָה", transliteration: "shaná", english: "year" },
+      { hebrew: "בַּיִת", roman: "báyit", english: "house / home" },
+      { hebrew: "עֲבוֹדָה", roman: "avodá", english: "work / job" },
+      { hebrew: "כֶּסֶף", roman: "késef", english: "money" },
+      { hebrew: "זְמַן", roman: "zmán", english: "time" },
+      { hebrew: "יוֹם", roman: "yom", english: "day" },
+      { hebrew: "לַיְלָה", roman: "láyla", english: "night" },
+      { hebrew: "אֹכֶל", roman: "óchel", english: "food" },
+      { hebrew: "מַיִם", roman: "máyim", english: "water" },
+      { hebrew: "אִישׁ", roman: "ish", english: "man / person" },
+      { hebrew: "אִשָּׁה", roman: "ishá", english: "woman" },
+      { hebrew: "יֶלֶד", roman: "yéled", english: "child / boy" },
+      { hebrew: "מִשְׁפָּחָה", roman: "mishpachá", english: "family" },
+    ],
+  },
+  {
+    id: "core_verbs",
+    emoji: "⚡",
+    title: "Core Verbs (High ROI)",
+    items: [
+      { hebrew: "לִהְיוֹת", roman: "lihyót", english: "to be" },
+      { hebrew: "לַעֲשׂוֹת", roman: "la'asót", english: "to do / make" },
+      { hebrew: "לָלֶכֶת", roman: "laléchet", english: "to go / walk" },
+      { hebrew: "לָבוֹא", roman: "lavó", english: "to come" },
+      { hebrew: "לָקַחַת", roman: "lakáchat", english: "to take" },
+      { hebrew: "לָתֵת", roman: "latét", english: "to give" },
+      { hebrew: "לִבְחֹר", roman: "livchór", english: "to choose" },
+      { hebrew: "לִשְׁלֹחַ", roman: "lishlóach", english: "to send" },
+      { hebrew: "לְדַבֵּר", roman: "ledabér", english: "to speak" },
+      { hebrew: "לִרְאוֹת", roman: "lir'ót", english: "to see" },
+      { hebrew: "לֶאֱהֹב", roman: "le'ehóv", english: "to love" },
+      { hebrew: "לוֹמַר", roman: "lomár", english: "to say" },
+      { hebrew: "לִשְׁמֹעַ", roman: "lishmóa", english: "to hear / listen" },
+      { hebrew: "לָדַעַת", roman: "ladáat", english: "to know" },
+      { hebrew: "לִרְצוֹת", roman: "lirtzót", english: "to want" },
+      { hebrew: "לְיַכוֹל", roman: "leychól", english: "to be able to / can" },
+      { hebrew: "לַחְשׁוֹב", roman: "lachshóv", english: "to think" },
     ],
   },
 ];
 
-function SectionCard({ section }) {
+function Section({ section }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -207,7 +212,7 @@ function SectionCard({ section }) {
       <button
         onClick={() => setOpen(!open)}
         className="w-full p-4 text-left flex items-center justify-between hover:bg-stone-50/50 transition-all"
-        style={{ background: `linear-gradient(135deg, ${section.color}12, ${section.color}08)` }}
+        style={{ background: 'linear-gradient(135deg, #5a6b5a18, #6b7c6312)' }}
       >
         <div className="flex items-center gap-3">
           <span className="text-2xl">{section.emoji}</span>
@@ -230,34 +235,20 @@ function SectionCard({ section }) {
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="p-4">
-              <div className="grid gap-1.5">
-                {section.items.map((item, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center justify-between px-3 py-2 rounded-xl"
-                    style={{
-                      background: idx % 2 === 0 ? '#ffffff60' : '#f5f0e840',
-                      border: '1px solid #e8e4d850'
-                    }}
-                  >
-                    {/* English */}
-                    <span className="text-sm text-stone-500 w-28 flex-shrink-0">{item.english}</span>
-                    {/* Transliteration */}
-                    <span className="text-sm font-medium flex-1 text-center" style={{ color: '#5a6b3a' }}>
-                      {item.transliteration}
-                    </span>
-                    {/* Hebrew */}
-                    <span
-                      className="text-lg font-bold text-right flex-shrink-0 w-28"
-                      dir="rtl"
-                      style={{ color: '#3d4a2e' }}
-                    >
-                      {item.hebrew}
-                    </span>
+            <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {section.items.map((item, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center justify-between px-3 py-2.5 rounded-xl"
+                  style={{ background: idx % 2 === 0 ? '#ffffff70' : '#f5f0e850', border: '1px solid #e8e4d860' }}
+                >
+                  <div className="flex flex-col">
+                    <span className="text-xs font-medium" style={{ color: '#6b7c5a' }}>{item.roman}</span>
+                    <span className="text-sm text-stone-500">{item.english}</span>
                   </div>
-                ))}
-              </div>
+                  <span className="text-xl font-bold" dir="rtl" style={{ color: '#3d4a2e' }}>{item.hebrew}</span>
+                </div>
+              ))}
             </div>
           </motion.div>
         )}
@@ -268,15 +259,15 @@ function SectionCard({ section }) {
 
 export default function CoreVocabTab() {
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div className="p-4 rounded-xl mb-2" style={{ background: '#5a6b5a18', border: '1px solid #5a6b5a30' }}>
-        <p className="text-sm font-semibold mb-1" style={{ color: '#3d4a2e' }}>📚 Core Vocabulary</p>
+        <p className="text-sm font-semibold mb-1" style={{ color: '#3d4a2e' }}>📚 Core Vocabulary — The Foundation</p>
         <p className="text-xs" style={{ color: '#5a6b5a' }}>
-          The essential building blocks of Hebrew — high-frequency words organized by category. Master these and you can handle most everyday conversations.
+          These are the highest-ROI words in Hebrew. Master these first and you'll understand the structure of most everyday conversations. Click any section to expand.
         </p>
       </div>
       {SECTIONS.map(section => (
-        <SectionCard key={section.id} section={section} />
+        <Section key={section.id} section={section} />
       ))}
     </div>
   );

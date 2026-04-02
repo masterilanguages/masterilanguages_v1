@@ -931,6 +931,7 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
           <button onClick={() => setActiveMediaTab('audio')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-1.5 ${activeMediaTab === 'audio' ? 'text-stone-800' : 'text-stone-500 hover:text-stone-700'}`} style={activeMediaTab === 'audio' ? { background: '#ffffff80' } : {}}>🎧 Audio Training</button>
           <button onClick={() => setActiveMediaTab('grammar')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-1.5 ${activeMediaTab === 'grammar' ? 'text-stone-800' : 'text-stone-500 hover:text-stone-700'}`} style={activeMediaTab === 'grammar' ? { background: '#ffffff80' } : {}}>📖 Grammar</button>
           <button onClick={() => setActiveMediaTab('corevocab')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-1.5 ${activeMediaTab === 'corevocab' ? 'text-stone-800' : 'text-stone-500 hover:text-stone-700'}`} style={activeMediaTab === 'corevocab' ? { background: '#ffffff80' } : {}}>📚 Core Vocab</button>
+          <button onClick={() => setActiveMediaTab('corevocab')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-1.5 ${activeMediaTab === 'corevocab' ? 'text-stone-800' : 'text-stone-500 hover:text-stone-700'}`} style={activeMediaTab === 'corevocab' ? { background: '#ffffff80' } : {}}>📚 Core Vocab</button>
           {canEdit && (
             <button onClick={() => { resetForm(); setEditingVideo(null); setMediaType("video"); setShowAddDialog(true); }} className="px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-1.5 text-stone-500 hover:text-stone-700 ml-auto">
               <Plus className="w-4 h-4" /> Add Media
@@ -1007,6 +1008,9 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
 
         {/* Grammar Tab */}
         {activeMediaTab === 'grammar' && <GrammarTab />}
+
+        {/* Core Vocab Tab */}
+        {activeMediaTab === 'corevocab' && <CoreVocabTab />}
 
         {/* Core Vocab Tab */}
         {activeMediaTab === 'corevocab' && <CoreVocabTab />}
