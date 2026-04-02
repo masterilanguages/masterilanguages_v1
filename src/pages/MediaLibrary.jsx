@@ -163,8 +163,17 @@ export default function MediaLibrary() {
     },
   });
 
+  // Helper to determine which entity the selected video belongs to
+  const getVideoEntity = (video) => {
+    // Videos from userVideos (Video entity) have youtube_video_id but no topics/difficulty_level
+    if (video?.youtube_video_id !== undefined && video?.topics === undefined) {
+      return base44.entities.Video;
+    }
+    return base44.entities.MediaLibrary;
+  };
+
   const updateVideoMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.MediaLibrary.update(id, data),
+    mutationFn: ({ id, data, entity }) => (entity || base44.entities.MediaLibrary).update(id, data),
     onSuccess: async (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['mediaLibrary'] });
       const updatedVideo = await base44.entities.MediaLibrary.filter({ id: variables.id });
@@ -580,10 +589,11 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
         }
       }
 
-      // Save
+      // Save to correct entity
       await updateVideoMutation.mutateAsync({
         id: video.id,
-        data: { processed_transcript: processedSegments }
+        data: { processed_transcript: processedSegments },
+        entity: getVideoEntity(video)
       });
 
       setTranscript(processedSegments);
@@ -714,10 +724,11 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
         }
       }
 
-      // Save
+      // Save to correct entity
       await updateVideoMutation.mutateAsync({
         id: video.id,
-        data: { processed_transcript: processedSegments }
+        data: { processed_transcript: processedSegments },
+        entity: getVideoEntity(video)
       });
 
       setTranscript(processedSegments);
