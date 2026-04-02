@@ -55,9 +55,6 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
     { id: "schedule", to: "Home", emoji: "📅", label: "Schedule" },
     { id: "videos", to: "MediaLibrary", emoji: "📚", label: "Library" },
     { id: "journal", to: "Journal", emoji: "📓", label: "Journal" },
-    ...(currentUser?.role === 'admin' || currentUser?.role === 'coach' ? [
-      { id: "people", to: "ManageCoaches", emoji: "👥", label: "People" },
-    ] : []),
     ...(currentUser?.role === 'admin' ? [
       { id: "clock", to: "Home", emoji: "🕐", label: "Clock" },
     ] : []),
@@ -257,9 +254,11 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
           <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: '#ffffff18', border: '1px solid #ffffff30' }}>
             <span className="text-white font-bold text-xs">🏆 Progress</span>
           </motion.button>
-          <motion.button onClick={() => setShowMenu(!showMenu)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: '#ffffff18', border: '1px solid #ffffff30' }}>
-            <span className="text-white font-bold text-xs">👥 People</span>
-          </motion.button>
+          {(currentUser?.role === 'admin' || currentUser?.role === 'coach') && (
+            <motion.button onClick={() => navigate(createPageUrl("ManageCoaches"))} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: '#ffffff18', border: '1px solid #ffffff30' }}>
+              <span className="text-white font-bold text-xs">👥 People</span>
+            </motion.button>
+          )}
           <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: '#ffffff18', border: '1px solid #ffffff30' }}>
             <span className="text-white font-bold text-xs">💳 Payments</span>
           </motion.button>
