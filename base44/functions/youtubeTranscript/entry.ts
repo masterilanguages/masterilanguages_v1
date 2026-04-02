@@ -123,11 +123,22 @@ async function fetchYouTubeCaptions(videoId) {
 
   console.log(`✓ Selected caption track: ${selectedTrack.languageCode} (${selectedTrack.name?.simpleText || 'unknown'})`);
 
-  // Fetch caption XML
-  const captionResponse = await fetch(selectedTrack.baseUrl);
+  // Fetch caption XML - need same headers as page fetch
+  const captionUrl = selectedTrack.baseUrl;
+  console.log(`Fetching caption URL: ${captionUrl.substring(0, 80)}...`);
+  
+  const captionResponse = await fetch(captionUrl, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Accept-Language': 'en-US,en;q=0.9',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      'Referer': 'https://www.youtube.com/',
+    }
+  });
   if (!captionResponse.ok) throw new Error(`Caption fetch failed: ${captionResponse.status}`);
   const captionXml = await captionResponse.text();
   console.log(`✓ Caption XML fetched (${(captionXml.length / 1024).toFixed(1)}KB)`);
+  console.log(`Caption XML preview: ${captionXml.substring(0, 200)}`);
 
   // Parse XML - handle both with and without dur attribute
   const textMatches = [...captionXml.matchAll(/<text start="([^"]+)"(?:\s+dur="([^"]+)")?[^>]*>([\s\S]*?)<\/text>/g)];
