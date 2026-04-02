@@ -79,20 +79,22 @@ Transliteration scheme (must be consistent):
 Input: "${inputText}"
 
 Provide:
+- "english" the English meaning/translation of the input
 - "target_language" in ${targetLangName} script
 - "transliteration" in Latin letters using the scheme above
 - "alternatives" as a list of ${targetLangName} strings (may be empty)
 - "notes" only if ambiguity is meaningful (otherwise empty string)`;
-        
-        schema = {
-          type: "object",
-          properties: {
-            target_language: { type: "string" },
-            transliteration: { type: "string" },
-            alternatives: { type: "array", items: { type: "string" } },
-            notes: { type: "string" }
-          }
-        };
+
+schema = {
+  type: "object",
+  properties: {
+    english: { type: "string" },
+    target_language: { type: "string" },
+    transliteration: { type: "string" },
+    alternatives: { type: "array", items: { type: "string" } },
+    notes: { type: "string" }
+  }
+};
       } else {
         // Target language/transliteration to English
         const targetLangName = learningLanguage.charAt(0).toUpperCase() + learningLanguage.slice(1);
@@ -208,26 +210,12 @@ Provide:
           >
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-white font-medium text-sm">Translate</h3>
-              <div className="flex items-center gap-2">
-                {translation && (
-                  <button
-                    onClick={handleAddToBackpack}
-                    disabled={createWordMutation.isPending || wordAdded}
-                    className="relative hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed transition-transform"
-                  >
-                    <span className="text-2xl">🎒</span>
-                    {wordAdded && (
-                      <span className="absolute inset-0 flex items-center justify-center text-3xl text-green-400">✓</span>
-                    )}
-                  </button>
-                )}
-                <button
-                  onClick={() => setIsOpen(false)}
-                  className="text-white/60 hover:text-white"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="text-white/60 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
             <div className="flex gap-2 mb-3">
               <Input
@@ -250,64 +238,54 @@ Provide:
             {translation && (
               <>
                 <div className="space-y-2 mb-3">
-                  {translation.direction === 'en-he' ? (
-                    <>
-                      <div className="bg-white/5 rounded-lg p-3">
-                        <p className="text-white/60 text-[10px] mb-1">HEBREW</p>
-                        <p className="text-cyan-400 text-lg font-bold" dir="rtl">{translation.hebrew}</p>
-                      </div>
-                      
-                      <div className="bg-white/5 rounded-lg p-3">
-                        <p className="text-white/60 text-[10px] mb-1">PRONUNCIATION</p>
-                        <p className="text-white">{translation.transliteration}</p>
-                      </div>
-                      
-                      {translation.alternatives?.length > 0 && (
-                        <div className="bg-amber-500/10 rounded-lg p-2">
-                          <p className="text-amber-400 text-[10px] mb-1">ALTERNATIVES</p>
-                          <div className="flex flex-wrap gap-1">
-                            {translation.alternatives.map((alt, idx) => (
-                              <span key={idx} className="text-white/70 text-xs" dir="rtl">{alt}</span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                      
-                      {translation.notes && (
-                        <div className="bg-blue-500/10 rounded-lg p-2">
-                          <p className="text-blue-300 text-xs">{translation.notes}</p>
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      <div className="bg-white/5 rounded-lg p-3">
-                        <p className="text-white/60 text-[10px] mb-1">ENGLISH</p>
-                        <p className="text-green-400 text-lg font-bold">{translation.english}</p>
-                      </div>
-                      
-                      <div className="bg-white/5 rounded-lg p-3">
-                        <p className="text-white/60 text-[10px] mb-1">HEBREW</p>
-                        <p className="text-cyan-400 font-bold" dir="rtl">{translation.hebrew}</p>
-                      </div>
-                      
-                      <div className="bg-white/5 rounded-lg p-3">
-                        <p className="text-white/60 text-[10px] mb-1">PRONUNCIATION</p>
-                        <p className="text-white">{translation.transliteration}</p>
-                      </div>
-                      
-                      {translation.alternatives?.length > 0 && (
-                        <div className="bg-amber-500/10 rounded-lg p-2">
-                          <p className="text-amber-400 text-[10px] mb-1">ALTERNATIVES</p>
-                          <div className="flex flex-wrap gap-1">
-                            {translation.alternatives.map((alt, idx) => (
-                              <span key={idx} className="text-white/70 text-xs" dir="rtl">{alt}</span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </>
+                  {/* Always show English meaning first and prominently */}
+                  {translation.english && (
+                    <div className="bg-green-500/15 border border-green-500/30 rounded-lg p-3">
+                      <p className="text-green-400 text-[10px] font-semibold mb-1">ENGLISH MEANING</p>
+                      <p className="text-green-300 text-lg font-bold">{translation.english}</p>
+                    </div>
                   )}
+
+                  <div className="bg-white/5 rounded-lg p-3">
+                    <p className="text-white/60 text-[10px] mb-1">HEBREW</p>
+                    <p className="text-cyan-400 text-lg font-bold" dir="rtl">{translation.hebrew}</p>
+                  </div>
+
+                  <div className="bg-white/5 rounded-lg p-3">
+                    <p className="text-white/60 text-[10px] mb-1">PRONUNCIATION</p>
+                    <p className="text-white">{translation.transliteration}</p>
+                  </div>
+
+                  {translation.alternatives?.length > 0 && (
+                    <div className="bg-amber-500/10 rounded-lg p-2">
+                      <p className="text-amber-400 text-[10px] mb-1">ALTERNATIVES</p>
+                      <div className="flex flex-wrap gap-1">
+                        {translation.alternatives.map((alt, idx) => (
+                          <span key={idx} className="text-white/70 text-xs" dir="rtl">{alt}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {translation.notes && (
+                    <div className="bg-blue-500/10 rounded-lg p-2">
+                      <p className="text-blue-300 text-xs">{translation.notes}</p>
+                    </div>
+                  )}
+
+                  {/* Prominent Add to Backpack button */}
+                  <button
+                    onClick={handleAddToBackpack}
+                    disabled={createWordMutation.isPending || wordAdded}
+                    className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg font-semibold text-sm transition-all ${
+                      wordAdded
+                        ? 'bg-green-500/30 text-green-400 border border-green-500/50'
+                        : 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40'
+                    } disabled:opacity-50`}
+                  >
+                    <span className="text-lg">{wordAdded ? '✓' : '🎒'}</span>
+                    {wordAdded ? 'Added to Backpack!' : 'Add to My Flashcards'}
+                  </button>
                 </div>
 
                 {aiAnswer && (
