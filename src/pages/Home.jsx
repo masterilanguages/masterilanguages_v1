@@ -568,15 +568,11 @@ export default function Home() {
             />
           </motion.div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-10">
+
             {/* SCHEDULE SECTION */}
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-2xl font-bold" style={{ color: '#3d4a2e', fontFamily: 'Cormorant Garamond, Georgia, serif' }}>📅 Schedule</h2>
-                <Link to={createPageUrl("Home") + "?showSchedule=true"}>
-                  <Button variant="ghost" className="text-sm" style={{ color: '#6b7c5a' }}>View All →</Button>
-                </Link>
-              </div>
+            <div className="text-center">
+              <h2 className="text-3xl font-bold mb-4" style={{ color: '#3d4a2e', fontFamily: 'Cormorant Garamond, Georgia, serif' }}>📅 Schedule</h2>
               {sortedDays.length === 0 ? (
                 <div className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 p-4 text-center">
                   <p style={{ color: '#6b7c5a' }} className="text-sm">No days available yet</p>
@@ -591,7 +587,7 @@ export default function Home() {
                     ];
                     const dayColor = dayColors[idx % dayColors.length];
                     const progress = getDayProgress(day.id);
-                    const allCompleted = day.subsections?.length > 0 && 
+                    const allCompleted = day.subsections?.length > 0 &&
                       day.subsections.every(task => progress?.subsections_completed?.includes(task.id));
 
                     return (
@@ -613,14 +609,36 @@ export default function Home() {
               )}
             </div>
 
-            {/* BACKPACK SECTION */}
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold" style={{ color: '#3d4a2e', fontFamily: 'Cormorant Garamond, Georgia, serif' }}>🎒 Words Backpack</h2>
-                <Link to={createPageUrl("Backpack")}>
-                  <Button variant="ghost" className="text-sm" style={{ color: '#6b7c5a' }}>View All →</Button>
-                </Link>
+            {/* LIBRARY SECTION */}
+            <div className="text-center">
+              <h2 className="text-3xl font-bold mb-4" style={{ color: '#3d4a2e', fontFamily: 'Cormorant Garamond, Georgia, serif' }}>📚 Library</h2>
+              <div className="flex flex-wrap justify-center gap-2">
+                {[
+                  { label: 'Videos', emoji: '📹', to: 'MediaLibrary' },
+                  { label: 'Songs', emoji: '🎵', to: 'Songs' },
+                  { label: 'Audio Training', emoji: '🎧', to: 'MediaLibrary' },
+                  { label: 'Verbs', emoji: '📖', to: 'MediaLibrary' },
+                  { label: 'Core Vocab', emoji: '📚', to: 'MediaLibrary' },
+                  { label: 'Journal', emoji: '📓', to: 'Journal' },
+                ].map((item) => (
+                  <Link key={item.label} to={createPageUrl(item.to)} className="no-underline">
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-medium text-sm transition-all"
+                      style={{ background: '#ffffff70', border: '1px solid #5a6b5a30', color: '#3d4a2e' }}
+                    >
+                      <span>{item.emoji}</span>
+                      <span>{item.label}</span>
+                    </motion.div>
+                  </Link>
+                ))}
               </div>
+            </div>
+
+            {/* BACKPACK SECTION */}
+            <div className="text-center">
+              <h2 className="text-3xl font-bold mb-4" style={{ color: '#3d4a2e', fontFamily: 'Cormorant Garamond, Georgia, serif' }}>🎒 Words Backpack</h2>
               <div className="flex flex-wrap gap-4 justify-center">
                 {[
                   { name: 'New', count: wordRatings.filter(w => w.times_practiced === 0).length, icon: '✨', color: '#8a9a6a' },
@@ -644,33 +662,9 @@ export default function Home() {
               </div>
             </div>
 
-            {/* JOURNAL SECTION */}
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-2xl font-bold" style={{ color: '#3d4a2e', fontFamily: 'Cormorant Garamond, Georgia, serif' }}>📓 Journal</h2>
-                <Link to={createPageUrl("Journal")}>
-                  <Button variant="ghost" className="text-sm" style={{ color: '#6b7c5a' }}>Write Entry →</Button>
-                </Link>
-              </div>
-              {journalEntries.length === 0 ? (
-                <div className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 p-4 text-center">
-                  <p style={{ color: '#6b7c5a' }} className="text-sm">No journal entries yet. Start writing! ✍️</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {journalEntries.slice(0, 2).map((entry) => (
-                    <div key={entry.id} className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 p-3">
-                      <p style={{ color: '#3d4a2e' }} className="text-xs font-bold">{entry.date}</p>
-                      <p style={{ color: '#6b7c5a' }} className="text-sm line-clamp-2 mt-1">{entry.text}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
             {/* PROGRESS SECTION */}
-            <div>
-              <h2 className="text-2xl font-bold mb-3" style={{ color: '#3d4a2e', fontFamily: 'Cormorant Garamond, Georgia, serif' }}>🏆 Progress</h2>
+            <div className="text-center">
+              <h2 className="text-3xl font-bold mb-4" style={{ color: '#3d4a2e', fontFamily: 'Cormorant Garamond, Georgia, serif' }}>🏆 Progress</h2>
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 p-4 text-center">
                   <p style={{ color: '#6b7c5a' }} className="text-xs mb-1">Current Day</p>
