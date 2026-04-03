@@ -290,24 +290,15 @@ export default function VideoTranscript({ videoId, videoUrl, iframeId, onPauseVi
     }));
 
     setGeneratingTranslations(true);
-    toast.info("Processing transcript - this may take 10-20 seconds...");
+    toast.info("Processing transcript...");
     
     try {
-      // Step 1: Add nikud to Hebrew text and generate transliteration/translation
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `For each Hebrew segment, add full nikud (vowel points) if missing, then generate transliteration and English translation.
+        prompt: `Process these ${blocksWithEnd.length} Hebrew segments. For each: add nikud, transliteration, English translation.
 
-Hebrew segments:
-${blocksWithEnd.map((b, i) => `${i + 1}. ${b.hebrew}`).join('\n')}
+${blocksWithEnd.map((b, i) => `${i + 1}|${b.hebrew}`).join('\n')}
 
-For each segment, provide:
-1. hebrew_nikud: Hebrew text with full nikud (ניקוד) added. If nikud already exists, preserve it.
-2. transliteration: Phonetic Hebrew using Latin characters
-3. translation: English translation
-
-CRITICAL: Always output Hebrew WITH nikud. Add vowel points to every word.
-
-Return as array of objects with: hebrew_nikud, transliteration, translation`,
+Return JSON with segments array, each: hebrew_nikud, transliteration, translation. Keep same order.`,
         response_json_schema: {
           type: "object",
           properties: {
@@ -326,7 +317,6 @@ Return as array of objects with: hebrew_nikud, transliteration, translation`,
         }
       });
 
-      // Merge AI results with parsed data
       const enriched = blocksWithEnd.map((block, i) => ({
         ...block,
         hebrew: result.segments[i]?.hebrew_nikud || block.hebrew,
@@ -373,17 +363,11 @@ Return as array of objects with: hebrew_nikud, transliteration, translation`,
     setGeneratingTranslations(true);
     try {
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `You have Hebrew text. Generate transliteration and English translation for each sentence.
+        prompt: `Split this Hebrew text into sentences, add nikud, transliteration and English translation for each.
 
-Hebrew text:
 ${hebrewText}
 
-For each sentence, provide:
-1. Transliteration (phonetic Hebrew using Latin characters)
-2. English translation
-3. Original Hebrew
-
-Format as array of objects with: transliteration, english, hebrew`,
+Return JSON sentences array, each: transliteration, english, hebrew (with nikud).`,
         response_json_schema: {
           type: "object",
           properties: {
