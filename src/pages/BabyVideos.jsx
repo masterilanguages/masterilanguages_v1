@@ -872,40 +872,11 @@ export default function BabyVideos() {
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(160deg, #f0ece4 0%, #e8e4d8 50%, #eae6da 100%)' }}>
       <div className="max-w-4xl mx-auto px-4 py-6">
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <Link to={createPageUrl("Home")} style={{ color: '#5a6b3a' }} className="hover:opacity-70">
-              <ArrowLeft className="w-6 h-6" />
-            </Link>
-            <div>
-              <h1 className="text-3xl font-bold" style={{ color: '#3d4a2e', fontFamily: 'Cormorant Garamond, Georgia, serif' }}>
-                📺 {userProfile?.language === 'hebrew' ? 'Hebrew TV' : 'Videos'}
-              </h1>
-              <p style={{ color: '#6b7c5a' }}>Watch videos & rate words you learn</p>
-              {managingUserEmail && currentUser?.role === 'admin' && (
-                <p className="text-amber-400 text-sm font-medium mt-1">
-                  👤 Managing videos for: {managingUserEmail}
-                </p>
-              )}
-            </div>
-          </div>
-          <div className="flex gap-2">
-            {singleVideoMode && (
-              <Link to={createPageUrl("BabyVideos")}>
-                <Button className="bg-white/10 text-white border border-white/20">
-                  See All Videos
-                </Button>
-              </Link>
-            )}
-            <Button
-              onClick={() => setBackpackOpen(true)}
-              className="bg-amber-500/20 text-amber-400 border border-amber-500/50"
-            >
-              <Backpack className="w-5 h-5 mr-2" />
-              Backpack ({fluentWords.length} ⭐)
-            </Button>
-          </div>
-        </div>
+        {managingUserEmail && currentUser?.role === 'admin' && (
+          <p className="text-amber-400 text-sm font-medium mb-4">
+            👤 Managing videos for: {managingUserEmail}
+          </p>
+        )}
 
         {/* Tab Switcher */}
         {!selectedVideo && (
