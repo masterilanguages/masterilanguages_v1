@@ -1666,7 +1666,7 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
                       disabled={!pastedTranscript.trim()}
                       className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500"
                     >
-                      Process Transcript
+                      Paste Transcript
                     </Button>
                     {canEdit && (
                       <Button
