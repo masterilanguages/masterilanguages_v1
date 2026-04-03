@@ -650,7 +650,7 @@ export default function Home() {
                                          setDraggedTask(null);
                                          setDragOverTask(null);
                                        }}
-                                       className={`flex items-center justify-between px-3 py-2 rounded-lg hover:opacity-80 transition-all ${isDragging ? 'cursor-grabbing opacity-50' : 'cursor-pointer'} ${isDragOver ? 'border-2 border-dashed border-cyan-400' : ''}`}
+                                       className={`flex items-center justify-between px-3 py-2 rounded-lg hover:opacity-80 transition-all ${isDragging ? 'cursor-grabbing opacity-50' : 'cursor-pointer'} ${isDragOver ? 'border-t-2 border-b-2 border-cyan-400 my-2' : ''}`}
                                        style={{ background: isTaskDone ? '#5a6b5a30' : '#ffffff50', border: isDragOver ? undefined : '1px solid #5a6b5a20' }}
                                        onClick={() => !isDragging && (task.page ? navigate(createPageUrl(task.page)) : toggleTaskMutation.mutate({ dayId: day.id, taskId: task.id, dayNumber: day.day_number }))}
                                      >
