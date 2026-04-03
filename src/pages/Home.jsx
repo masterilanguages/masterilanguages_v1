@@ -571,21 +571,22 @@ export default function Home() {
           <div className="space-y-10">
 
             {/* SCHEDULE SECTION */}
-            <div>
-              <h2
-                className="text-3xl font-bold mb-4 text-center cursor-pointer hover:opacity-80 transition-opacity"
-                style={{ color: '#3d4a2e', fontFamily: 'Cormorant Garamond, Georgia, serif' }}
-                onClick={() => navigate(createPageUrl("Days"))}
-              >
-                📅 Schedule <ChevronRight className="inline w-5 h-5 mb-1" />
-              </h2>
-              {sortedDays.length === 0 ? (
-                <div className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 p-4 text-center">
-                  <p style={{ color: '#6b7c5a' }} className="text-sm">No days available yet</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {sortedDays.slice(0, 3).map((day, idx) => {
+            <div className="flex justify-center">
+              <div className="w-full max-w-md">
+                <h2
+                  className="text-3xl font-bold mb-4 text-center cursor-pointer hover:opacity-80 transition-opacity"
+                  style={{ color: '#3d4a2e', fontFamily: 'Cormorant Garamond, Georgia, serif' }}
+                  onClick={() => navigate(createPageUrl("Days"))}
+                >
+                  📅 Schedule <ChevronRight className="inline w-5 h-5 mb-1" />
+                </h2>
+                {sortedDays.length === 0 ? (
+                  <div className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 p-4 text-center">
+                    <p style={{ color: '#6b7c5a' }} className="text-sm">No sessions available yet</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {sortedDays.slice(0, 3).map((day, idx) => {
                     const dayColors = [
                       { bg: '#5a6b5a', text: '#f5f0e8' },
                       { bg: '#6b7c63', text: '#f5f0e8' },
@@ -605,7 +606,7 @@ export default function Home() {
                           onClick={() => setExpandedDay(isExpanded ? null : day.day_number)}
                         >
                           <div className="flex items-center gap-2">
-                            <h3 className="font-bold text-sm" style={{ color: '#3d4a2e' }}>{day.title || `Day ${day.day_number}`}</h3>
+                            <h3 className="font-bold text-sm" style={{ color: '#3d4a2e' }}>{day.title || `Session ${day.day_number}`}</h3>
                             {allCompleted && <span className="text-xs text-green-600">✓</span>}
                           </div>
                           <div className="flex items-center gap-2">
@@ -649,8 +650,9 @@ export default function Home() {
                       </div>
                     );
                   })}
-                </div>
-              )}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* LIBRARY SECTION */}
@@ -838,5 +840,5 @@ export default function Home() {
 
 
       </div>
-      );
-      }
+    );
+    }
