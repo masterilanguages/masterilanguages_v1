@@ -178,7 +178,7 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
   if (!profile?.language) return null;
 
   return (
-    <div style={{ background: 'linear-gradient(to right, #1E3A8A, #1E40AF, #1E3A8A)', borderBottom: '1px solid rgba(30, 58, 138, 0.2)' }} className="backdrop-blur-xl">
+    <div style={{ background: 'linear-gradient(135deg, #f5f0e8 0%, #e8e4d8 50%, #eae6da 100%)', borderBottom: '1px solid rgba(90, 107, 90, 0.15)' }} className="backdrop-blur-xl">
       {/* Top row */}
       <div className="flex items-center justify-between max-w-7xl mx-auto px-4 py-2">
         {/* Language selector */}
@@ -188,10 +188,10 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="flex items-center gap-2 px-3 py-1.5 rounded-lg cursor-pointer"
-            style={{ background: 'rgba(30, 58, 138, 0.2)', border: '1px solid rgba(245, 158, 11, 0.3)' }}
+            style={{ background: 'rgba(90, 107, 90, 0.08)', border: '1px solid rgba(90, 107, 90, 0.2)' }}
           >
             <span className="text-xl">{languageFlags[profile?.language] || '🌍'}</span>
-            <span className="font-semibold text-sm text-white">{languageNames[profile?.language] || 'Language'}</span>
+            <span className="font-semibold text-sm" style={{ color: '#3d4a2e', fontFamily: 'Jost, sans-serif', letterSpacing: '0.03em' }}>{languageNames[profile?.language] || 'Language'}</span>
           </motion.button>
           <AnimatePresence>
             {showMenu && (
@@ -200,10 +200,10 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 className="absolute top-full left-0 mt-2 z-50 rounded-xl shadow-2xl overflow-hidden min-w-[200px]"
-                style={{ background: '#1E3A8A', border: '1px solid rgba(245, 158, 11, 0.3)' }}
+                style={{ background: '#f5f0e8', border: '1px solid rgba(90, 107, 90, 0.2)' }}
               >
                 <div className="p-2">
-                  <div className="px-3 py-2 text-xs font-medium border-b" style={{ color: 'rgba(245, 158, 11, 0.7)', borderColor: 'rgba(245, 158, 11, 0.2)' }}>
+                  <div className="px-3 py-2 text-xs font-medium border-b" style={{ color: '#6b7c5a', borderColor: 'rgba(90, 107, 90, 0.15)', fontFamily: 'Jost, sans-serif', letterSpacing: '0.05em' }}>
                     Learning Language
                   </div>
                   <div className="space-y-1 mt-2">
@@ -213,19 +213,19 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
                         onClick={() => changeLanguageMutation.mutate(lang)}
                         disabled={changeLanguageMutation.isPending}
                         className="w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-all"
-                        style={profile?.language === lang ? { background: 'rgba(245, 158, 11, 0.2)', color: '#fff' } : { color: '#cbd5e1' }}
+                        style={profile?.language === lang ? { background: 'rgba(90, 107, 90, 0.1)', color: '#3d4a2e' } : { color: '#6b7c5a' }}
                       >
                         <span className="text-xl">{languageFlags[lang]}</span>
-                        <span className="text-sm font-medium">{languageNames[lang]}</span>
+                        <span className="text-sm font-medium" style={{ color: 'inherit', fontFamily: 'Jost, sans-serif' }}>{languageNames[lang]}</span>
                         {profile?.language === lang && <span className="ml-auto text-xs">✓</span>}
                       </button>
                     ))}
                   </div>
-                  <div className="mt-2 pt-2" style={{ borderTop: '1px solid rgba(245, 158, 11, 0.2)' }}>
-                    <Button onClick={() => { setShowMenu(false); navigate(createPageUrl("LanguageSelect")); }} className="w-full justify-start text-sm mb-1" style={{ background: 'rgba(30, 58, 138, 0.2)', color: '#93c5fd' }} variant="ghost">
+                  <div className="mt-2 pt-2" style={{ borderTop: '1px solid rgba(90, 107, 90, 0.15)' }}>
+                    <Button onClick={() => { setShowMenu(false); navigate(createPageUrl("LanguageSelect")); }} className="w-full justify-start text-sm mb-1" style={{ background: 'rgba(90, 107, 90, 0.05)', color: '#5a6b5a' }} variant="ghost">
                       <Globe className="w-4 h-4 mr-2" />Start Onboarding
                     </Button>
-                    <Button onClick={handleLogout} className="w-full justify-start text-sm" style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#fca5a5' }} variant="ghost">
+                    <Button onClick={handleLogout} className="w-full justify-start text-sm" style={{ background: 'rgba(200, 50, 50, 0.08)', color: '#8b3a3a' }} variant="ghost">
                       <LogOut className="w-4 h-4 mr-2" />Logout
                     </Button>
                   </div>
@@ -237,38 +237,38 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
 
         {/* Brand */}
         <div className="text-center flex-1">
-          <p className="font-bold text-xl tracking-widest" style={{ color: '#ffffff', fontFamily: 'system-ui, sans-serif', letterSpacing: '0.05em', fontWeight: 600 }}>Language Mastery</p>
+          <p className="font-bold text-2xl tracking-widest" style={{ color: '#3d4a2e', fontFamily: 'Cormorant Garamond, Georgia, serif', letterSpacing: '0.08em', fontWeight: 500 }}>Language Mastery</p>
         </div>
 
         {/* Streak + Timer + Progress + Logout */}
         <div className="flex items-center gap-2 flex-shrink-0">
-          <motion.div whileHover={{ scale: 1.05 }} className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
-            <Flame className="w-4 h-4" style={{ color: '#F59E0B' }} />
-            <span className="text-xs font-bold text-white">{profile?.daily_streak || 0}</span>
+          <motion.div whileHover={{ scale: 1.05 }} className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: 'rgba(90, 107, 90, 0.08)', border: '1px solid rgba(90, 107, 90, 0.2)' }}>
+            <Flame className="w-4 h-4" style={{ color: '#d4a574' }} />
+            <span className="text-xs font-bold" style={{ color: '#6b7c5a', fontFamily: 'Jost, sans-serif' }}>{profile?.daily_streak || 0}</span>
           </motion.div>
           {sessionActive ? (
-            <motion.button onClick={togglePause} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onDoubleClick={endSession} className="flex items-center gap-1 px-2 py-1 rounded-lg cursor-pointer" style={{ background: profile.session_paused ? '#F59E0B' : timeRemaining < 300 ? '#EF4444' : '#10B981', border: '1px solid rgba(30, 58, 138, 0.3)' }} title="Click to pause/resume • Double-click to end">
-              <Clock className="w-4 h-4 text-white" />
-              <span className="text-white font-bold text-xs">{formatTime(timeRemaining)}</span>
+            <motion.button onClick={togglePause} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onDoubleClick={endSession} className="flex items-center gap-1 px-2 py-1 rounded-lg cursor-pointer" style={{ background: profile.session_paused ? '#d4a574' : timeRemaining < 300 ? '#c97c6f' : '#7a9b6f', border: '1px solid rgba(90, 107, 90, 0.2)' }} title="Click to pause/resume • Double-click to end">
+              <Clock className="w-4 h-4" style={{ color: '#3d4a2e' }} />
+              <span className="font-bold text-xs" style={{ color: '#3d4a2e', fontFamily: 'Jost, sans-serif' }}>{formatTime(timeRemaining)}</span>
             </motion.button>
           ) : (
-            <motion.button onClick={() => startSession(30)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg cursor-pointer" style={{ background: 'rgba(30, 58, 138, 0.2)', border: '1px solid rgba(30, 58, 138, 0.3)' }}>
-              <Clock className="w-4 h-4 text-white" />
-              <span className="text-white font-bold text-xs">Timer</span>
+            <motion.button onClick={() => startSession(30)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg cursor-pointer" style={{ background: 'rgba(90, 107, 90, 0.08)', border: '1px solid rgba(90, 107, 90, 0.2)' }}>
+              <Clock className="w-4 h-4" style={{ color: '#6b7c5a' }} />
+              <span className="font-bold text-xs" style={{ color: '#6b7c5a', fontFamily: 'Jost, sans-serif' }}>Timer</span>
             </motion.button>
           )}
           {(currentUser?.role === 'admin' || currentUser?.role === 'coach') && (
-            <motion.button onClick={() => navigate(createPageUrl("ManageCoaches"))} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg cursor-pointer" style={{ background: 'rgba(30, 58, 138, 0.2)', border: '1px solid rgba(30, 58, 138, 0.3)' }}>
-              <span className="text-white font-bold text-xs">👥 People</span>
+            <motion.button onClick={() => navigate(createPageUrl("ManageCoaches"))} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg cursor-pointer" style={{ background: 'rgba(90, 107, 90, 0.08)', border: '1px solid rgba(90, 107, 90, 0.2)' }}>
+              <span className="font-bold text-xs" style={{ color: '#6b7c5a', fontFamily: 'Jost, sans-serif' }}>👥 People</span>
             </motion.button>
           )}
-          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg cursor-pointer" style={{ background: 'rgba(30, 58, 138, 0.2)', border: '1px solid rgba(30, 58, 138, 0.3)' }}>
-            <span className="text-white font-bold text-xs">💳 Payments</span>
+          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg cursor-pointer" style={{ background: 'rgba(90, 107, 90, 0.08)', border: '1px solid rgba(90, 107, 90, 0.2)' }}>
+            <span className="font-bold text-xs" style={{ color: '#6b7c5a', fontFamily: 'Jost, sans-serif' }}>💳 Payments</span>
           </motion.button>
-          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg cursor-pointer" style={{ background: 'rgba(30, 58, 138, 0.2)', border: '1px solid rgba(30, 58, 138, 0.3)' }}>
-            <span className="text-white font-bold text-xs">⚙️ Settings</span>
+          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg cursor-pointer" style={{ background: 'rgba(90, 107, 90, 0.08)', border: '1px solid rgba(90, 107, 90, 0.2)' }}>
+            <span className="font-bold text-xs" style={{ color: '#6b7c5a', fontFamily: 'Jost, sans-serif' }}>⚙️ Settings</span>
           </motion.button>
-          <motion.button onClick={handleLogout} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium" style={{ background: 'rgba(239, 68, 68, 0.2)', border: '1px solid rgba(239, 68, 68, 0.4)', color: '#fca5a5' }}>
+          <motion.button onClick={handleLogout} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium cursor-pointer" style={{ background: 'rgba(200, 50, 50, 0.08)', border: '1px solid rgba(200, 50, 50, 0.2)', color: '#8b3a3a', fontFamily: 'Jost, sans-serif' }}>
             <LogOut className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Logout</span>
           </motion.button>
@@ -276,7 +276,7 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
       </div>
 
       {/* Nav grid: 4 per row, hold to drag */}
-      <div style={{ borderTop: '1px solid rgba(30, 58, 138, 0.2)' }} className="px-4 py-2">
+      <div style={{ borderTop: '1px solid rgba(90, 107, 90, 0.15)' }} className="px-4 py-2">
         <div className="grid grid-cols-5 gap-1.5 max-w-lg mx-auto">
           {orderedNav.map(({ id, to, emoji, label }) => {
             const isDragging = draggingId === id;
@@ -292,8 +292,8 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
                 onClick={() => { if (!isDraggingRef.current) navigate(createPageUrl(to)); }}
                 className="flex flex-col items-center py-2 rounded-xl select-none transition-all"
                 style={{
-                  background: isDragging ? 'rgba(30, 58, 138, 0.08)' : isOver ? 'rgba(30, 58, 138, 0.2)' : 'rgba(30, 58, 138, 0.1)',
-                  border: `1px solid ${isDragging ? 'rgba(30, 58, 138, 0.4)' : isOver ? 'rgba(30, 58, 138, 0.8)' : 'rgba(30, 58, 138, 0.2)'}`,
+                  background: isDragging ? 'rgba(90, 107, 90, 0.08)' : isOver ? 'rgba(90, 107, 90, 0.15)' : 'rgba(90, 107, 90, 0.06)',
+                  border: `1px solid ${isDragging ? 'rgba(90, 107, 90, 0.3)' : isOver ? 'rgba(90, 107, 90, 0.4)' : 'rgba(90, 107, 90, 0.15)'}`,
                   cursor: 'grab',
                   opacity: isDragging ? 0.35 : 1,
                   transform: isOver ? 'scale(1.05)' : 'scale(1)',
@@ -301,7 +301,7 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
                 }}
               >
                 <span className="text-lg">{emoji}</span>
-                <span className="text-xs font-medium mt-0.5 text-white" style={{ fontFamily: 'Jost, sans-serif', letterSpacing: '0.03em' }}>{label}</span>
+                <span className="text-xs font-medium mt-0.5" style={{ color: '#6b7c5a', fontFamily: 'Jost, sans-serif', letterSpacing: '0.03em' }}>{label}</span>
               </div>
             );
           })}
