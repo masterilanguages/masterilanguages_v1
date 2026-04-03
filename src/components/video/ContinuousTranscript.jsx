@@ -21,6 +21,7 @@ export default function ContinuousTranscript({
   const [lastSeekIdx, setLastSeekIdx] = useState(null);
   const [editingTimestamp, setEditingTimestamp] = useState(null);
   const [timestampValue, setTimestampValue] = useState("");
+  const [playingSegment, setPlayingSegment] = useState(null);
 
   // Flatten all words from all segments with their timestamps
   const allWords = transcript.flatMap((segment, segIdx) => {
@@ -157,7 +158,15 @@ export default function ContinuousTranscript({
               {/* Timestamp Play Button */}
               <div className="flex-shrink-0 pt-1">
                 <button
-                  onClick={() => onSeekTo(segment.start, false)}
+                  onClick={() => {
+                    if (playingSegment === segIdx) {
+                      onSeekTo(segment.start, false); // pause
+                      setPlayingSegment(null);
+                    } else {
+                      onSeekTo(segment.start, true); // play
+                      setPlayingSegment(segIdx);
+                    }
+                  }}
                   className={`flex items-center gap-1.5 px-2 py-1 rounded-lg transition-all text-xs font-mono ${
                     isActive
                       ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-400/50'
