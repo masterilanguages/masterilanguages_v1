@@ -133,6 +133,7 @@ Output JSON only, no markdown.`;
       verb_conjugations: translation.is_verb ? translation.conjugations : undefined,
       times_practiced: 0,
       mastered: false,
+      vocab_level: 0,
     });
   };
 
@@ -227,6 +228,18 @@ Output JSON only, no markdown.`;
                 className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
                 onKeyDown={(e) => e.key === 'Enter' && handleTranslate()}
               />
+              {translation && (
+                <button
+                  onClick={handleAddToBackpack}
+                  disabled={createWordMutation.isPending || wordAdded}
+                  className={`flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-md text-lg transition-all ${
+                    wordAdded ? 'bg-green-500/30 text-green-400' : 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300'
+                  } disabled:opacity-50`}
+                  title="Add to backpack"
+                >
+                  {wordAdded ? '✓' : '🎒'}
+                </button>
+              )}
               <Button
                 onClick={handleTranslate}
                 disabled={!inputText.trim() || isTranslating}
@@ -317,20 +330,6 @@ Output JSON only, no markdown.`;
                     <p className="text-blue-300 text-xs">{translation.notes}</p>
                   </div>
                 )}
-
-                {/* Action buttons */}
-                <button
-                  onClick={handleAddToBackpack}
-                  disabled={createWordMutation.isPending || wordAdded}
-                  className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg font-semibold text-sm transition-all ${
-                    wordAdded
-                      ? 'bg-green-500/30 text-green-400 border border-green-500/50'
-                      : 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40'
-                  } disabled:opacity-50`}
-                >
-                  <span className="text-lg">{wordAdded ? '✓' : '🎒'}</span>
-                  {wordAdded ? 'Added to Flashcards!' : 'Add to My Flashcards'}
-                </button>
 
                 {translation.is_verb && (
                   <button
