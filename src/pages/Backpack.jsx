@@ -51,7 +51,7 @@ export default function Backpack() {
     
     const timer = setTimeout(() => {
       generateImage(newWordCustomMnemonic);
-    }, 2000);
+    }, 500);
 
     return () => clearTimeout(timer);
   }, [newWordCustomMnemonic, activeNewWord]);
