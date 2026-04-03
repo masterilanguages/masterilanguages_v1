@@ -1,8 +1,6 @@
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { base44 } from "@/api/base44Client";
-import { Input } from "@/components/ui/input";
-import { Play } from "lucide-react";
+import { Play, Loader2, Check, X, Plus, Trash2 } from "lucide-react";
 
 export default function ContinuousTranscript({ 
   transcript, 
@@ -12,134 +10,14 @@ export default function ContinuousTranscript({
   onEditWord,
   canEdit
 }) {
-  const [clickedWord, setClickedWord] = useState(null);
-  const [translation, setTranslation] = useState("");
-  const [editingTranslation, setEditingTranslation] = useState(false);
-  const [isTranslating, setIsTranslating] = useState(false);
-  const [editingWord, setEditingWord] = useState(null);
-  const [editValue, setEditValue] = useState("");
-  const [lastSeekIdx, setLastSeekIdx] = useState(null);
-  const [editingTimestamp, setEditingTimestamp] = useState(null);
-  const [timestampValue, setTimestampValue] = useState("");
   const [playingSegment, setPlayingSegment] = useState(null);
   const [editingSegmentTime, setEditingSegmentTime] = useState(null);
   const [editingTimeValue, setEditingTimeValue] = useState("");
 
-  // Flatten all words from all segments with their timestamps
-  const allWords = transcript.flatMap((segment, segIdx) => {
-    if (!segment.transliteration) return [];
-    
-    const words = segment.transliteration.split(/\s+/).filter(w => w.trim());
-    const nextStart = transcript[segIdx + 1]?.start || Infinity;
-    const segmentDuration = nextStart - segment.start;
-    const wordDuration = segmentDuration / words.length;
-    
-    return words.map((word, wordIdx) => ({
-      text: word,
-      start: segment.start + (wordIdx * wordDuration),
-      segmentIndex: segIdx,
-      wordIndex: wordIdx
-    }));
-  });
-
-  // Group words into 5-second chunks
-  const timeChunks = [];
-  let currentChunk = { time: 0, words: [] };
-  
-  allWords.forEach((wordObj, idx) => {
-    const chunkTime = Math.floor(wordObj.start / 5) * 5;
-    
-    if (chunkTime !== currentChunk.time && currentChunk.words.length > 0) {
-      timeChunks.push(currentChunk);
-      currentChunk = { time: chunkTime, words: [] };
-    }
-    
-    currentChunk.time = chunkTime;
-    currentChunk.words.push({ ...wordObj, globalIdx: idx });
-  });
-  
-  if (currentChunk.words.length > 0) {
-    timeChunks.push(currentChunk);
-  }
-
-  const handleWordClick = async (wordObj, idx, e) => {
-    // Seek and play/pause behavior
-    if (lastSeekIdx === idx && clickedWord === idx) {
-      onSeekTo(wordObj.start, true); // play
-      setLastSeekIdx(null);
-      setClickedWord(null);
-      return;
-    } else {
-      onSeekTo(wordObj.start, false); // pause
-      setLastSeekIdx(idx);
-    }
-
-    // Show translation and edit field
-    setClickedWord(idx);
-    setEditValue(wordObj.text);
-    setEditingTranslation(false);
-    setIsTranslating(true);
-    
-    try {
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Translate this Hebrew word to English: "${wordObj.text}". Return only the English translation, nothing else.`
-      });
-      setTranslation(result);
-    } catch (e) {
-      setTranslation("Translation failed");
-    }
-    
-    setIsTranslating(false);
-  };
-
-  const saveEdit = (wordObj) => {
-    const segment = transcript[wordObj.segmentIndex];
-    const words = segment.transliteration.split(/\s+/);
-    
-    if (!editValue.trim()) {
-      // Delete the word if empty
-      words.splice(wordObj.wordIndex, 1);
-    } else if (editValue !== wordObj.text) {
-      // Update the word
-      words[wordObj.wordIndex] = editValue.trim();
-    }
-    
-    const newTransliteration = words.join(' ');
-    
-    if (onEditWord) {
-      onEditWord(wordObj.segmentIndex, 'transliteration', newTransliteration);
-    }
-    
-    setEditingWord(null);
-  };
-
-  const saveChunkTimestamp = (chunkTime) => {
-    const newTime = parseFloat(timestampValue);
-    if (isNaN(newTime) || newTime < 0) {
-      setEditingTimestamp(null);
-      return;
-    }
-    
-    // Find the first word in this chunk
-    const firstWord = allWords.find(w => Math.floor(w.start / 5) * 5 === chunkTime);
-    if (!firstWord) {
-      setEditingTimestamp(null);
-      return;
-    }
-    
-    const segment = transcript[firstWord.segmentIndex];
-    const words = segment.transliteration.split(/\s+/).filter(w => w.trim());
-    const wordDuration = (transcript[firstWord.segmentIndex + 1]?.start || (segment.start + 10)) - segment.start;
-    
-    // Adjust segment start to place first word at new time
-    const adjustedSegmentStart = newTime - (firstWord.wordIndex * (wordDuration / words.length));
-    
-    if (onEditWord) {
-      onEditWord(firstWord.segmentIndex, 'start', adjustedSegmentStart);
-    }
-    
-    setEditingTimestamp(null);
-  };
+  // Word editing state
+  const [editingCell, setEditingCell] = useState(null); // { segIdx, field, wordIdx }
+  const [editCellValue, setEditCellValue] = useState("");
+  const [savingCell, setSavingCell] = useState(false);
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -150,12 +28,171 @@ export default function ContinuousTranscript({
   // Sort transcript by start time for correct active highlighting
   const sortedByTime = [...transcript].sort((a, b) => (a.start || 0) - (b.start || 0));
 
+  const getWordsArray = (text) => (text || "").split(/\s+/).filter(w => w.trim());
+
+  const startEditWord = (segIdx, field, wordIdx, currentWords) => {
+    setEditingCell({ segIdx, field, wordIdx });
+    setEditCellValue(currentWords[wordIdx] || "");
+  };
+
+  const cancelEdit = () => {
+    setEditingCell(null);
+    setEditCellValue("");
+  };
+
+  const saveWordEdit = async (segIdx, field, wordIdx, newValue) => {
+    const segment = transcript[segIdx];
+    const words = getWordsArray(segment[field]);
+    const trimmed = newValue.trim();
+
+    let changed = false;
+    if (!trimmed) {
+      // Delete
+      words.splice(wordIdx, 1);
+      changed = true;
+    } else if (trimmed !== words[wordIdx]) {
+      words[wordIdx] = trimmed;
+      changed = true;
+    }
+
+    if (!changed) {
+      cancelEdit();
+      return;
+    }
+
+    const newFieldText = words.join(' ');
+    setSavingCell(true);
+
+    // Update the edited field first
+    if (onEditWord) onEditWord(segIdx, field, newFieldText);
+
+    // Only re-translate the OTHER fields based on what changed
+    try {
+      if (field === 'transliteration') {
+        // Re-fetch hebrew and english from new transliteration
+        const result = await base44.integrations.Core.InvokeLLM({
+          prompt: `Given this Hebrew transliteration line: "${newFieldText}"
+Convert ONLY the changed/new words to Hebrew with nikud, keeping existing Hebrew words for unchanged parts where possible.
+Also provide an English translation of the full line.
+
+Return JSON with:
+- hebrew: full Hebrew line with nikud (same word count and order as transliteration)
+- english: English translation of the full line`,
+          response_json_schema: {
+            type: "object",
+            properties: {
+              hebrew: { type: "string" },
+              english: { type: "string" }
+            }
+          }
+        });
+        if (onEditWord) {
+          if (result.hebrew) onEditWord(segIdx, 'hebrew', result.hebrew);
+          if (result.english) onEditWord(segIdx, 'english', result.english);
+        }
+      } else if (field === 'hebrew') {
+        // Re-fetch transliteration and english from new hebrew
+        const result = await base44.integrations.Core.InvokeLLM({
+          prompt: `Given this Hebrew text with nikud: "${newFieldText}"
+Provide:
+- transliteration: Latin phonetic transliteration of the full line
+- english: English translation of the full line`,
+          response_json_schema: {
+            type: "object",
+            properties: {
+              transliteration: { type: "string" },
+              english: { type: "string" }
+            }
+          }
+        });
+        if (onEditWord) {
+          if (result.transliteration) onEditWord(segIdx, 'transliteration', result.transliteration);
+          if (result.english) onEditWord(segIdx, 'english', result.english);
+        }
+      } else if (field === 'english') {
+        // English changed — no need to re-translate other fields
+      }
+    } catch (e) {
+      console.error('Re-translation failed', e);
+    }
+
+    setSavingCell(false);
+    cancelEdit();
+  };
+
+  const addWordToSegment = async (segIdx, field, afterIdx) => {
+    const segment = transcript[segIdx];
+    const words = getWordsArray(segment[field]);
+    const newWord = "___";
+    words.splice(afterIdx + 1, 0, newWord);
+    if (onEditWord) onEditWord(segIdx, field, words.join(' '));
+    // Start editing the new word
+    setEditingCell({ segIdx, field, wordIdx: afterIdx + 1 });
+    setEditCellValue("");
+  };
+
+  const renderEditableWords = (segIdx, field, text, textClassName) => {
+    const words = getWordsArray(text);
+    return (
+      <span className="inline-flex flex-wrap gap-x-1 gap-y-0.5 items-center">
+        {words.map((word, wordIdx) => {
+          const isEditing = editingCell?.segIdx === segIdx && editingCell?.field === field && editingCell?.wordIdx === wordIdx;
+          if (isEditing) {
+            return (
+              <span key={wordIdx} className="inline-flex items-center gap-0.5">
+                <input
+                  autoFocus
+                  value={editCellValue}
+                  onChange={e => setEditCellValue(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') saveWordEdit(segIdx, field, wordIdx, editCellValue);
+                    if (e.key === 'Escape') cancelEdit();
+                  }}
+                  className="bg-yellow-400/20 border border-yellow-400 text-yellow-200 rounded px-1 text-sm outline-none"
+                  style={{ width: `${Math.max(editCellValue.length * 9 + 16, 40)}px` }}
+                  placeholder="type or leave empty to delete"
+                />
+                <button onClick={() => saveWordEdit(segIdx, field, wordIdx, editCellValue)} className="text-green-400 hover:text-green-300 p-0.5">
+                  {savingCell ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
+                </button>
+                <button onClick={cancelEdit} className="text-red-400 hover:text-red-300 p-0.5">
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            );
+          }
+          return (
+            <span key={wordIdx} className="inline-flex items-center group/word">
+              <span
+                onClick={() => canEdit && startEditWord(segIdx, field, wordIdx, words)}
+                className={`${textClassName} ${canEdit ? 'cursor-pointer hover:bg-white/10 rounded px-0.5 transition-colors' : ''}`}
+              >
+                {word}
+              </span>
+              {canEdit && (
+                <button
+                  onClick={() => addWordToSegment(segIdx, field, wordIdx)}
+                  className="opacity-0 group-hover/word:opacity-100 transition-opacity ml-0.5 text-white/30 hover:text-cyan-400"
+                  title="Add word after"
+                >
+                  <Plus className="w-2.5 h-2.5" />
+                </button>
+              )}
+            </span>
+          );
+        })}
+      </span>
+    );
+  };
+
   return (
     <div className="w-full bg-white/5 rounded-2xl p-4">
+      {canEdit && (
+        <p className="text-white/30 text-xs text-center mb-3">Click any word to edit • Leave empty to delete • + to add after</p>
+      )}
       <div className="space-y-4 flex flex-col items-center">
         {transcript.map((segment, segIdx) => {
           if (!segment.transliteration) return null;
-          // Find this segment's position in time-sorted order to get the correct next segment
           const sortedIdx = sortedByTime.findIndex(s => s === segment);
           const nextSegment = sortedByTime[sortedIdx + 1];
           const isActive = currentTime >= segment.start &&
@@ -220,18 +257,18 @@ export default function ContinuousTranscript({
               <div className="flex-1 space-y-0.5">
                 {/* Transliteration */}
                 <p className="text-white text-base font-medium leading-snug text-left">
-                  {segment.transliteration}
+                  {renderEditableWords(segIdx, 'transliteration', segment.transliteration, 'text-white text-base font-medium')}
                 </p>
                 {/* Translation */}
                 {segment.english && (
                   <p className="text-white/60 text-sm leading-snug text-left">
-                    {segment.english}
+                    {renderEditableWords(segIdx, 'english', segment.english, 'text-white/60 text-sm')}
                   </p>
                 )}
-                {/* Hebrew with nikud - display left-aligned, preserving word order */}
+                {/* Hebrew with nikud */}
                 {segment.hebrew && (
                   <p className="text-cyan-300 text-base leading-snug text-left" dir="ltr" style={{ unicodeBidi: 'plaintext' }}>
-                    {segment.hebrew}
+                    {renderEditableWords(segIdx, 'hebrew', segment.hebrew, 'text-cyan-300 text-base')}
                   </p>
                 )}
               </div>
