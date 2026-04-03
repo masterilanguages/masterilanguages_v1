@@ -476,22 +476,21 @@ export default function Backpack() {
                           <Textarea
                             value={mnemonicDescription}
                             onChange={(e) => setMnemonicDescription(e.target.value)}
-                            placeholder="Describe new picture..."
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && !e.shiftKey && mnemonicDescription.trim()) {
+                                e.preventDefault();
+                                generateMnemonicForWord(word);
+                              }
+                            }}
+                            placeholder="Describe new picture... (press Enter to generate)"
                             className="bg-white/5 border-white/20 text-white text-xs mb-1 resize-none h-12"
                             onClick={(e) => e.stopPropagation()}
                           />
-                          <Button
-                            onClick={(e) => { e.stopPropagation(); generateMnemonicForWord(word); }}
-                            disabled={!mnemonicDescription.trim() || generatingMnemonic}
-                            size="sm"
-                            className="w-full bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 h-6 text-xs"
-                          >
-                            {generatingMnemonic ? (
-                              <><Loader2 className="w-3 h-3 mr-1 animate-spin" /> Generating...</>
-                            ) : (
-                              <><Wand2 className="w-3 h-3 mr-1" /> Generate</>
-                            )}
-                          </Button>
+                          {generatingMnemonic && (
+                            <div className="flex items-center justify-center gap-2 text-purple-400 text-xs">
+                              <Loader2 className="w-3 h-3 animate-spin" /> Generating...
+                            </div>
+                          )}
                         </motion.div>
                       )}
                     </div>
@@ -606,22 +605,21 @@ export default function Backpack() {
                       <Textarea
                         value={mnemonicDescription}
                         onChange={(e) => setMnemonicDescription(e.target.value)}
-                        placeholder="Describe a picture..."
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey && mnemonicDescription.trim()) {
+                            e.preventDefault();
+                            generateMnemonicForWord(word);
+                          }
+                        }}
+                        placeholder="Describe a picture... (press Enter to generate)"
                         className="bg-white/5 border-stone-200 text-stone-800 text-xs mb-2 resize-none h-12 mt-2"
                         onClick={(e) => e.stopPropagation()}
                       />
-                      <Button
-                        onClick={(e) => { e.stopPropagation(); generateMnemonicForWord(word); }}
-                        disabled={!mnemonicDescription.trim() || generatingMnemonic}
-                        size="sm"
-                        className="w-full bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 h-7 text-xs"
-                      >
-                        {generatingMnemonic ? (
-                          <><Loader2 className="w-3 h-3 mr-1 animate-spin" /> Generating...</>
-                        ) : (
-                          <><Wand2 className="w-3 h-3 mr-1" /> Generate</>
-                        )}
-                      </Button>
+                      {generatingMnemonic && (
+                        <div className="flex items-center justify-center gap-2 text-purple-400 text-xs mt-2">
+                          <Loader2 className="w-3 h-3 animate-spin" /> Generating...
+                        </div>
+                      )}
                     </motion.div>
                   )}
                 </motion.div>
