@@ -1702,7 +1702,7 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
               </div>
 
               <div>
-                <Label>Default Day (1-100)</Label>
+                <Label>Session Number (1-100)</Label>
                 <Input
                   type="number"
                   min="1"
@@ -1725,15 +1725,7 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
               </div>
             </div>
 
-            <div>
-              <Label>Tags (comma separated)</Label>
-              <Input
-                value={formData.tags}
-                onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-                placeholder="keywords, phrases, topics"
-                className="bg-white/5 border-white/20 text-white"
-              />
-            </div>
+
 
             <div>
               <label className="flex items-center gap-2 text-white/80 cursor-pointer">
