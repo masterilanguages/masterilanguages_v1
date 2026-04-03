@@ -94,6 +94,8 @@ export default function MediaLibrary() {
   const { data: videos = [] } = useQuery({
     queryKey: ['mediaLibrary'],
     queryFn: () => base44.entities.MediaLibrary.list(),
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: userProfile } = useQuery({
@@ -102,6 +104,8 @@ export default function MediaLibrary() {
       const profiles = await base44.entities.UserProfile.list();
       return profiles[0] || null;
     },
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: userCoins } = useQuery({
@@ -110,11 +114,16 @@ export default function MediaLibrary() {
       const coins = await base44.entities.UserCoins.list();
       return coins[0] || null;
     },
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: allVideosData = [] } = useQuery({
     queryKey: ['allVideos'],
     queryFn: () => base44.entities.Video.list(),
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    enabled: !!currentUser,
   });
 
   const { data: userVideos = [] } = useQuery({
@@ -125,6 +134,9 @@ export default function MediaLibrary() {
         .filter(v => !v.deleted_at && v.is_active !== false)
         .sort((a, b) => (a.order || 0) - (b.order || 0));
     },
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    enabled: !!currentUser,
   });
 
   const { data: myProgram = [] } = useQuery({
@@ -134,6 +146,8 @@ export default function MediaLibrary() {
       return await base44.entities.UserProgram.filter({ user_email: currentUser.email });
     },
     enabled: !!currentUser,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const createWordMutation = useMutation({
@@ -151,6 +165,8 @@ export default function MediaLibrary() {
       return await base44.entities.User.list();
     },
     enabled: currentUser?.role === 'admin' || currentUser?.role === 'coach',
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const createVideoMutation = useMutation({
