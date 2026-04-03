@@ -160,7 +160,7 @@ export default function Layout({ children, currentPageName }) {
   }
 
   return (
-    <>
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950">
       {isDev && isAuthChecked && (
         <div className="fixed top-0 left-0 z-[9999] bg-black/90 text-white text-xs px-3 py-1 font-mono">
           user: {currentUser?.id?.slice(0, 8) || 'none'} | 
@@ -174,6 +174,6 @@ export default function Layout({ children, currentPageName }) {
       {showHeader && <GameHeader profile={userProfile} coins={userCoins?.coins} sessionActive={sessionActive} onSessionToggle={() => { setSessionActive(!sessionActive); setLastActivity(Date.now()); }} />}
       {children}
       <TranslatorWidget />
-    </>
+    </div>
   );
   }

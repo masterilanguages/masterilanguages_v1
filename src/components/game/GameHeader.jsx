@@ -178,7 +178,7 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
   if (!profile?.language) return null;
 
   return (
-    <div style={{ background: 'linear-gradient(to right, #5a6b5a, #6b7c63, #5a6b5a)', borderBottom: '1px solid #a8b89840' }} className="backdrop-blur-xl">
+    <div style={{ background: 'linear-gradient(to right, #1e1b4b, #2d1b69, #1e1b4b)', borderBottom: '1px solid rgba(139, 92, 246, 0.2)' }} className="backdrop-blur-xl">
       {/* Top row */}
       <div className="flex items-center justify-between max-w-7xl mx-auto px-4 py-2">
         {/* Language selector */}
@@ -188,10 +188,10 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="flex items-center gap-2 cursor-pointer px-3 py-1.5 rounded-lg"
-            style={{ background: '#ffffff18', border: '1px solid #ffffff30' }}
+            style={{ background: 'rgba(139, 92, 246, 0.1)', border: '1px solid rgba(139, 92, 246, 0.3)' }}
           >
             <span className="text-xl">{languageFlags[profile?.language] || '🌍'}</span>
-            <span className="font-semibold text-sm" style={{ color: '#c9a84c' }}>{languageNames[profile?.language] || 'Language'}</span>
+            <span className="font-semibold text-sm text-white">{languageNames[profile?.language] || 'Language'}</span>
           </motion.button>
           <AnimatePresence>
             {showMenu && (
@@ -200,10 +200,10 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 className="absolute top-full left-0 mt-2 z-50 rounded-xl shadow-2xl overflow-hidden min-w-[200px]"
-                style={{ background: '#4a5c4a', border: '1px solid #ffffff30' }}
+                style={{ background: '#1e1b4b', border: '1px solid rgba(139, 92, 246, 0.3)' }}
               >
                 <div className="p-2">
-                  <div className="px-3 py-2 text-xs font-medium border-b" style={{ color: '#c9a84c80', borderColor: '#c9a84c20' }}>
+                  <div className="px-3 py-2 text-xs font-medium border-b" style={{ color: 'rgba(139, 92, 246, 0.6)', borderColor: 'rgba(139, 92, 246, 0.2)' }}>
                     Learning Language
                   </div>
                   <div className="space-y-1 mt-2">
@@ -213,7 +213,7 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
                         onClick={() => changeLanguageMutation.mutate(lang)}
                         disabled={changeLanguageMutation.isPending}
                         className="w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-all"
-                        style={profile?.language === lang ? { background: '#ffffff25', color: '#fff' } : { color: '#d8e4d0' }}
+                        style={profile?.language === lang ? { background: 'rgba(139, 92, 246, 0.2)', color: '#fff' } : { color: '#cbd5e1' }}
                       >
                         <span className="text-xl">{languageFlags[lang]}</span>
                         <span className="text-sm font-medium">{languageNames[lang]}</span>
@@ -222,10 +222,10 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
                     ))}
                   </div>
                   <div className="mt-2 pt-2" style={{ borderTop: '1px solid #c9a84c20' }}>
-                    <Button onClick={() => { setShowMenu(false); navigate(createPageUrl("LanguageSelect")); }} className="w-full justify-start text-sm mb-1" style={{ background: '#c9a84c15', color: '#c9a84c' }} variant="ghost">
+                    <Button onClick={() => { setShowMenu(false); navigate(createPageUrl("LanguageSelect")); }} className="w-full justify-start text-sm mb-1" style={{ background: 'rgba(139, 92, 246, 0.15)', color: '#c4b5fd' }} variant="ghost">
                       <Globe className="w-4 h-4 mr-2" />Start Onboarding
                     </Button>
-                    <Button onClick={handleLogout} className="w-full justify-start text-sm" style={{ background: '#ff444415', color: '#ff6b6b' }} variant="ghost">
+                    <Button onClick={handleLogout} className="w-full justify-start text-sm" style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#fca5a5' }} variant="ghost">
                       <LogOut className="w-4 h-4 mr-2" />Logout
                     </Button>
                   </div>
@@ -236,15 +236,15 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
         </div>
 
         {/* Brand */}
-        <div className="text-center">
-          <p className="font-bold text-base tracking-widest uppercase" style={{ color: '#f5f0e8', fontFamily: 'Cormorant Garamond, Georgia, serif', letterSpacing: '0.2em', fontWeight: 300 }}>Language Masteri</p>
+        <div className="text-center flex-1">
+          <p className="font-bold text-xl tracking-widest" style={{ color: '#ffffff', fontFamily: 'system-ui, sans-serif', letterSpacing: '0.05em', fontWeight: 600 }}>Language Mastery</p>
         </div>
 
         {/* Streak + Timer + Progress + Logout */}
         <div className="flex items-center gap-2 flex-shrink-0">
-          <motion.div whileHover={{ scale: 1.05 }} className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: '#ffffff15', border: '1px solid #ffffff25' }}>
-            <Flame className="w-4 h-4" style={{ color: '#e8f0e0' }} />
-            <span className="text-xs font-bold" style={{ color: '#e8f0e0' }}>{profile?.daily_streak || 0}</span>
+          <motion.div whileHover={{ scale: 1.05 }} className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: 'rgba(249, 115, 22, 0.1)', border: '1px solid rgba(249, 115, 22, 0.3)' }}>
+            <Flame className="w-4 h-4" style={{ color: '#fb923c' }} />
+            <span className="text-xs font-bold text-white">{profile?.daily_streak || 0}</span>
           </motion.div>
           {sessionActive ? (
             <motion.button onClick={togglePause} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onDoubleClick={endSession} className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: profile.session_paused ? '#b8860b' : timeRemaining < 300 ? '#8b1a1a' : '#2d5a3d', border: '1px solid #c9a84c50' }} title="Click to pause/resume • Double-click to end">
@@ -252,23 +252,23 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
               <span className="text-white font-bold text-xs">{formatTime(timeRemaining)}</span>
             </motion.button>
           ) : (
-            <motion.button onClick={() => startSession(30)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: '#ffffff18', border: '1px solid #ffffff30' }}>
+            <motion.button onClick={() => startSession(30)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: 'rgba(139, 92, 246, 0.1)', border: '1px solid rgba(139, 92, 246, 0.3)' }}>
               <Clock className="w-4 h-4 text-white" />
               <span className="text-white font-bold text-xs">Timer</span>
             </motion.button>
           )}
           {(currentUser?.role === 'admin' || currentUser?.role === 'coach') && (
-            <motion.button onClick={() => navigate(createPageUrl("ManageCoaches"))} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: '#ffffff18', border: '1px solid #ffffff30' }}>
+            <motion.button onClick={() => navigate(createPageUrl("ManageCoaches"))} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: 'rgba(139, 92, 246, 0.1)', border: '1px solid rgba(139, 92, 246, 0.3)' }}>
               <span className="text-white font-bold text-xs">👥 People</span>
             </motion.button>
           )}
-          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: '#ffffff18', border: '1px solid #ffffff30' }}>
+          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: 'rgba(139, 92, 246, 0.1)', border: '1px solid rgba(139, 92, 246, 0.3)' }}>
             <span className="text-white font-bold text-xs">💳 Payments</span>
           </motion.button>
-          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: '#ffffff18', border: '1px solid #ffffff30' }}>
+          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: 'rgba(139, 92, 246, 0.1)', border: '1px solid rgba(139, 92, 246, 0.3)' }}>
             <span className="text-white font-bold text-xs">⚙️ Settings</span>
           </motion.button>
-          <motion.button onClick={handleLogout} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium" style={{ background: '#ff444415', border: '1px solid #ff444430', color: '#ff6b6b' }}>
+          <motion.button onClick={handleLogout} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium" style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#fca5a5' }}>
             <LogOut className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Logout</span>
           </motion.button>
@@ -276,7 +276,7 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
       </div>
 
       {/* Nav grid: 4 per row, hold to drag */}
-      <div style={{ borderTop: '1px solid #c9a84c20' }} className="px-4 py-2">
+      <div style={{ borderTop: '1px solid rgba(139, 92, 246, 0.2)' }} className="px-4 py-2">
         <div className="grid grid-cols-5 gap-1.5 max-w-lg mx-auto">
           {orderedNav.map(({ id, to, emoji, label }) => {
             const isDragging = draggingId === id;
@@ -292,8 +292,8 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
                 onClick={() => { if (!isDraggingRef.current) navigate(createPageUrl(to)); }}
                 className="flex flex-col items-center py-2 rounded-xl select-none transition-all"
                 style={{
-                  background: isDragging ? '#ffffff08' : isOver ? '#ffffff25' : '#ffffff12',
-                  border: `1px solid ${isDragging ? '#c9a84c40' : isOver ? '#c9a84c80' : '#ffffff25'}`,
+                  background: isDragging ? 'rgba(139, 92, 246, 0.08)' : isOver ? 'rgba(139, 92, 246, 0.2)' : 'rgba(139, 92, 246, 0.1)',
+                  border: `1px solid ${isDragging ? 'rgba(139, 92, 246, 0.4)' : isOver ? 'rgba(139, 92, 246, 0.8)' : 'rgba(139, 92, 246, 0.2)'}`,
                   cursor: 'grab',
                   opacity: isDragging ? 0.35 : 1,
                   transform: isOver ? 'scale(1.05)' : 'scale(1)',
@@ -301,7 +301,7 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
                 }}
               >
                 <span className="text-lg">{emoji}</span>
-                <span className="text-xs font-medium mt-0.5" style={{ color: '#e8f0e4', fontFamily: 'Jost, sans-serif', letterSpacing: '0.03em' }}>{label}</span>
+                <span className="text-xs font-medium mt-0.5 text-white" style={{ fontFamily: 'Jost, sans-serif', letterSpacing: '0.03em' }}>{label}</span>
               </div>
             );
           })}

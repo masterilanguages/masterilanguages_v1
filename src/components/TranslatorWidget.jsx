@@ -206,7 +206,7 @@ IMPORTANT: hebrew and transliteration fields are MANDATORY and must always have 
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-4 left-4 z-50 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg flex items-center justify-center font-medium"
+          className="fixed bottom-4 left-4 z-50 px-4 py-2 rounded-xl bg-white text-slate-900 shadow-lg flex items-center justify-center font-bold"
         >
           Translate
         </motion.button>
@@ -218,7 +218,7 @@ IMPORTANT: hebrew and transliteration fields are MANDATORY and must always have 
             initial={{ opacity: 0, y: 20, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
-            className="fixed bottom-20 left-4 z-50 w-80 bg-slate-900/95 backdrop-blur-xl border border-white/20 rounded-2xl p-4 shadow-2xl max-h-[85vh] overflow-y-auto"
+            className="fixed bottom-20 left-4 z-50 w-80 bg-slate-950/95 backdrop-blur-xl border border-purple-500/30 rounded-2xl p-4 shadow-2xl max-h-[85vh] overflow-y-auto"
           >
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-white font-medium text-sm">Translate</h3>
