@@ -630,40 +630,84 @@ export default function Home() {
                             >
                               <div className="mt-1 space-y-1 pl-3">
                                 {(day.subsections || []).map((task, idx) => {
-                                   const isTaskDone = progress?.subsections_completed?.includes(task.id);
-                                   const isDragging = draggedTask?.dayId === day.id && draggedTask?.idx === idx;
-                                   const isDragOver = dragOverTask?.dayId === day.id && dragOverTask?.idx === idx;
-                                   return (
-                                     <div
-                                       key={task.id}
-                                       draggable
-                                       onDragStart={() => setDraggedTask({ dayId: day.id, idx })}
-                                       onDragOver={(e) => {
-                                         e.preventDefault();
-                                         setDragOverTask({ dayId: day.id, idx });
-                                       }}
-                                       onDragLeave={() => setDragOverTask(null)}
-                                       onDrop={() => {
-                                         if (draggedTask && draggedTask.dayId === day.id && draggedTask.idx !== idx) {
-                                           reorderTasks(day.id, draggedTask.idx, idx);
-                                         }
-                                         setDraggedTask(null);
-                                         setDragOverTask(null);
-                                       }}
-                                       className={`flex items-center justify-between px-3 py-2 rounded-lg hover:opacity-80 transition-all ${isDragging ? 'cursor-grabbing opacity-50' : 'cursor-pointer'} ${isDragOver ? 'border-t-2 border-b-2 border-cyan-400 my-2' : ''}`}
-                                       style={{ background: isTaskDone ? '#5a6b5a30' : '#ffffff50', border: isDragOver ? undefined : '1px solid #5a6b5a20' }}
-                                       onClick={() => !isDragging && (task.page ? navigate(createPageUrl(task.page)) : toggleTaskMutation.mutate({ dayId: day.id, taskId: task.id, dayNumber: day.day_number }))}
-                                     >
-                                       <div className="flex items-center gap-2">
-                                         <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${isTaskDone ? 'bg-green-500 border-green-500' : 'border-stone-400'}`}>
-                                           {isTaskDone && <Check className="w-2.5 h-2.5 text-white" />}
-                                         </div>
-                                         <span className="text-sm font-medium" style={{ color: '#3d4a2e' }}>{task.name}</span>
-                                       </div>
-                                       {task.duration && <span className="text-xs" style={{ color: '#6b7c5a' }}>{task.duration}</span>}
-                                     </div>
-                                   );
-                                })}
+                                    const isTaskDone = progress?.subsections_completed?.includes(task.id);
+                                    const isDragging = draggedTask?.dayId === day.id && draggedTask?.idx === idx;
+                                    const isDragOver = dragOverTask?.dayId === day.id && dragOverTask?.idx === idx;
+                                    const isEditing = editingTask?.dayId === day.id && editingTask?.taskId === task.id;
+                                    return (
+                                      <div key={task.id} className="flex flex-col gap-1">
+                                        {isEditing ? (
+                                          <div className="flex gap-2 px-3 py-2 bg-white/10 rounded-lg border border-cyan-400/50">
+                                            <Input
+                                              value={editingTaskData.name}
+                                              onChange={(e) => setEditingTaskData({ ...editingTaskData, name: e.target.value })}
+                                              placeholder="Task name"
+                                              className="flex-1 bg-white/10 border-white/20 text-white text-sm"
+                                            />
+                                            <Input
+                                              value={editingTaskData.duration}
+                                              onChange={(e) => setEditingTaskData({ ...editingTaskData, duration: e.target.value })}
+                                              placeholder="Duration"
+                                              className="w-24 bg-white/10 border-white/20 text-white text-sm"
+                                            />
+                                            <Button
+                                              onClick={() => handleSaveEditedTask(day.id)}
+                                              size="sm"
+                                              className="bg-green-500/30 text-green-400 hover:bg-green-500/40 border border-green-500/50"
+                                            >
+                                              ✓
+                                            </Button>
+                                            <Button
+                                              onClick={handleCancelEdit}
+                                              size="sm"
+                                              className="bg-red-500/30 text-red-400 hover:bg-red-500/40 border border-red-500/50"
+                                            >
+                                              ✕
+                                            </Button>
+                                          </div>
+                                        ) : (
+                                          <div
+                                            draggable
+                                            onDragStart={() => setDraggedTask({ dayId: day.id, idx })}
+                                            onDragOver={(e) => {
+                                              e.preventDefault();
+                                              setDragOverTask({ dayId: day.id, idx });
+                                            }}
+                                            onDragLeave={() => setDragOverTask(null)}
+                                            onDrop={() => {
+                                              if (draggedTask && draggedTask.dayId === day.id && draggedTask.idx !== idx) {
+                                                reorderTasks(day.id, draggedTask.idx, idx);
+                                              }
+                                              setDraggedTask(null);
+                                              setDragOverTask(null);
+                                            }}
+                                            className={`flex items-center justify-between px-3 py-2 rounded-lg hover:opacity-80 transition-all group ${isDragging ? 'cursor-grabbing opacity-50' : 'cursor-pointer'} ${isDragOver ? 'border-t-2 border-b-2 border-cyan-400 my-2' : ''}`}
+                                            style={{ background: isTaskDone ? '#5a6b5a30' : '#ffffff50', border: isDragOver ? undefined : '1px solid #5a6b5a20' }}
+                                            onClick={() => !isDragging && (task.page ? navigate(createPageUrl(task.page)) : toggleTaskMutation.mutate({ dayId: day.id, taskId: task.id, dayNumber: day.day_number }))}
+                                          >
+                                            <div className="flex items-center gap-2">
+                                              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${isTaskDone ? 'bg-green-500 border-green-500' : 'border-stone-400'}`}>
+                                                {isTaskDone && <Check className="w-2.5 h-2.5 text-white" />}
+                                              </div>
+                                              <span className="text-sm font-medium" style={{ color: '#3d4a2e' }}>{task.name}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                              {task.duration && <span className="text-xs" style={{ color: '#6b7c5a' }}>{task.duration}</span>}
+                                              {isMasterUser && (
+                                                <button
+                                                  onClick={(e) => { e.stopPropagation(); handleStartEditTask(day.id, task); }}
+                                                  className="opacity-0 group-hover:opacity-100 transition-opacity text-white/50 hover:text-white text-xs px-1"
+                                                  title="Edit task"
+                                                >
+                                                  ✏️
+                                                </button>
+                                              )}
+                                            </div>
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                 })}
                               </div>
                             </motion.div>
                           )}
