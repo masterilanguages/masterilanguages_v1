@@ -1392,18 +1392,6 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
                         {video.duration_minutes} min
                       </span>
                     )}
-                    {video.topics && video.topics.length > 0 && (
-                      <>
-                        {video.topics.slice(0, 2).map((topic, idx) => (
-                          <span key={idx} className="text-xs bg-white/10 text-white/70 px-2 py-1 rounded flex-shrink-0">
-                            {topic}
-                          </span>
-                        ))}
-                        {video.topics.length > 2 && (
-                          <span className="text-xs text-white/40 flex-shrink-0">+{video.topics.length - 2}</span>
-                        )}
-                      </>
-                    )}
                   </div>
 
                   <div className="space-y-2">
