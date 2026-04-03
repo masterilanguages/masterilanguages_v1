@@ -190,7 +190,7 @@ Provide:
       {canEdit && (
         <p className="text-white/30 text-xs text-center mb-3">Click any word to edit • Leave empty to delete • + to add after</p>
       )}
-      <div className="space-y-4 flex flex-col items-center">
+      <div className="space-y-1 flex flex-col items-center">
         {transcript.map((segment, segIdx) => {
           if (!segment.transliteration) return null;
           const sortedIdx = sortedByTime.findIndex(s => s === segment);
