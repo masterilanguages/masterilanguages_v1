@@ -1867,56 +1867,62 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
                 )}
               </div>
 
-            {/* Transcript - same width as video */}
-            <div className="w-full max-w-3xl flex-1 overflow-y-auto py-4 px-2">
-              {loadingTranscript ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
-                </div>
-              ) : transcript.length > 0 ? (
-                <ContinuousTranscript
-                  transcript={transcript}
-                  currentTime={currentTime}
-                  onSeekTo={handleSeekTo}
-                  onAddWord={handleAddWordFromTranscript}
-                  onEditWord={saveTranscriptEdit}
-                  canEdit={canEdit}
-                />
-              ) : (
-                <div className="max-w-3xl mx-auto bg-white/5 rounded-xl p-8 space-y-6">
-                  <div className="text-center">
-                    <p className="text-white/60 mb-4">No transcript available</p>
-                    <p className="text-white/40 text-sm mb-6">Paste transcript from YouTube "Show transcript" or DownSub</p>
+            {/* Transcript - only show when video player is ready */}
+            {videoPlayer ? (
+              <div className="w-full max-w-3xl flex-1 overflow-y-auto py-4 px-2">
+                {loadingTranscript ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
                   </div>
-
-                  <Textarea
-                    value={pastedTranscript}
-                    onChange={(e) => setPastedTranscript(e.target.value)}
-                    placeholder="Paste transcript here..."
-                    className="bg-white/5 border-white/20 text-white min-h-[200px]"
+                ) : transcript.length > 0 ? (
+                  <ContinuousTranscript
+                    transcript={transcript}
+                    currentTime={currentTime}
+                    onSeekTo={handleSeekTo}
+                    onAddWord={handleAddWordFromTranscript}
+                    onEditWord={saveTranscriptEdit}
+                    canEdit={canEdit}
                   />
+                ) : (
+                  <div className="max-w-3xl mx-auto bg-white/5 rounded-xl p-8 space-y-6">
+                    <div className="text-center">
+                      <p className="text-white/60 mb-4">No transcript available</p>
+                      <p className="text-white/40 text-sm mb-6">Paste transcript from YouTube "Show transcript" or DownSub</p>
+                    </div>
 
-                  <div className="flex gap-3">
-                    <Button
-                      onClick={() => processManualTranscript(selectedVideo, pastedTranscript)}
-                      disabled={!pastedTranscript.trim()}
-                      className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500"
-                    >
-                      Paste Transcript
-                    </Button>
-                    {canEdit && (
+                    <Textarea
+                      value={pastedTranscript}
+                      onChange={(e) => setPastedTranscript(e.target.value)}
+                      placeholder="Paste transcript here..."
+                      className="bg-white/5 border-white/20 text-white min-h-[200px]"
+                    />
+
+                    <div className="flex gap-3">
                       <Button
-                        onClick={() => generateTranscriptFromYouTube(selectedVideo)}
-                        variant="outline"
-                        className="border-cyan-500/50 text-cyan-400"
+                        onClick={() => processManualTranscript(selectedVideo, pastedTranscript)}
+                        disabled={!pastedTranscript.trim()}
+                        className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500"
                       >
-                        Try YouTube Auto
+                        Paste Transcript
                       </Button>
-                    )}
+                      {canEdit && (
+                        <Button
+                          onClick={() => generateTranscriptFromYouTube(selectedVideo)}
+                          variant="outline"
+                          className="border-cyan-500/50 text-cyan-400"
+                        >
+                          Try YouTube Auto
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex-1 flex items-center justify-center">
+                <p className="text-white/50">Play video to view transcript</p>
+              </div>
+            )}
             </div>
           </div>
         </div>
