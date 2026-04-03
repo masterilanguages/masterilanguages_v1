@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { ArrowLeft, Star, Gamepad2, Loader2, X, Wand2, Check } from "lucide-react";
+import { ArrowLeft, Star, Loader2, X, Wand2, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import GameHeader from "../components/game/GameHeader";
@@ -16,7 +16,7 @@ import TranslatorWidget from "../components/TranslatorWidget";
 
 export default function Backpack() {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState("level5");
+  const [activeTab, setActiveTab] = useState("level0");
   const [expandedId, setExpandedId] = useState(null);
   const [selectedWord, setSelectedWord] = useState(null);
   const [sentences, setSentences] = useState(null);
@@ -133,11 +133,11 @@ export default function Backpack() {
   const level5Words = wordRatings.filter(w => w.times_practiced >= 5);
 
   const tabs = [
-    { id: "level5", label: "✓ Masteri", color: "green" },
-    { id: "level3", label: "Level 3", color: "purple" },
-    { id: "level2", label: "Level 2", color: "yellow" },
+    { id: "level0", label: "✨ New", color: "gray" },
     { id: "level1", label: "Level 1", color: "orange" },
-    { id: "level0", label: "Level 0", color: "gray" },
+    { id: "level2", label: "Level 2", color: "yellow" },
+    { id: "level3", label: "Level 3", color: "purple" },
+    { id: "level5", label: "✓ Mastered", color: "green" },
     { id: "pictures", label: "🖼️ Pictures", color: "pink" },
   ];
 
@@ -151,7 +151,15 @@ export default function Backpack() {
     else if (activeTab === "pictures") words = wordRatings.filter(w => w.image_url);
     else return [];
     
-    return [...words].sort((a, b) => (a.phonetic || a.word).localeCompare(b.phonetic || b.word));
+    // Deduplicate by phonetic (keep highest times_practiced)
+    const seen = new Map();
+    for (const w of words) {
+      const key = (w.phonetic || w.word).toLowerCase();
+      if (!seen.has(key) || (w.times_practiced || 0) > (seen.get(key).times_practiced || 0)) {
+        seen.set(key, w);
+      }
+    }
+    return [...seen.values()].sort((a, b) => (a.phonetic || a.word).localeCompare(b.phonetic || b.word));
   };
 
   const handleWordClick = async (word) => {
@@ -282,36 +290,8 @@ export default function Backpack() {
           <h1 className="text-3xl font-bold" style={{ color: '#3a4a3a', fontFamily: 'Cormorant Garamond, serif', fontWeight: 400 }}>🎒 My Backpack</h1>
         </div>
 
-        {/* Quick Actions - Top */}
-        <div className="grid grid-cols-4 gap-2 mb-6">
-          <Link to={createPageUrl("Home")}>
-            <Button variant="outline" className="w-full bg-white border-gray-200 text-black hover:bg-gray-100 h-auto py-2 flex-col">
-              <Gamepad2 className="w-4 h-4 mb-1 text-black" />
-              <span className="text-xs text-black">Home</span>
-            </Button>
-          </Link>
-          <Link to={createPageUrl("BabyVideos")}>
-            <Button variant="outline" className="w-full bg-white border-gray-200 text-black hover:bg-gray-100 h-auto py-2 flex-col">
-              <span className="text-sm mb-1">📺</span>
-              <span className="text-xs text-black">Videos</span>
-            </Button>
-          </Link>
-          <Link to={createPageUrl("Practice")}>
-            <Button variant="outline" className="w-full bg-white border-gray-200 text-black hover:bg-gray-100 h-auto py-2 flex-col">
-              <span className="text-sm mb-1">📚</span>
-              <span className="text-xs text-black">Practice</span>
-            </Button>
-          </Link>
-          <Link to={createPageUrl("Backpack")}>
-            <Button variant="outline" className="w-full bg-white border-gray-200 text-black hover:bg-gray-100 h-auto py-2 flex-col">
-              <span className="text-sm mb-1">🎒</span>
-              <span className="text-xs text-black">Backpack</span>
-            </Button>
-          </Link>
-        </div>
-
         {/* Tabs - Single Row */}
-        <div className="flex gap-1 mb-4 justify-center overflow-x-auto">
+        <div className="flex gap-1 mb-4 justify-center overflow-x-auto flex-wrap">
           {tabs.map((tab) => (
             <button
               key={tab.id}
