@@ -60,9 +60,6 @@ export default function Layout({ children, currentPageName }) {
     enabled: isAuthChecked && !!currentUser,
   });
 
-  // Debug label (dev only)
-  const isDev = window.location.hostname === 'localhost' || window.location.hostname.includes('dev');
-  
   // Inactivity detection - reset session if no activity for 2 minutes
   useEffect(() => {
     if (!sessionActive) return;
@@ -139,6 +136,12 @@ export default function Layout({ children, currentPageName }) {
     }
   }, [isOnboardingPage, isAuthChecked, currentUser, profileLoading, userProfile, navigate, currentPageName]);
 
+  // Debug label (dev only)
+  const isDev = window.location.hostname === 'localhost' || window.location.hostname.includes('dev');
+  
+  // Show header on all pages except onboarding
+  const showHeader = !isOnboardingPage && userProfile?.language;
+
   // Show loading during initial auth check
   if (!isAuthChecked) {
     return <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900" />;
@@ -155,9 +158,6 @@ export default function Layout({ children, currentPageName }) {
       </div>;
     }
   }
-  
-  // Show header on all pages except onboarding
-  const showHeader = !isOnboardingPage && userProfile?.language;
 
   return (
     <>
