@@ -276,20 +276,20 @@ Provide:
               </div>
 
               {/* Text Block */}
-              <div className="flex-1 space-y-0.5">
+              <div className="flex-1 space-y-0">
                 {/* Transliteration */}
-                <p className="text-white text-base font-medium leading-snug text-left">
+                <p className="text-white text-base font-medium leading-tight text-left">
                   {renderEditableWords(segIdx, 'transliteration', segment.transliteration, 'text-white text-base font-medium')}
                 </p>
                 {/* Translation */}
                 {segment.english && (
-                  <p className="text-white/60 text-sm leading-snug text-left">
+                  <p className="text-white/60 text-sm leading-tight text-left">
                     {renderEditableWords(segIdx, 'english', segment.english, 'text-white/60 text-sm')}
                   </p>
                 )}
                 {/* Hebrew with nikud */}
                 {segment.hebrew && (
-                  <p className="text-cyan-300 text-base leading-snug text-left" dir="ltr" style={{ unicodeBidi: 'plaintext' }}>
+                  <p className="text-cyan-300 text-base leading-tight text-left" dir="ltr" style={{ unicodeBidi: 'plaintext' }}>
                     {renderEditableWords(segIdx, 'hebrew', segment.hebrew, 'text-cyan-300 text-base')}
                   </p>
                 )}

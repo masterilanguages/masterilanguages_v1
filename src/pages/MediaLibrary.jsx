@@ -593,8 +593,8 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
 
   ${batch.map((s, idx) => `[${idx + 1}] "${s.text}"`).join('\n')}
 
-  For each provide:
-  - hebrew: Hebrew with nikud
+  CRITICAL: For each provide:
+  - hebrew: Hebrew WITH FULL NIKUD (vowel points/diacritics). NEVER without nikud.
   - transliteration: Latin phonetic
   - english: English translation`,
             response_json_schema: {
@@ -728,8 +728,8 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
 
   ${batch.map((s, idx) => `[${idx + 1}] "${s.text}"`).join('\n')}
 
-  For each segment provide:
-  - hebrew: Hebrew with nikud
+  CRITICAL: For each segment provide:
+  - hebrew: Hebrew text WITH FULL NIKUD (vowel points/diacritics). NEVER without nikud.
   - transliteration: Latin phonetic
   - english: English translation`,
             response_json_schema: {
