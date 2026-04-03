@@ -167,6 +167,7 @@ export default function ContinuousTranscript({
                       setPlayingSegment(segIdx);
                     }
                   }}
+                  onDoubleClick={(e) => e.preventDefault()}
                   className={`flex items-center gap-1.5 px-2 py-1 rounded-lg transition-all text-xs font-mono ${
                     isActive
                       ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-400/50'
