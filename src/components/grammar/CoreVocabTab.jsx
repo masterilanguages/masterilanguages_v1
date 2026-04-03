@@ -235,11 +235,11 @@ function Section({ section, onAddToBackpack }) {
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+            <div className="p-3 flex flex-wrap gap-1 justify-center">
               {section.items.map((item, idx) => (
                 <div
                   key={idx}
-                  className="flex flex-col items-center text-center px-2 py-1 rounded-xl group w-fit mx-auto"
+                  className="flex flex-col items-center text-center px-1.5 py-0.5 rounded-lg group w-fit"
                   style={{ background: idx % 2 === 0 ? '#ffffff70' : '#f5f0e850', border: '1px solid #e8e4d860' }}
                 >
                   <span className="text-xs font-medium leading-none" style={{ color: '#6b7c5a' }}>{item.roman}</span>

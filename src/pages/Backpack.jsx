@@ -333,7 +333,7 @@ export default function Backpack() {
               </p>
             </div>
           ) : activeTab === "pictures" ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            <div className="flex flex-wrap gap-1.5">
               {getDisplayWords().map((word) => (
                 <DeletablePictureBox
                   key={word.id}
@@ -430,7 +430,7 @@ export default function Backpack() {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            <div className="flex flex-wrap gap-1.5">
               {getDisplayWords().map((word) => {
                 const isFlipped = flippedCards[word.id] || showAllEnglish;
                 return (
