@@ -1273,11 +1273,12 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
                   <div className="p-3">
                    <div className="flex items-start justify-between gap-2 mb-2">
                      <h3 className="text-white font-bold text-base flex-1">{video.title}</h3>
-                     <div className="flex gap-1 flex-shrink-0">
+                     <div className="flex gap-2 flex-shrink-0">
                        {canEdit && (
                          <button
                            onClick={(e) => { e.stopPropagation(); handleEdit(video); }}
-                           className="text-white/60 hover:text-white transition-colors p-1"
+                           className="bg-cyan-500/30 hover:bg-cyan-500/50 text-cyan-300 transition-all p-1.5 rounded-md border border-cyan-500/50"
+                           title="Edit video"
                          >
                            <Pencil className="w-4 h-4" />
                          </button>
@@ -1285,7 +1286,8 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
                        {canDelete && (
                          <button
                            onClick={(e) => { e.stopPropagation(); if (confirm("Delete this video from your list?")) { deleteVideoMutation.mutate(video.id); } }}
-                           className="text-white/60 hover:text-white transition-colors p-1"
+                           className="bg-red-500/30 hover:bg-red-500/50 text-red-300 transition-all p-1.5 rounded-md border border-red-500/50"
+                           title="Delete video"
                          >
                            <Trash2 className="w-4 h-4" />
                          </button>
