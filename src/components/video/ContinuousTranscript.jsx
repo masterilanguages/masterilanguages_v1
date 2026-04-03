@@ -181,18 +181,18 @@ export default function ContinuousTranscript({
               {/* Text Block */}
               <div className="flex-1 space-y-0.5">
                 {/* Transliteration */}
-                <p className="text-white text-base font-medium leading-snug">
+                <p className="text-white text-base font-medium leading-snug text-left">
                   {segment.transliteration}
                 </p>
                 {/* Translation */}
                 {segment.english && (
-                  <p className="text-white/60 text-sm leading-snug">
+                  <p className="text-white/60 text-sm leading-snug text-left">
                     {segment.english}
                   </p>
                 )}
-                {/* Hebrew with nikud */}
+                {/* Hebrew with nikud - display left-aligned, preserving word order */}
                 {segment.hebrew && (
-                  <p className="text-cyan-300 text-base leading-snug" dir="rtl">
+                  <p className="text-cyan-300 text-base leading-snug text-left" dir="ltr" style={{ unicodeBidi: 'plaintext' }}>
                     {segment.hebrew}
                   </p>
                 )}
