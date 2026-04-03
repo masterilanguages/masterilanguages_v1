@@ -147,13 +147,19 @@ export default function ContinuousTranscript({
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Sort transcript by start time for correct active highlighting
+  const sortedByTime = [...transcript].sort((a, b) => (a.start || 0) - (b.start || 0));
+
   return (
     <div className="w-full bg-white/5 rounded-2xl p-4">
       <div className="space-y-4 flex flex-col items-center">
         {transcript.map((segment, segIdx) => {
           if (!segment.transliteration) return null;
+          // Find this segment's position in time-sorted order to get the correct next segment
+          const sortedIdx = sortedByTime.findIndex(s => s === segment);
+          const nextSegment = sortedByTime[sortedIdx + 1];
           const isActive = currentTime >= segment.start &&
-            currentTime < (transcript[segIdx + 1]?.start || Infinity);
+            currentTime < (nextSegment?.start ?? Infinity);
 
           return (
             <div key={segIdx} className={`flex gap-3 items-start rounded-xl px-3 py-2 transition-all w-full max-w-lg ${isActive ? 'bg-cyan-500/10 border border-cyan-400/30' : 'border border-transparent'}`}>
