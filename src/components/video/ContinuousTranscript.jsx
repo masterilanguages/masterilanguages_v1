@@ -22,6 +22,8 @@ export default function ContinuousTranscript({
   const [editingTimestamp, setEditingTimestamp] = useState(null);
   const [timestampValue, setTimestampValue] = useState("");
   const [playingSegment, setPlayingSegment] = useState(null);
+  const [editingSegmentTime, setEditingSegmentTime] = useState(null);
+  const [editingTimeValue, setEditingTimeValue] = useState("");
 
   // Flatten all words from all segments with their timestamps
   const allWords = transcript.flatMap((segment, segIdx) => {
@@ -157,26 +159,54 @@ export default function ContinuousTranscript({
             <div key={segIdx} className={`flex gap-3 items-start rounded-xl px-3 py-2 transition-all w-full max-w-lg ${isActive ? 'bg-cyan-500/10 border border-cyan-400/30' : 'border border-transparent'}`}>
               {/* Timestamp Play Button */}
               <div className="flex-shrink-0 pt-1">
-                <button
-                  onClick={() => {
-                    if (playingSegment === segIdx) {
-                      onSeekTo(segment.start, false); // pause
-                      setPlayingSegment(null);
-                    } else {
-                      onSeekTo(segment.start, true); // play
-                      setPlayingSegment(segIdx);
-                    }
-                  }}
-                  onDoubleClick={(e) => e.preventDefault()}
-                  className={`flex items-center gap-1.5 px-2 py-1 rounded-lg transition-all text-xs font-mono ${
-                    isActive
-                      ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-400/50'
-                      : 'bg-white/10 text-white/60 hover:bg-white/20'
-                  }`}
-                >
-                  <Play className="w-3 h-3" />
-                  {formatTime(segment.start)}
-                </button>
+                {editingSegmentTime === segIdx ? (
+                  <input
+                    autoFocus
+                    type="text"
+                    value={editingTimeValue}
+                    onChange={(e) => setEditingTimeValue(e.target.value)}
+                    onBlur={() => {
+                      const parts = editingTimeValue.split(':');
+                      if (parts.length === 2) {
+                        const secs = parseInt(parts[0]) * 60 + parseInt(parts[1]);
+                        if (!isNaN(secs) && onEditWord) {
+                          onEditWord(segIdx, 'start', secs);
+                        }
+                      }
+                      setEditingSegmentTime(null);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') e.target.blur();
+                      if (e.key === 'Escape') setEditingSegmentTime(null);
+                    }}
+                    className="w-16 px-2 py-1 rounded-lg text-xs font-mono bg-yellow-400/20 border border-yellow-400 text-yellow-300 outline-none"
+                  />
+                ) : (
+                  <button
+                    onClick={() => {
+                      if (playingSegment === segIdx) {
+                        onSeekTo(segment.start, false);
+                        setPlayingSegment(null);
+                      } else {
+                        onSeekTo(segment.start, true);
+                        setPlayingSegment(segIdx);
+                      }
+                    }}
+                    onDoubleClick={(e) => {
+                      e.preventDefault();
+                      setEditingSegmentTime(segIdx);
+                      setEditingTimeValue(formatTime(segment.start));
+                    }}
+                    className={`flex items-center gap-1.5 px-2 py-1 rounded-lg transition-all text-xs font-mono ${
+                      isActive
+                        ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-400/50'
+                        : 'bg-white/10 text-white/60 hover:bg-white/20'
+                    }`}
+                  >
+                    <Play className="w-3 h-3" />
+                    {formatTime(segment.start)}
+                  </button>
+                )}
               </div>
 
               {/* Text Block */}
