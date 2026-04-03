@@ -656,28 +656,20 @@ export default function Home() {
             {/* LIBRARY SECTION */}
             <div className="text-center">
               <h2 className="text-3xl font-bold mb-4 cursor-pointer hover:opacity-80 transition-opacity inline-flex items-center gap-1" style={{ color: '#3d4a2e', fontFamily: 'Cormorant Garamond, Georgia, serif' }} onClick={() => navigate(createPageUrl("MediaLibrary"))}>📚 Library <ChevronRight className="w-5 h-5 mb-1" /></h2>
-              <div className="flex flex-wrap justify-center gap-2">
+              <div className="flex flex-wrap justify-center gap-2 bg-white/40 rounded-2xl px-4 py-3" style={{ border: '1px solid #5a6b5a30' }}>
                 {[
                   { label: 'Videos', emoji: '📹', to: 'MediaLibrary' },
                   { label: 'Songs', emoji: '🎵', to: 'Songs' },
                   { label: 'Audio Training', emoji: '🎧', to: 'MediaLibrary' },
-                  { label: 'Verbs', emoji: '📖', to: 'MediaLibrary' },
-                  { label: 'Core Vocab', emoji: '📚', to: 'MediaLibrary' },
-                  { label: 'Journal', emoji: '📓', to: 'Journal' },
-                  { label: 'Words', emoji: '🎒', to: 'Flashcards' },
-                  { label: 'Progress', emoji: '🏆', to: 'Progress' },
+                  { label: 'Words Backpack', emoji: '🎒', to: 'Backpack', chevron: true },
+                  { label: 'Add Media', emoji: '+', to: 'MediaLibrary' },
                 ].map((item) => (
-                  <Link key={item.label} to={createPageUrl(item.to)} className="no-underline">
-                    <motion.div
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-medium text-sm transition-all"
-                      style={{ background: '#ffffff70', border: '1px solid #5a6b5a30', color: '#3d4a2e' }}
-                    >
-                      <span>{item.emoji}</span>
-                      <span>{item.label}</span>
-                    </motion.div>
-                  </Link>
+                  <div key={item.label} className="flex items-center gap-1">
+                    <Link to={createPageUrl(item.to)} className="no-underline">
+                      <span className="text-sm font-medium" style={{ color: '#5a6b5a' }}>{item.emoji} {item.label}</span>
+                    </Link>
+                    {item.chevron && <span style={{ color: '#5a6b5a' }}>▼</span>}
+                  </div>
                 ))}
               </div>
             </div>

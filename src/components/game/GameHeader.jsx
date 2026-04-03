@@ -59,7 +59,7 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
     ] : []),
   ];
 
-  const validNavIds = ["home", "schedule", "videos", "progress", "clock"];
+  const validNavIds = ["home", "schedule", "videos", "progress", "clock", "progress"];
   const getSavedOrder = () => {
     try {
       const saved = JSON.parse(localStorage.getItem('nav_order') || '[]');
@@ -257,9 +257,6 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
               <span className="text-white font-bold text-xs">Timer</span>
             </motion.button>
           )}
-          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: '#ffffff18', border: '1px solid #ffffff30' }}>
-            <span className="text-white font-bold text-xs">🏆 Progress</span>
-          </motion.button>
           {(currentUser?.role === 'admin' || currentUser?.role === 'coach') && (
             <motion.button onClick={() => navigate(createPageUrl("ManageCoaches"))} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: '#ffffff18', border: '1px solid #ffffff30' }}>
               <span className="text-white font-bold text-xs">👥 People</span>
