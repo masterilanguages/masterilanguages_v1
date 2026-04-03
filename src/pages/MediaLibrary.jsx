@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -36,6 +38,7 @@ const topics = [
 ];
 
 export default function MediaLibrary() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [currentUser, setCurrentUser] = useState(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -945,15 +948,15 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
         </div>
 
         {/* Filter Buttons and Actions */}
-        <div className="flex items-center gap-2 mb-6 p-1 rounded-xl flex-wrap" style={{ background: '#ffffff18', border: '1px solid #ffffff20' }}>
+        <div className="flex items-center justify-center gap-2 mb-6 p-1 rounded-xl flex-wrap" style={{ background: '#ffffff18', border: '1px solid #ffffff20' }}>
           <button onClick={() => setActiveMediaTab('videos')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-1.5 ${activeMediaTab === 'videos' ? 'text-stone-800' : 'text-stone-500 hover:text-stone-700'}`} style={activeMediaTab === 'videos' ? { background: '#ffffff80' } : {}}>📹 Videos</button>
           <button onClick={() => setActiveMediaTab('songs')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-1.5 ${activeMediaTab === 'songs' ? 'text-stone-800' : 'text-stone-500 hover:text-stone-700'}`} style={activeMediaTab === 'songs' ? { background: '#ffffff80' } : {}}>🎵 Songs</button>
           <button onClick={() => setActiveMediaTab('audio')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-1.5 ${activeMediaTab === 'audio' ? 'text-stone-800' : 'text-stone-500 hover:text-stone-700'}`} style={activeMediaTab === 'audio' ? { background: '#ffffff80' } : {}}>🎧 Audio Training</button>
           <button onClick={() => setActiveMediaTab('grammar')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-1.5 ${activeMediaTab === 'grammar' ? 'text-stone-800' : 'text-stone-500 hover:text-stone-700'}`} style={activeMediaTab === 'grammar' ? { background: '#ffffff80' } : {}}>📖 Grammar</button>
           <button onClick={() => setActiveMediaTab('corevocab')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-1.5 ${activeMediaTab === 'corevocab' ? 'text-stone-800' : 'text-stone-500 hover:text-stone-700'}`} style={activeMediaTab === 'corevocab' ? { background: '#ffffff80' } : {}}>📚 Core Vocab</button>
-          <button onClick={() => setActiveMediaTab('corevocab')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-1.5 ${activeMediaTab === 'corevocab' ? 'text-stone-800' : 'text-stone-500 hover:text-stone-700'}`} style={activeMediaTab === 'corevocab' ? { background: '#ffffff80' } : {}}>📚 Core Vocab</button>
+          <button onClick={() => navigate(createPageUrl('Backpack'))} className="px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-1.5 text-stone-500 hover:text-stone-700">🎒 Words</button>
           {canEdit && (
-            <button onClick={() => { resetForm(); setEditingVideo(null); setMediaType("video"); setShowAddDialog(true); }} className="px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-1.5 text-stone-500 hover:text-stone-700 ml-auto">
+            <button onClick={() => { resetForm(); setEditingVideo(null); setMediaType("video"); setShowAddDialog(true); }} className="px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-1.5 text-stone-500 hover:text-stone-700">
               <Plus className="w-4 h-4" /> Add Media
             </button>
           )}
@@ -1028,9 +1031,6 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
 
         {/* Grammar Tab */}
         {activeMediaTab === 'grammar' && <GrammarTab />}
-
-        {/* Core Vocab Tab */}
-        {activeMediaTab === 'corevocab' && <CoreVocabTab />}
 
         {/* Core Vocab Tab */}
         {activeMediaTab === 'corevocab' && <CoreVocabTab />}
