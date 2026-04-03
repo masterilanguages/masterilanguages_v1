@@ -65,8 +65,9 @@ export default function MediaLibrary() {
   const [draggedButton, setDraggedButton] = useState(null);
   const [buttonOrder, setButtonOrder] = useState(() => {
     const saved = localStorage.getItem("mediaLibraryButtonOrder");
-    return saved ? JSON.parse(saved) : ["videos", "songs", "audio", "grammar", "corevocab", "backpack"];
+    return saved ? JSON.parse(saved) : ["videos", "songs", "audio", "verbs", "corevocab", "backpack"];
   });
+  const [selectedVerb, setSelectedVerb] = useState(null);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -156,6 +157,14 @@ export default function MediaLibrary() {
     enabled: !!currentUser,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
+  });
+
+  const { data: wordRatings = [] } = useQuery({
+    queryKey: ['wordRatings'],
+    queryFn: () => base44.entities.Word.filter({ category: "wordbank" }),
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    enabled: activeMediaTab === 'verbs',
   });
 
   const createWordMutation = useMutation({
@@ -948,7 +957,7 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
     videos: { label: "Videos", emoji: "📹" },
     songs: { label: "Songs", emoji: "🎵" },
     audio: { label: "Audio Training", emoji: "🎧" },
-    grammar: { label: "Grammar", emoji: "📖" },
+    verbs: { label: "Verbs", emoji: "📖" },
     corevocab: { label: "Core Vocab", emoji: "📚" },
     backpack: { label: "Words", emoji: "🎒" }
   };
@@ -1098,8 +1107,31 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
           </div>
         </div>
 
-        {/* Grammar Tab */}
-        {activeMediaTab === 'grammar' && <GrammarTab />}
+        {/* Verbs Tab */}
+        {activeMediaTab === 'verbs' && (
+          <div>
+            <h2 className="text-2xl font-bold text-white mb-4">Verbs from Backpack</h2>
+            {wordRatings.filter(w => w.is_verb).length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-white/60">No verbs in your backpack yet. Add verbs while learning!</p>
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-3">
+                {wordRatings.filter(w => w.is_verb).map((verb) => (
+                  <motion.button
+                    key={verb.id}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setSelectedVerb(verb)}
+                    className="px-4 py-2 rounded-lg bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 border border-cyan-500/50 font-semibold transition-all"
+                  >
+                    {verb.infinitive || verb.phonetic}
+                  </motion.button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Core Vocab Tab */}
         {activeMediaTab === 'corevocab' && <CoreVocabTab />}
@@ -1691,6 +1723,35 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
       </Dialog>
 
 
+
+      {/* Verb Conjugation Modal */}
+      <Dialog open={!!selectedVerb} onOpenChange={() => setSelectedVerb(null)}>
+        <DialogContent className="bg-slate-900 border-white/20 text-white max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-center text-2xl">
+              <span className="text-cyan-400">{selectedVerb?.infinitive || selectedVerb?.phonetic}</span>
+            </DialogTitle>
+          </DialogHeader>
+          {selectedVerb?.verb_conjugations && (
+            <div className="space-y-6">
+              {['past', 'present', 'future'].map((tense) => (
+                <div key={tense}>
+                  <h3 className="text-lg font-bold text-amber-400 mb-3 capitalize">{tense} Tense</h3>
+                  <div className="grid grid-cols-2 gap-3 bg-white/5 rounded-lg p-4">
+                    {selectedVerb.verb_conjugations[tense] && Object.entries(selectedVerb.verb_conjugations[tense]).map(([person, conj]) => (
+                      <div key={person} className="border-l-2 border-cyan-500/50 pl-3">
+                        <p className="text-white/60 text-xs capitalize">{person.replace('_', ' ')}</p>
+                        <p className="text-cyan-300 font-semibold" dir="rtl">{conj.native}</p>
+                        <p className="text-white/70 text-sm">{conj.transliteration}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Video Transcript Dialog - Fullscreen */}
       {showTranscript && (
