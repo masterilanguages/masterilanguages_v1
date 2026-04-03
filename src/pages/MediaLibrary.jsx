@@ -1695,77 +1695,48 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
             </div>
 
             <div>
-              <Label>Topics (edit, add, remove, reorder)</Label>
-              <div className="space-y-2 mt-2">
-                {(formData.topics || []).map((topic, idx) => (
-                  <div key={idx} className="flex gap-2 items-center bg-white/5 p-2 rounded-lg border border-white/10">
-                    <input
-                      type="text"
-                      value={topic}
-                      onChange={(e) => {
-                        const updated = [...formData.topics];
-                        updated[idx] = e.target.value;
-                        setFormData({ ...formData, topics: updated });
-                      }}
-                      className="flex-1 bg-transparent text-white text-sm outline-none"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setFormData({ ...formData, topics: formData.topics.filter((_, i) => i !== idx) })}
-                      className="text-red-400 hover:text-red-300 p-1"
-                      title="Remove"
-                    >
-                      ✕
-                    </button>
-                    {idx > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const updated = [...formData.topics];
-                          [updated[idx], updated[idx - 1]] = [updated[idx - 1], updated[idx]];
-                          setFormData({ ...formData, topics: updated });
-                        }}
-                        className="text-white/50 hover:text-white/80 text-xs p-1"
-                        title="Move up"
-                      >
-                        ↑
-                      </button>
-                    )}
-                    {idx < formData.topics.length - 1 && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const updated = [...formData.topics];
-                          [updated[idx], updated[idx + 1]] = [updated[idx + 1], updated[idx]];
-                          setFormData({ ...formData, topics: updated });
-                        }}
-                        className="text-white/50 hover:text-white/80 text-xs p-1"
-                        title="Move down"
-                      >
-                        ↓
-                      </button>
-                    )}
-                  </div>
+              <Label>Topics (select multiple)</Label>
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                {topics.map(topic => (
+                  <button
+                    key={topic}
+                    type="button"
+                    onClick={() => toggleTopic(topic)}
+                    className={`text-sm px-3 py-2 rounded border transition-all ${
+                      formData.topics.includes(topic)
+                        ? 'bg-cyan-500/30 border-cyan-500 text-cyan-400'
+                        : 'bg-white/5 border-white/20 text-white/70 hover:bg-white/10'
+                    }`}
+                  >
+                    {topic}
+                  </button>
                 ))}
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, topics: [...(formData.topics || []), ''] })}
-                  className="w-full px-3 py-2 rounded border border-dashed border-cyan-500/50 text-cyan-400 text-sm hover:bg-cyan-500/10 transition-all"
-                >
-                  + Add Topic
-                </button>
               </div>
             </div>
 
             <div>
-              <Label>Tags (comma-separated, fully editable)</Label>
-              <Textarea
-                value={formData.tags}
-                onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-                placeholder="e.g., Learning, Hebrew, Grammar"
-                className="bg-white/5 border-white/20 text-white resize-none h-16"
-              />
-              <p className="text-xs text-white/50 mt-1">Edit tags directly, add/remove/reorder as needed</p>
+              <Label>Tags (select relevant)</Label>
+              <div className="space-y-2 mt-2 bg-white/5 rounded-lg p-3 border border-white/10 max-h-48 overflow-y-auto">
+                {['Learning', 'Hebrew', 'Beginner', 'Intermediate', 'Advanced', 'Grammar', 'Vocabulary', 'Conversation', 'Music', 'Stories', 'Culture', 'Daily Routine', 'Business', 'Travel', 'Food', 'Health'].map(tag => (
+                  <label key={tag} className="flex items-center gap-2 cursor-pointer hover:text-white/80 transition-all text-white/70">
+                    <input
+                      type="checkbox"
+                      checked={formData.tags.split(',').map(t => t.trim()).filter(Boolean).includes(tag)}
+                      onChange={(e) => {
+                        const tagsList = formData.tags.split(',').map(t => t.trim()).filter(Boolean);
+                        if (e.target.checked) {
+                          tagsList.push(tag);
+                        } else {
+                          tagsList = tagsList.filter(t => t !== tag);
+                        }
+                        setFormData({ ...formData, tags: tagsList.join(', ') });
+                      }}
+                      className="w-4 h-4 rounded bg-white/10 border border-white/30 cursor-pointer"
+                    />
+                    <span className="text-sm">{tag}</span>
+                  </label>
+                ))}
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
