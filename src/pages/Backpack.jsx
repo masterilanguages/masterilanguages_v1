@@ -477,7 +477,7 @@ export default function Backpack() {
                             value={mnemonicDescription}
                             onChange={(e) => setMnemonicDescription(e.target.value)}
                             onKeyDown={(e) => {
-                              if (e.key === 'Enter' && !e.shiftKey && mnemonicDescription.trim()) {
+                              if (e.key === 'Enter' && !e.shiftKey && mnemonicDescription.trim() && !generatingMnemonic) {
                                 e.preventDefault();
                                 generateMnemonicForWord(word);
                               }
@@ -485,11 +485,16 @@ export default function Backpack() {
                             placeholder="Describe new picture... (press Enter to generate)"
                             className="bg-white/5 border-white/20 text-white text-xs mb-1 resize-none h-12"
                             onClick={(e) => e.stopPropagation()}
+                            disabled={generatingMnemonic}
                           />
                           {generatingMnemonic && (
-                            <div className="flex items-center justify-center gap-2 text-purple-400 text-xs">
+                            <motion.div
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              className="flex items-center justify-center gap-2 text-purple-400 text-xs mt-2"
+                            >
                               <Loader2 className="w-3 h-3 animate-spin" /> Generating...
-                            </div>
+                            </motion.div>
                           )}
                         </motion.div>
                       )}
@@ -606,7 +611,7 @@ export default function Backpack() {
                         value={mnemonicDescription}
                         onChange={(e) => setMnemonicDescription(e.target.value)}
                         onKeyDown={(e) => {
-                          if (e.key === 'Enter' && !e.shiftKey && mnemonicDescription.trim()) {
+                          if (e.key === 'Enter' && !e.shiftKey && mnemonicDescription.trim() && !generatingMnemonic) {
                             e.preventDefault();
                             generateMnemonicForWord(word);
                           }
@@ -614,11 +619,16 @@ export default function Backpack() {
                         placeholder="Describe a picture... (press Enter to generate)"
                         className="bg-white/5 border-stone-200 text-stone-800 text-xs mb-2 resize-none h-12 mt-2"
                         onClick={(e) => e.stopPropagation()}
+                        disabled={generatingMnemonic}
                       />
                       {generatingMnemonic && (
-                        <div className="flex items-center justify-center gap-2 text-purple-400 text-xs mt-2">
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className="flex items-center justify-center gap-2 text-purple-400 text-xs mt-2"
+                        >
                           <Loader2 className="w-3 h-3 animate-spin" /> Generating...
-                        </div>
+                        </motion.div>
                       )}
                     </motion.div>
                   )}
