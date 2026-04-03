@@ -59,7 +59,7 @@ export default function Backpack() {
     if (wordsToGenerate.length > 0) {
       generateMissingMnemonics(wordsToGenerate);
     }
-  }, [wordRatings]);
+  }, []);
 
   // Auto-generate image after user stops typing
   useEffect(() => {
