@@ -63,9 +63,11 @@ export default function MediaLibrary() {
   const [uploadingAudio, setUploadingAudio] = useState(false);
   const [activeMediaTab, setActiveMediaTab] = useState("videos");
   const [draggedButton, setDraggedButton] = useState(null);
+  const [showBackpackSubmenu, setShowBackpackSubmenu] = useState(false);
+  const [activeBackpackTab, setActiveBackpackTab] = useState("allwords");
   const [buttonOrder, setButtonOrder] = useState(() => {
     const saved = localStorage.getItem("mediaLibraryButtonOrder");
-    return saved ? JSON.parse(saved) : ["videos", "songs", "audio", "verbs", "corevocab", "backpack"];
+    return saved ? JSON.parse(saved) : ["videos", "songs", "audio", "backpack"];
   });
   const [selectedVerb, setSelectedVerb] = useState(null);
 
@@ -957,9 +959,13 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
     videos: { label: "Videos", emoji: "📹" },
     songs: { label: "Songs", emoji: "🎵" },
     audio: { label: "Audio Training", emoji: "🎧" },
+    backpack: { label: "Words Backpack", emoji: "🎒", submenu: ["allwords", "verbs", "corevocab"] }
+  };
+  
+  const backpackSubmenuConfigs = {
+    allwords: { label: "All words", emoji: "📝" },
     verbs: { label: "Verbs", emoji: "📖" },
-    corevocab: { label: "Core Vocab", emoji: "📚" },
-    backpack: { label: "Words", emoji: "🎒" }
+    corevocab: { label: "Core Vocab", emoji: "📚" }
   };
 
   const handleDragStart = (e, id) => {
@@ -1004,35 +1010,73 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
         </div>
 
         {/* Draggable Filter Buttons */}
-        <div className="flex items-center justify-center gap-2 mb-6 p-2 rounded-xl flex-wrap" style={{ background: '#ffffff18', border: '1px solid #ffffff20' }}>
-          {buttonOrder.map((btnId) => {
-            if (btnId === 'backpack') {
-              return (
-                <button key="backpack" onClick={() => navigate(createPageUrl('Backpack'))} className="px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-1.5 text-stone-500 hover:text-stone-700 cursor-pointer">
-                  🎒 Words
-                </button>
-              );
-            }
-            const config = buttonConfigs[btnId];
-            if (!config) return null;
-            return (
-              <button
-                key={btnId}
-                draggable
-                onDragStart={(e) => handleDragStart(e, btnId)}
-                onDragOver={handleDragOver}
-                onDrop={(e) => handleDrop(e, btnId)}
-                onDragEnd={handleDragEnd}
-                onClick={() => setActiveMediaTab(btnId)}
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-1.5 cursor-grab active:cursor-grabbing ${
-                  activeMediaTab === btnId ? 'text-stone-800' : 'text-stone-500 hover:text-stone-700'
-                } ${draggedButton === btnId ? 'opacity-50' : ''}`}
-                style={activeMediaTab === btnId ? { background: '#ffffff80' } : {}}
-              >
-                {config.emoji} {config.label}
-              </button>
-            );
-          })}
+         <div className="flex items-center justify-center gap-2 mb-6 p-2 rounded-xl flex-wrap" style={{ background: '#ffffff18', border: '1px solid #ffffff20' }}>
+           {buttonOrder.map((btnId) => {
+             const config = buttonConfigs[btnId];
+             if (!config) return null;
+
+             if (btnId === 'backpack') {
+               return (
+                 <div key="backpack" className="relative">
+                   <button
+                     draggable
+                     onDragStart={(e) => handleDragStart(e, btnId)}
+                     onDragOver={handleDragOver}
+                     onDrop={(e) => handleDrop(e, btnId)}
+                     onDragEnd={handleDragEnd}
+                     onClick={() => setShowBackpackSubmenu(!showBackpackSubmenu)}
+                     className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-1.5 cursor-grab active:cursor-grabbing ${
+                       showBackpackSubmenu ? 'text-stone-800' : 'text-stone-500 hover:text-stone-700'
+                     } ${draggedButton === btnId ? 'opacity-50' : ''}`}
+                     style={showBackpackSubmenu ? { background: '#ffffff80' } : {}}
+                   >
+                     {config.emoji} {config.label}
+                     <span className={`text-xs transition-transform ${showBackpackSubmenu ? 'rotate-180' : ''}`}>▼</span>
+                   </button>
+                   {showBackpackSubmenu && (
+                     <div className="absolute top-full left-0 mt-1 bg-white/95 rounded-lg shadow-lg py-1 min-w-[180px] z-20">
+                       {config.submenu.map(subId => {
+                         const subConfig = backpackSubmenuConfigs[subId];
+                         return (
+                           <button
+                             key={subId}
+                             onClick={() => {
+                               setActiveMediaTab(subId);
+                               setActiveBackpackTab(subId);
+                               setShowBackpackSubmenu(false);
+                             }}
+                             className={`w-full text-left px-4 py-2 text-sm font-medium transition-all ${
+                               activeBackpackTab === subId ? 'bg-stone-200 text-stone-800' : 'text-stone-600 hover:bg-stone-100'
+                             }`}
+                           >
+                             {subConfig.emoji} {subConfig.label}
+                           </button>
+                         );
+                       })}
+                     </div>
+                   )}
+                 </div>
+               );
+             }
+
+             return (
+               <button
+                 key={btnId}
+                 draggable
+                 onDragStart={(e) => handleDragStart(e, btnId)}
+                 onDragOver={handleDragOver}
+                 onDrop={(e) => handleDrop(e, btnId)}
+                 onDragEnd={handleDragEnd}
+                 onClick={() => setActiveMediaTab(btnId)}
+                 className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-1.5 cursor-grab active:cursor-grabbing ${
+                   activeMediaTab === btnId ? 'text-stone-800' : 'text-stone-500 hover:text-stone-700'
+                 } ${draggedButton === btnId ? 'opacity-50' : ''}`}
+                 style={activeMediaTab === btnId ? { background: '#ffffff80' } : {}}
+               >
+                 {config.emoji} {config.label}
+               </button>
+             );
+           })}
           {canEdit && (
             <button onClick={() => { resetForm(); setEditingVideo(null); setMediaType("video"); setShowAddDialog(true); }} className="px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-1.5 text-stone-500 hover:text-stone-700">
               <Plus className="w-4 h-4" /> Add Media
@@ -1107,8 +1151,34 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
           </div>
         </div>
 
+        {/* Backpack - All words with levels */}
+        {activeMediaTab === 'allwords' && (
+          <div>
+            <h2 className="text-2xl font-bold text-white mb-4">All Words</h2>
+            <div className="flex flex-wrap gap-4 justify-center">
+              {[
+                { name: 'New', count: wordRatings.filter(w => w.times_practiced === 0).length, icon: '✨', color: '#8a9a6a' },
+                { name: 'Level 1', count: wordRatings.filter(w => w.times_practiced > 0 && w.times_practiced < 3).length, icon: '🌱', color: '#6b7c5a' },
+                { name: 'Level 2', count: wordRatings.filter(w => w.times_practiced >= 3 && w.times_practiced < 5).length, icon: '🌿', color: '#5a6b5a' },
+                { name: 'Mastered', count: wordRatings.filter(w => w.times_practiced >= 5).length, icon: '✓', color: '#4a7c4a' },
+              ].map((level) => (
+                <motion.div
+                  key={level.name}
+                  whileHover={{ scale: 1.08 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="w-20 h-20 rounded-full flex flex-col items-center justify-center cursor-pointer transition-all shadow-lg"
+                  style={{ background: `linear-gradient(135deg, ${level.color}40, ${level.color}20)`, border: `2px solid ${level.color}80` }}
+                >
+                  <div className="text-xl mb-1">{level.icon}</div>
+                  <p className="text-xs font-bold" style={{ color: level.color }}>{level.count}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Verbs Tab */}
-        {activeMediaTab === 'verbs' && (
+         {activeMediaTab === 'verbs' && (
           <div>
             <h2 className="text-2xl font-bold text-white mb-4">Verbs from Backpack</h2>
             {wordRatings.filter(w => w.is_verb).length === 0 ? (
