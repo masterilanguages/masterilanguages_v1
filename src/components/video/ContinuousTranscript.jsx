@@ -134,12 +134,12 @@ Provide:
   const renderEditableWords = (segIdx, field, text, textClassName) => {
     const words = getWordsArray(text);
     return (
-      <span className="inline-flex flex-wrap gap-x-1 gap-y-0.5 items-center">
+      <span>
         {words.map((word, wordIdx) => {
           const isEditing = editingCell?.segIdx === segIdx && editingCell?.field === field && editingCell?.wordIdx === wordIdx;
           if (isEditing) {
             return (
-              <span key={wordIdx} className="inline-flex items-center gap-0.5">
+              <span key={wordIdx} className="inline-flex items-center gap-0.5 mx-0.5">
                 <input
                   autoFocus
                   value={editCellValue}
@@ -149,8 +149,8 @@ Provide:
                     if (e.key === 'Escape') cancelEdit();
                   }}
                   className="bg-yellow-400/20 border border-yellow-400 text-yellow-200 rounded px-1 text-sm outline-none"
-                  style={{ width: `${Math.max(editCellValue.length * 9 + 16, 40)}px` }}
-                  placeholder="type or leave empty to delete"
+                  style={{ width: `${Math.max((editCellValue.length || 4) * 9 + 16, 50)}px` }}
+                  placeholder="empty = delete"
                 />
                 <button onClick={() => saveWordEdit(segIdx, field, wordIdx, editCellValue)} className="text-green-400 hover:text-green-300 p-0.5">
                   {savingCell ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
@@ -162,22 +162,23 @@ Provide:
             );
           }
           return (
-            <span key={wordIdx} className="inline-flex items-center group/word">
+            <span key={wordIdx} className="group/word inline-block">
               <span
                 onClick={() => canEdit && startEditWord(segIdx, field, wordIdx, words)}
-                className={`${textClassName} ${canEdit ? 'cursor-pointer hover:bg-white/10 rounded px-0.5 transition-colors' : ''}`}
+                className={`${textClassName} ${canEdit ? 'cursor-pointer hover:underline hover:opacity-80 transition-opacity' : ''}`}
               >
                 {word}
               </span>
               {canEdit && (
                 <button
                   onClick={() => addWordToSegment(segIdx, field, wordIdx)}
-                  className="opacity-0 group-hover/word:opacity-100 transition-opacity ml-0.5 text-white/30 hover:text-cyan-400"
+                  className="opacity-0 group-hover/word:opacity-60 transition-opacity mx-px text-white/40 hover:text-cyan-400 align-middle"
                   title="Add word after"
                 >
-                  <Plus className="w-2.5 h-2.5" />
+                  <Plus className="w-2 h-2 inline" />
                 </button>
               )}
+              {wordIdx < words.length - 1 && ' '}
             </span>
           );
         })}
