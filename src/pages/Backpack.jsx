@@ -461,34 +461,28 @@ export default function Backpack() {
                             🎨
                           </button>
                         </div>
-                        <p className="text-cyan-400 font-bold text-lg mb-0.5" dir="rtl">
-                          <EditableWord
-                            text={word.word}
-                            language="he"
-                            onSave={(newWord) => updateWordMutation.mutate({ id: word.id, data: { word: newWord } })}
-                            className="text-cyan-400 font-bold text-lg"
-                          />
-                        </p>
-                        <p className="text-white/60 text-xs mb-1">
+                        <p className="text-white/60 text-xs font-medium leading-tight">
                           <EditableWord
                             text={word.phonetic}
                             onSave={(newPhonetic) => updateWordMutation.mutate({ id: word.id, data: { phonetic: newPhonetic } })}
                             className="text-white/60 text-xs"
                           />
                         </p>
-                        {isFlipped && (
-                          <motion.p
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="text-green-400 font-medium text-sm"
-                          >
-                            = <EditableWord
-                              text={word.translation}
-                              onSave={(newTranslation) => updateWordMutation.mutate({ id: word.id, data: { translation: newTranslation } })}
-                              className="text-green-400 font-medium text-sm"
-                            />
-                          </motion.p>
-                        )}
+                        <p className="text-green-400 font-medium text-xs leading-tight mt-0.5">
+                          <EditableWord
+                            text={word.translation}
+                            onSave={(newTranslation) => updateWordMutation.mutate({ id: word.id, data: { translation: newTranslation } })}
+                            className="text-green-400 font-medium text-xs"
+                          />
+                        </p>
+                        <p className="text-cyan-400 font-bold text-sm leading-tight mt-0.5" dir="rtl">
+                          <EditableWord
+                            text={word.word}
+                            language="he"
+                            onSave={(newWord) => updateWordMutation.mutate({ id: word.id, data: { word: newWord } })}
+                            className="text-cyan-400 font-bold text-sm"
+                          />
+                        </p>
                       </div>
                       
                       {/* Inline picture generation */}

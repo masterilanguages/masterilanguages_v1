@@ -235,32 +235,28 @@ function Section({ section, onAddToBackpack }) {
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
               {section.items.map((item, idx) => (
                 <div
                   key={idx}
-                  className="flex items-center justify-between px-3 py-2.5 rounded-xl group"
+                  className="flex flex-col items-center text-center px-2 py-2.5 rounded-xl group"
                   style={{ background: idx % 2 === 0 ? '#ffffff70' : '#f5f0e850', border: '1px solid #e8e4d860' }}
                 >
-                  <div className="flex flex-col flex-1">
-                    <span className="text-xs font-medium" style={{ color: '#6b7c5a' }}>{item.roman}</span>
-                    <span className="text-sm text-stone-500">{item.english}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl font-bold" dir="rtl" style={{ color: '#3d4a2e' }}>{item.hebrew}</span>
-                    {onAddToBackpack && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onAddToBackpack({ hebrew: item.hebrew, transliteration: item.roman, english: item.english });
-                        }}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity px-2 py-1 rounded text-xs font-medium bg-amber-500/20 text-amber-600 hover:bg-amber-500/30"
-                        title="Add to backpack"
-                      >
-                        +
-                      </button>
-                    )}
-                  </div>
+                  <span className="text-sm font-medium leading-tight" style={{ color: '#6b7c5a' }}>{item.roman}</span>
+                  <span className="text-xs text-stone-500 leading-tight">{item.english}</span>
+                  <span className="text-lg font-bold leading-tight mt-0.5" dir="rtl" style={{ color: '#3d4a2e' }}>{item.hebrew}</span>
+                  {onAddToBackpack && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onAddToBackpack({ hebrew: item.hebrew, transliteration: item.roman, english: item.english });
+                      }}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity mt-1 px-1.5 py-0.5 rounded text-xs font-medium bg-amber-500/20 text-amber-600 hover:bg-amber-500/30"
+                      title="Add to backpack"
+                    >
+                      +
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
