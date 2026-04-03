@@ -49,7 +49,7 @@ export default function TranslatorWidget() {
   });
 
   const handleTranslate = async () => {
-    if (!inputText.trim() || !learningLanguage) return;
+    if (!inputText.trim()) return;
     setIsTranslating(true);
     setTranslation(null);
     setWordAdded(false);
@@ -57,64 +57,70 @@ export default function TranslatorWidget() {
     setShowConjugations(false);
 
     try {
-      const isEnglish = /^[a-zA-Z\s\.,!?'-]+$/.test(inputText.trim());
-      const targetLangName = learningLanguage.charAt(0).toUpperCase() + learningLanguage.slice(1);
+      const trimmed = inputText.trim();
+      const isEnglish = /^[a-zA-Z\s\.,!?'"\-]+$/.test(trimmed);
 
-      const prompt = isEnglish
-        ? `You are a professional linguist and certified ${targetLangName} language expert with deep knowledge of modern Israeli Hebrew grammar, morphology, and everyday usage.
+      const prompt = `You are an expert Hebrew linguist. The user typed: "${trimmed}"
 
-TASK: Translate the English input into ${targetLangName} with maximum accuracy.
+Detect whether the input is:
+A) English → translate to Hebrew
+B) Hebrew letters → translate to English  
+C) Latin/Roman letters = Hebrew transliteration → identify the Hebrew word and translate to English
 
-Rules:
-- Use the most natural, modern everyday ${targetLangName} equivalent — not archaic or overly formal forms
-- For Hebrew: ALWAYS include full nikud (vowel diacritics) on every word
-- Transliteration: use consistent scheme: sh=ש, kh=ח/כ, tz=צ, ts=ת+ס only when needed, r=ר, a=patach/kamatz, e=segol/tzere, i=khirik, o=holam, u=shuruk. NO capitals mid-word.
-- Detect part of speech. If VERB: identify binyan (פָּעַל, פִּיעֵל, הִפְעִיל, etc.), 3-letter root, and produce ACCURATE conjugations for all 7 persons in past/present/future
-- For each conjugation: provide the native script WITH nikud AND the transliteration
-- "grammar_rule": explain the binyan pattern and any irregularities (2-3 sentences)
-- "alternatives": include genuinely different valid translations if they exist (not synonyms)
-- "notes": mention register (formal/informal), regional usage, or important nuances
+Return a JSON object with ALL of these fields (never leave hebrew or transliteration empty):
 
-Input: "${inputText}"
+- "hebrew": the Hebrew word/phrase WITH full nikud (vowel points). REQUIRED - never empty.
+- "transliteration": clean Latin phonetic pronunciation. REQUIRED - never empty. 
+- "english": clear English meaning/translation. REQUIRED.
+- "part_of_speech": one of: noun, verb, adjective, adverb, phrase, exclamation, preposition, conjunction
+- "gender": "masculine", "feminine", or "none" (for nouns/adjectives)
+- "plural": Hebrew plural form with nikud (for nouns)
+- "plural_transliteration": plural transliteration
+- "alternatives": array of 1-3 alternative translations or usage examples (strings)
+- "example_sentence_hebrew": a short natural example sentence in Hebrew with nikud
+- "example_sentence_transliteration": transliteration of the example sentence
+- "example_sentence_english": English translation of the example
+- "notes": usage notes, register (formal/informal/slang), cultural context (1-2 sentences max)
+- "is_verb": true if it's a verb
+- "root": 3-letter Hebrew root (shoresh) if verb or derivable
+- "infinitive": verb infinitive in transliteration (if verb)
+- "infinitive_hebrew": verb infinitive in Hebrew with nikud (if verb)
+- "binyan": Hebrew verb pattern name (if verb)
+- "grammar_rule": brief grammar note about the binyan/pattern (if verb, 1-2 sentences)
+- "conjugations": object with past/present/future tenses, each containing keys: i, you_m, you_f, he, she, we, they — each with "native" (Hebrew with nikud) and "transliteration" fields
 
-Output JSON only, no markdown.`
-        : `You are a professional linguist and certified ${targetLangName} language expert specializing in reading transliterated Hebrew and reconstructing correct grammatical forms.
-
-TASK: The user typed Hebrew in Latin letters (transliteration). Identify the word, provide the correct Hebrew spelling with nikud, translate it accurately to English.
-
-Rules:
-- Normalize spelling variants: ch→kh, ts→tz, w→v, ee→i, oo→u, double letters simplified unless phonemically necessary
-- Reconstruct the CORRECT Hebrew spelling WITH full nikud (vowel diacritics)
-- Provide the most natural English translation — not word-for-word but meaning-accurate
-- Detect part of speech. If VERB: identify the conjugated form the user typed (e.g. "isakti" = past 1st person singular of לְהִתְעַסֵּק), give the infinitive, identify binyan and root, then produce ACCURATE conjugations for ALL 7 persons in past/present/future
-- For each conjugation: native Hebrew WITH nikud AND transliteration
-- "grammar_rule": explain the binyan, what tense/person the input was, and any irregular patterns (2-3 sentences)
-- "infinitive": the canonical infinitive transliteration
-- "infinitive_hebrew": the infinitive in Hebrew WITH nikud
-
-Input: "${inputText}"
-
-Output JSON only, no markdown.`;
+IMPORTANT: hebrew and transliteration fields are MANDATORY and must always have a value.`;
 
       const schema = {
         type: "object",
         properties: {
-          english: { type: "string" },
-          target_language: { type: "string" },
+          hebrew: { type: "string" },
           transliteration: { type: "string" },
+          english: { type: "string" },
+          part_of_speech: { type: "string" },
+          gender: { type: "string" },
+          plural: { type: "string" },
+          plural_transliteration: { type: "string" },
           alternatives: { type: "array", items: { type: "string" } },
+          example_sentence_hebrew: { type: "string" },
+          example_sentence_transliteration: { type: "string" },
+          example_sentence_english: { type: "string" },
           notes: { type: "string" },
           is_verb: { type: "boolean" },
+          root: { type: "string" },
           infinitive: { type: "string" },
           infinitive_hebrew: { type: "string" },
-          root: { type: "string" },
+          binyan: { type: "string" },
           grammar_rule: { type: "string" },
           conjugations: { type: "object" }
         }
       };
 
-      const result = await base44.integrations.Core.InvokeLLM({ prompt, response_json_schema: schema, model: "claude_sonnet_4_6" });
-      result.hebrew = result.target_language;
+      const result = await base44.integrations.Core.InvokeLLM({ 
+        prompt, 
+        response_json_schema: schema, 
+        model: "claude_sonnet_4_6" 
+      });
       setTranslation(result);
     } catch (e) {
       toast.error("Translation failed");
@@ -131,6 +137,7 @@ Output JSON only, no markdown.`;
       category: "wordbank",
       is_verb: translation.is_verb || false,
       verb_conjugations: translation.is_verb ? translation.conjugations : undefined,
+      example_sentence: translation.example_sentence_hebrew || "",
       times_practiced: 0,
       mastered: false,
       vocab_level: 0,
@@ -252,38 +259,80 @@ Output JSON only, no markdown.`;
 
             {translation && (
               <div className="space-y-2">
-                {/* English meaning */}
-                {translation.english && (
-                  <div className="bg-green-500/15 border border-green-500/30 rounded-lg p-3">
-                    <p className="text-green-400 text-[10px] font-semibold mb-1">ENGLISH MEANING</p>
-                    <p className="text-green-300 text-lg font-bold">{translation.english}</p>
+                {/* Main result card: Hebrew + transliteration + English */}
+                <div className="bg-white/8 border border-white/15 rounded-xl p-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1">
+                      <p className="text-cyan-300 text-2xl font-bold leading-tight" dir="rtl">{translation.hebrew}</p>
+                      <p className="text-white/70 text-sm mt-0.5">{translation.transliteration}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-green-300 text-lg font-bold">{translation.english}</p>
+                      {translation.part_of_speech && (
+                        <span className="text-[10px] text-white/40 uppercase tracking-wide">{translation.part_of_speech}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Gender + Plural */}
+                  {(translation.gender && translation.gender !== 'none') || translation.plural ? (
+                    <div className="flex gap-3 mt-2 pt-2 border-t border-white/10">
+                      {translation.gender && translation.gender !== 'none' && (
+                        <span className="text-xs text-white/50">
+                          <span className="text-white/30">gender: </span>
+                          <span className="text-amber-300">{translation.gender}</span>
+                        </span>
+                      )}
+                      {translation.plural && (
+                        <span className="text-xs text-white/50">
+                          <span className="text-white/30">plural: </span>
+                          <span className="text-cyan-300" dir="rtl">{translation.plural}</span>
+                          {translation.plural_transliteration && (
+                            <span className="text-white/50"> ({translation.plural_transliteration})</span>
+                          )}
+                        </span>
+                      )}
+                    </div>
+                  ) : null}
+                </div>
+
+                {/* Alternative meanings */}
+                {translation.alternatives && translation.alternatives.length > 0 && (
+                  <div className="bg-white/5 rounded-lg p-2.5">
+                    <p className="text-white/40 text-[10px] uppercase font-semibold mb-1.5">Also means</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {translation.alternatives.map((alt, i) => (
+                        <span key={i} className="bg-white/10 text-white/70 text-xs px-2 py-0.5 rounded-full">{alt}</span>
+                      ))}
+                    </div>
                   </div>
                 )}
 
-                {/* Hebrew + Pronunciation */}
-                <div className="bg-white/5 rounded-lg p-3">
-                  <p className="text-white/60 text-[10px] mb-1">HEBREW</p>
-                  <p className="text-cyan-400 text-lg font-bold" dir="rtl">{translation.hebrew}</p>
-                </div>
-                <div className="bg-white/5 rounded-lg p-3">
-                  <p className="text-white/60 text-[10px] mb-1">PRONUNCIATION</p>
-                  <p className="text-white">{translation.transliteration}</p>
-                </div>
+                {/* Example sentence */}
+                {translation.example_sentence_hebrew && (
+                  <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-2.5">
+                    <p className="text-white/40 text-[10px] uppercase font-semibold mb-1">Example</p>
+                    <p className="text-emerald-300 text-sm font-medium" dir="rtl">{translation.example_sentence_hebrew}</p>
+                    {translation.example_sentence_transliteration && (
+                      <p className="text-white/50 text-xs mt-0.5 italic">{translation.example_sentence_transliteration}</p>
+                    )}
+                    {translation.example_sentence_english && (
+                      <p className="text-white/60 text-xs mt-0.5">"{translation.example_sentence_english}"</p>
+                    )}
+                  </div>
+                )}
 
-                {/* Verb badge + grammar rule */}
+                {/* Verb info */}
                 {translation.is_verb && (
-                  <div className="bg-purple-500/15 border border-purple-500/40 rounded-lg p-3 space-y-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs bg-purple-500 text-white px-2 py-0.5 rounded-full font-semibold">VERB</span>
-                      {translation.infinitive && (
-                        <span className="text-purple-300 text-xs">∞ {translation.infinitive}</span>
-                      )}
-                      {translation.root && (
-                        <span className="text-purple-300 text-xs font-bold" dir="rtl">root: {translation.root}</span>
-                      )}
+                  <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-2.5">
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <span className="text-[10px] bg-purple-500 text-white px-2 py-0.5 rounded-full font-bold">VERB</span>
+                      {translation.binyan && <span className="text-purple-300 text-xs">{translation.binyan}</span>}
+                      {translation.root && <span className="text-white/50 text-xs" dir="rtl">root: <span className="text-cyan-300 font-bold">{translation.root}</span></span>}
+                      {translation.infinitive && <span className="text-white/50 text-xs">∞ {translation.infinitive}</span>}
                     </div>
                     {translation.grammar_rule && (
-                      <p className="text-white/70 text-xs leading-relaxed">{translation.grammar_rule}</p>
+                      <p className="text-white/60 text-xs leading-relaxed">{translation.grammar_rule}</p>
                     )}
                   </div>
                 )}
@@ -293,9 +342,9 @@ Output JSON only, no markdown.`;
                   <div className="bg-white/5 rounded-lg overflow-hidden">
                     <button
                       onClick={() => setShowConjugations(!showConjugations)}
-                      className="w-full flex items-center justify-between px-3 py-2 text-white/80 hover:text-white text-xs font-semibold"
+                      className="w-full flex items-center justify-between px-3 py-2 text-white/70 hover:text-white text-xs font-semibold"
                     >
-                      <span>📊 View Conjugations (Past / Present / Future)</span>
+                      <span>📊 Conjugations (Past / Present / Future)</span>
                       {showConjugations ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                     </button>
                     {showConjugations && (
@@ -310,9 +359,9 @@ Output JSON only, no markdown.`;
                                   if (!c) return null;
                                   return (
                                     <div key={p.key} className="flex items-center justify-between text-xs">
-                                      <span className="text-white/50 w-24">{p.label}</span>
-                                      <span className="text-cyan-400 font-medium" dir="rtl">{c.native}</span>
-                                      <span className="text-white/70 text-right">{c.transliteration}</span>
+                                      <span className="text-white/40 w-24 flex-shrink-0">{p.label}</span>
+                                      <span className="text-cyan-300 font-medium flex-1 text-center" dir="rtl">{c.native}</span>
+                                      <span className="text-white/60 text-right flex-shrink-0">{c.transliteration}</span>
                                     </div>
                                   );
                                 })}
@@ -325,32 +374,34 @@ Output JSON only, no markdown.`;
                   </div>
                 )}
 
-                {translation.notes && (
-                  <div className="bg-blue-500/10 rounded-lg p-2">
-                    <p className="text-blue-300 text-xs">{translation.notes}</p>
-                  </div>
-                )}
-
+                {/* Add to grammar button for verbs */}
                 {translation.is_verb && (
                   <button
                     onClick={handleAddToGrammar}
                     disabled={isAddingGrammar || grammarAdded}
-                    className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg font-semibold text-sm transition-all ${
+                    className={`w-full flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold transition-all ${
                       grammarAdded
-                        ? 'bg-green-500/30 text-green-400 border border-green-500/50'
-                        : 'bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/40'
+                        ? 'bg-green-500/20 text-green-400 border border-green-500/40'
+                        : 'bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 border border-purple-500/30'
                     } disabled:opacity-50`}
                   >
-                    {isAddingGrammar ? <Loader2 className="w-4 h-4 animate-spin" /> : <span className="text-lg">{grammarAdded ? '✓' : '📖'}</span>}
-                    {grammarAdded ? 'Added to Grammar!' : 'Add to Grammar (with conjugations)'}
+                    {isAddingGrammar ? <Loader2 className="w-3 h-3 animate-spin" /> : <span>{grammarAdded ? '✓' : '📖'}</span>}
+                    {grammarAdded ? 'Added to Grammar!' : 'Save verb + conjugations to Grammar'}
                   </button>
+                )}
+
+                {/* Usage notes */}
+                {translation.notes && (
+                  <div className="bg-blue-500/10 rounded-lg p-2.5">
+                    <p className="text-blue-300/80 text-xs leading-relaxed">💡 {translation.notes}</p>
+                  </div>
                 )}
 
                 {/* AI Ask */}
                 {aiAnswer && (
-                  <div className="bg-purple-500/10 rounded-lg p-3 border border-purple-500/30">
-                    <p className="text-purple-300 text-xs mb-1">AI ANSWER</p>
-                    <p className="text-white text-sm">{aiAnswer}</p>
+                  <div className="bg-purple-500/10 rounded-lg p-2.5 border border-purple-500/20">
+                    <p className="text-purple-300 text-[10px] uppercase font-semibold mb-1">AI Answer</p>
+                    <p className="text-white/80 text-xs leading-relaxed">{aiAnswer}</p>
                   </div>
                 )}
                 <div className="flex gap-2">
