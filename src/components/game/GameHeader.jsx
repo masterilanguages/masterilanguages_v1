@@ -51,17 +51,23 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
   // Build nav items (must be before useEffect that uses them)
   const baseNavItems = [
     { id: "home", to: "Home", emoji: "🏠", label: "Home" },
-    { id: "words", to: "Flashcards", emoji: "🎒", label: "Words" },
     { id: "schedule", to: "Home", emoji: "📅", label: "Schedule" },
     { id: "videos", to: "MediaLibrary", emoji: "📚", label: "Library" },
-    { id: "journal", to: "Journal", emoji: "📓", label: "Journal" },
+    { id: "progress", to: "Progress", emoji: "🏆", label: "Progress" },
     ...(currentUser?.role === 'admin' ? [
       { id: "clock", to: "Home", emoji: "🕐", label: "Clock" },
     ] : []),
   ];
 
+  const validNavIds = ["home", "schedule", "videos", "progress", "clock"];
   const getSavedOrder = () => {
-    try { return JSON.parse(localStorage.getItem('nav_order') || '[]'); } catch { return []; }
+    try {
+      const saved = JSON.parse(localStorage.getItem('nav_order') || '[]');
+      // If saved order contains stale ids, reset it
+      const hasStale = saved.some(id => !validNavIds.includes(id));
+      if (hasStale) { localStorage.removeItem('nav_order'); return []; }
+      return saved;
+    } catch { return []; }
   };
 
   const getSortedNavItems = (items) => {
