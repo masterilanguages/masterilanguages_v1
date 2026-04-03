@@ -224,7 +224,7 @@ export default function Backpack() {
   const handleNewWordRate = async (rating) => {
     if (!activeNewWord) return;
     
-    await createWordMutation.mutateAsync({
+    const newWord = await createWordMutation.mutateAsync({
       word: activeNewWord.hebrew || activeNewWord.word,
       translation: activeNewWord.meaning,
       phonetic: activeNewWord.word,
@@ -233,6 +233,28 @@ export default function Backpack() {
       mastered: rating >= 5,
       image_url: newWordImage || null,
     });
+
+    // Auto-generate mnemonic if no image yet
+    if (!newWordImage && newWord?.id) {
+      try {
+        setGeneratingMnemonic(true);
+        const mnemonicPrompt = `A memorable picture to help learn the Hebrew word "${activeNewWord.word}" meaning "${activeNewWord.meaning}". 
+        Create a colorful, cartoon-style illustration that visually represents the meaning. Fun and educational. NO TEXT IN THE IMAGE.`;
+        
+        const result = await base44.integrations.Core.GenerateImage({
+          prompt: mnemonicPrompt
+        });
+
+        await updateWordMutation.mutateAsync({
+          id: newWord.id,
+          data: { image_url: result.url }
+        });
+        setGeneratingMnemonic(false);
+      } catch (e) {
+        setGeneratingMnemonic(false);
+        console.error("Auto-generation failed", e);
+      }
+    }
 
     if (rating >= 5) {
       toast.success("Added to Fluent! ⭐");
@@ -430,114 +452,114 @@ export default function Backpack() {
               ))}
             </div>
           ) : (
-           <div className="flex flex-wrap gap-4">
-              {getDisplayWords().map((word) => {
-                const isFlipped = flippedCards[word.id] || showAllEnglish;
-                return (
-                  <motion.div
-                    key={word.id}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="bg-white/70 border border-stone-200 rounded-lg overflow-hidden"
-                  >
-                    <div className="relative">
-                      <div
-                         onClick={() => setFlippedCards(prev => ({ ...prev, [word.id]: !prev[word.id] }))}
-                         className="p-2 cursor-pointer hover:bg-white/5 transition-all flex flex-col justify-center items-center text-center"
-                       >
-                        <div className="absolute top-1 right-1 flex gap-1 z-10">
-                          <button
-                            onClick={(e) => { e.stopPropagation(); deleteWordMutation.mutate(word.id); }}
-                            className="w-6 h-6 rounded-full bg-white/5 hover:bg-red-500/20 flex items-center justify-center text-xs transition-all"
-                            title="Delete word"
-                          >
-                            🗑️
-                          </button>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); setPictureWordId(pictureWordId === word.id ? null : word.id); }}
-                            className="w-6 h-6 rounded-full bg-white/5 hover:bg-purple-500/20 flex items-center justify-center text-xs transition-all"
-                            title="Create picture"
-                          >
-                            🎨
-                          </button>
-                        </div>
-                        <p className="text-white/60 text-[11px] font-medium leading-none">
-                          <EditableWord
-                            text={word.phonetic}
-                            onSave={(newPhonetic) => updateWordMutation.mutate({ id: word.id, data: { phonetic: newPhonetic } })}
-                            className="text-white/60 text-[11px]"
-                          />
-                        </p>
-                        <p className="text-green-400 font-medium text-[10px] leading-none mt-0.5">
-                          <EditableWord
-                            text={word.translation}
-                            onSave={(newTranslation) => updateWordMutation.mutate({ id: word.id, data: { translation: newTranslation } })}
-                            className="text-green-400 font-medium text-[10px]"
-                          />
-                        </p>
-                        <p className="text-cyan-400 font-bold text-xs leading-none mt-0.5" dir="rtl">
-                          <EditableWord
-                            text={word.word}
-                            language="he"
-                            onSave={(newWord) => updateWordMutation.mutate({ id: word.id, data: { word: newWord } })}
-                            className="text-cyan-400 font-bold text-xs"
-                          />
-                        </p>
+            <div className="flex flex-wrap gap-4 justify-center">
+              {getDisplayWords().map((word) => (
+                <motion.div
+                  key={word.id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="bg-white/70 border border-stone-200 rounded-lg overflow-hidden w-48 flex flex-col"
+                >
+                  {/* Large mnemonic image */}
+                  <div className="h-40 bg-stone-100 flex items-center justify-center overflow-hidden">
+                    {word.image_url ? (
+                      <img src={word.image_url} alt={word.phonetic} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-stone-200 to-stone-300 flex items-center justify-center text-stone-400 text-xs text-center px-2">
+                        No image yet
                       </div>
-                      
-                      {/* Inline picture generation */}
-                      {pictureWordId === word.id && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          className="px-3 pb-3"
-                        >
-                          {word.image_url && (
-                            <img src={word.image_url} alt="" className="w-full h-24 object-cover rounded-lg mb-2" />
-                          )}
-                          {!word.image_url && (
-                            <Textarea
-                              value={mnemonicDescription}
-                              onChange={(e) => setMnemonicDescription(e.target.value)}
-                              placeholder="Describe a picture..."
-                              className="bg-white/5 border-white/20 text-white text-xs mb-2 resize-none h-12"
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                          )}
-                          <Button
-                            onClick={(e) => { e.stopPropagation(); generateMnemonicForWord(word); }}
-                            disabled={(!mnemonicDescription.trim() && !word.image_url) || generatingMnemonic}
-                            size="sm"
-                            className="w-full bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 h-7 text-xs"
-                          >
-                            {generatingMnemonic ? (
-                              <><Loader2 className="w-3 h-3 mr-1 animate-spin" /> Generating...</>
-                            ) : (
-                              <><Wand2 className="w-3 h-3 mr-1" /> Generate</>
-                            )}
-                          </Button>
-                        </motion.div>
-                      )}
-                    </div>
-                    {/* Rating buttons always visible */}
-                    <div className="flex gap-0.5 px-2 pb-2">
+                    )}
+                  </div>
+
+                  {/* Word info */}
+                  <div className="p-3 flex-1 flex flex-col">
+                    <p className="text-cyan-400 font-semibold text-sm text-center">
+                      <EditableWord
+                        text={word.phonetic}
+                        onSave={(newPhonetic) => updateWordMutation.mutate({ id: word.id, data: { phonetic: newPhonetic } })}
+                        className="text-cyan-400 font-semibold text-sm"
+                      />
+                    </p>
+                    <p className="text-stone-500 text-xs text-center mt-1">
+                      = <EditableWord
+                        text={word.translation}
+                        onSave={(newTranslation) => updateWordMutation.mutate({ id: word.id, data: { translation: newTranslation } })}
+                        className="text-stone-600 text-xs"
+                      />
+                    </p>
+                    <p className="text-cyan-600 font-bold text-sm text-center mt-1" dir="rtl">
+                      <EditableWord
+                        text={word.word}
+                        language="he"
+                        onSave={(newWord) => updateWordMutation.mutate({ id: word.id, data: { word: newWord } })}
+                        className="text-cyan-600 font-bold text-sm"
+                      />
+                    </p>
+                  </div>
+
+                  {/* Bottom row: ratings + edit/delete buttons */}
+                  <div className="px-2 pb-2 flex gap-1 items-center">
+                    <div className="flex gap-0.5 flex-1">
                       {[1, 2, 3, 4, 5].map((num) => (
                         <button
                           key={num}
                           onClick={(e) => handleRateWord(word.id, num, e)}
                           className={`flex-1 h-6 rounded text-xs font-bold transition-all ${
-                          word.times_practiced === num
-                            ? num === 5 ? "bg-green-600 text-white" : "bg-stone-600 text-white"
-                            : "bg-stone-100 text-stone-400 hover:bg-stone-200"
+                            word.times_practiced === num
+                              ? num === 5 ? "bg-green-600 text-white" : "bg-stone-600 text-white"
+                              : "bg-stone-100 text-stone-400 hover:bg-stone-200"
                           }`}
                         >
                           {num}
                         </button>
                       ))}
                     </div>
-                  </motion.div>
-                );
-              })}
+                    <button
+                      onClick={() => setPictureWordId(pictureWordId === word.id ? null : word.id)}
+                      className="w-6 h-6 rounded flex items-center justify-center text-sm hover:bg-purple-500/20 transition-all"
+                      title="Edit/generate picture"
+                    >
+                      🎨
+                    </button>
+                    <button
+                      onClick={() => deleteWordMutation.mutate(word.id)}
+                      className="w-6 h-6 rounded flex items-center justify-center text-sm hover:bg-red-500/20 transition-all"
+                      title="Delete word"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+
+                  {/* Inline picture editing */}
+                  {pictureWordId === word.id && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      className="px-3 pb-3 border-t border-stone-200"
+                    >
+                      <Textarea
+                        value={mnemonicDescription}
+                        onChange={(e) => setMnemonicDescription(e.target.value)}
+                        placeholder="Describe a picture..."
+                        className="bg-white/5 border-stone-200 text-stone-800 text-xs mb-2 resize-none h-12 mt-2"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <Button
+                        onClick={(e) => { e.stopPropagation(); generateMnemonicForWord(word); }}
+                        disabled={!mnemonicDescription.trim() || generatingMnemonic}
+                        size="sm"
+                        className="w-full bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 h-7 text-xs"
+                      >
+                        {generatingMnemonic ? (
+                          <><Loader2 className="w-3 h-3 mr-1 animate-spin" /> Generating...</>
+                        ) : (
+                          <><Wand2 className="w-3 h-3 mr-1" /> Generate</>
+                        )}
+                      </Button>
+                    </motion.div>
+                  )}
+                </motion.div>
+              ))}
             </div>
           )}
         </div>
