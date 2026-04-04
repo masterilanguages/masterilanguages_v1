@@ -385,9 +385,18 @@ export default function MediaLibrary() {
   };
 
   const handleSubmit = async () => {
-    if (!formData.title || !formData.video_url || !formData.video_id) {
-      toast.error("Title, URL, and Video ID are required");
+    if (!formData.title || !formData.video_url) {
+      toast.error("Title and URL are required");
       return;
+    }
+
+    // Auto-extract video_id from URL if missing
+    if (!formData.video_id && formData.video_url) {
+      const extracted = extractYouTubeId(formData.video_url);
+      if (extracted) {
+        setFormData(prev => ({ ...prev, video_id: extracted }));
+        formData.video_id = extracted;
+      }
     }
 
     let processedTranscript = undefined;
@@ -1741,7 +1750,7 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
                       type="checkbox"
                       checked={formData.tags.split(',').map(t => t.trim()).filter(Boolean).includes(tag)}
                       onChange={(e) => {
-                        const tagsList = formData.tags.split(',').map(t => t.trim()).filter(Boolean);
+                        let tagsList = formData.tags.split(',').map(t => t.trim()).filter(Boolean);
                         if (e.target.checked) {
                           tagsList.push(tag);
                         } else {
