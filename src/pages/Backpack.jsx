@@ -39,6 +39,7 @@ export default function Backpack() {
   const [lockedWords, setLockedWords] = useState(JSON.parse(localStorage.getItem('lockedWords') || '{}'));
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [suggestingMnemonic, setSuggestingMnemonic] = useState(null); // wordId currently suggesting
 
   // Load current user
   useEffect(() => {
@@ -148,6 +149,32 @@ export default function Backpack() {
       toast.error("Failed to generate picture");
     }
     setGeneratingMnemonic(false);
+  };
+
+  const suggestMnemonicForWord = async (word) => {
+    setSuggestingMnemonic(word.id);
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `You are an expert in memory techniques and language learning mnemonics.
+
+Create the BEST possible mnemonic image description to help remember the Hebrew word:
+- Hebrew: "${word.word}"
+- Transliteration: "${word.phonetic}"
+- Meaning: "${word.translation}"
+
+Use proven memory techniques such as:
+- The Keyword Method (find an English word that SOUNDS like the Hebrew word, then link it visually to the meaning)
+- Vivid, bizarre, or emotionally engaging imagery
+- Action-based scenes (things interacting, not just static objects)
+- Familiar locations or characters if helpful
+
+Return ONLY a 1-2 sentence image description (no explanations, no headers). Start directly with the visual scene. Be specific and vivid.`,
+      });
+      setMnemonicDescription(result.trim());
+    } catch (e) {
+      toast.error("Failed to get AI suggestion");
+    }
+    setSuggestingMnemonic(null);
   };
 
   const level0Words = wordRatings.filter(w => (w.times_practiced || 0) === 0);
@@ -539,7 +566,19 @@ export default function Backpack() {
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
                       className="px-3 pb-3 border-t border-stone-200"
+                      onClick={(e) => e.stopPropagation()}
                     >
+                      {/* AI Suggest button */}
+                      <button
+                        onClick={() => suggestMnemonicForWord(word)}
+                        disabled={suggestingMnemonic === word.id}
+                        className="w-full mt-2 mb-1.5 flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-purple-100 hover:bg-purple-200 text-purple-700 text-xs font-medium transition-all disabled:opacity-60"
+                      >
+                        {suggestingMnemonic === word.id
+                          ? <><Loader2 className="w-3 h-3 animate-spin" /> Thinking...</>
+                          : <><Wand2 className="w-3 h-3" /> AI Suggest Best Mnemonic</>
+                        }
+                      </button>
                       <Textarea
                         value={mnemonicDescription}
                         onChange={(e) => setMnemonicDescription(e.target.value)}
@@ -550,18 +589,21 @@ export default function Backpack() {
                           }
                         }}
                         placeholder="Describe a picture... (press Enter to generate)"
-                        className="bg-white/5 border-stone-200 text-stone-800 text-xs mb-2 resize-none h-12 mt-2"
-                        onClick={(e) => e.stopPropagation()}
+                        className="bg-white/5 border-stone-200 text-stone-800 text-xs mb-2 resize-none h-16"
                         disabled={generatingMnemonic}
                       />
-                      {generatingMnemonic && (
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          className="flex items-center justify-center gap-2 text-purple-400 text-xs mt-2"
+                      {mnemonicDescription.trim() && !generatingMnemonic && (
+                        <button
+                          onClick={() => generateMnemonicForWord(word)}
+                          className="w-full py-1.5 rounded-lg bg-stone-700 hover:bg-stone-800 text-white text-xs font-medium transition-all"
                         >
-                          <Loader2 className="w-3 h-3 animate-spin" /> Generating...
-                        </motion.div>
+                          Generate Image ✨
+                        </button>
+                      )}
+                      {generatingMnemonic && (
+                        <div className="flex items-center justify-center gap-2 text-purple-500 text-xs mt-1">
+                          <Loader2 className="w-3 h-3 animate-spin" /> Generating image...
+                        </div>
                       )}
                     </motion.div>
                   )}
