@@ -12,6 +12,7 @@ export default function ContinuousTranscript({
 }) {
   const [editingSegmentTime, setEditingSegmentTime] = useState(null);
   const [editingTimeValue, setEditingTimeValue] = useState("");
+  const [wasPlayingBeforeEdit, setWasPlayingBeforeEdit] = useState(false);
 
   // Word editing state
   const [editingCell, setEditingCell] = useState(null); // { segIdx, field, wordIdx }
@@ -216,7 +217,7 @@ Provide:
                             const secs = parseInt(parts[0]) * 60 + parseInt(parts[1]);
                             if (!isNaN(secs)) {
                               if (onEditWord) onEditWord(segIdx, 'start', secs);
-                              onSeekTo(secs, false);
+                              onSeekTo(secs, wasPlayingBeforeEdit);
                             }
                           }
                           setEditingSegmentTime(null);
@@ -233,7 +234,7 @@ Provide:
                           const secs = parseInt(parts[0]) * 60 + parseInt(parts[1]);
                           if (!isNaN(secs)) {
                             if (onEditWord) onEditWord(segIdx, 'start', secs);
-                            onSeekTo(secs, false);
+                            onSeekTo(secs, wasPlayingBeforeEdit);
                           }
                         }
                         setEditingSegmentTime(null);
@@ -260,6 +261,7 @@ Provide:
                     }}
                     onDoubleClick={(e) => {
                       e.preventDefault();
+                      setWasPlayingBeforeEdit(isActive);
                       setEditingSegmentTime(segIdx);
                       setEditingTimeValue(formatTime(segment.start));
                     }}
