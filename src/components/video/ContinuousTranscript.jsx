@@ -1,15 +1,28 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Play, Pause, Loader2, Check, X, Plus } from "lucide-react";
 
 export default function ContinuousTranscript({ 
-  transcript, 
+  transcript: transcriptProp, 
   currentTime, 
   onSeekTo, 
   onAddWord,
   onEditWord,
   canEdit
 }) {
+  const [localTranscript, setLocalTranscript] = useState(transcriptProp);
+
+  // Sync when prop changes (e.g. loaded from DB)
+  React.useEffect(() => {
+    setLocalTranscript(transcriptProp);
+  }, [transcriptProp]);
+
+  const transcript = localTranscript;
+
+  const applyLocalEdit = (segIdx, field, value) => {
+    setLocalTranscript(prev => prev.map((seg, i) => i === segIdx ? { ...seg, [field]: value } : seg));
+  };
+
   const [editingSegmentTime, setEditingSegmentTime] = useState(null);
   const [editingTimeValue, setEditingTimeValue] = useState("");
   const [wasPlayingBeforeEdit, setWasPlayingBeforeEdit] = useState(false);
@@ -63,7 +76,11 @@ export default function ContinuousTranscript({
     const newFieldText = words.join(' ');
     setSavingCell(true);
 
-    // Update the edited field first
+    // Update locally immediately
+    applyLocalEdit(segIdx, field, newFieldText);
+    cancelEdit();
+
+    // Persist to DB
     if (onEditWord) onEditWord(segIdx, field, newFieldText);
 
     // Only re-translate the OTHER fields based on what changed
@@ -87,11 +104,10 @@ Return JSON with:
           }
         });
         if (onEditWord) {
-          if (result.hebrew) onEditWord(segIdx, 'hebrew', result.hebrew);
-          if (result.english) onEditWord(segIdx, 'english', result.english);
+          if (result.hebrew) { applyLocalEdit(segIdx, 'hebrew', result.hebrew); onEditWord(segIdx, 'hebrew', result.hebrew); }
+          if (result.english) { applyLocalEdit(segIdx, 'english', result.english); onEditWord(segIdx, 'english', result.english); }
         }
       } else if (field === 'hebrew') {
-        // Re-fetch transliteration and english from new hebrew
         const result = await base44.integrations.Core.InvokeLLM({
           prompt: `Given this Hebrew text with nikud: "${newFieldText}"
 Provide:
@@ -106,18 +122,15 @@ Provide:
           }
         });
         if (onEditWord) {
-          if (result.transliteration) onEditWord(segIdx, 'transliteration', result.transliteration);
-          if (result.english) onEditWord(segIdx, 'english', result.english);
+          if (result.transliteration) { applyLocalEdit(segIdx, 'transliteration', result.transliteration); onEditWord(segIdx, 'transliteration', result.transliteration); }
+          if (result.english) { applyLocalEdit(segIdx, 'english', result.english); onEditWord(segIdx, 'english', result.english); }
         }
-      } else if (field === 'english') {
-        // English changed — no need to re-translate other fields
       }
     } catch (e) {
       console.error('Re-translation failed', e);
     }
 
     setSavingCell(false);
-    cancelEdit();
   };
 
   const addWordToSegment = async (segIdx, field, afterIdx) => {
@@ -125,7 +138,9 @@ Provide:
     const words = getWordsArray(segment[field]);
     const newWord = "___";
     words.splice(afterIdx + 1, 0, newWord);
-    if (onEditWord) onEditWord(segIdx, field, words.join(' '));
+    const newText = words.join(' ');
+    applyLocalEdit(segIdx, field, newText);
+    if (onEditWord) onEditWord(segIdx, field, newText);
     // Start editing the new word
     setEditingCell({ segIdx, field, wordIdx: afterIdx + 1 });
     setEditCellValue("");
