@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { ArrowLeft, Star, Loader2, X, Wand2, Check } from "lucide-react";
+import { ArrowLeft, Star, Loader2, X, Wand2, Check, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import GameHeader from "../components/game/GameHeader";
@@ -36,10 +37,24 @@ export default function Backpack() {
   const [imageApproved, setImageApproved] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [lockedWords, setLockedWords] = useState(JSON.parse(localStorage.getItem('lockedWords') || '{}'));
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Load current user
   useEffect(() => {
     base44.auth.me().then(setCurrentUser).catch(() => {});
+  }, []);
+
+  // Migrate: move all "pictures" category words to "wordbank" level0
+  useEffect(() => {
+    const migrate = async () => {
+      const pictureWords = await base44.entities.Word.filter({ category: "pictures" });
+      for (const w of pictureWords) {
+        await base44.entities.Word.update(w.id, { category: "wordbank", times_practiced: 0, mastered: false });
+      }
+      if (pictureWords.length > 0) queryClient.invalidateQueries({ queryKey: ['wordRatings'] });
+    };
+    migrate().catch(() => {});
   }, []);
 
   // Load pending words from localStorage on mount
@@ -154,7 +169,6 @@ export default function Backpack() {
     { id: "level2", label: "Level 2", color: "yellow" },
     { id: "level3", label: "Level 3", color: "purple" },
     { id: "level5", label: "✓ Mastered", color: "green" },
-    { id: "pictures", label: "🖼️ Pictures", color: "pink" },
   ];
 
   const getDisplayWords = () => {
@@ -164,7 +178,6 @@ export default function Backpack() {
     else if (activeTab === "level2") words = level2Words;
     else if (activeTab === "level1") words = level1Words;
     else if (activeTab === "level0") words = level0Words;
-    else if (activeTab === "pictures") words = wordRatings.filter(w => w.image_url);
     else return [];
     
     // Deduplicate by phonetic (keep highest times_practiced)
@@ -175,7 +188,18 @@ export default function Backpack() {
         seen.set(key, w);
       }
     }
-    return [...seen.values()].sort((a, b) => (a.phonetic || a.word).localeCompare(b.phonetic || b.word));
+    let result = [...seen.values()].sort((a, b) => (a.phonetic || a.word).localeCompare(b.phonetic || b.word));
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(w =>
+        (w.phonetic || "").toLowerCase().includes(q) ||
+        (w.word || "").toLowerCase().includes(q) ||
+        (w.translation || "").toLowerCase().includes(q)
+      );
+    }
+    return result;
   };
 
   const handleWordClick = async (word) => {
@@ -361,7 +385,7 @@ export default function Backpack() {
         </div>
 
         {/* Tabs - Single Row */}
-        <div className="flex gap-1 mb-4 justify-center overflow-x-auto flex-wrap">
+        <div className="flex gap-1 mb-4 justify-center overflow-x-auto flex-wrap items-center">
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -375,10 +399,30 @@ export default function Backpack() {
               {tab.label}
             </button>
           ))}
+          {/* Search toggle */}
+          <button
+            onClick={() => { setSearchOpen(!searchOpen); if (searchOpen) setSearchQuery(""); }}
+            className={`p-1.5 rounded-lg border transition-all ${searchOpen ? "bg-stone-700 text-stone-100 border-stone-600" : "bg-white/60 text-stone-500 hover:bg-white/80 border-stone-200"}`}
+            title="Search words"
+          >
+            <Search className="w-4 h-4" />
+          </button>
         </div>
+        {/* Search input */}
+        {searchOpen && (
+          <div className="mb-4 max-w-xs mx-auto">
+            <Input
+              autoFocus
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by word or translation..."
+              className="bg-white/80 border-stone-300 text-stone-800"
+            />
+          </div>
+        )}
 
         {/* Show All English Toggle */}
-        {activeTab !== "pictures" && (
+        {(
           <div className="mb-4 flex justify-end">
             <button
               onClick={() => setShowAllEnglish(!showAllEnglish)}
@@ -397,111 +441,7 @@ export default function Backpack() {
         <div>
           {getDisplayWords().length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-stone-400 text-lg">
-                {activeTab.startsWith("level") && "No words at this level yet!"}
-                {activeTab === "pictures" && "No mnemonic pictures yet. Generate some while learning!"}
-              </p>
-            </div>
-          ) : activeTab === "pictures" ? (
-            <div className="flex flex-wrap gap-4">
-              {getDisplayWords().map((word) => (
-                <DeletablePictureBox
-                  key={word.id}
-                  onDelete={() => deleteWordMutation.mutate(word.id)}
-                  canDelete={true}
-                >
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    onClick={() => setExpandedId(expandedId === word.id ? null : word.id)}
-                    className="bg-white/70 border border-stone-200 rounded-xl overflow-hidden cursor-pointer hover:border-stone-400 transition-all flex flex-col"
-                  >
-                    <div className="h-32 overflow-hidden">
-                      <img src={word.image_url} alt={word.phonetic} className="w-full h-full object-cover" />
-                    </div>
-                    <div className="p-2 text-center flex flex-col gap-1">
-                      <p className="text-cyan-400 font-medium text-sm truncate">
-                        <EditableWord
-                          text={word.phonetic || word.word}
-                          onSave={(newText) => updateWordMutation.mutate({ id: word.id, data: { phonetic: newText } })}
-                          className="text-cyan-400 font-medium text-sm"
-                        />
-                      </p>
-                      <p className="text-green-400 font-medium text-xs truncate">
-                        = <EditableWord
-                          text={word.translation}
-                          onSave={(newTranslation) => updateWordMutation.mutate({ id: word.id, data: { translation: newTranslation } })}
-                          className="text-green-400 font-medium text-xs"
-                        />
-                      </p>
-                      <div className="flex items-center justify-center gap-1 mt-1">
-                        {[1, 2, 3, 4, 5].map((num) => (
-                          <button
-                            key={num}
-                            onClick={(e) => handleRateWord(word.id, num, e)}
-                            className={`w-5 h-5 rounded text-[10px] font-bold transition-all ${
-                              word.times_practiced === num
-                                ? num === 5 ? "bg-green-500 text-white" : "bg-cyan-500 text-white"
-                                : "bg-white/10 text-white/50 hover:bg-white/20"
-                            }`}
-                          >
-                            {num}
-                          </button>
-                        ))}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setPictureWordId(pictureWordId === word.id ? null : word.id);
-                          }}
-                          className="w-5 h-5 rounded flex items-center justify-center bg-white/10 hover:bg-purple-500/20 transition-all"
-                        >
-                          <span className="text-xs">🎨</span>
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteWordMutation.mutate(word.id);
-                          }}
-                          className="w-5 h-5 rounded flex items-center justify-center bg-white/10 hover:bg-red-500/20 transition-all"
-                        >
-                          <span className="text-xs">🗑️</span>
-                        </button>
-                      </div>
-                      {pictureWordId === word.id && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          className="mt-2"
-                        >
-                          <Textarea
-                            value={mnemonicDescription}
-                            onChange={(e) => setMnemonicDescription(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' && !e.shiftKey && mnemonicDescription.trim() && !generatingMnemonic) {
-                                e.preventDefault();
-                                generateMnemonicForWord(word);
-                              }
-                            }}
-                            placeholder="Describe new picture... (press Enter to generate)"
-                            className="bg-white/5 border-white/20 text-white text-xs mb-1 resize-none h-12"
-                            onClick={(e) => e.stopPropagation()}
-                            disabled={generatingMnemonic}
-                          />
-                          {generatingMnemonic && (
-                            <motion.div
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              className="flex items-center justify-center gap-2 text-purple-400 text-xs mt-2"
-                            >
-                              <Loader2 className="w-3 h-3 animate-spin" /> Generating...
-                            </motion.div>
-                          )}
-                        </motion.div>
-                      )}
-                    </div>
-                  </motion.div>
-                </DeletablePictureBox>
-              ))}
+              <p className="text-stone-400 text-lg">No words at this level yet!</p>
             </div>
           ) : (
             <div className="flex flex-wrap gap-4 justify-center">
