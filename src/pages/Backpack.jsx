@@ -67,14 +67,7 @@ export default function Backpack() {
     }
   }, []);
 
-  // Auto-generate mnemonics for words without images on load
-  useEffect(() => {
-    if (!wordRatings || wordRatings.length === 0) return;
-    const wordsToGenerate = wordRatings.filter(w => !w.image_url && !lockedWords[w.id]);
-    if (wordsToGenerate.length > 0) {
-      generateMissingMnemonics(wordsToGenerate);
-    }
-  }, []);
+
 
   // Auto-generate image after user stops typing
   useEffect(() => {
