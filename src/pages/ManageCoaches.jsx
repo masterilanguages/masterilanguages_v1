@@ -65,26 +65,19 @@ export default function ManageCoaches() {
           await base44.users.inviteUser(variables.student_email, "user");
         }
 
-        // Send coach notification + student notification (existing users only — new users get platform invite email)
-        const emailPromises = [
+        // Send coach notification + student notification (always send to student)
+        await Promise.all([
           base44.integrations.Core.SendEmail({
             to: variables.coach_email,
             subject: "🎉 You've been assigned a new student!",
             body: `You have been assigned as a coach to ${variables.student_email} on Language Mastery.\n\nYou can now support their learning journey. Log in to view their progress and get started!\n\n${appUrl}\n\nWelcome aboard,\nThe Language Mastery Team`
           }),
-        ];
-
-        if (isExistingUser) {
-          emailPromises.push(
-            base44.integrations.Core.SendEmail({
-              to: variables.student_email,
-              subject: "🎉 You've been matched with a coach on Language Mastery!",
-              body: `Great news! You have been matched with a personal coach: ${variables.coach_email} on Language Mastery.\n\nYour coach is ready to support your learning journey. Log in to get started!\n\n${appUrl}\n\nWelcome,\nThe Language Mastery Team`
-            })
-          );
-        }
-
-        await Promise.all(emailPromises);
+          base44.integrations.Core.SendEmail({
+            to: variables.student_email,
+            subject: "🎉 You've been matched with a coach on Language Mastery!",
+            body: `${isExistingUser ? "Great news!" : "Welcome to Language Mastery!"} You have been matched with a personal coach: ${variables.coach_email}.\n\n${isExistingUser ? "Log in to your account to get started" : "Your account has been created — log in with your email address"}:\n\n${appUrl}\n\nYour coach is ready to support your learning journey.\n\nWelcome,\nThe Language Mastery Team`
+          }),
+        ]);
       } catch (e) {
         console.error("Failed to invite/notify:", e);
       }
