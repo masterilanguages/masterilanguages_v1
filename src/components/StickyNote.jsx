@@ -4,9 +4,9 @@ import { X, StickyNote as StickyNoteIcon, Send, Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 
-// Extract @FirstName LastName mentions from text
+// Extract @Name mentions from text (single or multi word)
 function parseMentions(text) {
-  const regex = /@([A-Za-z]+(?:\s+[A-Za-z]+)+)/g;
+  const regex = /@([A-Za-z]+(?:\s+[A-Za-z]+)*)/g;
   const matches = [];
   let m;
   while ((m = regex.exec(text)) !== null) {

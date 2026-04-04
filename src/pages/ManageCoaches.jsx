@@ -147,6 +147,26 @@ export default function ManageCoaches() {
     return acc;
   }, {});
 
+  // People who appear only in notes (no formal assignment yet)
+  // Group all notes by student_name (case-insensitive)
+  const notePeopleMap = {};
+  for (const note of coachNotes) {
+    const key = note.student_name.toLowerCase();
+    if (!notePeopleMap[key]) notePeopleMap[key] = { name: note.student_name, notes: [], allWords: [] };
+    notePeopleMap[key].notes.push(note);
+    if (note.words) notePeopleMap[key].allWords.push(...note.words);
+  }
+  // Only show people NOT already in assignments
+  const assignedNames = new Set(
+    assignments.map(a => {
+      const u = allUsers.find(u2 => u2.email === a.student_email);
+      return (u?.full_name || "").toLowerCase();
+    }).filter(Boolean)
+  );
+  const notePeople = Object.values(notePeopleMap).filter(p =>
+    !assignedNames.has(p.name.toLowerCase())
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
       <div className="max-w-4xl mx-auto px-4 py-6">
@@ -268,6 +288,55 @@ export default function ManageCoaches() {
             ))
           )}
         </div>
+
+        {/* People from Notes — tagged via @mention but not formally assigned */}
+        {notePeople.length > 0 && (
+          <div className="mt-8">
+            <h2 className="text-white/60 text-sm font-semibold uppercase tracking-wider mb-3 flex items-center gap-2">
+              <StickyNote className="w-4 h-4" /> People from Notes
+            </h2>
+            <div className="space-y-3">
+              {notePeople.map(person => {
+                const uniqueWords = [...new Set(person.allWords)];
+                return (
+                  <div key={person.name} className="bg-yellow-400/5 border border-yellow-400/20 rounded-xl p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-white font-bold text-base">👤 {person.name}</h3>
+                      <span className="text-yellow-300/60 text-xs">{person.notes.length} note(s)</span>
+                    </div>
+
+                    {/* All words across notes */}
+                    {uniqueWords.length > 0 && (
+                      <div className="mb-3">
+                        <p className="text-white/40 text-xs mb-1 flex items-center gap-1"><BookOpen className="w-3 h-3" /> Saved Words</p>
+                        <div className="flex flex-wrap gap-1">
+                          {uniqueWords.map((w, i) => (
+                            <span key={i} className="bg-cyan-500/20 text-cyan-300 text-xs px-2 py-0.5 rounded-full">{w}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Notes */}
+                    <div className="space-y-2">
+                      {person.notes.map(note => (
+                        <div key={note.id} className="bg-white/5 rounded-lg p-2.5 flex items-start justify-between gap-2">
+                          <p className="text-white/70 text-sm flex-1 whitespace-pre-wrap">{note.note}</p>
+                          <button
+                            onClick={() => deleteNoteMutation.mutate(note.id)}
+                            className="text-white/20 hover:text-red-400 flex-shrink-0 transition-colors"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Assign Dialog */}
