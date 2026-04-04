@@ -19,6 +19,7 @@ export default function ManageCoaches() {
   const [showAssignDialog, setShowAssignDialog] = useState(false);
   const [selectedCoach, setSelectedCoach] = useState("");
   const [selectedStudent, setSelectedStudent] = useState("");
+  const [studentEmailInput, setStudentEmailInput] = useState("");
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -55,18 +56,25 @@ export default function ManageCoaches() {
       queryClient.invalidateQueries({ queryKey: ['coachAssignments'] });
       setShowAssignDialog(false);
 
-      // Send congratulations emails to both coach and student
+      const appUrl = window.location.origin;
+      const isExistingUser = allUsers.some(u => u.email === variables.student_email);
+
+      const studentEmailBody = isExistingUser
+        ? `Congratulations! You have been matched with a coach: ${variables.coach_email} on Language Mastery.\n\nYour coach is here to support your learning journey. Log in to get started!\n\n${appUrl}\n\nWelcome,\nThe Language Mastery Team`
+        : `You've been invited to Language Mastery and matched with a personal coach: ${variables.coach_email}!\n\nClick the link below to create your account and start your learning journey:\n\n${appUrl}\n\nYour coach is ready and waiting to support you.\n\nWelcome,\nThe Language Mastery Team`;
+
+      // Send emails to both coach and student
       try {
         await Promise.all([
           base44.integrations.Core.SendEmail({
             to: variables.coach_email,
             subject: "🎉 You've been assigned a new student!",
-            body: `Congratulations! You have been assigned as a coach to ${variables.student_email} on Language Masteri.\n\nYou can now support their Hebrew learning journey. Log in to view their progress and get started!\n\nWelcome aboard,\nThe Language Masteri Team`
+            body: `You have been assigned as a coach to ${variables.student_email} on Language Mastery.\n\nYou can now support their learning journey. Log in to view their progress and get started!\n\n${appUrl}\n\nWelcome aboard,\nThe Language Mastery Team`
           }),
           base44.integrations.Core.SendEmail({
             to: variables.student_email,
-            subject: "🎉 You've been matched with a coach!",
-            body: `Congratulations! You have been matched with a coach: ${variables.coach_email} on Language Masteri.\n\nYour coach is here to support your Hebrew learning journey. Log in to get started!\n\nWelcome,\nThe Language Masteri Team`
+            subject: "🎉 You've been matched with a coach on Language Mastery!",
+            body: studentEmailBody
           })
         ]);
       } catch (e) {
@@ -75,7 +83,8 @@ export default function ManageCoaches() {
 
       setSelectedCoach("");
       setSelectedStudent("");
-      toast.success("Coach assigned! Congratulations emails sent.");
+      setStudentEmailInput("");
+      toast.success("Coach assigned! Emails sent.");
     },
   });
 
@@ -88,17 +97,18 @@ export default function ManageCoaches() {
   });
 
   const handleAssign = () => {
-    if (!selectedCoach || !selectedStudent) {
-      toast.error("Select both coach and student");
+    const studentEmail = studentEmailInput.trim() || selectedStudent;
+    if (!selectedCoach || !studentEmail) {
+      toast.error("Select a coach and enter a student email");
       return;
     }
-    if (selectedCoach === selectedStudent) {
+    if (selectedCoach === studentEmail) {
       toast.error("Coach cannot manage themselves");
       return;
     }
     createAssignmentMutation.mutate({
       coach_email: selectedCoach,
-      student_email: selectedStudent,
+      student_email: studentEmail,
       assigned_by: currentUser.email,
       assigned_at: new Date().toISOString(),
     });
@@ -221,16 +231,27 @@ export default function ManageCoaches() {
               <label className="text-white/60 text-sm mb-2 block">Student</label>
               <select
                 value={selectedStudent}
-                onChange={(e) => setSelectedStudent(e.target.value)}
-                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
+                onChange={(e) => { setSelectedStudent(e.target.value); setStudentEmailInput(""); }}
+                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white mb-2"
               >
-                <option value="">Select student...</option>
+                <option value="">Select existing user...</option>
                 {allUsers.map((user) => (
                   <option key={user.id} value={user.email}>
                     {user.email}
                   </option>
                 ))}
               </select>
+              <p className="text-white/40 text-xs text-center mb-2">— or invite by email —</p>
+              <input
+                type="email"
+                value={studentEmailInput}
+                onChange={(e) => { setStudentEmailInput(e.target.value); setSelectedStudent(""); }}
+                placeholder="Enter new student email..."
+                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder:text-white/30"
+              />
+              {studentEmailInput && !allUsers.some(u => u.email === studentEmailInput) && (
+                <p className="text-amber-400 text-xs mt-1">⚠️ New user — they'll receive a signup link in their email.</p>
+              )}
             </div>
 
             <div className="flex gap-2">
