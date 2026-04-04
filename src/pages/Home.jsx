@@ -63,9 +63,9 @@ export default function Home() {
   const [expandedDay, setExpandedDay] = useState(null);
   const [draggedTask, setDraggedTask] = useState(null);
   const [dragOverTask, setDragOverTask] = useState(null);
-  const [newTask, setNewTask] = useState({ name: "", duration: "", page: "" });
+  const [newTask, setNewTask] = useState({ name: "", youtube_url: "", page: "" });
   const [editingTask, setEditingTask] = useState(null);
-  const [editingTaskData, setEditingTaskData] = useState({ name: "", duration: "", page: "" });
+  const [editingTaskData, setEditingTaskData] = useState({ name: "", youtube_url: "", page: "" });
   const [currentWeek, setCurrentWeek] = useState(1);
   const [addingTaskToDayId, setAddingTaskToDayId] = useState(null);
 
@@ -463,28 +463,35 @@ export default function Home() {
     updateDayMutation.mutate({ id: dayId, data: { subsections: updatedSubsections } });
   };
 
+  const extractYouTubeId = (url) => {
+    if (!url) return null;
+    const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([^&\n?#]+)/);
+    return match ? match[1] : null;
+  };
+
   const handleStartEditTask = (dayId, task) => {
     setEditingTask({ dayId, taskId: task.id });
-    setEditingTaskData({ name: task.name, duration: task.duration || "", page: task.page || "" });
+    setEditingTaskData({ name: task.name, youtube_url: task.youtube_url || "", page: task.page || "" });
   };
 
   const handleSaveEditedTask = (dayId) => {
     if (!editingTaskData.name.trim()) return;
     
     const day = days.find(d => d.id === dayId);
+    const videoId = extractYouTubeId(editingTaskData.youtube_url);
     const updatedSubsections = day.subsections.map(s => 
       s.id === editingTask.taskId 
-        ? { ...s, name: editingTaskData.name, duration: editingTaskData.duration, page: editingTaskData.page }
+        ? { ...s, name: editingTaskData.name, youtube_url: editingTaskData.youtube_url, video_id: videoId || s.video_id, page: editingTaskData.page || (videoId ? "MediaLibrary" : s.page) }
         : s
     );
     updateDayMutation.mutate({ id: dayId, data: { subsections: updatedSubsections } });
     setEditingTask(null);
-    setEditingTaskData({ name: "", duration: "", page: "" });
+    setEditingTaskData({ name: "", youtube_url: "", page: "" });
   };
 
   const handleCancelEdit = () => {
     setEditingTask(null);
-    setEditingTaskData({ name: "", duration: "", page: "" });
+    setEditingTaskData({ name: "", youtube_url: "", page: "" });
   };
 
   const reorderTasks = (dayId, fromIdx, toIdx) => {
@@ -643,7 +650,7 @@ export default function Home() {
                                     return (
                                       <div key={task.id} className="flex flex-col gap-1">
                                         {isEditing ? (
-                                          <div className="flex gap-2 px-3 py-2 bg-white/10 rounded-lg border border-cyan-400/50">
+                                         <div className="flex gap-2 px-3 py-2 bg-white/10 rounded-lg border border-cyan-400/50">
                                             <Input
                                               value={editingTaskData.name}
                                               onChange={(e) => setEditingTaskData({ ...editingTaskData, name: e.target.value })}
@@ -651,10 +658,10 @@ export default function Home() {
                                               className="flex-1 bg-white/10 border-white/20 text-white text-sm"
                                             />
                                             <Input
-                                              value={editingTaskData.duration}
-                                              onChange={(e) => setEditingTaskData({ ...editingTaskData, duration: e.target.value })}
-                                              placeholder="Duration"
-                                              className="w-24 bg-white/10 border-white/20 text-white text-sm"
+                                              value={editingTaskData.youtube_url}
+                                              onChange={(e) => setEditingTaskData({ ...editingTaskData, youtube_url: e.target.value })}
+                                              placeholder="YouTube URL (optional)"
+                                              className="w-48 bg-white/10 border-white/20 text-white text-sm"
                                             />
                                             <Button
                                               onClick={() => handleSaveEditedTask(day.id)}
@@ -689,7 +696,17 @@ export default function Home() {
                                             }}
                                             className={`flex items-center justify-between px-3 py-2 rounded-lg hover:opacity-80 transition-all group ${isDragging ? 'cursor-grabbing opacity-50' : 'cursor-pointer'} ${isDragOver ? 'border-t-2 border-b-2 border-cyan-400 my-2' : ''}`}
                                             style={{ background: isTaskDone ? '#5a6b5a30' : '#ffffff50', border: isDragOver ? undefined : '1px solid #5a6b5a20' }}
-                                            onClick={() => !isDragging && (task.page ? navigate(createPageUrl(task.page) + (task.video_id ? `?videoId=${task.video_id}` : '')) : toggleTaskMutation.mutate({ dayId: day.id, taskId: task.id, dayNumber: day.day_number }))}
+                                            onClick={() => {
+                                             if (isDragging) return;
+                                             const ytId = task.video_id || extractYouTubeId(task.youtube_url);
+                                             if (ytId) {
+                                               navigate(createPageUrl("MediaLibrary") + `?videoId=${ytId}`);
+                                             } else if (task.page) {
+                                               navigate(createPageUrl(task.page));
+                                             } else {
+                                               toggleTaskMutation.mutate({ dayId: day.id, taskId: task.id, dayNumber: day.day_number });
+                                             }
+                                            }}
                                           >
                                             <div className="flex items-center gap-2">
                                               <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${isTaskDone ? 'bg-green-500 border-green-500' : 'border-stone-400'}`}>
@@ -698,7 +715,7 @@ export default function Home() {
                                               <span className="text-sm font-medium" style={{ color: '#3d4a2e' }}>{task.name}</span>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                              {task.duration && <span className="text-xs" style={{ color: '#6b7c5a' }}>{task.duration}</span>}
+                                              {(task.video_id || extractYouTubeId(task.youtube_url)) && <span className="text-xs" style={{ color: '#6b7c5a' }}>▶ video</span>}
                                               {isMasterUser && (
                                                 <button
                                                   onClick={(e) => { e.stopPropagation(); handleStartEditTask(day.id, task); }}
