@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Plus, Trash2, Users, UserCheck, ClipboardList, StickyNote, BookOpen } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Users, UserCheck, ClipboardList, StickyNote, BookOpen, LogIn, ChevronDown, ChevronUp, Shield, GraduationCap, User } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
@@ -20,15 +20,14 @@ export default function ManageCoaches() {
   const [selectedCoach, setSelectedCoach] = useState("");
   const [selectedStudent, setSelectedStudent] = useState("");
   const [studentEmailInput, setStudentEmailInput] = useState("");
+  const [expandedPerson, setExpandedPerson] = useState(null);
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
         const user = await base44.auth.me();
         setCurrentUser(user);
-        if (user.role !== 'admin') {
-          toast.error("Admin access required");
-        }
+        if (user.role !== 'admin') toast.error("Admin access required");
       } catch (e) {
         toast.error("Not authenticated");
       }
@@ -36,24 +35,33 @@ export default function ManageCoaches() {
     fetchUser();
   }, []);
 
-  // Fetch all users
   const { data: allUsers = [] } = useQuery({
     queryKey: ['allUsers'],
     queryFn: () => base44.entities.User.list(),
     enabled: currentUser?.role === 'admin',
   });
 
-  // Fetch all coach assignments
   const { data: assignments = [] } = useQuery({
     queryKey: ['coachAssignments'],
     queryFn: () => base44.entities.CoachAssignment.list(),
     enabled: currentUser?.role === 'admin',
   });
 
-  // Fetch all coach notes
-  const { data: coachNotes = [], refetch: refetchNotes } = useQuery({
+  const { data: coachNotes = [] } = useQuery({
     queryKey: ['coachNotes'],
     queryFn: () => base44.entities.CoachNote.list('-created_date'),
+    enabled: currentUser?.role === 'admin',
+  });
+
+  const { data: allProfiles = [] } = useQuery({
+    queryKey: ['allProfiles'],
+    queryFn: () => base44.entities.UserProfile.list(),
+    enabled: currentUser?.role === 'admin',
+  });
+
+  const { data: allWords = [] } = useQuery({
+    queryKey: ['allWords'],
+    queryFn: () => base44.entities.Word.filter({ category: "wordbank" }),
     enabled: currentUser?.role === 'admin',
   });
 
@@ -70,37 +78,27 @@ export default function ManageCoaches() {
     onSuccess: async (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['coachAssignments'] });
       setShowAssignDialog(false);
-
-      const appUrl = window.location.origin;
       const isExistingUser = allUsers.some(u => u.email === variables.student_email);
-
       try {
-        // If new user, invite them (platform sends login credentials automatically)
-        if (!isExistingUser) {
-          await base44.users.inviteUser(variables.student_email, "user");
-        }
-
-        // Send coach notification + student notification (always send to student)
+        if (!isExistingUser) await base44.users.inviteUser(variables.student_email, "user");
+        const appUrl = window.location.origin;
         await Promise.all([
           base44.integrations.Core.SendEmail({
             to: variables.coach_email,
             subject: "🎉 You've been assigned a new student!",
-            body: `You have been assigned as a coach to ${variables.student_email} on Language Mastery.\n\nYou can now support their learning journey. Log in to view their progress and get started!\n\n${appUrl}\n\nWelcome aboard,\nThe Language Mastery Team`
+            body: `You have been assigned as a coach to ${variables.student_email} on Language Mastery.\n\nLog in to view their progress:\n${appUrl}`
           }),
           base44.integrations.Core.SendEmail({
             to: variables.student_email,
             subject: "🎉 You've been matched with a coach on Language Mastery!",
-            body: `${isExistingUser ? "Great news!" : "Welcome to Language Mastery!"} You have been matched with a personal coach: ${variables.coach_email}.\n\n${isExistingUser ? "Log in to your account to get started" : "Your account has been created — log in with your email address"}:\n\n${appUrl}\n\nYour coach is ready to support your learning journey.\n\nWelcome,\nThe Language Mastery Team`
+            body: `${isExistingUser ? "Great news!" : "Welcome to Language Mastery!"} You have been matched with a personal coach: ${variables.coach_email}.\n\n${appUrl}`
           }),
         ]);
       } catch (e) {
         console.error("Failed to invite/notify:", e);
       }
-
-      setSelectedCoach("");
-      setSelectedStudent("");
-      setStudentEmailInput("");
-      toast.success(isExistingUser ? "Coach assigned! Notification sent." : "Coach assigned! Account created and login details sent to student.");
+      setSelectedCoach(""); setSelectedStudent(""); setStudentEmailInput("");
+      toast.success(isExistingUser ? "Coach assigned! Notification sent." : "Coach assigned! Account created and login sent.");
     },
   });
 
@@ -114,20 +112,20 @@ export default function ManageCoaches() {
 
   const handleAssign = () => {
     const studentEmail = studentEmailInput.trim() || selectedStudent;
-    if (!selectedCoach || !studentEmail) {
-      toast.error("Select a coach and enter a student email");
-      return;
-    }
-    if (selectedCoach === studentEmail) {
-      toast.error("Coach cannot manage themselves");
-      return;
-    }
+    if (!selectedCoach || !studentEmail) { toast.error("Select a coach and enter a student email"); return; }
+    if (selectedCoach === studentEmail) { toast.error("Coach cannot manage themselves"); return; }
     createAssignmentMutation.mutate({
       coach_email: selectedCoach,
       student_email: studentEmail,
       assigned_by: currentUser.email,
       assigned_at: new Date().toISOString(),
     });
+  };
+
+  const handleLoginAsStudent = (email) => {
+    localStorage.setItem('admin_managing_user', email);
+    toast.success(`Now viewing as ${email}`);
+    window.location.href = createPageUrl("Home");
   };
 
   if (!currentUser || currentUser.role !== 'admin') {
@@ -138,17 +136,32 @@ export default function ManageCoaches() {
     );
   }
 
-  // Group assignments by coach
-  const assignmentsByCoach = assignments.reduce((acc, assignment) => {
-    if (!acc[assignment.coach_email]) {
-      acc[assignment.coach_email] = [];
-    }
-    acc[assignment.coach_email].push(assignment);
-    return acc;
-  }, {});
+  // Build a unified people list
+  const studentEmails = new Set(assignments.map(a => a.student_email));
+  const coachEmails = new Set(assignments.map(a => a.coach_email));
 
-  // People who appear only in notes (no formal assignment yet)
-  // Group all notes by student_name (case-insensitive)
+  // All real users, tagged with their role
+  const people = allUsers.map(user => {
+    const isCoach = coachEmails.has(user.email) || user.role === 'admin' || user.role === 'coach';
+    const isStudent = studentEmails.has(user.email);
+    const profile = allProfiles.find(p => p.created_by === user.email);
+    const userNotes = coachNotes.filter(n =>
+      n.student_email === user.email ||
+      (user.full_name && n.student_name.toLowerCase() === (user.full_name || "").toLowerCase())
+    );
+    const userWords = allWords.filter(w => w.created_by === user.email);
+    const myCoach = assignments.find(a => a.student_email === user.email);
+    const myStudents = assignments.filter(a => a.coach_email === user.email);
+    return { user, isCoach, isStudent, profile, userNotes, userWords, myCoach, myStudents };
+  });
+
+  // Sort: admins first, then coaches, then students
+  const sortedPeople = [...people].sort((a, b) => {
+    const rank = (p) => p.user.role === 'admin' ? 0 : p.isCoach ? 1 : 2;
+    return rank(a) - rank(b);
+  });
+
+  // People from notes who don't have an account yet
   const notePeopleMap = {};
   for (const note of coachNotes) {
     const key = note.student_name.toLowerCase();
@@ -156,28 +169,31 @@ export default function ManageCoaches() {
     notePeopleMap[key].notes.push(note);
     if (note.words) notePeopleMap[key].allWords.push(...note.words);
   }
-  // Only show people NOT already in assignments
   const assignedNames = new Set(
-    assignments.map(a => {
-      const u = allUsers.find(u2 => u2.email === a.student_email);
-      return (u?.full_name || "").toLowerCase();
-    }).filter(Boolean)
+    allUsers.map(u => (u.full_name || "").toLowerCase()).filter(Boolean)
   );
-  const notePeople = Object.values(notePeopleMap).filter(p =>
-    !assignedNames.has(p.name.toLowerCase())
-  );
+  const notePeople = Object.values(notePeopleMap).filter(p => !assignedNames.has(p.name.toLowerCase()));
+
+  const getRoleBadge = (person) => {
+    if (person.user.role === 'admin') return { label: 'Admin', color: 'bg-red-500/20 text-red-300', icon: Shield };
+    if (person.isCoach) return { label: 'Coach', color: 'bg-cyan-500/20 text-cyan-300', icon: UserCheck };
+    if (person.isStudent) return { label: 'Student', color: 'bg-green-500/20 text-green-300', icon: GraduationCap };
+    return { label: 'User', color: 'bg-white/10 text-white/50', icon: User };
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
       <div className="max-w-4xl mx-auto px-4 py-6">
+
+        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             <Link to={createPageUrl("Home")} className="text-white/60 hover:text-white">
               <ArrowLeft className="w-6 h-6" />
             </Link>
             <div>
-              <h1 className="text-3xl font-bold text-white">Manage Coaches</h1>
-              <p className="text-white/60">Assign coaches to manage students</p>
+              <h1 className="text-3xl font-bold text-white">People</h1>
+              <p className="text-white/60">{sortedPeople.length} users · {assignments.length} coach assignments</p>
             </div>
           </div>
           <div className="flex gap-2">
@@ -199,101 +215,171 @@ export default function ManageCoaches() {
           </div>
         </div>
 
-        <div className="space-y-4">
-          {Object.keys(assignmentsByCoach).length === 0 ? (
-            <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-8 text-center">
-              <Users className="w-12 h-12 text-white/40 mx-auto mb-3" />
-              <p className="text-white/60">No coach assignments yet</p>
-              <p className="text-white/40 text-sm mt-2">Click "Assign Coach" to get started</p>
-            </div>
-          ) : (
-            Object.entries(assignmentsByCoach).map(([coachEmail, coachAssignments]) => (
-              <div
-                key={coachEmail}
-                className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6"
-              >
-                <div className="flex items-center gap-3 mb-4">
-                  <UserCheck className="w-6 h-6 text-cyan-400" />
-                  <div>
-                    <h3 className="text-white font-bold text-lg">{coachEmail}</h3>
-                    <p className="text-white/60 text-sm">Managing {coachAssignments.length} student(s)</p>
+        {/* People list */}
+        <div className="space-y-2">
+          {sortedPeople.map(({ user, isCoach, isStudent, profile, userNotes, userWords, myCoach, myStudents }) => {
+            const badge = getRoleBadge({ user, isCoach, isStudent });
+            const BadgeIcon = badge.icon;
+            const isExpanded = expandedPerson === user.id;
+            const allNoteWords = [...new Set(userNotes.flatMap(n => n.words || []))];
+
+            return (
+              <div key={user.id} className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden">
+                {/* Row */}
+                <div
+                  className="flex items-center justify-between p-4 cursor-pointer hover:bg-white/5 transition-all"
+                  onClick={() => setExpandedPerson(isExpanded ? null : user.id)}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-lg font-bold text-white">
+                      {(user.full_name || user.email || "?")[0].toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="text-white font-semibold">{user.full_name || "—"}</p>
+                      <p className="text-white/50 text-sm">{user.email}</p>
+                    </div>
+                    <span className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${badge.color}`}>
+                      <BadgeIcon className="w-3 h-3" />{badge.label}
+                    </span>
+                    {profile?.language && (
+                      <span className="text-xs text-white/40 bg-white/5 px-2 py-0.5 rounded-full">{profile.language}</span>
+                    )}
+                    {userNotes.length > 0 && (
+                      <span className="text-xs text-yellow-300/70 flex items-center gap-0.5">
+                        <StickyNote className="w-3 h-3" />{userNotes.length}
+                      </span>
+                    )}
+                    {userWords.length > 0 && (
+                      <span className="text-xs text-cyan-300/70 flex items-center gap-0.5">
+                        <BookOpen className="w-3 h-3" />{userWords.length} words
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {user.role !== 'admin' && (
+                      <Button
+                        size="sm"
+                        onClick={(e) => { e.stopPropagation(); handleLoginAsStudent(user.email); }}
+                        className="bg-indigo-500/20 hover:bg-indigo-500/40 text-indigo-300 border border-indigo-500/30 text-xs"
+                        variant="ghost"
+                      >
+                        <LogIn className="w-3.5 h-3.5 mr-1" /> Login as
+                      </Button>
+                    )}
+                    {isExpanded ? <ChevronUp className="w-4 h-4 text-white/40" /> : <ChevronDown className="w-4 h-4 text-white/40" />}
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  {coachAssignments.map((assignment) => {
-                    // Find notes for this student by email or name match
-                    const studentUser = allUsers.find(u => u.email === assignment.student_email);
-                    const studentName = studentUser?.full_name || "";
-                    const studentNotes = coachNotes.filter(n =>
-                      n.student_email === assignment.student_email ||
-                      (studentName && n.student_name.toLowerCase() === studentName.toLowerCase())
-                    );
+                {/* Expanded panel */}
+                {isExpanded && (
+                  <div className="border-t border-white/10 px-4 py-4 space-y-4">
 
-                    return (
-                      <div key={assignment.id} className="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
-                        <div className="flex items-center justify-between p-3">
-                          <div className="flex items-center gap-2">
-                            <span className="text-white font-medium">{assignment.student_email}</span>
-                            {studentName && <span className="text-white/50 text-xs">({studentName})</span>}
-                            <span className="text-white/40 text-xs">
-                              assigned {new Date(assignment.assigned_at).toLocaleDateString()}
-                            </span>
+                    {/* Profile info */}
+                    {profile && (
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        {[
+                          { label: 'Day', value: profile.current_day || 1 },
+                          { label: 'Streak', value: `${profile.daily_streak || 0} 🔥` },
+                          { label: 'XP', value: profile.xp || 0 },
+                          { label: 'Difficulty', value: profile.difficulty_level || '—' },
+                        ].map(stat => (
+                          <div key={stat.label} className="bg-white/5 rounded-lg p-2 text-center">
+                            <p className="text-white/40 text-xs">{stat.label}</p>
+                            <p className="text-white font-bold">{stat.value}</p>
                           </div>
-                          <Button
-                            onClick={() => deleteAssignmentMutation.mutate(assignment.id)}
-                            variant="ghost"
-                            size="sm"
-                            className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-
-                        {/* Coach Notes for this student */}
-                        {studentNotes.length > 0 && (
-                          <div className="border-t border-white/10 px-3 py-2 space-y-2">
-                            <p className="text-yellow-300 text-xs font-semibold flex items-center gap-1">
-                              <StickyNote className="w-3 h-3" /> Coach Notes ({studentNotes.length})
-                            </p>
-                            {studentNotes.map(note => (
-                              <div key={note.id} className="bg-yellow-400/10 border border-yellow-400/20 rounded-lg p-2.5">
-                                <div className="flex items-start justify-between gap-2">
-                                  <p className="text-white/80 text-sm flex-1 whitespace-pre-wrap">{note.note}</p>
-                                  <button
-                                    onClick={() => deleteNoteMutation.mutate(note.id)}
-                                    className="text-white/30 hover:text-red-400 flex-shrink-0"
-                                  >
-                                    <Trash2 className="w-3 h-3" />
-                                  </button>
-                                </div>
-                                {note.words?.length > 0 && (
-                                  <div className="mt-1.5 flex flex-wrap gap-1">
-                                    <span className="text-white/40 text-xs flex items-center gap-1"><BookOpen className="w-3 h-3" /> Words:</span>
-                                    {note.words.map((w, i) => (
-                                      <span key={i} className="bg-cyan-500/20 text-cyan-300 text-xs px-1.5 py-0.5 rounded">{w}</span>
-                                    ))}
-                                  </div>
-                                )}
-                                <p className="text-white/30 text-xs mt-1">by {note.coach_email} · {new Date(note.created_date).toLocaleDateString()}</p>
-                              </div>
-                            ))}
-                          </div>
-                        )}
+                        ))}
                       </div>
-                    );
-                  })}
-                </div>
+                    )}
+
+                    {/* Coach / Students relationships */}
+                    {myCoach && (
+                      <p className="text-white/50 text-sm">👨‍🏫 Coach: <span className="text-cyan-300">{myCoach.coach_email}</span></p>
+                    )}
+                    {myStudents.length > 0 && (
+                      <div>
+                        <p className="text-white/50 text-sm mb-1">📚 Students ({myStudents.length}):</p>
+                        <div className="flex flex-wrap gap-1">
+                          {myStudents.map(s => (
+                            <span key={s.id} className="bg-green-500/20 text-green-300 text-xs px-2 py-0.5 rounded-full">{s.student_email}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Words in backpack */}
+                    {userWords.length > 0 && (
+                      <div>
+                        <p className="text-white/40 text-xs mb-1 flex items-center gap-1"><BookOpen className="w-3 h-3" /> Backpack Words ({userWords.length})</p>
+                        <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto">
+                          {userWords.map(w => (
+                            <span key={w.id} className="bg-cyan-500/20 text-cyan-300 text-xs px-2 py-0.5 rounded-full">{w.word}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Words from coach notes */}
+                    {allNoteWords.length > 0 && (
+                      <div>
+                        <p className="text-white/40 text-xs mb-1 flex items-center gap-1"><StickyNote className="w-3 h-3" /> Words from Notes</p>
+                        <div className="flex flex-wrap gap-1">
+                          {allNoteWords.map((w, i) => (
+                            <span key={i} className="bg-yellow-400/20 text-yellow-300 text-xs px-2 py-0.5 rounded-full">{w}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Coach Notes */}
+                    {userNotes.length > 0 && (
+                      <div>
+                        <p className="text-yellow-300 text-xs font-semibold mb-2 flex items-center gap-1">
+                          <StickyNote className="w-3 h-3" /> Coach Notes ({userNotes.length})
+                        </p>
+                        <div className="space-y-2">
+                          {userNotes.map(note => (
+                            <div key={note.id} className="bg-yellow-400/10 border border-yellow-400/20 rounded-lg p-2.5">
+                              <div className="flex items-start justify-between gap-2">
+                                <p className="text-white/80 text-sm flex-1 whitespace-pre-wrap">{note.note}</p>
+                                <button onClick={() => deleteNoteMutation.mutate(note.id)} className="text-white/30 hover:text-red-400 flex-shrink-0 transition-colors">
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+                              </div>
+                              <p className="text-white/30 text-xs mt-1">by {note.coach_email} · {new Date(note.created_date).toLocaleDateString()}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Remove assignment button */}
+                    {isStudent && (
+                      <div className="flex gap-2 pt-1">
+                        {assignments.filter(a => a.student_email === user.email).map(a => (
+                          <Button
+                            key={a.id}
+                            size="sm"
+                            onClick={() => deleteAssignmentMutation.mutate(a.id)}
+                            className="text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-xs"
+                            variant="ghost"
+                          >
+                            <Trash2 className="w-3 h-3 mr-1" /> Remove coach assignment
+                          </Button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
-            ))
-          )}
+            );
+          })}
         </div>
 
-        {/* People from Notes — tagged via @mention but not formally assigned */}
+        {/* People from Notes (no account yet) */}
         {notePeople.length > 0 && (
           <div className="mt-8">
             <h2 className="text-white/60 text-sm font-semibold uppercase tracking-wider mb-3 flex items-center gap-2">
-              <StickyNote className="w-4 h-4" /> People from Notes
+              <StickyNote className="w-4 h-4" /> People from Notes (no account yet)
             </h2>
             <div className="space-y-3">
               {notePeople.map(person => {
@@ -301,31 +387,21 @@ export default function ManageCoaches() {
                 return (
                   <div key={person.name} className="bg-yellow-400/5 border border-yellow-400/20 rounded-xl p-4">
                     <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-white font-bold text-base">👤 {person.name}</h3>
+                      <h3 className="text-white font-bold">👤 {person.name}</h3>
                       <span className="text-yellow-300/60 text-xs">{person.notes.length} note(s)</span>
                     </div>
-
-                    {/* All words across notes */}
                     {uniqueWords.length > 0 && (
-                      <div className="mb-3">
-                        <p className="text-white/40 text-xs mb-1 flex items-center gap-1"><BookOpen className="w-3 h-3" /> Saved Words</p>
-                        <div className="flex flex-wrap gap-1">
-                          {uniqueWords.map((w, i) => (
-                            <span key={i} className="bg-cyan-500/20 text-cyan-300 text-xs px-2 py-0.5 rounded-full">{w}</span>
-                          ))}
-                        </div>
+                      <div className="flex flex-wrap gap-1 mb-2">
+                        {uniqueWords.map((w, i) => (
+                          <span key={i} className="bg-cyan-500/20 text-cyan-300 text-xs px-2 py-0.5 rounded-full">{w}</span>
+                        ))}
                       </div>
                     )}
-
-                    {/* Notes */}
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                       {person.notes.map(note => (
-                        <div key={note.id} className="bg-white/5 rounded-lg p-2.5 flex items-start justify-between gap-2">
-                          <p className="text-white/70 text-sm flex-1 whitespace-pre-wrap">{note.note}</p>
-                          <button
-                            onClick={() => deleteNoteMutation.mutate(note.id)}
-                            className="text-white/20 hover:text-red-400 flex-shrink-0 transition-colors"
-                          >
+                        <div key={note.id} className="bg-white/5 rounded-lg p-2 flex items-start justify-between gap-2">
+                          <p className="text-white/70 text-sm flex-1">{note.note}</p>
+                          <button onClick={() => deleteNoteMutation.mutate(note.id)} className="text-white/20 hover:text-red-400 transition-colors">
                             <Trash2 className="w-3 h-3" />
                           </button>
                         </div>
@@ -345,36 +421,22 @@ export default function ManageCoaches() {
           <DialogHeader>
             <DialogTitle>Assign Coach to Student</DialogTitle>
           </DialogHeader>
-
           <div className="space-y-4">
             <div>
               <label className="text-white/60 text-sm mb-2 block">Coach</label>
-              <select
-                value={selectedCoach}
-                onChange={(e) => setSelectedCoach(e.target.value)}
-                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
-              >
+              <select value={selectedCoach} onChange={(e) => setSelectedCoach(e.target.value)} className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white">
                 <option value="">Select coach...</option>
                 {allUsers.map((user) => (
-                  <option key={user.id} value={user.email}>
-                    {user.email} {user.role === 'admin' ? '(Admin)' : ''}
-                  </option>
+                  <option key={user.id} value={user.email}>{user.email} {user.role === 'admin' ? '(Admin)' : ''}</option>
                 ))}
               </select>
             </div>
-
             <div>
               <label className="text-white/60 text-sm mb-2 block">Student</label>
-              <select
-                value={selectedStudent}
-                onChange={(e) => { setSelectedStudent(e.target.value); setStudentEmailInput(""); }}
-                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white mb-2"
-              >
+              <select value={selectedStudent} onChange={(e) => { setSelectedStudent(e.target.value); setStudentEmailInput(""); }} className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white mb-2">
                 <option value="">Select existing user...</option>
                 {allUsers.map((user) => (
-                  <option key={user.id} value={user.email}>
-                    {user.email}
-                  </option>
+                  <option key={user.id} value={user.email}>{user.email}</option>
                 ))}
               </select>
               <p className="text-white/40 text-xs text-center mb-2">— or invite by email —</p>
@@ -386,25 +448,12 @@ export default function ManageCoaches() {
                 className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder:text-white/30"
               />
               {studentEmailInput && !allUsers.some(u => u.email === studentEmailInput) && (
-                <p className="text-amber-400 text-xs mt-1">✉️ New user — an account will be created and login details sent to their email automatically.</p>
+                <p className="text-amber-400 text-xs mt-1">✉️ New user — account will be created automatically.</p>
               )}
             </div>
-
             <div className="flex gap-2">
-              <Button
-                onClick={() => setShowAssignDialog(false)}
-                variant="outline"
-                className="flex-1 border-white/20 text-white"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleAssign}
-                disabled={createAssignmentMutation.isPending}
-                className="flex-1 bg-gradient-to-r from-green-500 to-emerald-500"
-              >
-                Assign
-              </Button>
+              <Button onClick={() => setShowAssignDialog(false)} variant="outline" className="flex-1 border-white/20 text-white">Cancel</Button>
+              <Button onClick={handleAssign} disabled={createAssignmentMutation.isPending} className="flex-1 bg-gradient-to-r from-green-500 to-emerald-500">Assign</Button>
             </div>
           </div>
         </DialogContent>
