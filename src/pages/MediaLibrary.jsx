@@ -54,7 +54,7 @@ export default function MediaLibrary() {
   const [loadingTranscript, setLoadingTranscript] = useState(false);
   const [videoPlayer, setVideoPlayer] = useState(null);
   const [showRecommended, setShowRecommended] = useState(false);
-  const [showLibrary, setShowLibrary] = useState(false);
+  const [showLibrary, setShowLibrary] = useState(true);
   const [editingSegment, setEditingSegment] = useState(null);
   const [editingWords, setEditingWords] = useState(null);
   const [currentTime, setCurrentTime] = useState(0);
