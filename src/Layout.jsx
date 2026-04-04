@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import TranslatorWidget from "@/components/TranslatorWidget";
+import StickyNote from "@/components/StickyNote";
 import GameHeader from "@/components/game/GameHeader";
 
 export default function Layout({ children, currentPageName }) {
@@ -174,6 +175,7 @@ export default function Layout({ children, currentPageName }) {
       {showHeader && <GameHeader profile={userProfile} coins={userCoins?.coins} sessionActive={sessionActive} onSessionToggle={() => { setSessionActive(!sessionActive); setLastActivity(Date.now()); }} />}
       {children}
       <TranslatorWidget />
+      <StickyNote />
     </div>
   );
   }
