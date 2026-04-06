@@ -33,6 +33,7 @@ export default function Songs() {
   }, []);
 
   const isAdmin = currentUser?.role === 'admin';
+  const canEdit = !!currentUser; // any logged-in user can add/delete their own songs
 
   const { data: userProfile } = useQuery({
     queryKey: ['userProfile'],
@@ -252,7 +253,7 @@ export default function Songs() {
               <p style={{ color: '#7a8a72', fontFamily: 'Jost, sans-serif' }}>Watch, listen, and add vocab to your backpack</p>
             </div>
           </div>
-          {isAdmin && (
+          {canEdit && (
             <Button onClick={() => setAddingSong(!addingSong)} className="bg-green-500 hover:bg-green-600">
               <Plus className="w-4 h-4 mr-2" /> Add Song
             </Button>
@@ -398,14 +399,14 @@ export default function Songs() {
                                 </div>
                                 <ChevronRight className={`w-5 h-5 text-stone-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
                               </div>
-                              {isAdmin && (
-                                <button
-                                  onClick={(e) => { e.stopPropagation(); deleteSongMutation.mutate(song.id); }}
-                                  className="w-8 h-8 rounded bg-red-500/20 hover:bg-red-500/30 flex items-center justify-center"
-                                >
-                                  <Trash2 className="w-4 h-4 text-red-400" />
-                                </button>
-                              )}
+                              {canEdit && (
+                                 <button
+                                   onClick={(e) => { e.stopPropagation(); if (confirm("Delete this song?")) deleteSongMutation.mutate(song.id); }}
+                                   className="w-8 h-8 rounded bg-red-500/20 hover:bg-red-500/30 flex items-center justify-center flex-shrink-0"
+                                 >
+                                   <Trash2 className="w-4 h-4 text-red-400" />
+                                 </button>
+                               )}
                             </div>
 
                             {isExpanded && (
