@@ -1309,15 +1309,24 @@ Keep natural sentence breaks. Estimate reasonable timestamps (e.g., 5-10 seconds
                           <Video className="w-12 h-12 text-white/40" />
                         </div>
                       )}
-                      {canEdit && (
+                      <div className="absolute bottom-2 right-2 flex gap-1">
+                        {canEdit && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleEdit(video); }}
+                            className="bg-cyan-500/80 hover:bg-cyan-500 text-white p-2 rounded-full transition-all shadow-lg"
+                            title="Edit video"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                        )}
                         <button
-                          onClick={(e) => { e.stopPropagation(); handleEdit(video); }}
-                          className="absolute bottom-2 right-2 bg-cyan-500/80 hover:bg-cyan-500 text-white p-2 rounded-full transition-all shadow-lg"
-                          title="Edit video"
+                          onClick={(e) => { e.stopPropagation(); if (confirm("Delete this video?")) { base44.entities.Video.delete(video.id).then(() => queryClient.invalidateQueries({ queryKey: ['userVideos'] })); } }}
+                          className="bg-red-500/80 hover:bg-red-500 text-white p-2 rounded-full transition-all shadow-lg"
+                          title="Delete video"
                         >
-                          <Pencil className="w-4 h-4" />
+                          <Trash2 className="w-4 h-4" />
                         </button>
-                      )}
+                      </div>
                     </div>
                     <div className="p-3" onClick={() => handleVideoClick({ ...video, video_id: ytId })}>
                       <div className="flex items-start justify-between gap-2">
