@@ -45,7 +45,7 @@ export default function MediaLibrary() {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingVideo, setEditingVideo] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterLanguage, setFilterLanguage] = useState("all");
+  const [filterLanguage, setFilterLanguage] = useState("");
   const [filterDifficulty, setFilterDifficulty] = useState("all");
   const [filterTopic, setFilterTopic] = useState("all");
   const [selectedUser, setSelectedUser] = useState("");
@@ -130,7 +130,19 @@ export default function MediaLibrary() {
     },
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
+    onSuccess: (profile) => {
+      if (profile?.language && !filterLanguage) {
+        setFilterLanguage(profile.language);
+      }
+    }
   });
+
+  // Set language filter once profile loads
+  useEffect(() => {
+    if (userProfile?.language && !filterLanguage) {
+      setFilterLanguage(userProfile.language);
+    }
+  }, [userProfile?.language]);
 
   const { data: userCoins } = useQuery({
     queryKey: ['userCoins'],
