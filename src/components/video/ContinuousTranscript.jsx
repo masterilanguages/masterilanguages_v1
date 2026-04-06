@@ -10,6 +10,7 @@ export default function ContinuousTranscript({
   onEditWord,
   canEdit
 }) {
+  const [showPhonetics, setShowPhonetics] = useState(false);
   const [localTranscript, setLocalTranscript] = useState(transcriptProp);
 
   // Sync when prop changes (e.g. loaded from DB)
@@ -203,9 +204,21 @@ Provide:
 
   return (
     <div className="w-full bg-white/5 rounded-2xl p-4">
-      {canEdit && (
-        <p className="text-white/30 text-xs text-center mb-3">Click any word to edit • Leave empty to delete • + to add after</p>
-      )}
+      <div className="flex items-center justify-between mb-3">
+        {canEdit && (
+          <p className="text-white/30 text-xs">Click any word to edit • Leave empty to delete • + to add after</p>
+        )}
+        <button
+          onClick={() => setShowPhonetics(prev => !prev)}
+          className={`ml-auto flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all border ${
+            showPhonetics
+              ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-300'
+              : 'bg-white/10 border-white/20 text-white/60 hover:bg-white/20'
+          }`}
+        >
+          {showPhonetics ? '🔤 Show Transliteration' : 'אָ Show Phonetics'}
+        </button>
+      </div>
       <div className="space-y-1 flex flex-col items-center">
         {transcript.map((segment, segIdx) => {
           if (!segment.transliteration) return null;
@@ -294,20 +307,22 @@ Provide:
 
               {/* Text Block */}
               <div className="flex-1 space-y-0">
-                {/* Transliteration */}
-                <p className="text-white text-base font-medium leading-tight text-left">
-                  {renderEditableWords(segIdx, 'transliteration', segment.transliteration, 'text-white text-base font-medium')}
-                </p>
+                {/* Main line: transliteration OR hebrew phonetics */}
+                {showPhonetics ? (
+                  segment.hebrew && (
+                    <p className="text-cyan-300 text-base font-medium leading-tight text-left" dir="rtl">
+                      {renderEditableWords(segIdx, 'hebrew', segment.hebrew, 'text-cyan-300 text-base font-medium')}
+                    </p>
+                  )
+                ) : (
+                  <p className="text-white text-base font-medium leading-tight text-left">
+                    {renderEditableWords(segIdx, 'transliteration', segment.transliteration, 'text-white text-base font-medium')}
+                  </p>
+                )}
                 {/* Translation */}
                 {segment.english && (
                   <p className="text-white/60 text-sm leading-tight text-left">
                     {renderEditableWords(segIdx, 'english', segment.english, 'text-white/60 text-sm')}
-                  </p>
-                )}
-                {/* Hebrew with nikud */}
-                {segment.hebrew && (
-                  <p className="text-cyan-300 text-base leading-tight text-left" dir="ltr" style={{ unicodeBidi: 'plaintext' }}>
-                    {renderEditableWords(segIdx, 'hebrew', segment.hebrew, 'text-cyan-300 text-base')}
                   </p>
                 )}
               </div>
