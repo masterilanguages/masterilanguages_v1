@@ -33,7 +33,8 @@ export default function Songs() {
   }, []);
 
   const isAdmin = currentUser?.role === 'admin';
-  const canEdit = !!currentUser; // any logged-in user can add/delete their own songs
+  const canEdit = !!currentUser;
+  const canDeleteSong = (song) => isAdmin || song.created_by === currentUser?.email;
 
   const { data: userProfile } = useQuery({
     queryKey: ['userProfile'],
@@ -399,7 +400,7 @@ export default function Songs() {
                                 </div>
                                 <ChevronRight className={`w-5 h-5 text-stone-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
                               </div>
-                              {canEdit && (
+                              {canDeleteSong(song) && (
                                  <button
                                    onClick={(e) => { e.stopPropagation(); if (confirm("Delete this song?")) deleteSongMutation.mutate(song.id); }}
                                    className="w-8 h-8 rounded bg-red-500/20 hover:bg-red-500/30 flex items-center justify-center flex-shrink-0"
