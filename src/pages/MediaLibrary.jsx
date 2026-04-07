@@ -265,6 +265,16 @@ export default function MediaLibrary() {
     });
   };
 
+  const deleteTranscriptSegment = async (segmentIdx) => {
+    if (!selectedVideo) return;
+    const updatedTranscript = transcript.filter((_, i) => i !== segmentIdx);
+    setTranscript(updatedTranscript);
+    await updateVideoMutation.mutateAsync({
+      id: selectedVideo.id,
+      data: { processed_transcript: updatedTranscript }
+    });
+  };
+
   const toggleApproval = async (segmentIdx) => {
     if (!selectedVideo) return;
     const updatedTranscript = [...transcript];
@@ -1854,6 +1864,7 @@ Return a JSON with a "videos" array. Each video must have:
                   onSeekTo={handleSeekTo}
                   onAddWord={handleAddWordFromTranscript}
                   onEditWord={saveTranscriptEdit}
+                  onDeleteSegment={deleteTranscriptSegment}
                   canEdit={canEdit}
                 />
               ) : (

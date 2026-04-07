@@ -8,6 +8,7 @@ export default function ContinuousTranscript({
   onSeekTo, 
   onAddWord,
   onEditWord,
+  onDeleteSegment,
   canEdit
 }) {
   const [showPhonetics, setShowPhonetics] = useState(false);
@@ -132,6 +133,12 @@ Provide:
     }
 
     setSavingCell(false);
+  };
+
+  const deleteSegment = (segIdx) => {
+    setLocalTranscript(prev => prev.filter((_, i) => i !== segIdx));
+    if (onDeleteSegment) onDeleteSegment(segIdx);
+    setEditingSegmentTime(null);
   };
 
   const addWordToSegment = async (segIdx, field, afterIdx) => {
@@ -277,6 +284,15 @@ Provide:
                     >
                       <X className="w-3 h-3" />
                     </button>
+                    {canEdit && (
+                      <button
+                        onMouseDown={(e) => { e.preventDefault(); deleteSegment(segIdx); }}
+                        className="ml-1 text-xs bg-red-500/20 hover:bg-red-500/40 text-red-400 hover:text-red-300 px-1.5 py-0.5 rounded border border-red-500/40 transition-all"
+                        title="Delete this sentence"
+                      >
+                        🗑️
+                      </button>
+                    )}
                   </span>
                 ) : (
                   <button
