@@ -195,6 +195,7 @@ Return ONLY a 1-2 sentence image description (no explanations, no headers). Star
     { id: "level5", label: "✓ Mastered", color: "green" },
   ];
 
+
   const getDisplayWords = () => {
     let words = [];
     if (activeTab === "level5") words = level5Words;
@@ -521,18 +522,18 @@ Return ONLY a 1-2 sentence image description (no explanations, no headers). Star
                   {/* Bottom row: ratings + edit/delete buttons */}
                   <div className="px-2 pb-2 flex gap-1 items-center">
                     <div className="flex gap-0.5 flex-1">
-                      {[1, 2, 3, 4, 5].map((num) => (
+                      {[{ value: 1, label: "1" }, { value: 2, label: "2" }, { value: 3, label: "3" }, { value: 5, label: "M" }].map(({ value, label }) => (
                         <button
-                          key={num}
-                          onClick={(e) => handleRateWord(word.id, num, e)}
+                          key={value}
+                          onClick={(e) => handleRateWord(word.id, value, e)}
                           disabled={isWordLocked(word.id) && !isAdmin}
                           className={`flex-1 h-6 rounded text-xs font-bold transition-all ${
-                            word.times_practiced === num
-                              ? num === 5 ? "bg-green-600 text-white" : "bg-stone-600 text-white"
+                            word.times_practiced === value || (value === 3 && word.times_practiced === 4)
+                              ? value === 5 ? "bg-green-600 text-white" : "bg-stone-600 text-white"
                               : "bg-stone-100 text-stone-400 hover:bg-stone-200"
                           } ${isWordLocked(word.id) && !isAdmin ? "opacity-50 cursor-not-allowed" : ""}`}
                         >
-                          {num}
+                          {label}
                         </button>
                       ))}
                     </div>
@@ -750,18 +751,18 @@ Return ONLY a 1-2 sentence image description (no explanations, no headers). Star
           {/* Rating - After picture */}
           <p className="text-stone-500 text-sm mb-2 text-center">How well do you know this word?</p>
           <div className="flex gap-2 justify-center mb-4">
-            {[1, 2, 3, 4, 5].map((num) => (
+            {[{ value: 1, label: "1" }, { value: 2, label: "2" }, { value: 3, label: "3" }, { value: 5, label: "M ⭐" }].map(({ value, label }) => (
               <motion.button
-                key={num}
+                key={value}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => handleNewWordRate(num)}
+                onClick={() => handleNewWordRate(value)}
                 className={`w-12 h-12 rounded-xl font-bold ${
-                  num === 5 ? "bg-green-600 text-white"
+                  value === 5 ? "bg-green-600 text-white"
                   : "bg-stone-200 text-stone-700 hover:bg-stone-300"
                 }`}
               >
-                {num}{num === 5 && "⭐"}
+                {label}
               </motion.button>
             ))}
           </div>
