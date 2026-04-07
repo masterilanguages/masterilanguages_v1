@@ -1738,11 +1738,10 @@ Return a JSON with a "videos" array. Each video must have:
                   className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden hover:border-purple-500/50 transition-all flex"
                 >
                   <img 
-                    src={`https://i.ytimg.com/vi/${video.youtube_id}/hqdefault.jpg`}
+                    src={`https://img.youtube.com/vi/${video.youtube_id}/hqdefault.jpg`}
                     alt={video.title}
                     className="w-48 h-32 object-cover flex-shrink-0 cursor-pointer"
                     onClick={() => handleVideoClick({ video_id: video.youtube_id, video_url: `https://youtube.com/watch?v=${video.youtube_id}`, title: video.title })}
-                    onError={(e) => { e.target.style.display = 'none'; }}
                   />
                   <div className="p-4 flex-1">
                     <h3 className="text-white font-bold text-base mb-0.5 cursor-pointer hover:text-purple-300" onClick={() => handleVideoClick({ video_id: video.youtube_id, video_url: `https://youtube.com/watch?v=${video.youtube_id}`, title: video.title })}>{video.title}</h3>
@@ -1755,7 +1754,7 @@ Return a JSON with a "videos" array. Each video must have:
                         className="bg-cyan-500/20 border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/30"
                       >
                         <Plus className="w-4 h-4 mr-1" />
-                        Add to Library
+                        Add to My Schedule
                       </Button>
                     )}
                   </div>
