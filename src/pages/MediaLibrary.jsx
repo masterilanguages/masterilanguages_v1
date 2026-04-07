@@ -59,6 +59,7 @@ export default function MediaLibrary() {
   const [editingSegment, setEditingSegment] = useState(null);
   const [editingWords, setEditingWords] = useState(null);
   const [currentTime, setCurrentTime] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [pastedTranscript, setPastedTranscript] = useState("");
   const [mediaType, setMediaType] = useState("video");
   const [uploadingAudio, setUploadingAudio] = useState(false);
@@ -1077,6 +1078,8 @@ For each segment:
         if (typeof time === 'number') {
           setCurrentTime(time);
         }
+        const state = await videoPlayer.getPlayerState?.();
+        setIsPlaying(state === 1); // 1 = playing
       } catch (e) {
         // Player not ready
       }
@@ -1866,6 +1869,7 @@ Return a JSON with a "videos" array. Each video must have:
                   onEditWord={saveTranscriptEdit}
                   onDeleteSegment={deleteTranscriptSegment}
                   canEdit={canEdit}
+                  isPlaying={isPlaying}
                 />
               ) : (
                 <div className="max-w-3xl mx-auto bg-white/5 rounded-xl p-8 space-y-6">

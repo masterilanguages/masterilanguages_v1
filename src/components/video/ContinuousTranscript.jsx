@@ -9,7 +9,8 @@ export default function ContinuousTranscript({
   onAddWord,
   onEditWord,
   onDeleteSegment,
-  canEdit
+  canEdit,
+  isPlaying: isPlayingProp = false,
 }) {
   const [showPhonetics, setShowPhonetics] = useState(false);
   const [localTranscript, setLocalTranscript] = useState(transcriptProp);
@@ -297,10 +298,12 @@ Provide:
                 ) : (
                   <button
                     onClick={() => {
-                      if (isActive) {
+                      if (isActive && isPlayingProp) {
                         onSeekTo(segment.start, false); // pause
+                      } else if (isActive && !isPlayingProp) {
+                        onSeekTo(segment.start, true); // resume (don't seek, just play)
                       } else {
-                        onSeekTo(segment.start, true); // seek and play
+                        onSeekTo(segment.start, true); // seek to new segment and play
                       }
                     }}
                     onDoubleClick={(e) => {
@@ -315,7 +318,7 @@ Provide:
                         : 'bg-white/10 text-white/60 hover:bg-white/20'
                     }`}
                   >
-                    {isActive ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
+                    {isActive && isPlayingProp ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
                     {formatTime(segment.start)}
                   </button>
                 )}
