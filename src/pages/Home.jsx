@@ -695,28 +695,28 @@ export default function Home() {
                             >
                               <div className="mt-1 space-y-1 pl-3">
                                 {/* Quick add video */}
-                                {addingVideoToDayId === day.id ? (
-                                  <div className="flex gap-1 mb-2">
-                                    <Input
-                                      autoFocus
-                                      value={quickVideoUrl[day.id] || ""}
-                                      onChange={(e) => setQuickVideoUrl(prev => ({ ...prev, [day.id]: e.target.value }))}
-                                      onKeyDown={(e) => { if (e.key === 'Enter') handleQuickAddVideo(day.id, day.day_number); if (e.key === 'Escape') setAddingVideoToDayId(null); }}
-                                      placeholder="Paste YouTube URL..."
-                                      className="flex-1 bg-white/80 border-stone-300 text-stone-800 text-xs h-7"
-                                    />
-                                    <Button onClick={() => handleQuickAddVideo(day.id, day.day_number)} size="sm" className="h-7 px-2 bg-green-600 text-white text-xs">Add</Button>
-                                    <Button onClick={() => setAddingVideoToDayId(null)} size="sm" variant="ghost" className="h-7 px-2 text-xs">✕</Button>
-                                  </div>
-                                ) : (
-                                  <button
-                                    onClick={() => setAddingVideoToDayId(day.id)}
-                                    className="w-full text-left px-3 py-1 text-xs rounded-lg mb-1 transition-all"
-                                    style={{ color: '#6b7c5a', background: '#5a6b5a10', border: '1px dashed #5a6b5a40' }}
-                                  >
-                                    + Add video to this session
-                                  </button>
-                                )}
+                                 {addingVideoToDayId === day.id ? (
+                                   <div className="flex gap-1 mb-2">
+                                     <Input
+                                       autoFocus
+                                       value={quickVideoUrl[day.id] || ""}
+                                       onChange={(e) => setQuickVideoUrl(prev => ({ ...prev, [day.id]: e.target.value }))}
+                                       onKeyDown={(e) => { if (e.key === 'Enter') handleQuickAddVideo(day.id, day.day_number); if (e.key === 'Escape') setAddingVideoToDayId(null); }}
+                                       placeholder="Paste YouTube URL..."
+                                       className="flex-1 bg-white/80 border-stone-300 text-stone-800 text-xs h-7"
+                                     />
+                                     <Button onClick={() => handleQuickAddVideo(day.id, day.day_number)} size="sm" className="h-7 px-2 bg-green-600 text-white text-xs">Add</Button>
+                                     <Button onClick={() => setAddingVideoToDayId(null)} size="sm" variant="ghost" className="h-7 px-2 text-xs">✕</Button>
+                                   </div>
+                                 ) : (
+                                   <button
+                                     onClick={() => setAddingVideoToDayId(day.id)}
+                                     className="w-full text-left px-3 py-1 text-xs rounded-lg mb-1 transition-all flex items-center gap-1"
+                                     style={{ color: '#6b7c5a', background: '#5a6b5a10', border: '1px dashed #5a6b5a40' }}
+                                   >
+                                     <Video className="w-3 h-3" /> + Add video to this session
+                                   </button>
+                                 )}
                                 {(day.subsections || []).filter(task => {
                                    // Hide generic "Watch a video" if a specific video task exists
                                    if (task.id === 'video' && (day.subsections || []).some(s => s.video_id)) return false;
@@ -794,16 +794,23 @@ export default function Home() {
                                               <span className="text-sm font-medium" style={{ color: '#3d4a2e' }}>{task.name}</span>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                              {(task.video_id || extractYouTubeId(task.youtube_url)) && <span className="text-xs" style={{ color: '#6b7c5a' }}>▶ video</span>}
-                                              {isMasterUser && (
-                                                <button
-                                                  onClick={(e) => { e.stopPropagation(); handleStartEditTask(day.id, task); }}
-                                                  className="opacity-0 group-hover:opacity-100 transition-opacity text-white/50 hover:text-white text-xs px-1"
-                                                  title="Edit task"
-                                                >
-                                                  ✏️
-                                                </button>
-                                              )}
+                                             {(task.video_id || extractYouTubeId(task.youtube_url)) && <span className="text-xs" style={{ color: '#6b7c5a' }}>▶ video</span>}
+                                             {isMasterUser && (
+                                               <button
+                                                 onClick={(e) => { e.stopPropagation(); handleStartEditTask(day.id, task); }}
+                                                 className="opacity-0 group-hover:opacity-100 transition-opacity text-stone-400 hover:text-stone-700 text-xs px-1"
+                                                 title="Edit task"
+                                               >
+                                                 ✏️
+                                               </button>
+                                             )}
+                                             <button
+                                               onClick={(e) => { e.stopPropagation(); handleDeleteTask(day.id, task.id); }}
+                                               className="opacity-0 group-hover:opacity-100 transition-opacity text-red-400 hover:text-red-600 text-xs px-1"
+                                               title="Remove from schedule"
+                                             >
+                                               ✕
+                                             </button>
                                             </div>
                                           </div>
                                         )}
