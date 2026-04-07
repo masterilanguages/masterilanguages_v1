@@ -297,7 +297,11 @@ Provide:
                 ) : (
                   <button
                     onClick={() => {
-                      onSeekTo(segment.start, true); // always seek to segment start and play
+                      if (isActive) {
+                        onSeekTo(segment.start, false); // pause
+                      } else {
+                        onSeekTo(segment.start, true); // seek and play
+                      }
                     }}
                     onDoubleClick={(e) => {
                       e.preventDefault();
@@ -311,7 +315,7 @@ Provide:
                         : 'bg-white/10 text-white/60 hover:bg-white/20'
                     }`}
                   >
-                    <Play className="w-3 h-3" />
+                    {isActive ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
                     {formatTime(segment.start)}
                   </button>
                 )}

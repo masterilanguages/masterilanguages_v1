@@ -1058,8 +1058,8 @@ For each segment:
 
   const handleSeekTo = async (seconds, shouldPlay = false) => {
     if (videoPlayer && videoPlayer.seekTo) {
-      videoPlayer.seekTo(seconds, true);
       if (shouldPlay) {
+        videoPlayer.seekTo(seconds, true);
         videoPlayer.playVideo();
       } else {
         videoPlayer.pauseVideo();
