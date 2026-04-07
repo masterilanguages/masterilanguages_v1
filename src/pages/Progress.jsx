@@ -1,12 +1,11 @@
-import React, { useState, useMemo } from "react";
+import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { ArrowLeft } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import GameHeader from "../components/game/GameHeader";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 export default function Progress() {
   const { data: userProfile } = useQuery({
@@ -19,17 +18,10 @@ export default function Progress() {
     refetchOnWindowFocus: false,
   });
 
-  const { data: userCoins } = useQuery({
-    queryKey: ['userCoins'],
-    queryFn: async () => {
-      const coins = await base44.entities.UserCoins.list();
-      return coins[0] || { coins: 0 };
-    },
-  });
-
   const { data: wordRatings = [] } = useQuery({
-    queryKey: ['wordRatings'],
-    queryFn: () => base44.entities.Word.filter({ category: "wordbank" }),
+    queryKey: ['wordRatings', userProfile?.language],
+    queryFn: () => base44.entities.Word.filter({ category: "wordbank", language: userProfile?.language || 'hebrew' }),
+    enabled: !!userProfile,
   });
 
   const { data: dayProgress = [] } = useQuery({
@@ -37,82 +29,92 @@ export default function Progress() {
     queryFn: () => base44.entities.DayProgress.list(),
   });
 
-  // Generate 30-day data
-  const generateChartData = () => {
-    const data = [];
+  // Build 30-day chart data from real entity timestamps
+  const chartData = useMemo(() => {
     const today = new Date();
-    
+    const days = [];
+
+    // Index words by creation date
+    const wordsByDate = {};
+    for (const w of wordRatings) {
+      if (!w.created_date) continue;
+      const d = new Date(w.created_date).toDateString();
+      if (!wordsByDate[d]) wordsByDate[d] = [];
+      wordsByDate[d].push(w);
+    }
+
+    // Index day completions by date
+    const progressByDate = {};
+    for (const p of dayProgress) {
+      if (!p.created_date && !p.updated_date) continue;
+      const d = new Date(p.updated_date || p.created_date).toDateString();
+      if (!progressByDate[d]) progressByDate[d] = [];
+      progressByDate[d].push(p);
+    }
+
+    let runningStreak = 0;
+    let runningTotalWords = 0;
+
     for (let i = 29; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
-      const dayStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      
-      // Mock data based on patterns - in production, calculate from actual user data
-      const dayNum = 30 - i;
-      
-      data.push({
-        day: dayStr,
-        streak: dayNum === 3 ? 0 : Math.min(dayNum, 30), // Streak resets on day 3
-        attendance: Math.max(0, 100 - (dayNum === 3 ? 20 : 0) - Math.random() * 5), // Drops on day 3
-        completion: 70 + Math.sin(dayNum / 5) * 15 + Math.random() * 10, // Varies
-        timeInvested: 2 + Math.sin(dayNum / 7) * 1 + Math.random() * 0.5, // Hours per day
-        vocabAdded: dayNum % 3 === 0 ? Math.floor(Math.random() * 5) + 3 : Math.floor(Math.random() * 3), // Words added
-        vocabProgress: dayNum % 2 === 0 ? Math.floor(Math.random() * 8) + 2 : Math.floor(Math.random() * 5), // Words progressed
+      const dateStr = date.toDateString();
+      const label = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+      const wordsAddedToday = (wordsByDate[dateStr] || []).length;
+      const sessionsCompletedToday = (progressByDate[dateStr] || []).length;
+
+      // Running totals for cumulative vocab
+      runningTotalWords += wordsAddedToday;
+
+      // Streak: +1 if any activity that day, else reset to 0
+      const hadActivity = wordsAddedToday > 0 || sessionsCompletedToday > 0;
+      if (hadActivity) {
+        runningStreak += 1;
+      } else {
+        runningStreak = 0;
+      }
+
+      days.push({
+        day: label,
+        streak: runningStreak,
+        vocabAdded: wordsAddedToday,
+        vocabTotal: runningTotalWords,
+        sessionsCompleted: sessionsCompletedToday,
       });
     }
-    return data;
-  };
 
-  const chartData = useMemo(() => generateChartData(), []);
+    return days;
+  }, [wordRatings, dayProgress]);
 
   const graphs = [
     {
-      title: "Streak",
-      description: "Daily login consistency",
+      title: "Daily Streak",
+      description: "Consecutive days with any learning activity",
       dataKey: "streak",
       color: "#ef4444",
       yAxisLabel: "Days",
-      unit: "",
     },
     {
-      title: "Attendance",
-      description: "Daily login percentage",
-      dataKey: "attendance",
-      color: "#3b82f6",
-      yAxisLabel: "Points",
-      unit: "",
-    },
-    {
-      title: "Completion",
-      description: "Session completion rate",
-      dataKey: "completion",
-      color: "#10b981",
-      yAxisLabel: "Score",
-      unit: "",
-    },
-    {
-      title: "Time Invested",
-      description: "Hours practiced per day",
-      dataKey: "timeInvested",
-      color: "#f59e0b",
-      yAxisLabel: "Hours",
-      unit: "h",
-    },
-    {
-      title: "Vocab Added",
-      description: "Words added to backpack",
+      title: "Vocab Added Per Day",
+      description: "New words added to backpack each day",
       dataKey: "vocabAdded",
       color: "#8b5cf6",
       yAxisLabel: "Words",
-      unit: "",
     },
     {
-      title: "Vocabulary Progress",
-      description: "Words learned/progressed",
-      dataKey: "vocabProgress",
+      title: "Total Vocabulary",
+      description: "Cumulative words in backpack over time",
+      dataKey: "vocabTotal",
       color: "#06b6d4",
       yAxisLabel: "Words",
-      unit: "",
+    },
+    {
+      title: "Sessions Completed",
+      description: "Daily sessions/days marked as done",
+      dataKey: "sessionsCompleted",
+      color: "#10b981",
+      yAxisLabel: "Sessions",
     },
   ];
 
@@ -125,20 +127,20 @@ export default function Progress() {
           </Link>
           <div>
             <h1 className="text-3xl font-bold text-white">📊 Progress Tracking</h1>
-            <p className="text-white/60">Monitor your learning development over the last 30 days</p>
+            <p className="text-white/60">Your last 30 days of learning activity</p>
           </div>
         </div>
 
-        {/* Words Backpack Counts */}
+        {/* Words Backpack Summary */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-white mb-4">🎒 Words Backpack Summary</h2>
           <div className="flex flex-wrap gap-4 justify-start">
             {[
-              { name: 'New', count: wordRatings.filter(w => w.times_practiced === 0).length, color: '#999999' },
-              { name: 'Recognized', count: wordRatings.filter(w => w.times_practiced > 0 && w.times_practiced < 3).length, color: '#dc2626' },
-              { name: 'Familiar', count: wordRatings.filter(w => w.times_practiced >= 3 && w.times_practiced < 5).length, color: '#eab308' },
-              { name: 'Can Use', count: wordRatings.filter(w => w.times_practiced >= 5 && w.times_practiced < 8).length, color: '#86efac' },
-              { name: 'Mastered', count: wordRatings.filter(w => w.times_practiced >= 8).length, color: '#16a34a' },
+              { name: 'Total', count: wordRatings.length, color: '#94a3b8' },
+              { name: 'New', count: wordRatings.filter(w => (w.times_practiced || 0) === 0).length, color: '#999999' },
+              { name: 'Recognized', count: wordRatings.filter(w => (w.times_practiced || 0) > 0 && (w.times_practiced || 0) < 3).length, color: '#dc2626' },
+              { name: 'Familiar', count: wordRatings.filter(w => (w.times_practiced || 0) >= 3 && (w.times_practiced || 0) < 5).length, color: '#eab308' },
+              { name: 'Mastered', count: wordRatings.filter(w => (w.times_practiced || 0) >= 5).length, color: '#16a34a' },
             ].map((level) => (
               <motion.div
                 key={level.name}
@@ -170,22 +172,20 @@ export default function Progress() {
                 <p className="text-white/50 text-sm">{graph.description}</p>
               </div>
 
-              <ResponsiveContainer width="100%" height={250}>
-                <LineChart
-                  data={chartData}
-                  margin={{ top: 5, right: 10, left: -20, bottom: 5 }}
-                >
+              <ResponsiveContainer width="100%" height={220}>
+                <LineChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
                   <XAxis
                     dataKey="day"
                     stroke="rgba(255,255,255,0.3)"
-                    tick={{ fontSize: 11 }}
+                    tick={{ fontSize: 11, fill: 'rgba(255,255,255,0.5)' }}
                     interval={4}
                   />
                   <YAxis
                     stroke="rgba(255,255,255,0.3)"
-                    tick={{ fontSize: 11 }}
-                    label={{ value: graph.yAxisLabel, angle: -90, position: 'insideLeft', style: { fill: 'rgba(255,255,255,0.5)', fontSize: 11 } }}
+                    tick={{ fontSize: 11, fill: 'rgba(255,255,255,0.5)' }}
+                    allowDecimals={false}
+                    domain={[0, 'auto']}
                   />
                   <Tooltip
                     contentStyle={{
@@ -194,18 +194,15 @@ export default function Progress() {
                       borderRadius: '8px',
                     }}
                     labelStyle={{ color: 'rgba(255,255,255,0.7)', fontSize: 12 }}
-                    formatter={(value) => [
-                      typeof value === 'number' ? value.toFixed(1) : value,
-                      graph.title,
-                    ]}
+                    formatter={(value) => [value, graph.title]}
                   />
                   <Line
                     type="monotone"
                     dataKey={graph.dataKey}
                     stroke={graph.color}
                     strokeWidth={2.5}
-                    dot={{ fill: graph.color, r: 3 }}
-                    activeDot={{ r: 5 }}
+                    dot={false}
+                    activeDot={{ r: 5, fill: graph.color }}
                     isAnimationActive={true}
                   />
                 </LineChart>
