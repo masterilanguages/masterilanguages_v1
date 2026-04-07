@@ -72,6 +72,8 @@ export default function MediaLibrary() {
   });
   const [selectedVerb, setSelectedVerb] = useState(null);
   const [extractingVocab, setExtractingVocab] = useState(false);
+  const [recommendations, setRecommendations] = useState([]);
+  const [loadingRecommendations, setLoadingRecommendations] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -1134,6 +1136,73 @@ For each segment:
     corevocab: { label: "Core Vocab", emoji: "📚" }
   };
 
+  const fetchRecommendations = async () => {
+    if (loadingRecommendations || recommendations.length > 0) return;
+    setLoadingRecommendations(true);
+    try {
+      // Extract channel IDs from existing library video URLs
+      const channelIds = new Set();
+      const existingVideoIds = new Set(filteredVideos.map(v => v.video_id).filter(Boolean));
+      
+      // Use LLM with internet to find popular language learning videos matching user's language
+      const lang = userProfile?.language || 'spanish';
+      const langCap = lang.charAt(0).toUpperCase() + lang.slice(1);
+      
+      // Get channel names from existing videos using oEmbed
+      const channelNames = [];
+      for (const video of filteredVideos.slice(0, 3)) {
+        if (!video.video_url) continue;
+        try {
+          const res = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(video.video_url)}&format=json`);
+          const meta = await res.json();
+          if (meta.author_name) channelNames.push(meta.author_name);
+        } catch {}
+      }
+
+      const channelContext = channelNames.length > 0 
+        ? `The user already watches videos from these channels: ${channelNames.join(', ')}.`
+        : '';
+
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Find 8 popular YouTube videos for learning ${langCap} as a beginner/intermediate student. ${channelContext}
+        
+Prioritize videos from the same channels if mentioned, or similar educational ${langCap} learning channels.
+Focus on videos with high view counts and good educational value.
+
+Return a JSON with a "videos" array. Each video must have:
+- title: video title
+- youtube_id: the exact YouTube video ID (11 characters)
+- channel: channel name
+- description: one sentence about what you learn`,
+        add_context_from_internet: true,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            videos: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  title: { type: "string" },
+                  youtube_id: { type: "string" },
+                  channel: { type: "string" },
+                  description: { type: "string" }
+                }
+              }
+            }
+          }
+        }
+      });
+
+      // Filter out videos already in library
+      const newRecs = (result.videos || []).filter(v => v.youtube_id && !existingVideoIds.has(v.youtube_id));
+      setRecommendations(newRecs);
+    } catch (e) {
+      console.error('Failed to fetch recommendations', e);
+    }
+    setLoadingRecommendations(false);
+  };
+
   const handleDragStart = (e, id) => {
     setDraggedButton(id);
     e.dataTransfer.effectAllowed = "move";
@@ -1513,7 +1582,7 @@ For each segment:
             className="w-full bg-cyan-600/40 hover:bg-cyan-600/50 backdrop-blur-xl rounded-2xl border border-white/10 p-4 flex items-center justify-between transition-all mb-4"
           >
             <h2 className="text-xl font-bold text-white">
-              Library Videos ({filteredVideos.length})
+              Videos on my Schedule ({filteredVideos.length})
             </h2>
             <ChevronDown className={`w-6 h-6 text-white transition-transform ${showLibrary ? 'rotate-180' : ''}`} />
           </button>
@@ -1624,26 +1693,14 @@ For each segment:
           </div>)}
 
           {/* Recommended Videos Section */}
-          {activeMediaTab === 'videos' && allVideosData.length > 0 && (
+          {activeMediaTab === 'videos' && (
           <div className="mt-8">
             <button
-              onClick={() => setShowRecommended(!showRecommended)}
+              onClick={() => { setShowRecommended(!showRecommended); if (!showRecommended) fetchRecommendations(); }}
               className="w-full bg-purple-600/40 hover:bg-purple-600/50 backdrop-blur-xl rounded-2xl border border-white/10 p-4 flex items-center justify-between transition-all mb-4"
             >
               <h2 className="text-xl font-bold text-white">
-                Recommended Videos ({allVideosData.filter(video => {
-                  if (userProfile?.language === 'hebrew') {
-                    return video.title?.toLowerCase().includes('hebrew') || 
-                           video.tags?.toLowerCase().includes('hebrew') ||
-                           video.title?.toLowerCase().includes('עברית');
-                  }
-                  return true;
-                }).filter((video, index, self) => 
-                  index === self.findIndex(v => 
-                    (v.video_url === video.video_url) || 
-                    (v.youtube_video_id && v.youtube_video_id === video.youtube_video_id)
-                  )
-                ).length})
+                Recommended Videos {recommendations.length > 0 ? `(${recommendations.length})` : ''}
               </h2>
               <ChevronDown className={`w-6 h-6 text-white transition-transform ${showRecommended ? 'rotate-180' : ''}`} />
             </button>
@@ -1654,53 +1711,33 @@ For each segment:
                 exit={{ opacity: 0, height: 0 }}
                 className="space-y-4"
               >
-                {allVideosData
-                .filter(video => {
-                  // Filter recommended by user's language
-                  const lang = userProfile?.language;
-                  if (!lang) return true;
-                  return video.language === lang ||
-                    video.title?.toLowerCase().includes(lang) ||
-                    (video.tags || '').toLowerCase().includes(lang);
-                })
-                .filter((video, index, self) => 
-                  // Remove duplicates by video_url or youtube_video_id
-                  index === self.findIndex(v => 
-                    (v.video_url === video.video_url) || 
-                    (v.youtube_video_id && v.youtube_video_id === video.youtube_video_id)
-                  )
-                )
-                .slice(0, 15)
-                .map((video) => (
+                {loadingRecommendations && (
+                  <div className="flex items-center justify-center py-8 gap-3">
+                    <Loader2 className="w-6 h-6 text-purple-400 animate-spin" />
+                    <p className="text-white/60">Finding recommendations from similar channels...</p>
+                  </div>
+                )}
+                {recommendations.map((video, idx) => (
                 <motion.div
-                  key={video.id}
+                  key={idx}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  onClick={() => handleVideoClick(video)}
-                  className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden hover:border-purple-500/50 transition-all cursor-pointer flex"
+                  className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden hover:border-purple-500/50 transition-all flex"
                 >
-                  {getThumbnailUrl(video) ? (
-                    <img 
-                      src={getThumbnailUrl(video)} 
-                      alt={video.title}
-                      className="w-48 h-32 object-cover flex-shrink-0"
-                    />
-                  ) : (
-                    <div className="w-48 h-32 bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center flex-shrink-0">
-                      <Video className="w-12 h-12 text-white/40" />
-                    </div>
-                  )}
+                  <img 
+                    src={`https://i.ytimg.com/vi/${video.youtube_id}/hqdefault.jpg`}
+                    alt={video.title}
+                    className="w-48 h-32 object-cover flex-shrink-0 cursor-pointer"
+                    onClick={() => handleVideoClick({ video_id: video.youtube_id, video_url: `https://youtube.com/watch?v=${video.youtube_id}`, title: video.title })}
+                    onError={(e) => { e.target.style.display = 'none'; }}
+                  />
                   <div className="p-4 flex-1">
-                    <h3 className="text-white font-bold text-lg mb-1">{video.title}</h3>
-                    {video.tags && (
-                      <p className="text-white/60 text-sm mb-3">{video.tags}</p>
-                    )}
+                    <h3 className="text-white font-bold text-base mb-0.5 cursor-pointer hover:text-purple-300" onClick={() => handleVideoClick({ video_id: video.youtube_id, video_url: `https://youtube.com/watch?v=${video.youtube_id}`, title: video.title })}>{video.title}</h3>
+                    <p className="text-purple-400 text-xs mb-1">{video.channel}</p>
+                    {video.description && <p className="text-white/50 text-sm mb-3">{video.description}</p>}
                     {canEdit && (
                       <Button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          addToLibraryMutation.mutate(video);
-                        }}
+                        onClick={() => addToLibraryMutation.mutate({ title: video.title, video_url: `https://youtube.com/watch?v=${video.youtube_id}`, youtube_video_id: video.youtube_id, tags: video.channel })}
                         size="sm"
                         className="bg-cyan-500/20 border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/30"
                       >
@@ -1711,6 +1748,9 @@ For each segment:
                   </div>
                 </motion.div>
                 ))}
+                {!loadingRecommendations && recommendations.length === 0 && (
+                  <p className="text-white/40 text-center py-4">No recommendations found. Try again.</p>
+                )}
               </motion.div>
             )}
           </div>
