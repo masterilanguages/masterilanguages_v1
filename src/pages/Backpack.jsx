@@ -6,7 +6,6 @@ import { ArrowLeft, Star, Loader2, X, Wand2, Check, Search } from "lucide-react"
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import GameHeader from "../components/game/GameHeader";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
@@ -400,7 +399,6 @@ Return ONLY a 1-2 sentence image description (no explanations, no headers). Star
 
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(160deg, #f0ece4 0%, #e8e4d8 50%, #eae6da 100%)' }}>
-      <GameHeader profile={userProfile} coins={0} onBuyCoins={() => {}} />
 
       <div className="max-w-4xl mx-auto px-4 py-6">
         <div className="flex items-center gap-4 mb-4">
