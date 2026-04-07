@@ -33,6 +33,7 @@ export default function ContinuousTranscript({
   const [editingCell, setEditingCell] = useState(null);
   const [editCellValue, setEditCellValue] = useState("");
   const [savingCell, setSavingCell] = useState(false);
+  const [activeWordKey, setActiveWordKey] = useState(null); // "segIdx-field-wordIdx"
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -179,32 +180,54 @@ Provide:
               </span>
             );
           }
+          const wordKey = `${segIdx}-${field}-${wordIdx}`;
+          const isWordActive = activeWordKey === wordKey;
           return (
-            <span key={wordIdx} className="group/word inline-block relative">
+            <span key={wordIdx} className="inline-block relative">
               <span
-                onClick={() => canEdit && startEditWord(segIdx, field, wordIdx, words)}
-                className={`${textClassName} ${canEdit ? 'cursor-pointer hover:underline hover:opacity-80 transition-opacity' : 'cursor-pointer'}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (isWordActive) {
+                    setActiveWordKey(null);
+                  } else {
+                    setActiveWordKey(wordKey);
+                  }
+                }}
+                className={`${textClassName} cursor-pointer hover:opacity-80 transition-opacity ${isWordActive ? 'underline' : ''}`}
               >
                 {word}
               </span>
-              {/* Backpack button - always visible on hover for all users */}
-              {onAddWord && (
-                <button
-                  onClick={(e) => { e.stopPropagation(); onAddWord(word); }}
-                  className="opacity-0 group-hover/word:opacity-80 transition-opacity absolute -top-5 left-1/2 -translate-x-1/2 text-sm bg-slate-800/90 rounded px-1 shadow-lg z-10 hover:opacity-100"
-                  title="Add to backpack"
-                >
-                  🎒
-                </button>
-              )}
-              {canEdit && (
-                <button
-                  onClick={() => addWordToSegment(segIdx, field, wordIdx)}
-                  className="opacity-0 group-hover/word:opacity-60 transition-opacity mx-px text-white/40 hover:text-cyan-400 align-middle"
-                  title="Add word after"
-                >
-                  <Plus className="w-2 h-2 inline" />
-                </button>
+              {/* Popup on click */}
+              {isWordActive && (
+                <span className="absolute -top-8 left-1/2 -translate-x-1/2 flex gap-1 z-20 bg-slate-800 rounded-lg px-1.5 py-1 shadow-xl border border-white/10 whitespace-nowrap">
+                  {onAddWord && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onAddWord(word); setActiveWordKey(null); }}
+                      className="text-sm hover:scale-110 transition-transform"
+                      title="Add to backpack"
+                    >
+                      🎒
+                    </button>
+                  )}
+                  {canEdit && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); startEditWord(segIdx, field, wordIdx, words); setActiveWordKey(null); }}
+                      className="text-xs text-yellow-300 hover:text-yellow-200 px-1"
+                      title="Edit word"
+                    >
+                      ✏️
+                    </button>
+                  )}
+                  {canEdit && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); addWordToSegment(segIdx, field, wordIdx); setActiveWordKey(null); }}
+                      className="text-xs text-cyan-400 hover:text-cyan-300 px-1"
+                      title="Add word after"
+                    >
+                      <Plus className="w-3 h-3" />
+                    </button>
+                  )}
+                </span>
               )}
               {wordIdx < words.length - 1 && ' '}
             </span>
@@ -234,7 +257,7 @@ Provide:
           {showPhonetics ? '🔤 Show Transliteration' : 'אָ Show Phonetics'}
         </button>
       </div>
-      <div className="space-y-1 flex flex-col items-center">
+      <div className="space-y-1 flex flex-col items-center" onClick={() => setActiveWordKey(null)}>
         {transcript.map((segment, segIdx) => {
           if (!segment.transliteration) return null;
           const isActive = getIsActive(segIdx);
