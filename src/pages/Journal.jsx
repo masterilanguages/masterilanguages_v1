@@ -1,18 +1,21 @@
-import React, { useState, useEffect, useMemo, lazy, Suspense } from "react";
+import React, { useState, useEffect, useMemo, Suspense, lazy } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { ArrowLeft, BookOpen, Loader2, CheckCircle, X } from "lucide-react";
+import { ArrowLeft, BookOpen, Loader2, CheckCircle, X, Languages } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
-// Lazy load heavy components for faster initial load
 const TranslatorWidget = lazy(() => import("../components/TranslatorWidget"));
 const SignaturePad = lazy(() => import("../components/journal/SignaturePad"));
 
+const languageNames = {
+  hebrew: 'Hebrew', english: 'English', spanish: 'Spanish',
+  french: 'French', portuguese: 'Portuguese', italian: 'Italian'
+};
 
 export default function Journal() {
   const queryClient = useQueryClient();
@@ -22,17 +25,15 @@ export default function Journal() {
   const [generatingQuestion, setGeneratingQuestion] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [usedWords, setUsedWords] = useState([]);
-  const [synonyms, setSynonyms] = useState(null);
-  const [loadingSynonyms, setLoadingSynonyms] = useState(false);
-  const [selectedWord, setSelectedWord] = useState("");
-  const [editingWord, setEditingWord] = useState(null);
-  const [editValues, setEditValues] = useState({});
   const [isPublic, setIsPublic] = useState(false);
   const [showPublicFeed, setShowPublicFeed] = useState(false);
   const [signature, setSignature] = useState("");
   const [wordTranslation, setWordTranslation] = useState(null);
   const [translationPosition, setTranslationPosition] = useState({ x: 0, y: 0 });
   const [translatingWord, setTranslatingWord] = useState(false);
+  const [translatingEntry, setTranslatingEntry] = useState(false);
+  const [translatedText, setTranslatedText] = useState("");
+  const [showTranslated, setShowTranslated] = useState(false);
   const today = new Date().toISOString().split('T')[0];
 
   const { data: userProfile } = useQuery({
@@ -43,19 +44,12 @@ export default function Journal() {
     }
   });
 
-  const { data: userCoins } = useQuery({
-    queryKey: ['userCoins'],
-    queryFn: async () => {
-      const coins = await base44.entities.UserCoins.list();
-      return coins[0] || { coins: 0 };
-    }
-  });
-
   const { data: entries = [] } = useQuery({
     queryKey: ['journalEntries'],
     queryFn: () => base44.entities.JournalEntry.list('-date')
   });
 
+  // Fetch latest 10 words from flashcards (wordbank), sorted by newest first
   const { data: backpackWords = [] } = useQuery({
     queryKey: ['backpackWords'],
     queryFn: () => base44.entities.Word.filter({ category: "wordbank" })
@@ -63,19 +57,15 @@ export default function Journal() {
 
   const { data: publicEntries = [] } = useQuery({
     queryKey: ['publicJournalEntries'],
-    queryFn: async () => {
-      const allEntries = await base44.entities.JournalEntry.filter({ is_public: true }, '-date', 10);
-      return allEntries;
-    },
-    staleTime: 60000, // Cache for 1 minute
+    queryFn: async () => base44.entities.JournalEntry.filter({ is_public: true }, '-date', 10),
+    staleTime: 60000,
   });
 
   const todayEntry = useMemo(() => entries.find(e => e.date === today), [entries, today]);
 
-  // Get 10 most recent level 0 words - memoized
-  const suggestedVocab = useMemo(() => 
-    backpackWords
-      .filter(w => w.vocab_level === 0)
+  // Get 10 most recently ADDED words to the backpack/flashcards
+  const suggestedVocab = useMemo(() =>
+    [...backpackWords]
       .sort((a, b) => new Date(b.created_date) - new Date(a.created_date))
       .slice(0, 10),
     [backpackWords]
@@ -100,15 +90,6 @@ export default function Journal() {
     }
   });
 
-  const updateWordMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Word.update(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['backpackWords'] });
-      toast.success("Word updated!");
-      setEditingWord(null);
-    }
-  });
-
   // Load today's entry if exists
   useEffect(() => {
     if (todayEntry) {
@@ -120,12 +101,11 @@ export default function Journal() {
     }
   }, [todayEntry]);
 
-  // Check which vocab words are used - debounced for performance
+  // Check which vocab words are used
   useEffect(() => {
     const timer = setTimeout(() => {
       const textLower = text.toLowerCase();
       const textWords = new Set(textLower.split(/\s+/).filter(w => w.length > 0));
-      
       const found = suggestedVocab
         .filter(v => {
           if (v.word && textWords.has(v.word.toLowerCase())) return true;
@@ -135,45 +115,20 @@ export default function Journal() {
         })
         .map(v => v.id);
       setUsedWords(found);
-    }, 300); // Debounce 300ms
-    
+    }, 300);
     return () => clearTimeout(timer);
   }, [text, suggestedVocab]);
 
   const generateQuestion = async () => {
     if (!text.trim()) return;
-    
     setGeneratingQuestion(true);
     try {
-      const isHebrewHeavy = (text.match(/[\u0590-\u05FF]/g) || []).length > text.length * 0.3;
       const sentences = text.split(/[.!?]+/).filter(s => s.trim());
       const lastSentence = sentences[sentences.length - 1]?.trim() || text.trim();
-      
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `The user just wrote: "${lastSentence}"
-
-Their full entry so far: "${text}"
-
-Previous questions: ${questionsAsked.join(", ") || "none"}
-
-Generate ONE simple follow-up question about their LAST SENTENCE specifically.
-${isHebrewHeavy ? "Ask in Hebrew." : "Ask in English."}
-
-Rules:
-- Focus on what they JUST wrote
-- Very short and simple
-- Ask about feelings, details, or what happened next
-- Examples: "איך הרגשת?" / "What happened next?" / "Who was with you?"
-
-Return just the question.`,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            question: { type: "string" }
-          }
-        }
+        prompt: `The user just wrote: "${lastSentence}"\nFull entry: "${text}"\nPrevious questions: ${questionsAsked.join(", ") || "none"}\nGenerate ONE simple follow-up question about their last sentence. Ask in English. Keep it short. Return just the question.`,
+        response_json_schema: { type: "object", properties: { question: { type: "string" } } }
       });
-
       setAiQuestion(result.question);
       setQuestionsAsked([...questionsAsked, result.question]);
     } catch (e) {
@@ -182,49 +137,41 @@ Return just the question.`,
     setGeneratingQuestion(false);
   };
 
-  // Auto-generate question after writing
   useEffect(() => {
     const sentences = text.split(/[.!?]+/).filter(s => s.trim());
     if (sentences.length > 0 && text.length > 100 && !aiQuestion && !generatingQuestion) {
-      const timer = setTimeout(() => {
-        generateQuestion();
-      }, 3000);
+      const timer = setTimeout(() => generateQuestion(), 3000);
       return () => clearTimeout(timer);
     }
   }, [text]);
 
+  // Translate the full entry to learning language
+  const handleTranslateEntry = async () => {
+    if (!text.trim()) return;
+    const lang = userProfile?.language || 'hebrew';
+    const langName = languageNames[lang] || lang;
+    setTranslatingEntry(true);
+    setShowTranslated(false);
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Translate the following English text to ${langName}. Keep it natural and conversational. Return only the translation:\n\n"${text}"`
+      });
+      setTranslatedText(result);
+      setShowTranslated(true);
+    } catch (e) {
+      toast.error("Translation failed");
+    }
+    setTranslatingEntry(false);
+  };
+
   const wordCount = text.trim().split(/\s+/).filter(w => w.length > 0).length;
 
   const handleSave = () => {
-    if (!text.trim()) {
-      toast.error("Please write something");
+    if (!text.trim()) { toast.error("Please write something"); return; }
+    if (wordCount < 100) { toast.error(`Write at least 100 words! (${wordCount}/100)`); return; }
+    if (usedWords.length < Math.min(10, suggestedVocab.length)) {
+      toast.error(`Use more vocab words before saving! (${usedWords.length}/${Math.min(10, suggestedVocab.length)} used)`);
       return;
-    }
-
-    if (wordCount < 100) {
-      toast.error(`Write at least 100 words! (${wordCount}/100)`);
-      return;
-    }
-
-    if (usedWords.length < 10) {
-      toast.error(`Use all 10 level 0 words before saving! (${usedWords.length}/10 used)`);
-      return;
-    }
-
-    // Calculate consecutive days
-    let consecutiveDays = 1;
-    if (entries.length > 0) {
-      const sortedEntries = [...entries].sort((a, b) => new Date(b.date) - new Date(a.date));
-      for (let i = 0; i < sortedEntries.length - 1; i++) {
-        const current = new Date(sortedEntries[i].date);
-        const next = new Date(sortedEntries[i + 1].date);
-        const dayDiff = Math.floor((current - next) / (1000 * 60 * 60 * 24));
-        if (dayDiff === 1) {
-          consecutiveDays++;
-        } else {
-          break;
-        }
-      }
     }
 
     const entryData = {
@@ -237,7 +184,6 @@ Return just the question.`,
       is_public: isPublic,
       author_name: userProfile?.avatar_name || "Anonymous",
       signature_data: signature,
-      consecutive_days: consecutiveDays
     };
 
     if (todayEntry) {
@@ -247,58 +193,7 @@ Return just the question.`,
     }
   };
 
-  const allWordsUsed = usedWords.length === 10 && wordCount >= 100;
-
-  const getSynonyms = async (word) => {
-    if (!word.trim()) return;
-    
-    setLoadingSynonyms(true);
-    setSelectedWord(word);
-    try {
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Give me 5 Hebrew synonyms or alternative words for: "${word}"
-        
-Include both the Hebrew word and transliteration for each.
-If the input is English, give Hebrew equivalents.
-If the input is Hebrew, give other Hebrew words with similar meaning.
-
-Make them useful for a Hebrew learner writing a journal.`,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            synonyms: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  hebrew: { type: "string" },
-                  transliteration: { type: "string" },
-                  meaning: { type: "string" }
-                }
-              }
-            }
-          }
-        }
-      });
-      setSynonyms(result.synonyms);
-    } catch (e) {
-      toast.error("Failed to get synonyms");
-    }
-    setLoadingSynonyms(false);
-  };
-
-  const insertSynonym = (synonym) => {
-    const textarea = document.querySelector('textarea');
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const before = text.substring(0, start);
-    const after = text.substring(end);
-    setText(before + synonym + after);
-    setSynonyms(null);
-    toast.success("Word inserted!");
-  };
-
-  const unusedVocab = suggestedVocab.filter(v => !usedWords.includes(v.id));
+  const allWordsUsed = usedWords.length >= Math.min(10, suggestedVocab.length) && wordCount >= 100;
 
   const getWordAtPosition = (text, position) => {
     const before = text.slice(0, position);
@@ -312,23 +207,19 @@ Make them useful for a Hebrew learner writing a journal.`,
     const textarea = e.target;
     const cursorPos = textarea.selectionStart;
     const clickedWord = getWordAtPosition(text, cursorPos);
-    
     if (!clickedWord || clickedWord.length < 2) return;
-    
     const rect = textarea.getBoundingClientRect();
     const textBeforeCursor = text.slice(0, cursorPos);
     const lines = textBeforeCursor.split('\n');
     const currentLine = lines.length - 1;
-    const lineHeight = 28.8; // 1.8 line-height * 16px base
+    const lineHeight = 28.8;
     const y = rect.top + (currentLine * lineHeight) + 40;
     const x = rect.left + 100;
-    
     setTranslationPosition({ x, y });
     setTranslatingWord(true);
-    
     try {
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Translate this word to English: "${clickedWord}". Return only the translation, nothing else.`
+        prompt: `Translate this word to English: "${clickedWord}". Return only the translation.`
       });
       setWordTranslation({ word: clickedWord, translation: result });
     } catch (e) {
@@ -338,334 +229,277 @@ Make them useful for a Hebrew learner writing a journal.`,
     }
   };
 
+  const langName = languageNames[userProfile?.language] || 'target language';
+
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(160deg, #f0ece4 0%, #e8e4d8 50%, #eae6da 100%)' }}>
-      <div className="max-w-4xl mx-auto px-4 py-6">
+      <div className="max-w-3xl mx-auto px-4 py-6">
+        {/* Header */}
         <div className="flex items-center gap-4 mb-6">
-          <Link to={createPageUrl("Home")} className="text-white/60 hover:text-white">
-            <ArrowLeft className="w-6 h-6" />
+          <Link to={createPageUrl("Home")} style={{ color: '#6b7c5a' }}>
+            <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
-            <h1 className="text-3xl font-bold flex items-center gap-2" style={{ color: '#3d4a2e', fontFamily: 'Cormorant Garamond, Georgia, serif' }}>
-              <BookOpen className="w-8 h-8" />
+            <h1 className="text-3xl font-bold flex items-center gap-2" style={{ color: '#3d4a2e', fontFamily: 'Cormorant Garamond, Georgia, serif', fontWeight: 500 }}>
+              <BookOpen className="w-7 h-7" />
               Daily Journal
             </h1>
-            <p style={{ color: '#6b7c5a' }}>
+            <p className="text-sm" style={{ color: '#6b7c5a' }}>
               {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
             </p>
           </div>
         </div>
 
-        {/* Today's Entry - Clean Style */}
+        {/* ── NOTEBOOK ── */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-3xl border-2 border-amber-200 shadow-2xl p-6 mb-6 relative"
+          className="relative rounded-2xl shadow-2xl overflow-hidden mb-6"
+          style={{
+            background: '#fffef5',
+            border: '1px solid #e0d8c8',
+            boxShadow: '4px 6px 24px rgba(61,74,46,0.12), inset 0 0 0 1px rgba(255,255,255,0.8)'
+          }}
         >
-          {/* Word Count - Top Right */}
-          <div className="absolute top-4 right-4 bg-amber-50 rounded px-2 py-1 border border-amber-200 text-xs">
-            <span className="text-amber-900 font-medium">Words: </span>
-            <span className={`font-bold ${wordCount >= 100 ? 'text-green-600' : 'text-amber-600'}`}>
-              {wordCount}/100
-            </span>
+          {/* Red margin line */}
+          <div className="absolute left-14 top-0 bottom-0 w-px" style={{ background: 'rgba(200,100,100,0.25)' }} />
+          {/* Blue ruled lines */}
+          {Array.from({ length: 30 }).map((_, i) => (
+            <div
+              key={i}
+              className="absolute left-0 right-0"
+              style={{
+                top: `${80 + i * 32}px`,
+                height: '1px',
+                background: 'rgba(100,140,200,0.15)'
+              }}
+            />
+          ))}
+
+          {/* Notebook top strip */}
+          <div className="relative z-10 flex items-center justify-between px-6 pt-5 pb-3" style={{ borderBottom: '2px solid rgba(200,180,140,0.4)' }}>
+            <div className="flex items-center gap-2">
+              <BookOpen className="w-4 h-4" style={{ color: '#9b7e5a' }} />
+              <span className="text-xs font-semibold tracking-widest uppercase" style={{ color: '#9b7e5a', fontFamily: 'Jost, sans-serif' }}>
+                {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${wordCount >= 100 ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                {wordCount} / 100 words
+              </span>
+              {/* Translate to learning language button */}
+              <button
+                onClick={handleTranslateEntry}
+                disabled={translatingEntry || !text.trim()}
+                className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition-all disabled:opacity-50"
+                style={{ background: 'rgba(90,107,90,0.12)', color: '#5a6b5a', border: '1px solid rgba(90,107,90,0.25)', fontFamily: 'Jost, sans-serif' }}
+                title={`Translate to ${langName}`}
+              >
+                {translatingEntry ? <Loader2 className="w-3 h-3 animate-spin" /> : <Languages className="w-3 h-3" />}
+                {translatingEntry ? 'Translating...' : `→ ${langName}`}
+              </button>
+            </div>
           </div>
 
-          {/* Text Editor - Centered */}
-          <Textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            onClick={handleTextClick}
-            placeholder="Write about your day..."
-            className="bg-transparent border-none text-slate-800 min-h-[400px] mb-4 text-base w-full focus:outline-none resize-none"
-            style={{ 
-              fontFamily: 'Georgia, serif',
-              lineHeight: '1.8',
-              paddingTop: '40px',
-              paddingRight: '80px'
-            }}
-            onSelect={(e) => {
-              const selected = e.target.value.substring(e.target.selectionStart, e.target.selectionEnd).trim();
-              if (selected && selected.split(/\s+/).length === 1) {
-                setSelectedWord(selected);
-              }
-            }}
-          />
+          {/* Translated text panel */}
+          <AnimatePresence>
+            {showTranslated && translatedText && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="relative z-10 mx-6 mt-3 rounded-xl p-4 text-sm"
+                style={{ background: 'rgba(90,107,90,0.07)', border: '1px solid rgba(90,107,90,0.2)', fontFamily: 'Georgia, serif', color: '#3d4a2e', lineHeight: '1.8' }}
+              >
+                <div className="flex justify-between items-start mb-2">
+                  <span className="text-xs font-semibold tracking-wider uppercase" style={{ color: '#6b7c5a', fontFamily: 'Jost, sans-serif' }}>{langName} Translation</span>
+                  <button onClick={() => setShowTranslated(false)} style={{ color: '#9b7e5a' }}><X className="w-3.5 h-3.5" /></button>
+                </div>
+                <p dir={userProfile?.language === 'hebrew' ? 'rtl' : 'ltr'}>{translatedText}</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-          {/* Suggested Vocab - Bottom Circles */}
-          {suggestedVocab.length > 0 && !showFeedback && (
-            <div className="mb-4">
-              <p className="text-slate-600 text-xs text-center mb-2">Required words ({usedWords.length}/10):</p>
+          {/* Writing area */}
+          <div className="relative z-10 pl-16 pr-6 pt-4">
+            <Textarea
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              onClick={handleTextClick}
+              placeholder="Write about your day in English..."
+              className="w-full bg-transparent border-none shadow-none focus:outline-none focus:ring-0 resize-none"
+              style={{
+                fontFamily: 'Georgia, serif',
+                lineHeight: '32px',
+                fontSize: '15px',
+                color: '#2d3a1e',
+                minHeight: '480px',
+                padding: '4px 0',
+              }}
+            />
+          </div>
+
+          {/* Vocab word bubbles */}
+          {suggestedVocab.length > 0 && (
+            <div className="relative z-10 px-6 pb-4 pt-2" style={{ borderTop: '1px dashed rgba(200,180,140,0.5)' }}>
+              <p className="text-xs mb-3 text-center font-semibold tracking-wide uppercase" style={{ color: '#9b7e5a', fontFamily: 'Jost, sans-serif' }}>
+                Your latest words — use them in your entry ({usedWords.length}/{suggestedVocab.length})
+              </p>
               <div className="flex flex-wrap justify-center gap-2">
                 {suggestedVocab.map((word) => {
                   const isUsed = usedWords.includes(word.id);
-                  const isEditing = editingWord === word.id;
-                  
                   return (
-                    <div
+                    <motion.div
                       key={word.id}
+                      whileHover={{ scale: 1.05 }}
                       onClick={() => {
-                        if (isEditing) {
-                          setEditingWord(null);
-                          setEditValues({});
+                        // Insert word into text at cursor
+                        const textarea = document.querySelector('textarea');
+                        if (textarea) {
+                          const start = textarea.selectionStart;
+                          const before = text.substring(0, start);
+                          const after = text.substring(start);
+                          const insert = word.phonetic || word.word;
+                          setText(before + insert + ' ' + after);
                         } else {
-                          setEditingWord(word.id);
-                          setEditValues({
-                            phonetic: word.phonetic,
-                            translation: word.translation,
-                            word: word.word
-                          });
+                          setText(t => t + ' ' + (word.phonetic || word.word));
                         }
                       }}
-                      className={`w-16 h-16 rounded-full transition-all cursor-pointer flex flex-col items-center justify-center relative ${
-                        isUsed 
-                          ? "bg-green-100 border-2 border-green-400" 
-                          : "bg-slate-100 border-2 border-slate-300 hover:bg-slate-200"
-                      }`}
+                      className="flex flex-col items-center justify-center rounded-2xl cursor-pointer transition-all px-3 py-2 min-w-[64px]"
+                      style={{
+                        background: isUsed ? 'rgba(90,160,90,0.12)' : 'rgba(255,252,240,0.9)',
+                        border: isUsed ? '1.5px solid rgba(90,160,90,0.5)' : '1.5px solid rgba(200,180,140,0.5)',
+                        boxShadow: isUsed ? 'none' : '0 1px 4px rgba(0,0,0,0.06)'
+                      }}
                     >
-                      {isUsed && <CheckCircle className="w-3 h-3 text-green-600 absolute top-1 right-1" />}
-                      
-                      {isEditing ? (
-                        <div className="flex flex-col items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                          <input
-                            autoFocus
-                            value={editValues.phonetic ?? word.phonetic}
-                            onChange={(e) => setEditValues({ ...editValues, phonetic: e.target.value })}
-                            className="w-14 bg-white border border-cyan-300 text-cyan-700 text-[10px] font-medium px-1 py-0.5 rounded text-center"
-                            placeholder="Word"
-                            onBlur={() => {
-                              updateWordMutation.mutate({ id: word.id, data: editValues });
-                            }}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                updateWordMutation.mutate({ id: word.id, data: editValues });
-                              }
-                            }}
-                          />
-                          <input
-                            value={editValues.translation ?? word.translation}
-                            onChange={(e) => setEditValues({ ...editValues, translation: e.target.value })}
-                            className="w-14 bg-white border border-cyan-300 text-slate-700 text-[9px] px-1 py-0.5 rounded text-center"
-                            placeholder="Meaning"
-                            onBlur={() => {
-                              updateWordMutation.mutate({ id: word.id, data: editValues });
-                            }}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                updateWordMutation.mutate({ id: word.id, data: editValues });
-                              }
-                            }}
-                          />
-                        </div>
-                      ) : (
-                        <div className="flex flex-col items-center">
-                          <span className="text-cyan-700 text-xs font-bold">{word.phonetic}</span>
-                          {isEditing && <span className="text-slate-600 text-[9px] mt-0.5">{word.translation}</span>}
-                        </div>
-                      )}
-                    </div>
+                      {isUsed && <CheckCircle className="w-3 h-3 mb-0.5" style={{ color: '#5a9a5a' }} />}
+                      <span className="text-xs font-bold" style={{ color: isUsed ? '#3a7a3a' : '#5a6b5a', fontFamily: 'Jost, sans-serif' }}>
+                        {word.phonetic || word.word}
+                      </span>
+                      <span className="text-[10px]" style={{ color: '#9b7e5a' }}>{word.translation}</span>
+                    </motion.div>
                   );
                 })}
               </div>
             </div>
           )}
 
-          {/* Signature - Bottom Right - Lazy loaded */}
-          <div className="flex justify-end mb-3">
-            <div className="w-48">
-              <Suspense fallback={<div className="h-20 bg-slate-100 rounded-lg animate-pulse" />}>
-                <SignaturePad 
-                  value={signature} 
-                  onChange={setSignature}
-                  disabled={wordCount < 100}
-                />
-              </Suspense>
+          {/* AI Question bubble */}
+          <AnimatePresence>
+            {(aiQuestion || generatingQuestion) && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="relative z-10 mx-6 mb-4 rounded-xl px-4 py-3"
+                style={{ background: 'rgba(212,165,116,0.15)', border: '1px solid rgba(212,165,116,0.4)' }}
+              >
+                {generatingQuestion ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="w-3 h-3 animate-spin" style={{ color: '#9b7e5a' }} />
+                    <span className="text-xs" style={{ color: '#9b7e5a' }}>Thinking of a question…</span>
+                  </div>
+                ) : (
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-sm italic" style={{ color: '#6b4e2a', fontFamily: 'Georgia, serif' }}>✍️ {aiQuestion}</p>
+                    <button onClick={() => setAiQuestion("")} style={{ color: '#9b7e5a' }}><X className="w-3.5 h-3.5" /></button>
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Signature + controls */}
+          <div className="relative z-10 px-6 pb-5 pt-2 flex items-end justify-between gap-4" style={{ borderTop: '1px solid rgba(200,180,140,0.3)' }}>
+            <div className="flex items-center gap-2">
+              <input type="checkbox" id="isPublic" checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} className="w-4 h-4" />
+              <label htmlFor="isPublic" className="text-xs cursor-pointer" style={{ color: '#9b7e5a', fontFamily: 'Jost, sans-serif' }}>Share publicly</label>
             </div>
-          </div>
 
-          {/* Privacy Toggle */}
-          <div className="mb-3 flex items-center justify-center gap-2">
-            <input
-              type="checkbox"
-              id="isPublic"
-              checked={isPublic}
-              onChange={(e) => setIsPublic(e.target.checked)}
-              className="w-4 h-4"
-            />
-            <label htmlFor="isPublic" className="text-slate-700 text-sm cursor-pointer">
-              Click here to let others see my journal entry
-            </label>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex gap-2 justify-center">
-            <Button
-              onClick={() => getSynonyms(selectedWord)}
-              disabled={loadingSynonyms || !selectedWord}
-              size="sm"
-              className="bg-amber-500 hover:bg-amber-600 text-white border-0"
-            >
-              {loadingSynonyms ? <Loader2 className="w-3 h-3 animate-spin" /> : "💡"}
-            </Button>
-            <Button
-              onClick={handleSave}
-              disabled={createEntryMutation.isPending || updateEntryMutation.isPending || !text.trim() || !allWordsUsed}
-              className={`font-bold text-sm py-3 px-8 ${
-                allWordsUsed 
-                  ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700" 
-                  : "bg-slate-300 text-slate-500 cursor-not-allowed"
-              }`}
-            >
-              {allWordsUsed ? (
-                <>{todayEntry ? "Update" : "Save"} 📖</>
-              ) : (
-                <>⚠️ Write 100 words with 10 vocab words ({wordCount}/100, {usedWords.length}/10) 🔒</>
-              )}
-            </Button>
+            <div className="flex items-end gap-4">
+              <div className="w-40">
+                <Suspense fallback={<div className="h-16 rounded animate-pulse" style={{ background: 'rgba(200,180,140,0.2)' }} />}>
+                  <SignaturePad value={signature} onChange={setSignature} disabled={wordCount < 100} />
+                </Suspense>
+              </div>
+              <Button
+                onClick={handleSave}
+                disabled={createEntryMutation.isPending || updateEntryMutation.isPending || !text.trim() || !allWordsUsed}
+                className="font-semibold text-sm"
+                style={allWordsUsed
+                  ? { background: '#5a6b5a', color: 'white', fontFamily: 'Jost, sans-serif' }
+                  : { background: 'rgba(200,180,140,0.3)', color: '#9b7e5a', fontFamily: 'Jost, sans-serif' }
+                }
+              >
+                {allWordsUsed ? (todayEntry ? "Update" : "Save Entry") : `⚠️ ${wordCount}/100 words · ${usedWords.length}/${suggestedVocab.length} vocab`}
+              </Button>
+            </div>
           </div>
         </motion.div>
 
-        {/* Coach Mark's Hebrew Journal - Public Feed */}
-        {publicEntries.length > 0 && (
-          <div className="mb-6">
-            <button
-              onClick={() => setShowPublicFeed(!showPublicFeed)}
-              className="w-full bg-white/5 backdrop-blur-xl border border-white/20 rounded-xl p-4 mb-3 flex items-center justify-between hover:bg-white/10 transition-all"
-            >
-              <div className="flex items-center gap-2">
-                <BookOpen className="w-5 h-5 text-purple-400" />
-                <h3 className="text-white font-medium">Coach Mark's Hebrew Journal</h3>
-                <span className="text-purple-400 text-sm">({publicEntries.length} entries)</span>
-              </div>
-              <span className="text-white/60">{showPublicFeed ? '▼' : '▶'}</span>
-            </button>
-
-            {showPublicFeed && (
-              <div className="space-y-3">
-                {publicEntries.slice(0, 10).map((entry, idx) => (
-                  <motion.div
-                    key={entry.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.05 }}
-                    className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-4"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-purple-400 font-medium">{entry.author_name || "Anonymous"}</span>
-                        <span className="text-white/40 text-xs">
-                          {new Date(entry.date).toLocaleDateString('en-US', { 
-                            month: 'short', 
-                            day: 'numeric' 
-                          })}
-                        </span>
-                      </div>
-                      {entry.used_vocab_ids?.length > 0 && (
-                        <span className="text-green-400 text-xs">
-                          ✓ {entry.used_vocab_ids.length} words
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-white/80 whitespace-pre-wrap line-clamp-4" style={{ fontFamily: 'Georgia, serif' }}>{entry.text}</p>
-                  </motion.div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Previous Entries - Reduced animations */}
+        {/* Previous Entries */}
         {entries.filter(e => e.date !== today).length > 0 && (
           <div className="space-y-3">
-            <h3 className="text-white/60 text-sm font-medium">My Previous Entries</h3>
-            {entries
-              .filter(e => e.date !== today)
-              .slice(0, 5)
-              .map((entry, idx) => (
-                <motion.div
-                  key={entry.id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: idx * 0.02 }}
-                  className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-4"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-white font-medium">
-                      {new Date(entry.date).toLocaleDateString('en-US', { 
-                        weekday: 'long', 
-                        month: 'short', 
-                        day: 'numeric' 
-                      })}
-                    </span>
-                    <div className="flex items-center gap-2">
-                      {entry.used_vocab_ids?.length > 0 && (
-                        <span className="text-green-400 text-xs">
-                          ✓ {entry.used_vocab_ids.length} words used
-                        </span>
-                      )}
-                      <button
-                        onClick={() => {
-                          updateEntryMutation.mutate({
-                            id: entry.id,
-                            data: { is_public: !entry.is_public, author_name: userProfile?.avatar_name || "Anonymous" }
-                          });
-                        }}
-                        className={`text-xs px-2 py-1 rounded ${
-                          entry.is_public 
-                            ? 'bg-purple-500/30 text-purple-400 hover:bg-purple-500/50' 
-                            : 'bg-white/10 text-white/60 hover:bg-white/20'
-                        }`}
-                      >
-                        {entry.is_public ? '📢 Public' : '🔒 Private'}
-                      </button>
-                    </div>
-                  </div>
-                  <p className="text-white/80 whitespace-pre-wrap line-clamp-3" style={{ fontFamily: 'Georgia, serif' }}>{entry.text}</p>
-                </motion.div>
-              ))}
+            <h3 className="text-sm font-semibold tracking-wider uppercase" style={{ color: '#9b7e5a', fontFamily: 'Jost, sans-serif' }}>Previous Entries</h3>
+            {entries.filter(e => e.date !== today).slice(0, 5).map((entry, idx) => (
+              <motion.div
+                key={entry.id}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: idx * 0.05 }}
+                className="rounded-xl p-4"
+                style={{ background: 'rgba(255,254,245,0.8)', border: '1px solid rgba(200,180,140,0.4)' }}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-semibold" style={{ color: '#3d4a2e', fontFamily: 'Cormorant Garamond, serif' }}>
+                    {new Date(entry.date).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+                  </span>
+                  <button
+                    onClick={() => updateEntryMutation.mutate({ id: entry.id, data: { is_public: !entry.is_public, author_name: userProfile?.avatar_name || "Anonymous" } })}
+                    className="text-xs px-2 py-0.5 rounded-full"
+                    style={{ background: entry.is_public ? 'rgba(90,107,90,0.15)' : 'rgba(200,180,140,0.2)', color: '#6b7c5a', fontFamily: 'Jost, sans-serif' }}
+                  >
+                    {entry.is_public ? '📢 Public' : '🔒 Private'}
+                  </button>
+                </div>
+                <p className="text-sm line-clamp-3" style={{ color: '#3d4a2e', fontFamily: 'Georgia, serif', lineHeight: '1.7' }}>{entry.text}</p>
+              </motion.div>
+            ))}
           </div>
         )}
       </div>
 
-      {/* Translation Tooltip */}
-        {(wordTranslation || translatingWord) && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            style={{
-              position: 'fixed',
-              left: translationPosition.x,
-              top: translationPosition.y,
-              zIndex: 1000
-            }}
-            className="bg-slate-800 text-white rounded-lg shadow-2xl p-3 border border-cyan-400"
-          >
-            {translatingWord ? (
-              <div className="flex items-center gap-2">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span className="text-sm">Translating...</span>
+      {/* Word click translation tooltip */}
+      {(wordTranslation || translatingWord) && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          style={{ position: 'fixed', left: translationPosition.x, top: translationPosition.y, zIndex: 1000 }}
+          className="bg-slate-800 text-white rounded-lg shadow-2xl p-3 border border-cyan-400"
+        >
+          {translatingWord ? (
+            <div className="flex items-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span className="text-sm">Translating...</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              <div>
+                <p className="text-cyan-400 font-bold text-sm">{wordTranslation.word}</p>
+                <p className="text-white text-xs">{wordTranslation.translation}</p>
               </div>
-            ) : (
-              <div className="flex items-center gap-3">
-                <div>
-                  <p className="text-cyan-400 font-bold text-sm">{wordTranslation.word}</p>
-                  <p className="text-white text-xs">{wordTranslation.translation}</p>
-                </div>
-                <button
-                  onClick={() => setWordTranslation(null)}
-                  className="text-white/60 hover:text-white"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            )}
-            </motion.div>
-            )}
+              <button onClick={() => setWordTranslation(null)} className="text-white/60 hover:text-white">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+        </motion.div>
+      )}
 
-      {/* Translator Widget - Lazy loaded */}
       <Suspense fallback={null}>
         <TranslatorWidget />
       </Suspense>
-            </div>
-            );
-            }
+    </div>
+  );
+}

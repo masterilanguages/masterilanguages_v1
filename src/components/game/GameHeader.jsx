@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Flame, Clock, LogOut, Globe, UserPlus, X, Loader2 } from "lucide-react";
+import { Flame, Clock, LogOut, Globe, UserPlus, X, Loader2, BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -268,6 +268,11 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
             <Flame className="w-4 h-4" style={{ color: '#d4a574' }} />
             <span className="text-xs font-bold" style={{ color: '#6b7c5a', fontFamily: 'Jost, sans-serif' }}>{profile?.daily_streak || 0}</span>
           </motion.div>
+          {/* Journal button */}
+          <motion.button onClick={() => navigate(createPageUrl("Journal"))} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg cursor-pointer" style={{ background: 'rgba(90, 107, 90, 0.08)', border: '1px solid rgba(90, 107, 90, 0.2)' }} title="Daily Journal">
+            <BookOpen className="w-4 h-4" style={{ color: '#6b7c5a' }} />
+            <span className="font-bold text-xs hidden sm:inline" style={{ color: '#6b7c5a', fontFamily: 'Jost, sans-serif' }}>Journal</span>
+          </motion.button>
           {sessionActive ? (
             <motion.button onClick={togglePause} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onDoubleClick={endSession} className="flex items-center gap-1 px-2 py-1 rounded-lg cursor-pointer" style={{ background: profile.session_paused ? '#d4a574' : timeRemaining < 300 ? '#c97c6f' : '#7a9b6f', border: '1px solid rgba(90, 107, 90, 0.2)' }} title="Click to pause/resume • Double-click to end">
               <Clock className="w-4 h-4" style={{ color: '#3d4a2e' }} />
