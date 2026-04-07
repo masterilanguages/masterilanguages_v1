@@ -256,13 +256,16 @@ export default function MediaLibrary() {
 
   const saveTranscriptEdit = async (segmentIdx, field, value) => {
     if (!selectedVideo) return;
-    const updatedTranscript = [...transcript];
-    updatedTranscript[segmentIdx] = { ...updatedTranscript[segmentIdx], [field]: value };
-    setTranscript(updatedTranscript);
-
-    await updateVideoMutation.mutateAsync({
-      id: selectedVideo.id,
-      data: { processed_transcript: updatedTranscript }
+    setTranscript(prev => {
+      const updatedTranscript = prev.map((seg, i) => 
+        i === segmentIdx ? { ...seg, [field]: value } : seg
+      );
+      // Save to DB using the latest transcript
+      updateVideoMutation.mutate({
+        id: selectedVideo.id,
+        data: { processed_transcript: updatedTranscript }
+      });
+      return updatedTranscript;
     });
   };
 
