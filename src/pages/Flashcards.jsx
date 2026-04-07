@@ -85,15 +85,16 @@ export default function Flashcards() {
   });
 
   const levelData = [
-    { level: 0, label: "Level 0", subtitle: "New", gradient: "from-gray-500 to-slate-500" },
+    { level: 0, label: "New", subtitle: "New words", gradient: "from-gray-500 to-slate-500" },
     { level: 1, label: "Level 1", subtitle: "Seen", gradient: "from-red-500 to-pink-500" },
     { level: 2, label: "Level 2", subtitle: "Familiar", gradient: "from-orange-500 to-amber-500" },
     { level: 3, label: "Level 3", subtitle: "Practicing", gradient: "from-yellow-500 to-lime-500" },
-    { level: 4, label: "Level 4", subtitle: "Strong", gradient: "from-blue-500 to-cyan-500" },
-    { level: 5, label: "Level 5", subtitle: "Mastered", gradient: "from-green-500 to-emerald-500" },
+    { level: 5, label: "Mastered", subtitle: "Mastered", gradient: "from-green-500 to-emerald-500" },
   ];
 
   const getWordsForLevel = (level) => {
+    if (level === 5) return words.filter(w => (w.times_practiced || 0) >= 5);
+    if (level === 3) return words.filter(w => (w.times_practiced || 0) === 3 || (w.times_practiced || 0) === 4);
     return words.filter(w => (w.times_practiced || 0) === level);
   };
 
@@ -209,7 +210,7 @@ export default function Flashcards() {
       id: currentWord.id,
       data: {
         times_practiced: rating,
-        mastered: rating >= 5,
+        mastered: rating === 5,
       },
     });
 
@@ -835,23 +836,21 @@ Example:
 
           {/* Bottom rating buttons */}
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex gap-1.5" onClick={(e) => e.stopPropagation()}>
-            {[0, 1, 2, 3, 4, 5].map((rating) => (
+            {[{ value: 0, label: "N" }, { value: 1, label: "1" }, { value: 2, label: "2" }, { value: 3, label: "3" }, { value: 5, label: "M" }].map(({ value, label }) => (
               <button
-                key={rating}
-                onClick={() => handleRating(rating)}
+                key={value}
+                onClick={() => handleRating(value)}
                 className={`w-9 h-9 rounded-lg font-bold text-sm transition-all hover:scale-110 active:scale-95 ${
-                  rating === 0
+                  value === 0
                     ? "bg-gray-500/40 text-white/70"
-                    : rating === 5
+                    : value === 5
                     ? "bg-gradient-to-br from-green-500 to-emerald-500 text-white shadow-lg"
-                    : rating >= 4
-                    ? "bg-gradient-to-br from-blue-500 to-cyan-500 text-white"
-                    : rating >= 3
+                    : value === 3
                     ? "bg-gradient-to-br from-yellow-500 to-amber-500 text-white"
                     : "bg-white/30 text-white"
                 }`}
               >
-                {rating}
+                {label}
               </button>
             ))}
           </div>
