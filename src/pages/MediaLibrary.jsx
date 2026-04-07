@@ -169,7 +169,7 @@ export default function MediaLibrary() {
       const lang = userProfile?.language;
       return videos
         .filter(v => !v.deleted_at && v.is_active !== false)
-        .filter(v => !lang || !v.language || v.language === lang || v.language === lang.slice(0, 2))
+        .filter(v => !lang || v.language === lang || v.language === lang.slice(0, 2))
         .sort((a, b) => (a.order || 0) - (b.order || 0));
     },
     staleTime: 5 * 60 * 1000,
