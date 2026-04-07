@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
@@ -171,6 +171,36 @@ export default function Flashcards() {
       times_practiced: 0,
     });
   };
+
+  const addWordFromSentence = async (word, sentence) => {
+    // Try to find the matching position in the hebrew/transliteration arrays
+    const words = sentence.transliteration?.split(/\s+/) || [];
+    const hebrewWords = sentence.hebrew?.split(/\s+/) || [];
+    const idx = words.findIndex(w => w.replace(/[.,!?]/g, '').toLowerCase() === word.replace(/[.,!?]/g, '').toLowerCase());
+    const hebrewWord = hebrewWords[idx] || word;
+
+    // Check if already in backpack
+    const alreadyExists = words_ref.current?.some(w =>
+      (w.phonetic || '').toLowerCase() === word.replace(/[.,!?]/g, '').toLowerCase()
+    );
+    if (alreadyExists) { toast.info("Already in backpack!"); return; }
+
+    await createWordMutation.mutateAsync({
+      word: hebrewWord.replace(/[.,!?]/g, ''),
+      translation: '',
+      phonetic: word.replace(/[.,!?]/g, ''),
+      category: "wordbank",
+      language: userProfile?.language || 'hebrew',
+      times_practiced: 0,
+      mastered: false,
+      vocab_level: 0,
+    });
+    toast.success(`"${word.replace(/[.,!?]/g, '')}" added to backpack! 🎒`);
+  };
+
+  // keep a ref to words for the duplicate check
+  const words_ref = useRef(words);
+  useEffect(() => { words_ref.current = words; }, [words]);
 
   const handleCardTap = () => {
     if (revealState < 2) {
@@ -665,44 +695,30 @@ export default function Flashcards() {
                           }}
                         >
                           <div className="flex items-start justify-between gap-2">
-                            <div className="flex-1 space-y-0 text-center" onClick={(e) => e.stopPropagation()}>
-                              <div dir="ltr">
-                                <EditableWord
-                                  text={sentence.english}
-                                  onSave={(newText) => {
-                                    const updated = [...exampleSentences];
-                                    updated[idx] = { ...sentence, english: newText };
-                                    setExampleSentences(updated);
-                                  }}
-                                  className="text-white/60 text-xs"
-                                />
-                              </div>
+                            <div className="flex-1 space-y-1 text-center" onClick={(e) => e.stopPropagation()}>
+                              {/* English — static */}
+                              <p className="text-white/60 text-xs">{sentence.english}</p>
                               {isRevealed && (
                                 <>
-                                  <div dir="ltr">
-                                    <EditableWord
-                                      text={sentence.transliteration}
-                                      onSave={(newText) => {
-                                        const updated = [...exampleSentences];
-                                        updated[idx] = { ...sentence, transliteration: newText };
-                                        setExampleSentences(updated);
-                                      }}
-                                      className="text-cyan-400 text-sm"
-                                    />
+                                  {/* Transliteration — clickable words */}
+                                  <div dir="ltr" className="flex flex-wrap justify-center gap-x-1 gap-y-0.5">
+                                    {(sentence.transliteration || '').split(/\s+/).map((word, wi) => (
+                                      <button
+                                        key={wi}
+                                        onClick={(e) => { e.stopPropagation(); addWordFromSentence(word, sentence); }}
+                                        className="text-cyan-400 text-sm hover:text-cyan-200 hover:underline transition-colors cursor-pointer"
+                                        title={`Add "${word.replace(/[.,!?]/g, '')}" to backpack`}
+                                      >
+                                        {word}
+                                      </button>
+                                    ))}
                                   </div>
-                                  <div dir="rtl" lang="he">
-                                    <EditableWord
-                                      text={sentence.hebrew}
-                                      language="he"
-                                      onSave={(newText) => {
-                                        const updated = [...exampleSentences];
-                                        updated[idx] = { ...sentence, hebrew: newText };
-                                        setExampleSentences(updated);
-                                      }}
-                                      className="text-white text-sm"
-                                    />
-                                  </div>
+                                  {/* Hebrew */}
+                                  <p className="text-white text-sm" dir="rtl" lang="he">{sentence.hebrew}</p>
                                 </>
+                              )}
+                              {!isRevealed && (
+                                <p className="text-white/30 text-xs italic">tap to reveal</p>
                               )}
                             </div>
                             <div className="flex flex-col gap-1">
