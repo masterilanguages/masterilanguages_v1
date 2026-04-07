@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Flame, Clock, LogOut, Globe } from "lucide-react";
+import { Flame, Clock, LogOut, Globe, UserPlus, X, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }) {
@@ -19,6 +21,10 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
   const [dragOverId, setDragOverId] = useState(null);
   const longPressTimer = useRef(null);
   const isDraggingRef = useRef(false);
+  const [showInviteDialog, setShowInviteDialog] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState("user");
+  const [inviting, setInviting] = useState(false);
 
   useEffect(() => {
     base44.auth.me().then(setCurrentUser).catch(() => {});
@@ -146,6 +152,21 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
     window.location.href = '/';
   };
 
+  const handleInvite = async () => {
+    if (!inviteEmail.trim()) return;
+    setInviting(true);
+    try {
+      await base44.users.inviteUser(inviteEmail.trim(), inviteRole);
+      toast.success(`Invitation sent to ${inviteEmail}! They'll receive an email to set their password.`);
+      setInviteEmail("");
+      setInviteRole("user");
+      setShowInviteDialog(false);
+    } catch (e) {
+      toast.error(e?.message || "Failed to send invite");
+    }
+    setInviting(false);
+  };
+
   // Drag handlers
   const handleDragStart = (e, id) => {
     e.dataTransfer.effectAllowed = 'move';
@@ -178,6 +199,7 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
   if (!profile?.language) return null;
 
   return (
+    <>
     <div style={{ background: 'linear-gradient(135deg, #f5f0e8 0%, #e8e4d8 50%, #eae6da 100%)', borderBottom: '1px solid rgba(90, 107, 90, 0.15)' }} className="backdrop-blur-xl">
       {/* Top row */}
       <div className="flex items-center justify-between max-w-7xl mx-auto px-4 py-2">
@@ -258,9 +280,14 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
             </motion.button>
           )}
           {(currentUser?.role === 'admin' || currentUser?.role === 'coach') && (
-            <motion.button onClick={() => navigate(createPageUrl("ManageCoaches"))} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg cursor-pointer" style={{ background: 'rgba(90, 107, 90, 0.08)', border: '1px solid rgba(90, 107, 90, 0.2)' }}>
-              <span className="font-bold text-xs" style={{ color: '#6b7c5a', fontFamily: 'Jost, sans-serif' }}>👥 People</span>
-            </motion.button>
+            <div className="flex items-center gap-1">
+              <motion.button onClick={() => navigate(createPageUrl("ManageCoaches"))} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg cursor-pointer" style={{ background: 'rgba(90, 107, 90, 0.08)', border: '1px solid rgba(90, 107, 90, 0.2)' }}>
+                <span className="font-bold text-xs" style={{ color: '#6b7c5a', fontFamily: 'Jost, sans-serif' }}>👥 People</span>
+              </motion.button>
+              <motion.button onClick={() => setShowInviteDialog(true)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg cursor-pointer" style={{ background: 'rgba(90, 107, 90, 0.12)', border: '1px solid rgba(90, 107, 90, 0.3)' }} title="Invite new user">
+                <UserPlus className="w-3.5 h-3.5" style={{ color: '#6b7c5a' }} />
+              </motion.button>
+            </div>
           )}
           <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg cursor-pointer" style={{ background: 'rgba(90, 107, 90, 0.08)', border: '1px solid rgba(90, 107, 90, 0.2)' }}>
             <span className="font-bold text-xs" style={{ color: '#6b7c5a', fontFamily: 'Jost, sans-serif' }}>💳 Payments</span>
@@ -308,6 +335,55 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
         </div>
       </div>
     </div>
+
+    {/* Invite User Dialog */}
+    <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
+      <DialogContent className="max-w-sm" style={{ background: '#f5f0e8', border: '1px solid rgba(90, 107, 90, 0.2)' }}>
+        <DialogHeader>
+          <DialogTitle style={{ color: '#3d4a2e', fontFamily: 'Cormorant Garamond, serif', fontWeight: 500, fontSize: '1.4rem' }}>
+            Invite a Student
+          </DialogTitle>
+        </DialogHeader>
+        <p className="text-sm mb-4" style={{ color: '#6b7c5a' }}>
+          They'll receive an email with a link to set their password and access their personal learning portal.
+        </p>
+        <div className="space-y-3">
+          <div>
+            <label className="text-xs font-medium mb-1 block" style={{ color: '#6b7c5a', fontFamily: 'Jost, sans-serif' }}>Email address</label>
+            <Input
+              type="email"
+              placeholder="student@example.com"
+              value={inviteEmail}
+              onChange={(e) => setInviteEmail(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleInvite()}
+              className="border-stone-300 bg-white/70"
+              style={{ color: '#3d4a2e' }}
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium mb-1 block" style={{ color: '#6b7c5a', fontFamily: 'Jost, sans-serif' }}>Role</label>
+            <select
+              value={inviteRole}
+              onChange={(e) => setInviteRole(e.target.value)}
+              className="w-full h-9 rounded-md border border-stone-300 bg-white/70 px-3 text-sm"
+              style={{ color: '#3d4a2e' }}
+            >
+              <option value="user">Student</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <Button
+            onClick={handleInvite}
+            disabled={!inviteEmail.trim() || inviting}
+            className="w-full"
+            style={{ background: '#5a6b5a', color: 'white' }}
+          >
+            {inviting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Sending...</> : <><UserPlus className="w-4 h-4 mr-2" />Send Invitation</>}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 });
 
