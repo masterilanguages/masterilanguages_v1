@@ -52,7 +52,13 @@ export default function Journal() {
   // Fetch latest 10 words from flashcards (wordbank), sorted by newest first
   const { data: backpackWords = [] } = useQuery({
     queryKey: ['backpackWords', userProfile?.language],
-    queryFn: () => base44.entities.Word.filter({ category: "wordbank", language: userProfile?.language || 'hebrew' }),
+    queryFn: async () => {
+      const allWords = await base44.entities.Word.filter({ category: "wordbank" });
+      // Filter by language if set, otherwise show all (backwards compat)
+      const userLang = userProfile?.language || 'hebrew';
+      const byLang = allWords.filter(w => w.language === userLang);
+      return byLang.length > 0 ? byLang : allWords;
+    },
     enabled: !!userProfile,
   });
 
