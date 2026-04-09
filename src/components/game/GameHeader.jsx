@@ -25,6 +25,9 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("user");
   const [inviting, setInviting] = useState(false);
+  const [stopwatchTime, setStopwatchTime] = useState(0);
+  const [stopwatchRunning, setStopwatchRunning] = useState(false);
+  const stopwatchRef = useRef(null);
 
   useEffect(() => {
     base44.auth.me().then(setCurrentUser).catch(() => {});
@@ -54,18 +57,27 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
     },
   });
 
+  // Stopwatch
+  useEffect(() => {
+    if (stopwatchRunning) {
+      stopwatchRef.current = setInterval(() => setStopwatchTime(t => t + 1), 1000);
+    } else {
+      clearInterval(stopwatchRef.current);
+    }
+    return () => clearInterval(stopwatchRef.current);
+  }, [stopwatchRunning]);
+
   // Build nav items (must be before useEffect that uses them)
   const baseNavItems = [
     { id: "home", to: "Home", emoji: "🏠", label: "Home" },
     { id: "schedule", to: "Home", emoji: "📅", label: "Schedule" },
     { id: "videos", to: "MediaLibrary", emoji: "📚", label: "Library" },
     { id: "progress", to: "Progress", emoji: "🏆", label: "Progress" },
-    ...(currentUser?.role === 'admin' ? [
-      { id: "clock", to: "Home", emoji: "🕐", label: "Clock" },
-    ] : []),
+    { id: "journal", to: "Journal", emoji: "📖", label: "Journal" },
+    { id: "clock", to: null, emoji: "🕐", label: "Clock" },
   ];
 
-  const validNavIds = ["home", "schedule", "videos", "progress", "clock", "progress"];
+  const validNavIds = ["home", "schedule", "videos", "progress", "journal", "clock"];
   const getSavedOrder = () => {
     try {
       const saved = JSON.parse(localStorage.getItem('nav_order') || '[]');
@@ -268,22 +280,7 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
             <Flame className="w-4 h-4" style={{ color: '#d4a574' }} />
             <span className="text-xs font-bold" style={{ color: '#6b7c5a', fontFamily: 'Jost, sans-serif' }}>{profile?.daily_streak || 0}</span>
           </motion.div>
-          {/* Journal button */}
-          <motion.button onClick={() => navigate(createPageUrl("Journal"))} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg cursor-pointer" style={{ background: 'rgba(90, 107, 90, 0.08)', border: '1px solid rgba(90, 107, 90, 0.2)' }} title="Daily Journal">
-            <BookOpen className="w-4 h-4" style={{ color: '#6b7c5a' }} />
-            <span className="font-bold text-xs hidden sm:inline" style={{ color: '#6b7c5a', fontFamily: 'Jost, sans-serif' }}>Journal</span>
-          </motion.button>
-          {sessionActive ? (
-            <motion.button onClick={togglePause} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onDoubleClick={endSession} className="flex items-center gap-1 px-2 py-1 rounded-lg cursor-pointer" style={{ background: profile.session_paused ? '#d4a574' : timeRemaining < 300 ? '#c97c6f' : '#7a9b6f', border: '1px solid rgba(90, 107, 90, 0.2)' }} title="Click to pause/resume • Double-click to end">
-              <Clock className="w-4 h-4" style={{ color: '#3d4a2e' }} />
-              <span className="font-bold text-xs" style={{ color: '#3d4a2e', fontFamily: 'Jost, sans-serif' }}>{formatTime(timeRemaining)}</span>
-            </motion.button>
-          ) : (
-            <motion.button onClick={() => startSession(30)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg cursor-pointer" style={{ background: 'rgba(90, 107, 90, 0.08)', border: '1px solid rgba(90, 107, 90, 0.2)' }}>
-              <Clock className="w-4 h-4" style={{ color: '#6b7c5a' }} />
-              <span className="font-bold text-xs" style={{ color: '#6b7c5a', fontFamily: 'Jost, sans-serif' }}>Timer</span>
-            </motion.button>
-          )}
+
           {(currentUser?.role === 'admin' || currentUser?.role === 'coach') && (
             <div className="flex items-center gap-1">
               <motion.button onClick={() => navigate(createPageUrl("ManageCoaches"))} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg cursor-pointer" style={{ background: 'rgba(90, 107, 90, 0.08)', border: '1px solid rgba(90, 107, 90, 0.2)' }}>
@@ -307,9 +304,9 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
         </div>
       </div>
 
-      {/* Nav grid: 4 per row, hold to drag */}
+      {/* Nav grid */}
       <div style={{ borderTop: '1px solid rgba(90, 107, 90, 0.15)' }} className="px-4 py-2">
-        <div className="grid grid-cols-5 gap-1.5 max-w-lg mx-auto">
+        <div className="grid grid-cols-6 gap-1.5 max-w-xl mx-auto">
           {orderedNav.map(({ id, to, emoji, label }) => {
             const isDragging = draggingId === id;
             const isOver = dragOverId === id && !isDragging;
@@ -321,7 +318,14 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
                 onDragStart={(e) => handleDragStart(e, id)}
                 onDragOver={(e) => handleDragOver(e, id)}
                 onDragEnd={handleDragEnd}
-                onClick={() => { if (!isDraggingRef.current) navigate(createPageUrl(to)); }}
+                onClick={() => {
+                  if (isDraggingRef.current) return;
+                  if (id === 'clock') {
+                    setStopwatchRunning(r => !r);
+                  } else {
+                    navigate(createPageUrl(to));
+                  }
+                }}
                 className="flex flex-col items-center py-2 rounded-xl select-none transition-all"
                 style={{
                   background: isDragging ? 'rgba(90, 107, 90, 0.08)' : isOver ? 'rgba(90, 107, 90, 0.15)' : 'rgba(90, 107, 90, 0.06)',
@@ -332,8 +336,17 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
                   transition: 'all 0.15s ease',
                 }}
               >
-                <span className="text-lg">{emoji}</span>
-                <span className="text-xs font-medium mt-0.5" style={{ color: '#6b7c5a', fontFamily: 'Jost, sans-serif', letterSpacing: '0.03em' }}>{label}</span>
+                {id === 'clock' ? (
+                  <>
+                    <span className="text-lg">{stopwatchRunning ? '⏱️' : '🕐'}</span>
+                    <span className="text-xs font-bold mt-0.5" style={{ color: stopwatchRunning ? '#5a8a5a' : '#6b7c5a', fontFamily: 'Jost, sans-serif' }}>{formatTime(stopwatchTime)}</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-lg">{emoji}</span>
+                    <span className="text-xs font-medium mt-0.5" style={{ color: '#6b7c5a', fontFamily: 'Jost, sans-serif', letterSpacing: '0.03em' }}>{label}</span>
+                  </>
+                )}
               </div>
             );
           })}
