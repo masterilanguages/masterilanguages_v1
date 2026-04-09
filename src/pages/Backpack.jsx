@@ -182,11 +182,13 @@ Return ONLY a 1-2 sentence image description (no explanations, no headers). Star
     setSuggestingMnemonic(null);
   };
 
-  const level0Words = wordRatings.filter(w => (w.times_practiced || 0) === 0);
-  const level1Words = wordRatings.filter(w => w.times_practiced === 1);
-  const level2Words = wordRatings.filter(w => w.times_practiced === 2);
-  const level3Words = wordRatings.filter(w => w.times_practiced === 3 || w.times_practiced === 4);
-  const level5Words = wordRatings.filter(w => w.times_practiced >= 5);
+  const userLang = userProfile?.language || 'hebrew';
+  const langFilteredRatings = wordRatings.filter(w => !w.language || w.language === userLang);
+  const level0Words = langFilteredRatings.filter(w => (w.times_practiced || 0) === 0);
+  const level1Words = langFilteredRatings.filter(w => w.times_practiced === 1);
+  const level2Words = langFilteredRatings.filter(w => w.times_practiced === 2);
+  const level3Words = langFilteredRatings.filter(w => w.times_practiced === 3 || w.times_practiced === 4);
+  const level5Words = langFilteredRatings.filter(w => w.times_practiced >= 5);
 
   const tabs = [
     { id: "level0", label: "✨ New", color: "gray" },
