@@ -125,6 +125,18 @@ export default function Backpack() {
     },
   });
 
+  const approveWordMutation = useMutation({
+    mutationFn: ({ id, approved }) => base44.entities.Word.update(id, {
+      approved,
+      approved_by: approved ? currentUser?.email : null,
+      approved_at: approved ? new Date().toISOString() : null,
+    }),
+    onSuccess: (_, { approved }) => {
+      queryClient.invalidateQueries({ queryKey: ['wordRatings'] });
+      toast.success(approved ? "Card approved ✅ — now shared with all users" : "Approval removed");
+    },
+  });
+
   const handleRateWord = async (wordId, rating, event) => {
     event.stopPropagation();
     await updateWordMutation.mutateAsync({
@@ -425,6 +437,8 @@ Return JSON with:
 
   const isWordLocked = (wordId) => lockedWords[wordId];
   const isAdmin = currentUser?.role === 'admin';
+  // Content editable = not approved AND (not locally locked OR is admin)
+  const isContentEditable = (word) => !word.approved && (!isWordLocked(word.id) || isAdmin);
 
   const handleAddNewWord = async () => {
     if (!addWordForm.phonetic.trim() && !addWordForm.translation.trim()) return;
@@ -573,9 +587,9 @@ Return JSON with:
                   {/* Word info */}
                   <div className="p-3 flex-1 flex flex-col">
                     <p className="text-cyan-400 font-semibold text-sm text-center">
-                      <EditableWord
-                        text={word.phonetic}
-                        editable={!isWordLocked(word.id) || isAdmin}
+                     <EditableWord
+                       text={word.phonetic}
+                       editable={isContentEditable(word)}
                         onSave={(newPhonetic) => updateWordMutation.mutate({ id: word.id, data: { phonetic: newPhonetic } })}
                         className="text-cyan-400 font-semibold text-sm"
                       />
@@ -583,16 +597,16 @@ Return JSON with:
                     <p className="text-stone-500 text-xs text-center mt-1">
                       = <EditableWord
                         text={word.translation}
-                        editable={!isWordLocked(word.id) || isAdmin}
+                        editable={isContentEditable(word)}
                         onSave={(newTranslation) => updateWordMutation.mutate({ id: word.id, data: { translation: newTranslation } })}
                         className="text-stone-600 text-xs"
                       />
                     </p>
                     <p className="text-cyan-600 font-bold text-sm text-center mt-1" dir="rtl">
                       <EditableWord
-                        text={word.word}
-                        language="he"
-                        editable={!isWordLocked(word.id) || isAdmin}
+                       text={word.word}
+                       language="he"
+                       editable={isContentEditable(word)}
                         onSave={(newWord) => updateWordMutation.mutate({ id: word.id, data: { word: newWord } })}
                         className="text-cyan-600 font-bold text-sm"
                       />
@@ -611,44 +625,61 @@ Return JSON with:
                         <button
                           key={value}
                           onClick={(e) => handleRateWord(word.id, value, e)}
-                          disabled={isWordLocked(word.id) && !isAdmin}
                           className={`flex-1 h-6 rounded text-xs font-bold transition-all ${
                             word.times_practiced === value || (value === 3 && word.times_practiced === 4)
-                              ? value === 5 ? "bg-green-600 text-white" : "bg-stone-600 text-white"
-                              : "bg-stone-100 text-stone-400 hover:bg-stone-200"
-                          } ${isWordLocked(word.id) && !isAdmin ? "opacity-50 cursor-not-allowed" : ""}`}
+                              ? value === 5 ? 'bg-green-600 text-white' : 'bg-stone-600 text-white'
+                              : 'bg-stone-100 text-stone-400 hover:bg-stone-200'
+                          }`}
                         >
                           {label}
                         </button>
-                      ))}
+                      ))
                     </div>
-                    <button
-                      onClick={() => suggestMnemonicForWord(word)}
-                      disabled={(isWordLocked(word.id) && !isAdmin) || suggestingMnemonic === word.id}
-                      className={`w-6 h-6 rounded flex items-center justify-center text-sm hover:bg-purple-500/20 transition-all ${(isWordLocked(word.id) && !isAdmin) ? "opacity-50 cursor-not-allowed" : ""}`}
-                      title="Generate mnemonic image"
-                    >
-                      {suggestingMnemonic === word.id ? <Loader2 className="w-3 h-3 animate-spin text-purple-500" /> : '🎨'}
-                    </button>
-                    <button
-                      onClick={() => toggleWordLock(word.id)}
-                      className={`w-6 h-6 rounded flex items-center justify-center text-sm transition-all ${
-                        isWordLocked(word.id)
-                          ? "bg-orange-500/30 hover:bg-orange-500/40"
-                          : "hover:bg-stone-300"
-                      }`}
-                      title={isWordLocked(word.id) ? "Unlock card" : "Lock card"}
-                    >
-                      {isWordLocked(word.id) ? "🔒" : "🔓"}
-                    </button>
-                    <button
-                      onClick={() => deleteWordMutation.mutate(word.id)}
-                      disabled={isWordLocked(word.id) && !isAdmin}
-                      className={`w-6 h-6 rounded flex items-center justify-center text-sm hover:bg-red-500/20 transition-all ${isWordLocked(word.id) && !isAdmin ? "opacity-50 cursor-not-allowed" : ""}`}
-                      title="Delete word"
-                    >
-                      🗑️
-                    </button>
+                    {!word.approved && (
+                      <button
+                        onClick={() => suggestMnemonicForWord(word)}
+                        disabled={suggestingMnemonic === word.id}
+                        className="w-6 h-6 rounded flex items-center justify-center text-sm hover:bg-purple-500/20 transition-all"
+                        title="Generate mnemonic image"
+                      >
+                        {suggestingMnemonic === word.id ? <Loader2 className="w-3 h-3 animate-spin text-purple-500" /> : '🎨'}
+                      </button>
+                    )}
+                    {isAdmin && (
+                      <button
+                        onClick={() => approveWordMutation.mutate({ id: word.id, approved: !word.approved })}
+                        disabled={approveWordMutation.isPending}
+                        className={`w-6 h-6 rounded flex items-center justify-center text-xs font-bold transition-all ${
+                          word.approved
+                            ? 'bg-green-500/30 hover:bg-red-500/20 text-green-700'
+                            : 'bg-stone-100 hover:bg-green-500/20 text-stone-400'
+                        }`}
+                        title={word.approved ? "Unapprove card" : "Approve card for all users"}
+                      >
+                        ✅
+                      </button>
+                    )}
+                    {!word.approved && (
+                      <button
+                        onClick={() => toggleWordLock(word.id)}
+                        className={`w-6 h-6 rounded flex items-center justify-center text-sm transition-all ${
+                          isWordLocked(word.id) ? "bg-orange-500/30 hover:bg-orange-500/40" : "hover:bg-stone-300"
+                        }`}
+                        title={isWordLocked(word.id) ? "Unlock card" : "Lock card"}
+                      >
+                        {isWordLocked(word.id) ? "🔒" : "🔓"}
+                      </button>
+                    )}
+                    {(!word.approved || isAdmin) && (
+                      <button
+                        onClick={() => deleteWordMutation.mutate(word.id)}
+                        disabled={word.approved && !isAdmin}
+                        className="w-6 h-6 rounded flex items-center justify-center text-sm hover:bg-red-500/20 transition-all"
+                        title="Delete word"
+                      >
+                        🗑️
+                      </button>
+                    )}
                   </div>
 
                 </motion.div>

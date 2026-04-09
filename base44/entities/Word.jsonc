@@ -1,0 +1,189 @@
+{
+  "name": "Word",
+  "type": "object",
+  "properties": {
+    "word": {
+      "type": "string",
+      "description": "The word in the target language"
+    },
+    "translation": {
+      "type": "string",
+      "description": "Translation in user's native language"
+    },
+    "phonetic": {
+      "type": "string",
+      "description": "Phonetic pronunciation"
+    },
+    "audio_url": {
+      "type": "string",
+      "description": "URL to audio pronunciation"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "URL to visual image for the word"
+    },
+    "youtube_url": {
+      "type": "string",
+      "description": "YouTube video URL for learning"
+    },
+    "exercises": {
+      "type": "array",
+      "description": "Practice exercises for the word",
+      "items": {
+        "type": "object",
+        "properties": {
+          "question": {
+            "type": "string"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "correct_answer": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "basics",
+        "numbers",
+        "colors",
+        "food",
+        "animals",
+        "travel",
+        "nature",
+        "business",
+        "emotions",
+        "actions",
+        "wordbank",
+        "words_i_know",
+        "pictures",
+        "sentences"
+      ],
+      "description": "Word category"
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": [
+        "beginner",
+        "intermediate",
+        "advanced"
+      ],
+      "default": "beginner"
+    },
+    "example_sentence": {
+      "type": "string",
+      "description": "Example usage in a sentence"
+    },
+    "saved_sentences": {
+      "type": "array",
+      "description": "User-approved example sentences",
+      "items": {
+        "type": "object",
+        "properties": {
+          "hebrew": {
+            "type": "string"
+          },
+          "transliteration": {
+            "type": "string"
+          },
+          "english": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "times_practiced": {
+      "type": "number",
+      "default": 0
+    },
+    "mastered": {
+      "type": "boolean",
+      "default": false
+    },
+    "vocab_level": {
+      "type": "number",
+      "enum": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "default": 0,
+      "description": "Vocabulary mastery level: 0=New, 1=Seen, 2=Familiar, 3=Practicing, 4=Strong, 5=Mastered"
+    },
+    "language": {
+      "type": "string",
+      "enum": [
+        "hebrew",
+        "english",
+        "spanish",
+        "french",
+        "portuguese",
+        "italian"
+      ],
+      "default": "hebrew",
+      "description": "Language of this word"
+    },
+    "day_introduced": {
+      "type": "number",
+      "description": "Day number where word was introduced"
+    },
+    "is_top_500": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this is a top 500 common word"
+    },
+    "is_starred": {
+      "type": "boolean",
+      "default": false,
+      "description": "User marked as important"
+    },
+    "is_verb": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this word is a verb"
+    },
+    "approved": {
+      "type": "boolean",
+      "default": false,
+      "description": "Admin-approved card \u2014 locked from editing, shared across all users"
+    },
+    "approved_by": {
+      "type": "string",
+      "description": "Email of admin who approved the card"
+    },
+    "approved_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the card was approved"
+    },
+    "verb_conjugations": {
+      "type": "object",
+      "description": "Verb conjugations for past, present, future",
+      "properties": {
+        "past": {
+          "type": "object"
+        },
+        "present": {
+          "type": "object"
+        },
+        "future": {
+          "type": "object"
+        }
+      }
+    }
+  },
+  "required": [
+    "word",
+    "translation",
+    "category"
+  ]
+}
