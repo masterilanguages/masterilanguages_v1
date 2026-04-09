@@ -141,7 +141,7 @@ export default function Backpack() {
         prompt: `A colorful, memorable mnemonic illustration: ${mnemonicDescription}. 
         For learning Hebrew word "${word.phonetic}" meaning "${word.translation}".
         Cartoon style, vibrant colors, educational, fun and memorable.
-        NO TEXT OR WORDS in the image - purely visual.`
+        ABSOLUTELY NO TEXT, NO LETTERS, NO WORDS, NO WRITING, NO LABELS of any kind in the image - purely visual illustration only.`
       });
       await updateWordMutation.mutateAsync({
         id: word.id,
@@ -308,7 +308,7 @@ Return ONLY a 1-2 sentence image description (no explanations, no headers). Star
       try {
         setGeneratingMnemonic(true);
         const mnemonicPrompt = `A memorable picture to help learn the Hebrew word "${activeNewWord.word}" meaning "${activeNewWord.meaning}". 
-        Create a colorful, cartoon-style illustration that visually represents the meaning. Fun and educational. NO TEXT IN THE IMAGE.`;
+        Create a colorful, cartoon-style illustration that visually represents the meaning. Fun and educational. ABSOLUTELY NO TEXT, NO LETTERS, NO WORDS, NO WRITING of any kind in the image.`;
         
         const result = await base44.integrations.Core.GenerateImage({
           prompt: mnemonicPrompt
@@ -342,7 +342,7 @@ Return ONLY a 1-2 sentence image description (no explanations, no headers). Star
       const result = await base44.integrations.Core.GenerateImage({
         prompt: `A colorful, memorable mnemonic illustration: ${prompt}. 
         For learning the word "${activeNewWord.word}" meaning "${activeNewWord.meaning}".
-        Cartoon style, vibrant colors, educational, fun and memorable.`
+        Cartoon style, vibrant colors, educational, fun and memorable. ABSOLUTELY NO TEXT, NO LETTERS, NO WORDS, NO WRITING of any kind in the image.`
       });
       setNewWordImage(result.url);
       
@@ -374,7 +374,7 @@ Return ONLY a 1-2 sentence image description (no explanations, no headers). Star
       try {
         setGeneratingMnemonic(true);
         const mnemonicPrompt = `A memorable, colorful cartoon illustration to help learn the Hebrew word "${word.phonetic}" meaning "${word.translation}". 
-        Visually represent the meaning. Fun, educational style. NO TEXT IN THE IMAGE.`;
+        Visually represent the meaning. Fun, educational style. ABSOLUTELY NO TEXT, NO LETTERS, NO WORDS, NO WRITING of any kind in the image.`;
         
         const result = await base44.integrations.Core.GenerateImage({
           prompt: mnemonicPrompt
