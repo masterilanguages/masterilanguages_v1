@@ -94,12 +94,24 @@ export default function Backpack() {
   });
 
   const { data: wordRatings = [] } = useQuery({
-    queryKey: ['wordRatings', userProfile?.language],
-    queryFn: () => {
+    queryKey: ['wordRatings', userProfile?.language, currentUser?.email],
+    queryFn: async () => {
       const lang = userProfile?.language || 'hebrew';
-      return base44.entities.Word.filter({ category: "wordbank", language: lang });
+      // Fetch user's own words
+      const ownWords = await base44.entities.Word.filter({ category: "wordbank", language: lang });
+      // Fetch all approved words (shared cards from admin)
+      let approvedWords = [];
+      try {
+        approvedWords = await base44.entities.Word.filter({ approved: true, language: lang });
+      } catch (e) {}
+      // Merge: for each approved word not already in own words (by phonetic), add it as level 0
+      const ownPhonetics = new Set(ownWords.map(w => (w.phonetic || w.word).toLowerCase()));
+      const newApproved = approvedWords.filter(w => !ownPhonetics.has((w.phonetic || w.word).toLowerCase()));
+      // Mark these as "shared" so UI can show badge, and reset their times_practiced for this user
+      const sharedCards = newApproved.map(w => ({ ...w, _shared: true, times_practiced: 0, mastered: false }));
+      return [...ownWords, ...sharedCards];
     },
-    enabled: !!userProfile,
+    enabled: !!userProfile && !!currentUser,
     staleTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
@@ -139,6 +151,22 @@ export default function Backpack() {
 
   const handleRateWord = async (wordId, rating, event) => {
     event.stopPropagation();
+    // Check if it's a shared (approved) card not yet owned by this user
+    const word = wordRatings.find(w => w.id === wordId);
+    if (word?._shared) {
+      // Save a copy for this user
+      await createWordMutation.mutateAsync({
+        word: word.word,
+        translation: word.translation,
+        phonetic: word.phonetic,
+        category: 'wordbank',
+        language: word.language || userProfile?.language || 'hebrew',
+        times_practiced: rating,
+        mastered: rating >= 5,
+        image_url: word.image_url || null,
+      });
+      return;
+    }
     await updateWordMutation.mutateAsync({
       id: wordId,
       data: { times_practiced: rating, mastered: rating >= 5 }
@@ -572,6 +600,17 @@ Return JSON with:
                   animate={{ opacity: 1, scale: 1 }}
                   className="bg-white/70 border border-stone-200 rounded-lg overflow-hidden w-48 flex flex-col"
                 >
+                  {/* Approved badge */}
+                  {word.approved && (
+                    <div className="flex items-center gap-1 px-2 py-0.5 bg-green-100 border-b border-green-200">
+                      <span className="text-green-600 text-[10px] font-semibold">✅ Approved card</span>
+                    </div>
+                  )}
+                  {word._shared && (
+                    <div className="flex items-center gap-1 px-2 py-0.5 bg-blue-100 border-b border-blue-200">
+                      <span className="text-blue-600 text-[10px] font-semibold">⭐ New — tap to rank</span>
+                    </div>
+                  )}
                   {/* Large mnemonic image */}
                   <div className="h-40 bg-stone-100 flex items-center justify-center overflow-hidden">
                     {word.image_url ? (
