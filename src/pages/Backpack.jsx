@@ -632,9 +632,9 @@ Return JSON with:
                           }`}
                         >
                           {label}
-                        </button>
-                      ))
-                    </div>
+                          </button>
+                          ))}
+                          </div>
                     {!word.approved && (
                       <button
                         onClick={() => suggestMnemonicForWord(word)}
