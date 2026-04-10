@@ -1,0 +1,62 @@
+{
+  "name": "FluentLead",
+  "type": "object",
+  "properties": {
+    "tag": {
+      "type": "string",
+      "default": "Language Fluency Lead"
+    },
+    "language": {
+      "type": "string"
+    },
+    "motivation": {
+      "type": "string"
+    },
+    "why_important": {
+      "type": "string"
+    },
+    "current_level": {
+      "type": "string"
+    },
+    "goal_level": {
+      "type": "string"
+    },
+    "frustration": {
+      "type": "string"
+    },
+    "tried_before": {
+      "type": "string"
+    },
+    "why_didnt_work": {
+      "type": "string"
+    },
+    "learning_duration": {
+      "type": "string"
+    },
+    "fluency_impact": {
+      "type": "string"
+    },
+    "why_now": {
+      "type": "string"
+    },
+    "ready_to_commit": {
+      "type": "string"
+    },
+    "daily_time": {
+      "type": "string"
+    },
+    "ready_to_move": {
+      "type": "string"
+    },
+    "first_name": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    }
+  },
+  "required": []
+}
