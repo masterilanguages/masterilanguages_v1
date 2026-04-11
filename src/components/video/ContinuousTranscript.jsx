@@ -40,6 +40,15 @@ export default function ContinuousTranscript({
   const [activeWordKey, setActiveWordKey] = useState(null); // "segIdx-field-wordIdx"
   const [wordTranslations, setWordTranslations] = useState({}); // key -> translation string
   const [translatingKey, setTranslatingKey] = useState(null);
+  const [revealedSentences, setRevealedSentences] = useState(new Set());
+
+  const toggleSentenceReveal = (segIdx) => {
+    setRevealedSentences(prev => {
+      const next = new Set(prev);
+      if (next.has(segIdx)) next.delete(segIdx); else next.add(segIdx);
+      return next;
+    });
+  };
 
   const fetchWordTranslation = async (wordKey, word) => {
     if (wordTranslations[wordKey]) return;
@@ -451,10 +460,18 @@ export default function ContinuousTranscript({
                         </p>
                       )
                     )}
-                    {(!hideEnglish || activeWordKey?.startsWith(`${segIdx}-`)) && segment.english && (
+                    {(!hideEnglish || revealedSentences.has(segIdx)) && segment.english && (
                       <p className="text-white/60 text-sm leading-tight text-left">
                         {renderWords(segIdx, 'english', segment.english, 'text-white/60 text-sm')}
                       </p>
+                    )}
+                    {segment.english && !canEdit && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); toggleSentenceReveal(segIdx); }}
+                        className="mt-0.5 text-[10px] text-white/30 hover:text-green-300 transition-colors"
+                      >
+                        {revealedSentences.has(segIdx) ? '🙈 hide' : '👁 see translation'}
+                      </button>
                     )}
                     {canEdit && (
                       <button
