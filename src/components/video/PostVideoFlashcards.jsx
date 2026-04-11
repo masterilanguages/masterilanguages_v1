@@ -295,33 +295,54 @@ Return JSON with:
 
                 {/* Custom mnemonic inline input */}
                 {customMnemonicInput === currentKey && (
-                  <div className="mt-2 flex gap-1" onClick={e => e.stopPropagation()}>
-                    <input
-                      autoFocus
-                      value={customMnemonicText}
-                      onChange={e => setCustomMnemonicText(e.target.value)}
-                      placeholder="Your own memory trick..."
-                      className="flex-1 text-xs px-2 py-1 rounded-lg border border-purple-200 bg-white text-stone-700 outline-none focus:border-purple-400"
-                      onKeyDown={e => {
-                        if (e.key === 'Enter' && customMnemonicText.trim()) {
-                          setMnemonicData(prev => ({ ...prev, [currentKey]: { ...prev[currentKey], customExplanation: customMnemonicText.trim() } }));
-                          if (currentWord.id) base44.entities.Word.update(currentWord.id, { mnemonic_explanation: customMnemonicText.trim() }).catch(() => {});
+                  <div className="mt-2 space-y-1" onClick={e => e.stopPropagation()}>
+                    <div className="flex gap-1">
+                      <input
+                        autoFocus
+                        value={customMnemonicText}
+                        onChange={e => setCustomMnemonicText(e.target.value)}
+                        placeholder="Your own memory trick..."
+                        className="flex-1 text-xs px-2 py-1 rounded-lg border border-purple-200 bg-white text-stone-700 outline-none focus:border-purple-400"
+                        onKeyDown={e => {
+                          if (e.key === 'Escape') setCustomMnemonicInput(null);
+                        }}
+                      />
+                      <button
+                        onClick={() => {
+                          if (customMnemonicText.trim()) {
+                            setMnemonicData(prev => ({ ...prev, [currentKey]: { ...prev[currentKey], customExplanation: customMnemonicText.trim() } }));
+                            if (currentWord.id) base44.entities.Word.update(currentWord.id, { mnemonic_explanation: customMnemonicText.trim() }).catch(() => {});
+                          }
                           setCustomMnemonicInput(null);
-                        }
-                        if (e.key === 'Escape') setCustomMnemonicInput(null);
-                      }}
-                    />
+                        }}
+                        className="text-xs px-2 py-1 rounded-lg bg-purple-500 text-white font-semibold hover:bg-purple-600"
+                      >Save</button>
+                      <button onClick={() => setCustomMnemonicInput(null)} className="text-xs text-stone-400 hover:text-stone-600 px-1">✕</button>
+                    </div>
+                    {/* Generate new image from custom text */}
                     <button
-                      onClick={() => {
-                        if (customMnemonicText.trim()) {
-                          setMnemonicData(prev => ({ ...prev, [currentKey]: { ...prev[currentKey], customExplanation: customMnemonicText.trim() } }));
-                          if (currentWord.id) base44.entities.Word.update(currentWord.id, { mnemonic_explanation: customMnemonicText.trim() }).catch(() => {});
-                        }
+                      onClick={async () => {
+                        if (!customMnemonicText.trim()) return;
+                        // Save text first
+                        setMnemonicData(prev => ({ ...prev, [currentKey]: { ...prev[currentKey], customExplanation: customMnemonicText.trim(), loading: true } }));
+                        if (currentWord.id) base44.entities.Word.update(currentWord.id, { mnemonic_explanation: customMnemonicText.trim() }).catch(() => {});
                         setCustomMnemonicInput(null);
+                        try {
+                          const imageResult = await base44.integrations.Core.GenerateImage({
+                            prompt: `${customMnemonicText.trim()}. Cartoon illustration, bright vivid colors, solid WHITE background, single clear subject centered. ABSOLUTELY NO TEXT, NO LETTERS, NO WORDS anywhere in the image. White background only.`
+                          });
+                          setMnemonicData(prev => ({ ...prev, [currentKey]: { ...prev[currentKey], image_url: imageResult.url, loading: false } }));
+                          if (currentWord.id) base44.entities.Word.update(currentWord.id, { image_url: imageResult.url }).catch(() => {});
+                        } catch (e) {
+                          setMnemonicData(prev => ({ ...prev, [currentKey]: { ...prev[currentKey], loading: false } }));
+                          toast.error("Failed to generate image");
+                        }
                       }}
-                      className="text-xs px-2 py-1 rounded-lg bg-purple-500 text-white font-semibold hover:bg-purple-600"
-                    >Save</button>
-                    <button onClick={() => setCustomMnemonicInput(null)} className="text-xs text-stone-400 hover:text-stone-600 px-1">✕</button>
+                      disabled={!customMnemonicText.trim()}
+                      className="w-full text-xs py-1 rounded-lg bg-purple-100 hover:bg-purple-200 text-purple-700 font-semibold transition-all disabled:opacity-40"
+                    >
+                      🎨 Save & Generate New Image
+                    </button>
                   </div>
                 )}
 
