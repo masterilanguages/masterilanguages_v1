@@ -15,6 +15,7 @@ import RecommendedForYou from "@/components/home/RecommendedForYou";
 import BabyGame from "../components/game/BabyGame";
 import AvatarMenu from "../components/game/AvatarMenu";
 import PostVideoFlashcards from "../components/video/PostVideoFlashcards";
+import SongTranscriptModal from "../components/songs/SongTranscriptModal";
 
 
 
@@ -77,6 +78,8 @@ export default function Home() {
   const [showSessionFlashcards, setShowSessionFlashcards] = useState(false);
   const [sessionFlashcardWords, setSessionFlashcardWords] = useState([]);
   const [loadingSessionWords, setLoadingSessionWords] = useState(false);
+  const [selectedSongForTranscript, setSelectedSongForTranscript] = useState(null);
+  const [savingSongTranscript, setSavingSongTranscript] = useState(false);
 
 
   // Get current user
@@ -261,6 +264,15 @@ export default function Home() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['days'] });
       toast.success("Day updated!");
+    },
+  });
+
+  const updateSongTranscriptMutation = useMutation({
+    mutationFn: ({ songId, transcript }) => base44.entities.DailySong.update(songId, { lyrics_he: transcript }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dailySongs'] });
+      toast.success("Transcript saved!");
+      setSelectedSongForTranscript(null);
     },
   });
 
@@ -818,10 +830,11 @@ export default function Home() {
                                    </button>
                                  ) : null}
                                 {(day.subsections || []).filter(task => {
-                                   // Hide generic "Watch a video" if a specific video task exists
-                                   if (task.id === 'video' && (day.subsections || []).some(s => s.video_id)) return false;
-                                   return true;
-                                 }).map((task, idx) => {
+                                  // Hide generic "Watch a video" if a specific video task exists
+                                  if (task.id === 'video' && (day.subsections || []).some(s => s.video_id)) return false;
+                                  return true;
+                                }).map((task, idx) => {
+                                  const isSong = task.song_id || (songs && songs.find(s => s.id === task.id));
                                     const isTaskDone = progress?.subsections_completed?.includes(task.id);
                                     const isDragging = draggedTask?.dayId === day.id && draggedTask?.idx === idx;
                                     const isDragOver = dragOverTask?.dayId === day.id && dragOverTask?.idx === idx;
@@ -866,6 +879,11 @@ export default function Home() {
                                             style={{ background: isTaskDone ? '#5a6b5a30' : '#ffffff50', border: isDragOver ? undefined : '1px solid #5a6b5a20' }}
                                             onClick={() => {
                                              if (isDragging) return;
+                                             if (isSong) {
+                                               const songData = songs.find(s => s.id === task.id || s.id === task.song_id);
+                                               setSelectedSongForTranscript(songData);
+                                               return;
+                                             }
                                              const ytId = task.video_id || extractYouTubeId(task.youtube_url);
                                              if (ytId) {
                                                navigate(createPageUrl("MediaLibrary") + `?videoId=${ytId}`);
@@ -1037,6 +1055,20 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      {/* Song Transcript Modal */}
+      <SongTranscriptModal
+        open={!!selectedSongForTranscript}
+        onOpenChange={(open) => !open && setSelectedSongForTranscript(null)}
+        song={selectedSongForTranscript}
+        onSave={(transcript) => {
+          setSavingSongTranscript(true);
+          updateSongTranscriptMutation.mutate({ songId: selectedSongForTranscript.id, transcript }, {
+            onSettled: () => setSavingSongTranscript(false),
+          });
+        }}
+        isSaving={savingSongTranscript}
+      />
 
       {/* Post-video flashcards */}
       {showSessionFlashcards && sessionFlashcardWords.length > 0 && (
