@@ -13,6 +13,8 @@ export default function ContinuousTranscript({
   isPlaying: isPlayingProp = false,
 }) {
   const [showPhonetics, setShowPhonetics] = useState(false);
+  const [hideEnglish, setHideEnglish] = useState(false);
+  const [hideTranslit, setHideTranslit] = useState(false);
   const [localTranscript, setLocalTranscript] = useState(transcriptProp);
 
   // Sync when prop changes (e.g. loaded from DB)
@@ -235,16 +237,38 @@ export default function ContinuousTranscript({
         {!canEdit && (
           <p className="text-white/30 text-xs">Hover a word and click 🎒 to add to backpack</p>
         )}
-        <button
-          onClick={() => setShowPhonetics(prev => !prev)}
-          className={`ml-auto flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all border ${
-            showPhonetics
-              ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-300'
-              : 'bg-white/10 border-white/20 text-white/60 hover:bg-white/20'
-          }`}
-        >
-          {showPhonetics ? '🔤 Show Transliteration' : 'אָ Show Phonetics'}
-        </button>
+        <div className="ml-auto flex items-center gap-1.5 flex-wrap">
+          <button
+            onClick={() => setHideTranslit(prev => !prev)}
+            className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold transition-all border ${
+              hideTranslit
+                ? 'bg-orange-500/20 border-orange-500/50 text-orange-300'
+                : 'bg-white/10 border-white/20 text-white/60 hover:bg-white/20'
+            }`}
+          >
+            {hideTranslit ? '👁 Translit' : '🚫 Translit'}
+          </button>
+          <button
+            onClick={() => setHideEnglish(prev => !prev)}
+            className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold transition-all border ${
+              hideEnglish
+                ? 'bg-orange-500/20 border-orange-500/50 text-orange-300'
+                : 'bg-white/10 border-white/20 text-white/60 hover:bg-white/20'
+            }`}
+          >
+            {hideEnglish ? '👁 English' : '🚫 English'}
+          </button>
+          <button
+            onClick={() => setShowPhonetics(prev => !prev)}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all border ${
+              showPhonetics
+                ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-300'
+                : 'bg-white/10 border-white/20 text-white/60 hover:bg-white/20'
+            }`}
+          >
+            {showPhonetics ? '🔤 Show Transliteration' : 'אָ Show Phonetics'}
+          </button>
+        </div>
       </div>
       <div className="space-y-1 flex flex-col items-center" onClick={() => setActiveWordKey(null)}>
         {transcript.map((segment, segIdx) => {
@@ -351,11 +375,13 @@ export default function ContinuousTranscript({
                     </p>
                   )
                 ) : (
-                  <p className="text-white text-base font-medium leading-tight text-left">
-                    {renderWords(segIdx, 'transliteration', segment.transliteration, 'text-white text-base font-medium')}
-                  </p>
+                  !hideTranslit && (
+                    <p className="text-white text-base font-medium leading-tight text-left">
+                      {renderWords(segIdx, 'transliteration', segment.transliteration, 'text-white text-base font-medium')}
+                    </p>
+                  )
                 )}
-                {segment.english && (
+                {!hideEnglish && segment.english && (
                   <p className="text-white/60 text-sm leading-tight text-left">
                     {renderWords(segIdx, 'english', segment.english, 'text-white/60 text-sm')}
                   </p>
