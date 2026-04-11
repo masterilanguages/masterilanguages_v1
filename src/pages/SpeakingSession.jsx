@@ -43,18 +43,23 @@ function useMediaRecorder(onStop) {
   const chunksRef = useRef([]);
 
   const startRecording = useCallback(async () => {
-    chunksRef.current = [];
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const mr = new MediaRecorder(stream);
-    mediaRecorderRef.current = mr;
-    mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
-    mr.onstop = () => {
-      const blob = new Blob(chunksRef.current, { type: "audio/webm" });
-      const url = URL.createObjectURL(blob);
-      onStop(url);
-      stream.getTracks().forEach(t => t.stop());
-    };
-    mr.start();
+    try {
+      chunksRef.current = [];
+      if (!navigator.mediaDevices?.getUserMedia) return;
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mr = new MediaRecorder(stream);
+      mediaRecorderRef.current = mr;
+      mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+      mr.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        const url = URL.createObjectURL(blob);
+        onStop(url);
+        stream.getTracks().forEach(t => t.stop());
+      };
+      mr.start();
+    } catch (e) {
+      console.warn("Mic access denied or unavailable:", e);
+    }
   }, [onStop]);
 
   const stopRecording = useCallback(() => {
