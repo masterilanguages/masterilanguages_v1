@@ -393,27 +393,26 @@ Return JSON with:
 
               {/* Word info */}
               <div className="flex flex-col items-center px-6 pt-4 pb-2 gap-1" onClick={() => !flipped && setFlipped(true)}>
-                {/* Phonetic always shown */}
-                <p className="text-cyan-500 font-bold text-2xl">{currentWord.phonetic}</p>
+                {/* English always shown */}
+                <p className="text-stone-700 font-bold text-2xl">{currentWord.translation}</p>
 
-                {/* English: shown if toggle ON, or revealed after tap */}
-                {(showEnglish || flipped) && (
-                  <p className="text-stone-500 text-base">= {currentWord.translation}</p>
-                )}
-
-                {/* Hebrew: shown if toggle ON, always */}
-                {showHebrew && currentWord.word && (
-                  <p className="text-cyan-700 font-bold text-xl" dir="rtl" style={{ fontFamily: 'serif' }}>
-                    {currentWord.word}
-                  </p>
+                {/* Phonetic + Hebrew: revealed on flip, hidden if Hebrew toggle OFF */}
+                {flipped && !showHebrew && (
+                  <>
+                    <p className="text-cyan-500 font-bold text-xl">{currentWord.phonetic}</p>
+                    {currentWord.word && (
+                      <p className="text-cyan-700 font-bold text-lg" dir="rtl" style={{ fontFamily: 'serif' }}>
+                        {currentWord.word}
+                      </p>
+                    )}
+                  </>
                 )}
 
                 {/* Tap hint */}
                 {!flipped && (
-                  <p className="text-stone-300 text-xs mt-2">tap to reveal translation & rate</p>
+                  <p className="text-stone-300 text-xs mt-2">tap to reveal the word</p>
                 )}
 
-                {/* Rating buttons inside card, shown after tap */}
                 <AnimatePresence>
                   {flipped && (
                     <motion.div
