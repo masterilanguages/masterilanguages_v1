@@ -27,6 +27,7 @@ export default function PostVideoFlashcards({ words, onClose, onJournal, videoTi
   const [mnemonicData, setMnemonicData] = useState({});
   const [customMnemonicInput, setCustomMnemonicInput] = useState(null); // key or null
   const [customMnemonicText, setCustomMnemonicText] = useState("");
+  const [approvedState, setApprovedState] = useState({}); // local approved override per word id
 
   const updateWordMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Word.update(id, data),
@@ -141,8 +142,11 @@ Return JSON with:
 
   const handleApprove = async (word) => {
     if (!word.id) return;
-    await updateWordMutation.mutateAsync({ id: word.id, data: { approved: !word.approved } });
-    toast.success(word.approved ? "Approval removed" : "Card approved ✅");
+    const currentApproved = approvedState[word.id] !== undefined ? approvedState[word.id] : word.approved;
+    const newApproved = !currentApproved;
+    setApprovedState(prev => ({ ...prev, [word.id]: newApproved }));
+    await updateWordMutation.mutateAsync({ id: word.id, data: { approved: newApproved } });
+    toast.success(newApproved ? "Card approved ✅" : "Approval removed");
   };
 
   const handleSkip = () => {
@@ -259,7 +263,7 @@ Return JSON with:
               style={{ background: '#ffffff', border: '1px solid #e5e7eb' }}
             >
               {/* Approved badge - always shown at top if approved */}
-              {currentWord.approved && (
+              {(approvedState[currentWord.id] !== undefined ? approvedState[currentWord.id] : currentWord.approved) && (
                 <div className="flex items-center justify-center gap-1 px-4 py-2 bg-green-50 border-b border-green-100">
                   <span className="text-green-600 text-sm font-bold">✅ Approved card</span>
                 </div>
@@ -286,22 +290,27 @@ Return JSON with:
 
               {/* Mnemonic explanation — always shown */}
               <div className="px-5 py-2 bg-purple-50 border-t border-purple-100" style={{ minHeight: 36 }}>
-                {currentMnemonic?.explanation ? (
+                {/* Always show the AI explanation if present */}
+                {currentMnemonic?.explanation && (
                   <div className="flex items-center gap-2">
                     <p className="text-purple-600 text-xs italic flex-1">💡 {currentMnemonic.explanation}</p>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setCustomMnemonicInput(currentKey); setCustomMnemonicText(currentMnemonic.customExplanation || ""); }}
-                      className="flex-shrink-0 w-7 h-7 rounded-full bg-purple-100 hover:bg-purple-200 flex items-center justify-center text-base transition-all"
-                      title="Write your own mnemonic"
-                    >✏️</button>
+                    {!customMnemonicInput && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setCustomMnemonicInput(currentKey); setCustomMnemonicText(currentMnemonic.customExplanation || ""); }}
+                        className="flex-shrink-0 w-7 h-7 rounded-full bg-purple-100 hover:bg-purple-200 flex items-center justify-center text-base transition-all"
+                        title="Write your own mnemonic"
+                      >✏️</button>
+                    )}
                   </div>
-                ) : currentMnemonic?.loading ? (
-                  <p className="text-purple-300 text-xs text-center italic">Crafting mnemonic...</p>
-                ) : (
+                )}
+                {!currentMnemonic?.explanation && !currentMnemonic?.loading && !customMnemonicInput && (
                   <button
                     onClick={(e) => { e.stopPropagation(); setCustomMnemonicInput(currentKey); setCustomMnemonicText(""); }}
                     className="w-full text-xs text-purple-400 hover:text-purple-600 text-center"
                   >✏️ Write your own mnemonic</button>
+                )}
+                {currentMnemonic?.loading && !currentMnemonic?.explanation && (
+                  <p className="text-purple-300 text-xs text-center italic">Crafting mnemonic...</p>
                 )}
 
                 {/* Custom mnemonic inline input */}
@@ -468,16 +477,16 @@ Return JSON with:
                     {showEnglish ? '👁 EN' : '🙈 EN'}
                   </button>
 
-                  {/* Approve */}
+                  {/* Approve / Disapprove */}
                   {currentWord.id && (
                     <button
                       onClick={(e) => { e.stopPropagation(); handleApprove(currentWord); }}
                       className={`flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-all border ${
-                        currentWord.approved
+                        (approvedState[currentWord.id] !== undefined ? approvedState[currentWord.id] : currentWord.approved)
                           ? 'bg-green-100 border-green-200 text-green-600'
                           : 'bg-white border-stone-200 text-stone-300 hover:text-green-500 hover:bg-green-50'
                       }`}
-                      title={currentWord.approved ? "Approved" : "Approve card"}
+                      title={(approvedState[currentWord.id] !== undefined ? approvedState[currentWord.id] : currentWord.approved) ? "Click to disapprove" : "Approve card"}
                     >
                       <Check className="w-3 h-3" />
                     </button>
