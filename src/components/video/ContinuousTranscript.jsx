@@ -13,7 +13,7 @@ export default function ContinuousTranscript({
   isPlaying: isPlayingProp = false,
 }) {
   const [showPhonetics, setShowPhonetics] = useState(false);
-  const [hideEnglish, setHideEnglish] = useState(false);
+  const [hideEnglish, setHideEnglish] = useState(true);
   const [hideTranslit, setHideTranslit] = useState(false);
   const [localTranscript, setLocalTranscript] = useState(transcriptProp);
 
@@ -432,7 +432,7 @@ export default function ContinuousTranscript({
                         </p>
                       )
                     )}
-                    {!hideEnglish && segment.english && (
+                    {(!hideEnglish || activeWordKey?.startsWith(`${segIdx}-`)) && segment.english && (
                       <p className="text-white/60 text-sm leading-tight text-left">
                         {renderWords(segIdx, 'english', segment.english, 'text-white/60 text-sm')}
                       </p>
