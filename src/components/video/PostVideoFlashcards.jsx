@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 
 const RATINGS = [
   { value: 1, label: "1", color: "#ef4444" },
@@ -19,6 +19,8 @@ export default function PostVideoFlashcards({ words, onClose, onJournal, videoTi
   const [flipped, setFlipped] = useState(false);
   const [saving, setSaving] = useState(false);
   const [results, setResults] = useState([]);
+  const [generatingMnemonic, setGeneratingMnemonic] = useState(false);
+  const [wordImages, setWordImages] = useState({}); // wordId/phonetic -> image url
 
   const updateWordMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Word.update(id, data),
@@ -33,8 +35,9 @@ export default function PostVideoFlashcards({ words, onClose, onJournal, videoTi
   const handleRate = async (word, rating) => {
     setSaving(true);
     setResults(prev => [...prev, { word, rating }]);
+    const imageUrl = wordImages[word.id || word.phonetic];
     if (word.id) {
-      await updateWordMutation.mutateAsync({ id: word.id, data: { times_practiced: rating, mastered: rating >= 5 } });
+      await updateWordMutation.mutateAsync({ id: word.id, data: { times_practiced: rating, mastered: rating >= 5, ...(imageUrl ? { image_url: imageUrl } : {}) } });
     } else {
       await createWordMutation.mutateAsync({
         word: word.word,
@@ -45,6 +48,7 @@ export default function PostVideoFlashcards({ words, onClose, onJournal, videoTi
         times_practiced: rating,
         mastered: rating >= 5,
         vocab_level: 0,
+        ...(imageUrl ? { image_url: imageUrl } : {}),
       });
     }
     setSaving(false);
@@ -56,10 +60,46 @@ export default function PostVideoFlashcards({ words, onClose, onJournal, videoTi
     }
   };
 
+  const handleGenerateMnemonic = async (word) => {
+    setGeneratingMnemonic(true);
+    try {
+      const result = await base44.integrations.Core.GenerateImage({
+        prompt: `A colorful, memorable mnemonic cartoon illustration for learning the word "${word.phonetic}" meaning "${word.translation}". Fun, educational, vibrant colors. ABSOLUTELY NO TEXT, NO LETTERS, NO WORDS in the image.`
+      });
+      const key = word.id || word.phonetic;
+      setWordImages(prev => ({ ...prev, [key]: result.url }));
+      if (word.id) {
+        await updateWordMutation.mutateAsync({ id: word.id, data: { image_url: result.url } });
+      }
+      toast.success("Mnemonic image created! 🎨");
+    } catch (e) {
+      toast.error("Failed to generate image");
+    }
+    setGeneratingMnemonic(false);
+  };
+
+  const handleSkip = () => {
+    if (cardIdx + 1 >= words.length) {
+      setStep("done");
+    } else {
+      setCardIdx(i => i + 1);
+      setFlipped(false);
+    }
+  };
+
   const currentWord = words[cardIdx];
+  const currentImage = currentWord ? (currentWord.image_url || wordImages[currentWord.id || currentWord.phonetic]) : null;
 
   return (
     <div className="fixed inset-0 z-[100] bg-slate-950/95 flex flex-col items-center justify-center px-4">
+      {/* Exit button always visible */}
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 text-white/40 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10"
+      >
+        <X className="w-6 h-6" />
+      </button>
+
       <AnimatePresence mode="wait">
         {step === "intro" && (
           <motion.div
@@ -80,6 +120,7 @@ export default function PostVideoFlashcards({ words, onClose, onJournal, videoTi
               <ul className="space-y-2 text-white/60 text-sm">
                 <li>📖 Each word from the video will appear on a card</li>
                 <li>👆 Tap the card to reveal the English meaning</li>
+                <li>🎨 Generate a mnemonic image to help remember it</li>
                 <li>⭐ Rate how well you know it (1–Mastered)</li>
                 <li>🎒 Your ratings are saved to your Backpack</li>
               </ul>
@@ -92,9 +133,6 @@ export default function PostVideoFlashcards({ words, onClose, onJournal, videoTi
             >
               Start Flashcards →
             </button>
-            <button onClick={onClose} className="text-white/30 text-sm hover:text-white/60">
-              Skip for now
-            </button>
           </motion.div>
         )}
 
@@ -104,7 +142,7 @@ export default function PostVideoFlashcards({ words, onClose, onJournal, videoTi
             initial={{ opacity: 0, x: 60 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -60 }}
-            className="max-w-md w-full space-y-6"
+            className="max-w-md w-full space-y-4"
           >
             {/* Progress */}
             <div className="flex items-center gap-3">
@@ -133,7 +171,11 @@ export default function PostVideoFlashcards({ words, onClose, onJournal, videoTi
                 border: '1px solid rgba(255,255,255,0.1)',
               }}
             >
-              <div className="flex flex-col items-center justify-center h-full p-8 gap-3">
+              {/* Mnemonic image if available */}
+              {currentImage && (
+                <img src={currentImage} alt="mnemonic" className="w-full h-40 object-cover" />
+              )}
+              <div className="flex flex-col items-center justify-center p-8 gap-3">
                 {currentWord.word && (
                   <p className="text-4xl font-bold text-cyan-300" dir="rtl" style={{ fontFamily: 'serif' }}>
                     {currentWord.word}
@@ -156,6 +198,25 @@ export default function PostVideoFlashcards({ words, onClose, onJournal, videoTi
                 )}
               </div>
             </motion.div>
+
+            {/* Action row: mnemonic + skip */}
+            <div className="flex gap-2 items-center justify-between">
+              <button
+                onClick={() => handleGenerateMnemonic(currentWord)}
+                disabled={generatingMnemonic}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all"
+                style={{ background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.4)', color: '#a78bfa' }}
+              >
+                {generatingMnemonic ? <Loader2 className="w-4 h-4 animate-spin" /> : "🎨"}
+                {generatingMnemonic ? "Generating..." : "Mnemonic"}
+              </button>
+              <button
+                onClick={handleSkip}
+                className="text-white/30 text-sm hover:text-white/60 transition-colors px-3 py-2"
+              >
+                Skip →
+              </button>
+            </div>
 
             {/* Rating buttons */}
             <AnimatePresence>
