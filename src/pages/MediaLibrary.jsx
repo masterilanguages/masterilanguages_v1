@@ -79,6 +79,15 @@ export default function MediaLibrary() {
   const [showPostVideoFlashcards, setShowPostVideoFlashcards] = useState(false);
   const [sessionVocabWords, setSessionVocabWords] = useState([]);
 
+  const sessionDay = new URLSearchParams(window.location.search).get('sessionDay');
+
+  const handleRankWords = async () => {
+    if (!sessionDay) return;
+    const words = await base44.entities.Word.filter({ example_sentence: `Session ${sessionDay}` });
+    setSessionVocabWords(words.length > 0 ? words : []);
+    setShowPostVideoFlashcards(true);
+  };
+
   const [formData, setFormData] = useState({
     title: "",
     language: "hebrew",
@@ -1888,16 +1897,29 @@ Return a JSON with a "videos" array. Each video must have:
                   <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
                 </div>
               ) : transcript.length > 0 ? (
-                <ContinuousTranscript
-                  transcript={transcript}
-                  currentTime={currentTime}
-                  onSeekTo={handleSeekTo}
-                  onAddWord={handleAddWordFromTranscript}
-                  onEditWord={saveTranscriptEdit}
-                  onDeleteSegment={deleteTranscriptSegment}
-                  canEdit={canEdit}
-                  isPlaying={isPlaying}
-                />
+                <>
+                  <ContinuousTranscript
+                    transcript={transcript}
+                    currentTime={currentTime}
+                    onSeekTo={handleSeekTo}
+                    onAddWord={handleAddWordFromTranscript}
+                    onEditWord={saveTranscriptEdit}
+                    onDeleteSegment={deleteTranscriptSegment}
+                    canEdit={canEdit}
+                    isPlaying={isPlaying}
+                  />
+                  {sessionDay && (
+                    <div className="mt-6 pb-8 flex justify-center">
+                      <button
+                        onClick={handleRankWords}
+                        className="px-8 py-4 rounded-2xl text-white font-bold text-lg transition-all hover:scale-105"
+                        style={{ background: 'linear-gradient(135deg, #5a6b5a, #3d4a2e)' }}
+                      >
+                        ✅ I'm Done — Rank Words
+                      </button>
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="max-w-3xl mx-auto bg-white/5 rounded-xl p-8 space-y-6">
                   <div className="text-center">

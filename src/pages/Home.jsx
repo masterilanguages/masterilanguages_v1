@@ -73,17 +73,6 @@ export default function Home() {
   const [addingVideoToDayId, setAddingVideoToDayId] = useState(null);
   const [sessionModal, setSessionModal] = useState(null); // day object
 
-  const handleSessionDone = async (day) => {
-    setLoadingSessionWords(true);
-    try {
-      const sessionLabel = `Session ${day.day_number}`;
-      const words = await base44.entities.Word.filter({ example_sentence: sessionLabel });
-      setSessionFlashcardWords(words.length > 0 ? words : []);
-      setSessionModal(null);
-      setShowSessionFlashcards(true);
-    } catch (e) {}
-    setLoadingSessionWords(false);
-  };
   const [showSessionFlashcards, setShowSessionFlashcards] = useState(false);
   const [sessionFlashcardWords, setSessionFlashcardWords] = useState([]);
   const [loadingSessionWords, setLoadingSessionWords] = useState(false);
@@ -970,39 +959,32 @@ export default function Home() {
                 <li>Rank the key vocabulary words from the session</li>
               </ol>
             </div>
-            {/* Video tasks */}
+            {/* Video tasks - open in-app with sessionDay param */}
             {(sessionModal.subsections || []).filter(t => t.video_id || extractYouTubeId(t.youtube_url)).map(task => {
               const ytId = task.video_id || extractYouTubeId(task.youtube_url);
               return (
-                <a
+                <button
                   key={task.id}
-                  href={`https://www.youtube.com/watch?v=${ytId}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 bg-stone-100 rounded-xl p-3 border border-stone-200 hover:border-stone-400 transition-all no-underline"
+                  onClick={() => {
+                    setSessionModal(null);
+                    navigate(createPageUrl('MediaLibrary') + `?videoId=${ytId}&sessionDay=${sessionModal.day_number}`);
+                  }}
+                  className="flex items-center gap-3 bg-stone-100 rounded-xl p-3 border border-stone-200 hover:border-stone-400 transition-all w-full text-left"
                 >
                   <img src={`https://i.ytimg.com/vi/${ytId}/hqdefault.jpg`} alt="" className="w-20 h-14 rounded-lg object-cover flex-shrink-0" />
                   <div>
                     <p className="text-stone-700 font-semibold text-sm">{task.name}</p>
                     <p className="text-stone-400 text-xs mt-0.5">▶ Watch video</p>
                   </div>
-                </a>
+                </button>
               );
             })}
-            <div className="flex gap-3 pt-1">
+            <div className="pt-1">
               <button
                 onClick={() => setSessionModal(null)}
-                className="flex-1 py-2.5 rounded-xl border border-stone-300 text-stone-500 text-sm font-medium hover:bg-stone-100 transition-all"
+                className="w-full py-2.5 rounded-xl border border-stone-300 text-stone-500 text-sm font-medium hover:bg-stone-100 transition-all"
               >
                 Cancel
-              </button>
-              <button
-                onClick={() => handleSessionDone(sessionModal)}
-                disabled={loadingSessionWords}
-                className="flex-1 py-2.5 rounded-xl text-white text-sm font-bold transition-all disabled:opacity-60"
-                style={{ background: 'linear-gradient(135deg, #5a6b5a, #3d4a2e)' }}
-              >
-                {loadingSessionWords ? '...' : "✅ I'm Done — Rank Words"}
               </button>
             </div>
           </div>
