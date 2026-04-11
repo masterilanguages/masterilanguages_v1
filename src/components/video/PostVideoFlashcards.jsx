@@ -78,6 +78,11 @@ Return JSON with:
         ...prev,
         [key]: { image_url: imageResult.url, explanation: concept.explanation, loading: false }
       }));
+
+      // Persist to DB if word has an id
+      if (word.id) {
+        base44.entities.Word.update(word.id, { image_url: imageResult.url, mnemonic_explanation: concept.explanation }).catch(() => {});
+      }
     } catch (e) {
       setMnemonicData(prev => ({ ...prev, [key]: { ...(prev[key] || {}), loading: false } }));
       toast.error("Failed to generate mnemonic");

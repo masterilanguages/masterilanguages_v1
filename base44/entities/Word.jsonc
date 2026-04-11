@@ -22,6 +22,10 @@
       "type": "string",
       "description": "URL to visual image for the word"
     },
+    "mnemonic_explanation": {
+      "type": "string",
+      "description": "Short mnemonic explanation for the image"
+    },
     "youtube_url": {
       "type": "string",
       "description": "YouTube video URL for learning"
@@ -117,7 +121,7 @@
         5
       ],
       "default": 0,
-      "description": "Vocabulary mastery level: 0=New, 1=Seen, 2=Familiar, 3=Practicing, 4=Strong, 5=Mastered"
+      "description": "Vocabulary mastery level"
     },
     "language": {
       "type": "string",
@@ -129,45 +133,36 @@
         "portuguese",
         "italian"
       ],
-      "default": "hebrew",
-      "description": "Language of this word"
+      "default": "hebrew"
     },
     "day_introduced": {
-      "type": "number",
-      "description": "Day number where word was introduced"
+      "type": "number"
     },
     "is_top_500": {
       "type": "boolean",
-      "default": false,
-      "description": "Whether this is a top 500 common word"
+      "default": false
     },
     "is_starred": {
       "type": "boolean",
-      "default": false,
-      "description": "User marked as important"
+      "default": false
     },
     "is_verb": {
       "type": "boolean",
-      "default": false,
-      "description": "Whether this word is a verb"
+      "default": false
     },
     "approved": {
       "type": "boolean",
-      "default": false,
-      "description": "Admin-approved card \u2014 locked from editing, shared across all users"
+      "default": false
     },
     "approved_by": {
-      "type": "string",
-      "description": "Email of admin who approved the card"
+      "type": "string"
     },
     "approved_at": {
       "type": "string",
-      "format": "date-time",
-      "description": "When the card was approved"
+      "format": "date-time"
     },
     "verb_conjugations": {
       "type": "object",
-      "description": "Verb conjugations for past, present, future",
       "properties": {
         "past": {
           "type": "object"

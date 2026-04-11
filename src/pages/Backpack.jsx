@@ -252,12 +252,13 @@ Return JSON with:
             times_practiced: word.times_practiced || 0,
             mastered: word.mastered || false,
             image_url: imageResult.url,
+            mnemonic_explanation: concept.explanation,
           });
         }
       } else {
         await updateWordMutation.mutateAsync({
           id: word.id,
-          data: { image_url: imageResult.url }
+          data: { image_url: imageResult.url, mnemonic_explanation: concept.explanation }
         });
       }
 
@@ -706,8 +707,8 @@ Return JSON with:
                   </div>
 
                   {/* Mnemonic explanation under image */}
-                  {mnemonicExplanations[word.id] && (
-                    <p className="text-[10px] text-center px-2 pb-1 italic" style={{ color: '#6b7c5a' }}>{mnemonicExplanations[word.id]}</p>
+                  {(mnemonicExplanations[word.id] || word.mnemonic_explanation) && (
+                    <p className="text-[10px] text-center px-2 pb-1 italic" style={{ color: '#6b7c5a' }}>💡 {mnemonicExplanations[word.id] || word.mnemonic_explanation}</p>
                   )}
 
                             {/* Bottom row: ratings + edit/delete buttons */}
