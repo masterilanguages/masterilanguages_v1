@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Volume2, Play, ArrowLeft } from "lucide-react";
@@ -14,6 +14,11 @@ export default function Sentences() {
   const [mode, setMode] = useState("list");
   const [currentIndex, setCurrentIndex] = useState(0);
   const queryClient = useQueryClient();
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    base44.auth.me().then(setCurrentUser).catch(() => {});
+  }, []);
 
   const { data: userProfile } = useQuery({
     queryKey: ['userProfile'],
@@ -42,6 +47,17 @@ export default function Sentences() {
       queryClient.invalidateQueries({ queryKey: ['sentences'] });
     },
   });
+
+  const approveMutation = useMutation({
+    mutationFn: ({ id, approved }) => base44.entities.Word.update(id, {
+      approved,
+      approved_by: approved ? currentUser?.email : null,
+      approved_at: approved ? new Date().toISOString() : null,
+    }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['sentences'] }),
+  });
+
+  const isAdmin = currentUser?.role === 'admin';
 
   const handleRate = async (id, rating) => {
     await updateMutation.mutateAsync({
@@ -138,8 +154,12 @@ export default function Sentences() {
                           key={sentence.id}
                           initial={{ opacity: 0, scale: 0.9 }}
                           animate={{ opacity: 1, scale: 1 }}
-                          className={`${levelLabels[level].bg} ${levelLabels[level].border} border rounded-2xl px-4 py-3 flex items-center justify-between`}
+                          className={`${levelLabels[level].bg} ${levelLabels[level].border} border rounded-2xl px-4 py-3 flex flex-col gap-1`}
                         >
+                          {sentence.approved && (
+                            <span className="text-[10px] text-green-400 font-semibold">✅ Approved</span>
+                          )}
+                          <div className="flex items-center justify-between">
                           <div className="flex-1 text-left flex items-center gap-3">
                             <ClickableWord
                               word={sentence.word}
@@ -162,22 +182,37 @@ export default function Sentences() {
                               </button>
                             )}
                           </div>
-                          <div className="flex gap-1 ml-2 border-l border-white/10 pl-2">
-                            {[1, 2, 3, 4, 5].map(num => (
-                              <button
-                                key={num}
-                                onClick={() => handleRate(sentence.id, num)}
-                                className={`w-6 h-6 rounded-full text-xs font-bold transition-all hover:scale-110 ${
-                                  (sentence.times_practiced || 0) >= num 
-                                    ? "bg-cyan-500 text-white" 
-                                    : "bg-white/10 text-white/50 hover:bg-white/20"
-                                }`}
-                              >
-                                {num}
-                              </button>
-                            ))}
+                          <div className="flex gap-1 ml-2 border-l border-white/10 pl-2 items-center">
+                             {[1, 2, 3, 4, 5].map(num => (
+                               <button
+                                 key={num}
+                                 onClick={() => handleRate(sentence.id, num)}
+                                 className={`w-6 h-6 rounded-full text-xs font-bold transition-all hover:scale-110 ${
+                                   (sentence.times_practiced || 0) >= num 
+                                     ? "bg-cyan-500 text-white" 
+                                     : "bg-white/10 text-white/50 hover:bg-white/20"
+                                 }`}
+                               >
+                                 {num}
+                               </button>
+                             ))}
+                             {isAdmin && (
+                               <button
+                                 onClick={() => approveMutation.mutate({ id: sentence.id, approved: !sentence.approved })}
+                                 disabled={approveMutation.isPending}
+                                 className={`w-6 h-6 rounded-full text-xs font-bold transition-all ml-1 ${
+                                   sentence.approved
+                                     ? 'bg-green-500/30 hover:bg-red-500/20 text-green-400'
+                                     : 'bg-white/10 hover:bg-green-500/20 text-white/40'
+                                 }`}
+                                 title={sentence.approved ? 'Unapprove' : 'Approve for all users'}
+                               >
+                                 ✅
+                               </button>
+                             )}
+                           </div>
                           </div>
-                        </motion.div>
+                          </motion.div>
                       ))}
                     </div>
                   </div>
