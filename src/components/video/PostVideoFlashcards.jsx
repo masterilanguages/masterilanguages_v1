@@ -23,6 +23,8 @@ export default function PostVideoFlashcards({ words, onClose, onJournal, videoTi
   const [showHebrew, setShowHebrew] = useState(true);
   const [showEnglish, setShowEnglish] = useState(false);
   const [mnemonicData, setMnemonicData] = useState({});
+  const [customMnemonicInput, setCustomMnemonicInput] = useState(null); // key or null
+  const [customMnemonicText, setCustomMnemonicText] = useState("");
 
   const updateWordMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Word.update(id, data),
@@ -286,10 +288,57 @@ Return JSON with:
               {/* Mnemonic explanation — always shown */}
               <div className="px-5 py-2 bg-purple-50 border-t border-purple-100" style={{ minHeight: 36 }}>
                 {currentMnemonic?.explanation ? (
-                  <p className="text-purple-600 text-xs text-center italic">💡 {currentMnemonic.explanation}</p>
+                  <div className="flex items-start gap-1 justify-center">
+                    <p className="text-purple-600 text-xs text-center italic flex-1">💡 {currentMnemonic.explanation}</p>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setCustomMnemonicInput(currentKey); setCustomMnemonicText(currentMnemonic.customExplanation || ""); }}
+                      className="text-sm hover:scale-110 transition-transform flex-shrink-0"
+                      title="Write your own mnemonic"
+                    >✏️</button>
+                  </div>
                 ) : currentMnemonic?.loading ? (
                   <p className="text-purple-300 text-xs text-center italic">Crafting mnemonic...</p>
                 ) : null}
+
+                {/* Custom mnemonic inline input */}
+                {customMnemonicInput === currentKey && (
+                  <div className="mt-2 flex gap-1" onClick={e => e.stopPropagation()}>
+                    <input
+                      autoFocus
+                      value={customMnemonicText}
+                      onChange={e => setCustomMnemonicText(e.target.value)}
+                      placeholder="Your own memory trick..."
+                      className="flex-1 text-xs px-2 py-1 rounded-lg border border-purple-200 bg-white text-stone-700 outline-none focus:border-purple-400"
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && customMnemonicText.trim()) {
+                          setMnemonicData(prev => ({ ...prev, [currentKey]: { ...prev[currentKey], customExplanation: customMnemonicText.trim() } }));
+                          if (currentWord.id) base44.entities.Word.update(currentWord.id, { mnemonic_explanation: customMnemonicText.trim() }).catch(() => {});
+                          setCustomMnemonicInput(null);
+                        }
+                        if (e.key === 'Escape') setCustomMnemonicInput(null);
+                      }}
+                    />
+                    <button
+                      onClick={() => {
+                        if (customMnemonicText.trim()) {
+                          setMnemonicData(prev => ({ ...prev, [currentKey]: { ...prev[currentKey], customExplanation: customMnemonicText.trim() } }));
+                          if (currentWord.id) base44.entities.Word.update(currentWord.id, { mnemonic_explanation: customMnemonicText.trim() }).catch(() => {});
+                        }
+                        setCustomMnemonicInput(null);
+                      }}
+                      className="text-xs px-2 py-1 rounded-lg bg-purple-500 text-white font-semibold hover:bg-purple-600"
+                    >Save</button>
+                    <button onClick={() => setCustomMnemonicInput(null)} className="text-xs text-stone-400 hover:text-stone-600 px-1">✕</button>
+                  </div>
+                )}
+
+                {/* Show custom override if set */}
+                {!customMnemonicInput && currentMnemonic?.customExplanation && (
+                  <div className="flex items-start gap-1 justify-center mt-1">
+                    <p className="text-emerald-600 text-xs text-center italic flex-1">🌟 {currentMnemonic.customExplanation}</p>
+                    <button onClick={e => { e.stopPropagation(); setCustomMnemonicInput(currentKey); setCustomMnemonicText(currentMnemonic.customExplanation); }} className="text-sm hover:scale-110 transition-transform flex-shrink-0">✏️</button>
+                  </div>
+                )}
               </div>
 
               {/* Word info */}
