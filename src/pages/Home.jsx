@@ -652,6 +652,18 @@ export default function Home() {
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
+                onClick={() => navigate('/SpeakingSession')}
+                className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl text-base font-semibold shadow-lg transition-all mb-3"
+                style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white' }}
+              >
+                <span className="text-xl">🎤</span>
+                Speaking Session
+                <ChevronRight className="w-5 h-5" />
+              </motion.button>
+              <br />
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => navigate('/FluentPath')}
                 className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl text-base font-semibold shadow-lg transition-all"
                 style={{ background: 'linear-gradient(135deg, #c9a96e, #e8c98a)', color: '#1a1a1a' }}
