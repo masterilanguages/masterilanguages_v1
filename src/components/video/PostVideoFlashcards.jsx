@@ -303,8 +303,24 @@ Return JSON with:
                         onChange={e => setCustomMnemonicText(e.target.value)}
                         placeholder="Your own memory trick..."
                         className="flex-1 text-xs px-2 py-1 rounded-lg border border-purple-200 bg-white text-stone-700 outline-none focus:border-purple-400"
-                        onKeyDown={e => {
-                          if (e.key === 'Escape') setCustomMnemonicInput(null);
+                        onKeyDown={async e => {
+                          if (e.key === 'Escape') { setCustomMnemonicInput(null); return; }
+                          if (e.key === 'Enter' && customMnemonicText.trim()) {
+                            const text = customMnemonicText.trim();
+                            setMnemonicData(prev => ({ ...prev, [currentKey]: { ...prev[currentKey], customExplanation: text, loading: true } }));
+                            if (currentWord.id) base44.entities.Word.update(currentWord.id, { mnemonic_explanation: text }).catch(() => {});
+                            setCustomMnemonicInput(null);
+                            try {
+                              const imageResult = await base44.integrations.Core.GenerateImage({
+                                prompt: `${text}. Cartoon illustration, bright vivid colors, solid WHITE background, single clear subject centered. ABSOLUTELY NO TEXT, NO LETTERS, NO WORDS anywhere in the image. White background only.`
+                              });
+                              setMnemonicData(prev => ({ ...prev, [currentKey]: { ...prev[currentKey], image_url: imageResult.url, loading: false } }));
+                              if (currentWord.id) base44.entities.Word.update(currentWord.id, { image_url: imageResult.url }).catch(() => {});
+                            } catch (e) {
+                              setMnemonicData(prev => ({ ...prev, [currentKey]: { ...prev[currentKey], loading: false } }));
+                              toast.error("Failed to generate image");
+                            }
+                          }
                         }}
                       />
                       <button
