@@ -9,7 +9,7 @@ const RATINGS = [
   { value: 1, label: "1", color: "#ef4444" },
   { value: 2, label: "2", color: "#f97316" },
   { value: 3, label: "3", color: "#eab308" },
-  { value: 5, label: "Mastered ⭐", color: "#22c55e" },
+  { value: 5, label: "M ⭐", color: "#22c55e" },
 ];
 
 export default function PostVideoFlashcards({ words, onClose, onJournal, videoTitle, userProfile }) {
@@ -20,9 +20,9 @@ export default function PostVideoFlashcards({ words, onClose, onJournal, videoTi
   const [saving, setSaving] = useState(false);
   const [results, setResults] = useState([]);
   const [confirmLeave, setConfirmLeave] = useState(false);
-
-  // Per-card mnemonic state
-  const [mnemonicData, setMnemonicData] = useState({}); // key -> { image_url, explanation, loading }
+  const [showHebrew, setShowHebrew] = useState(true);
+  const [showEnglish, setShowEnglish] = useState(false);
+  const [mnemonicData, setMnemonicData] = useState({});
 
   const updateWordMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Word.update(id, data),
@@ -36,19 +36,16 @@ export default function PostVideoFlashcards({ words, onClose, onJournal, videoTi
 
   const getKey = (word) => word.id || word.phonetic;
 
-  // Auto-generate mnemonic when card changes
   useEffect(() => {
     if (step !== "flashcards") return;
     const word = words[cardIdx];
     if (!word) return;
     const key = getKey(word);
-    // Use existing image if word already has one
-    const existingImage = word.image_url;
-    if (existingImage && !mnemonicData[key]) {
-      setMnemonicData(prev => ({ ...prev, [key]: { image_url: existingImage, explanation: null, loading: false } }));
+    if (word.image_url && !mnemonicData[key]) {
+      setMnemonicData(prev => ({ ...prev, [key]: { image_url: word.image_url, explanation: null, loading: false } }));
       return;
     }
-    if (mnemonicData[key]) return; // already generated
+    if (mnemonicData[key]) return;
     generateMnemonic(word);
   }, [cardIdx, step]);
 
@@ -58,8 +55,11 @@ export default function PostVideoFlashcards({ words, onClose, onJournal, videoTi
     try {
       const concept = await base44.integrations.Core.InvokeLLM({
         prompt: `Create a mnemonic to remember the word "${word.phonetic}" meaning "${word.translation}".
-Find an English word/phrase that SOUNDS like "${word.phonetic}" and connect it to the meaning "${word.translation}" in a funny or vivid way.
-Return JSON with: sound_anchor (English word that sounds similar), explanation (one punchy sentence like "NET-inah → imagine a NET catching gifts — giving!"), image_prompt (detailed scene for image, no text).`,
+Find an English word/phrase that SOUNDS like "${word.phonetic}" and connect it visually to the meaning "${word.translation}".
+Return JSON with:
+- sound_anchor: English word/phrase that sounds like the target word
+- explanation: one punchy memorable sentence (e.g. "NET-inah → picture a NET catching GIFTS — giving!")
+- image_prompt: vivid cartoon scene description (no text in image, single clear subject, bright colors)`,
         response_json_schema: {
           type: "object",
           properties: {
@@ -71,7 +71,7 @@ Return JSON with: sound_anchor (English word that sounds similar), explanation (
       });
 
       const imageResult = await base44.integrations.Core.GenerateImage({
-        prompt: `${concept.image_prompt}. Cartoon style, vibrant colors, fun and memorable, single clear subject. ABSOLUTELY NO TEXT, NO LETTERS, NO WORDS anywhere in the image.`
+        prompt: `${concept.image_prompt}. Cartoon style, vibrant colors, fun and memorable, white or plain background, single clear subject. ABSOLUTELY NO TEXT, NO LETTERS, NO WORDS anywhere in the image.`
       });
 
       setMnemonicData(prev => ({
@@ -120,10 +120,7 @@ Return JSON with: sound_anchor (English word that sounds similar), explanation (
 
   const handleApprove = async (word) => {
     if (!word.id) return;
-    await updateWordMutation.mutateAsync({
-      id: word.id,
-      data: { approved: !word.approved }
-    });
+    await updateWordMutation.mutateAsync({ id: word.id, data: { approved: !word.approved } });
     toast.success(word.approved ? "Approval removed" : "Card approved ✅");
   };
 
@@ -137,38 +134,36 @@ Return JSON with: sound_anchor (English word that sounds similar), explanation (
   const currentMnemonic = currentKey ? mnemonicData[currentKey] : null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center px-4"
-      style={{ background: 'linear-gradient(160deg, #0f172a 0%, #1e1b4b 100%)' }}>
+    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center px-4 py-6 overflow-y-auto"
+      style={{ background: 'linear-gradient(160deg, #f0ece4 0%, #e8e4d8 100%)' }}>
 
       {/* Pause button */}
       <button
         onClick={() => setConfirmLeave(true)}
-        className="absolute top-4 right-4 text-white/40 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10 z-10"
+        className="absolute top-4 right-4 text-stone-400 hover:text-stone-700 transition-colors p-2 rounded-full hover:bg-stone-200 z-10"
       >
         <Pause className="w-6 h-6" />
       </button>
 
       {/* Confirm leave dialog */}
       {confirmLeave && (
-        <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/70">
-          <div className="bg-slate-900 border border-white/10 rounded-2xl p-6 max-w-sm w-full mx-4 text-center space-y-4">
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/40">
+          <div className="bg-white border border-stone-200 rounded-2xl p-6 max-w-sm w-full mx-4 text-center space-y-4 shadow-2xl">
             <div className="text-4xl">⏸️</div>
-            <h3 className="text-white font-bold text-lg">Leave this session?</h3>
-            <p className="text-white/50 text-sm">Your progress so far will be saved, but you'll exit the flashcard session.</p>
+            <h3 className="text-stone-800 font-bold text-lg">Leave this session?</h3>
+            <p className="text-stone-500 text-sm">Your progress so far will be saved.</p>
             <div className="flex gap-3">
               <button
                 onClick={() => setConfirmLeave(false)}
-                className="flex-1 py-3 rounded-xl font-semibold text-sm"
-                style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)' }}
+                className="flex-1 py-3 rounded-xl font-semibold text-sm bg-stone-100 text-stone-600 hover:bg-stone-200"
               >
                 Keep Going
               </button>
               <button
                 onClick={onClose}
-                className="flex-1 py-3 rounded-xl font-semibold text-sm"
-                style={{ background: '#ef444420', border: '1px solid #ef444450', color: '#f87171' }}
+                className="flex-1 py-3 rounded-xl font-semibold text-sm bg-red-50 text-red-500 border border-red-200 hover:bg-red-100"
               >
-                Leave Session
+                Leave
               </button>
             </div>
           </div>
@@ -185,20 +180,20 @@ Return JSON with: sound_anchor (English word that sounds similar), explanation (
             className="max-w-md w-full text-center space-y-6"
           >
             <div className="text-5xl mb-2">🎉</div>
-            <h2 className="text-white text-2xl font-bold">Great job watching!</h2>
-            <p className="text-white/60 text-base">
-              You just watched <span className="text-cyan-300 font-semibold">"{videoTitle}"</span>.<br/>
+            <h2 className="text-stone-800 text-2xl font-bold">Great job watching!</h2>
+            <p className="text-stone-600 text-base">
+              You just watched <span className="text-cyan-600 font-semibold">"{videoTitle}"</span>.<br/>
               Let's lock in the key vocab words.
             </p>
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-5 text-left space-y-2">
-              <ul className="space-y-2 text-white/60 text-sm">
-                <li>🎨 Auto mnemonic image + tip generated per word</li>
-                <li>👆 Tap card to reveal meaning</li>
-                <li>⭐ Rate your knowledge inside the card</li>
-                <li>✅ Approve a card to lock it in for all users</li>
+            <div className="bg-white border border-stone-200 rounded-2xl p-5 text-left space-y-2 shadow-sm">
+              <ul className="space-y-2 text-stone-500 text-sm">
+                <li>🎨 Auto mnemonic image + explanation generated per word</li>
+                <li>👆 Tap card to reveal the meaning</li>
+                <li>⭐ Rate your knowledge — saved to your Backpack</li>
+                <li>✅ Approve a card to lock it in</li>
               </ul>
             </div>
-            <p className="text-white/40 text-sm">{words.length} words to review</p>
+            <p className="text-stone-400 text-sm">{words.length} words to review</p>
             <button
               onClick={() => setStep("flashcards")}
               className="w-full py-4 rounded-2xl text-white font-bold text-lg"
@@ -215,89 +210,116 @@ Return JSON with: sound_anchor (English word that sounds similar), explanation (
             initial={{ opacity: 0, x: 60 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -60 }}
-            className="w-full max-w-md flex flex-col gap-3"
+            className="w-full max-w-sm flex flex-col gap-3"
           >
             {/* Progress */}
             <div className="flex items-center gap-3">
-              <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
+              <div className="flex-1 h-2 bg-stone-200 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-cyan-400 rounded-full transition-all"
                   style={{ width: `${(cardIdx / words.length) * 100}%` }}
                 />
               </div>
-              <span className="text-white/40 text-xs">{cardIdx + 1} / {words.length}</span>
+              <span className="text-stone-400 text-xs">{cardIdx + 1} / {words.length}</span>
+            </div>
+
+            {/* Show/hide toggles */}
+            <div className="flex gap-2 justify-center">
+              <button
+                onClick={() => setShowHebrew(v => !v)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
+                  showHebrew
+                    ? 'bg-cyan-100 border-cyan-300 text-cyan-700'
+                    : 'bg-white border-stone-200 text-stone-400'
+                }`}
+              >
+                {showHebrew ? '👁 Hebrew' : '🙈 Hebrew'}
+              </button>
+              <button
+                onClick={() => setShowEnglish(v => !v)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
+                  showEnglish
+                    ? 'bg-green-100 border-green-300 text-green-700'
+                    : 'bg-white border-stone-200 text-stone-400'
+                }`}
+              >
+                {showEnglish ? '👁 English' : '🙈 English'}
+              </button>
             </div>
 
             {/* Card */}
             <div
-              className="w-full rounded-3xl overflow-hidden cursor-pointer select-none"
-              style={{ background: 'linear-gradient(160deg, #1e293b, #0f172a)', border: '1px solid rgba(255,255,255,0.1)' }}
+              className="w-full rounded-3xl overflow-hidden cursor-pointer select-none shadow-lg"
+              style={{ background: '#ffffff', border: '1px solid #e5e7eb' }}
               onClick={() => setFlipped(true)}
             >
-              {/* Mnemonic image - full width, not cropped */}
-              <div className="w-full flex items-center justify-center bg-black/20" style={{ minHeight: 180 }}>
+              {/* Approved badge */}
+              {currentWord.approved && (
+                <div className="flex items-center gap-1 px-4 py-2 bg-green-50 border-b border-green-100">
+                  <span className="text-green-600 text-xs font-semibold">✅ Approved card</span>
+                </div>
+              )}
+
+              {/* Mnemonic image — white bg, contain */}
+              <div className="w-full flex items-center justify-center bg-white" style={{ minHeight: 200 }}>
                 {currentMnemonic?.loading ? (
-                  <div className="flex flex-col items-center gap-2 py-10">
+                  <div className="flex flex-col items-center gap-2 py-12">
                     <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
-                    <p className="text-white/40 text-xs">Generating mnemonic...</p>
+                    <p className="text-stone-400 text-xs">Generating mnemonic...</p>
                   </div>
                 ) : currentMnemonic?.image_url ? (
                   <img
                     src={currentMnemonic.image_url}
                     alt="mnemonic"
                     className="w-full"
-                    style={{ objectFit: 'contain', maxHeight: 240 }}
+                    style={{ objectFit: 'contain', maxHeight: 260, background: 'white' }}
                   />
                 ) : (
-                  <div className="py-10 text-white/20 text-sm">No image</div>
+                  <div className="py-12 text-stone-300 text-sm">No image yet</div>
                 )}
               </div>
 
               {/* Mnemonic explanation */}
               {currentMnemonic?.explanation && (
-                <div className="px-5 pt-3 pb-1">
-                  <p className="text-purple-300 text-xs text-center italic">💡 {currentMnemonic.explanation}</p>
+                <div className="px-5 py-2 bg-purple-50 border-t border-purple-100">
+                  <p className="text-purple-600 text-xs text-center italic">💡 {currentMnemonic.explanation}</p>
                 </div>
               )}
 
               {/* Word info */}
-              <div className="flex flex-col items-center px-6 pt-4 pb-3 gap-2">
-                {currentWord.word && (
-                  <p className="text-4xl font-bold text-cyan-300" dir="rtl" style={{ fontFamily: 'serif' }}>
+              <div className="flex flex-col items-center px-6 pt-4 pb-2 gap-1">
+                <p className="text-cyan-500 font-bold text-2xl">{currentWord.phonetic}</p>
+
+                {showEnglish && (
+                  <p className="text-stone-500 text-base">= {currentWord.translation}</p>
+                )}
+
+                {showHebrew && currentWord.word && (
+                  <p className="text-cyan-700 font-bold text-xl" dir="rtl" style={{ fontFamily: 'serif' }}>
                     {currentWord.word}
                   </p>
                 )}
-                <p className="text-white/70 text-xl">{currentWord.phonetic}</p>
 
+                {/* Tap to reveal hint */}
+                {!flipped && (
+                  <p className="text-stone-300 text-xs mt-2">tap to reveal & rate</p>
+                )}
+
+                {/* Rating buttons inside card, shown after tap */}
                 <AnimatePresence>
                   {flipped && (
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="text-center mt-1"
-                    >
-                      <p className="text-green-300 text-2xl font-bold">{currentWord.translation}</p>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {!flipped && <p className="text-white/20 text-xs mt-2">tap to reveal</p>}
-
-                {/* Rating buttons INSIDE the card */}
-                <AnimatePresence>
-                  {flipped && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="flex gap-2 w-full mt-3"
+                      className="flex gap-2 w-full mt-3 mb-1"
                     >
                       {RATINGS.map(r => (
                         <button
                           key={r.value}
                           onClick={(e) => { e.stopPropagation(); handleRate(currentWord, r.value); }}
                           disabled={saving}
-                          className="flex-1 py-3 px-1 rounded-xl font-semibold text-sm transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
-                          style={{ background: `${r.color}20`, border: `1px solid ${r.color}50`, color: r.color }}
+                          className="flex-1 py-3 px-1 rounded-xl font-bold text-sm transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+                          style={{ background: `${r.color}18`, border: `1.5px solid ${r.color}60`, color: r.color }}
                         >
                           {saving ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : r.label}
                         </button>
@@ -306,43 +328,46 @@ Return JSON with: sound_anchor (English word that sounds similar), explanation (
                   )}
                 </AnimatePresence>
               </div>
-            </div>
 
-            {/* Below card: regen + approve + skip */}
-            <div className="flex items-center justify-between">
-              <div className="flex gap-2">
-                <button
-                  onClick={() => {
-                    const key = getKey(currentWord);
-                    setMnemonicData(prev => ({ ...prev, [key]: undefined }));
-                    generateMnemonic(currentWord);
-                  }}
-                  disabled={currentMnemonic?.loading}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all"
-                  style={{ background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.4)', color: '#a78bfa' }}
-                >
-                  {currentMnemonic?.loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
-                  New Mnemonic
-                </button>
-
-                {currentWord.id && (
+              {/* Bottom action row inside card */}
+              <div className="flex items-center justify-between px-4 py-3 border-t border-stone-100">
+                <div className="flex gap-1.5">
                   <button
-                    onClick={() => handleApprove(currentWord)}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all"
-                    style={currentWord.approved
-                      ? { background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.4)', color: '#4ade80' }
-                      : { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.4)' }
-                    }
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const key = getKey(currentWord);
+                      setMnemonicData(prev => ({ ...prev, [key]: undefined }));
+                      generateMnemonic(currentWord);
+                    }}
+                    disabled={currentMnemonic?.loading}
+                    className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium text-stone-400 hover:text-purple-500 hover:bg-purple-50 transition-all"
+                    title="New mnemonic"
                   >
-                    <Check className="w-3 h-3" />
-                    {currentWord.approved ? "Approved" : "Approve"}
+                    {currentMnemonic?.loading ? <Loader2 className="w-3 h-3 animate-spin" /> : '🎨'}
                   </button>
-                )}
-              </div>
 
-              <button onClick={handleSkip} className="text-white/30 text-sm hover:text-white/60 transition-colors px-2 py-2">
-                Skip →
-              </button>
+                  {currentWord.id && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleApprove(currentWord); }}
+                      className={`flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                        currentWord.approved
+                          ? 'bg-green-100 text-green-600'
+                          : 'text-stone-400 hover:text-green-500 hover:bg-green-50'
+                      }`}
+                      title={currentWord.approved ? "Approved" : "Approve card"}
+                    >
+                      <Check className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleSkip(); }}
+                  className="text-stone-300 text-xs hover:text-stone-500 transition-colors"
+                >
+                  Skip →
+                </button>
+              </div>
             </div>
           </motion.div>
         )}
@@ -355,16 +380,16 @@ Return JSON with: sound_anchor (English word that sounds similar), explanation (
             className="max-w-md w-full text-center space-y-5"
           >
             <div className="text-6xl">🎒</div>
-            <h2 className="text-white text-2xl font-bold">Session Complete!</h2>
-            <p className="text-white/60">
-              You reviewed <span className="text-cyan-300 font-bold">{words.length} words</span>.
+            <h2 className="text-stone-800 text-2xl font-bold">Session Complete!</h2>
+            <p className="text-stone-500">
+              You reviewed <span className="text-cyan-500 font-bold">{words.length} words</span>.
             </p>
             <div className="grid grid-cols-2 gap-3 text-sm">
               {results.map((r, i) => (
-                <div key={i} className="bg-white/5 rounded-xl p-3 flex justify-between items-center border border-white/10">
-                  <span className="text-white/70">{r.word.phonetic}</span>
+                <div key={i} className="bg-white rounded-xl p-3 flex justify-between items-center border border-stone-200 shadow-sm">
+                  <span className="text-stone-600">{r.word.phonetic}</span>
                   <span className="font-bold" style={{ color: RATINGS.find(rt => rt.value === r.rating)?.color }}>
-                    {r.rating === 5 ? "⭐ Mastered" : `Level ${r.rating}`}
+                    {r.rating === 5 ? "⭐ M" : `Lvl ${r.rating}`}
                   </span>
                 </div>
               ))}
@@ -381,8 +406,7 @@ Return JSON with: sound_anchor (English word that sounds similar), explanation (
               )}
               <button
                 onClick={onClose}
-                className="w-full py-3 rounded-2xl font-semibold text-sm"
-                style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)' }}
+                className="w-full py-3 rounded-2xl font-semibold text-sm bg-white border border-stone-200 text-stone-500 hover:bg-stone-50"
               >
                 Done
               </button>
