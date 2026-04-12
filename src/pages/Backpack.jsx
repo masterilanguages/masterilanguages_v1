@@ -581,11 +581,39 @@ Return JSON with:
   };
 
   const handleAddNewWord = async () => {
-    if (!addWordForm.phonetic.trim() && !addWordForm.translation.trim()) return;
+    if (!addWordForm.phonetic.trim()) return;
     setAddingWord(true);
+
+    let translation = addWordForm.translation.trim();
+    let hebrewWord = '';
+
+    // Auto-lookup meaning + Hebrew if translation is missing
+    if (!translation) {
+      try {
+        const lookup = await base44.integrations.Core.InvokeLLM({
+          prompt: `The user typed the transliteration "${addWordForm.phonetic}" of a Hebrew word. 
+Identify the Hebrew word, its correct phonetic transliteration, and its English meaning.
+Return JSON with: translation (English, 1-4 words), phonetic (clean Latin transliteration), hebrew (Hebrew script).`,
+          response_json_schema: {
+            type: 'object',
+            properties: {
+              translation: { type: 'string' },
+              phonetic: { type: 'string' },
+              hebrew: { type: 'string' },
+            }
+          }
+        });
+        translation = lookup.translation || '';
+        hebrewWord = lookup.hebrew || '';
+        if (lookup.phonetic) setAddWordForm(prev => ({ ...prev, phonetic: lookup.phonetic }));
+      } catch (e) {
+        toast.error('Could not find meaning automatically');
+      }
+    }
+
     const newWord = await createWordMutation.mutateAsync({
-      word: addWordForm.phonetic,
-      translation: addWordForm.translation,
+      word: hebrewWord || addWordForm.phonetic,
+      translation,
       phonetic: addWordForm.phonetic,
       category: 'wordbank',
       language: userProfile?.language || 'hebrew',
