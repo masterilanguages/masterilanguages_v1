@@ -201,7 +201,9 @@ export default function Backpack() {
   const suggestMnemonicForWord = async (word) => {
     setSuggestingMnemonic(word.id);
     try {
-      const targetWord = word.phonetic || word.word;
+      const rawWord = word.phonetic || word.word;
+      // Strip Hebrew infinitive "l" prefix (e.g. "lehorot" → "horot") for sound matching
+      const targetWord = /^l[aeiou]/i.test(rawWord) ? rawWord.slice(1) : rawWord;
       const meaning = word.translation || '';
 
       const concept = await base44.integrations.Core.InvokeLLM({
