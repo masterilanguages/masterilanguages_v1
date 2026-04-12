@@ -879,7 +879,7 @@ Return JSON with: translation (English, 1-4 words), phonetic (clean Latin transl
                               <button
                                 key={i}
                                 onClick={() => handleAddWordFromSentence(w.word, w.meaning)}
-                                className="text-[11px] text-cyan-600 font-medium hover:bg-cyan-100 rounded px-0.5 transition-all underline decoration-dotted"
+                                className="text-[10px] text-cyan-600 italic hover:bg-cyan-100 rounded px-0.5 transition-all underline decoration-dotted"
                                 title={`Add "${w.meaning}" to backpack`}
                               >
                                 {w.word}
