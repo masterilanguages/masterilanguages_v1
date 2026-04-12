@@ -727,7 +727,17 @@ Return JSON with:
 
                   {/* Mnemonic explanation under image */}
                   {(mnemonicExplanations[word.id] || word.mnemonic_explanation) && (
-                    <p className="text-[10px] text-center px-2 pb-1 italic" style={{ color: '#6b7c5a' }}>💡 {mnemonicExplanations[word.id] || word.mnemonic_explanation}</p>
+                    <p className="text-[10px] text-center px-2 pb-1 italic" style={{ color: '#6b7c5a' }}>
+                      💡 <EditableWord
+                        text={mnemonicExplanations[word.id] || word.mnemonic_explanation}
+                        editable={true}
+                        className="text-[10px] italic"
+                        onSave={(val) => {
+                          setMnemonicExplanations(prev => ({ ...prev, [word.id]: val }));
+                          updateWordMutation.mutate({ id: word.id, data: { mnemonic_explanation: val } });
+                        }}
+                      />
+                    </p>
                   )}
 
                             {/* Bottom row: ratings + edit/delete buttons */}
