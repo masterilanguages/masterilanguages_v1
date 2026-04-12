@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import EditableWord from "../components/learning/EditableWord";
 import CoreVocabTab from "../components/grammar/CoreVocabTab";
+import VerbsTab from "../components/backpack/VerbsTab";
 import DeletablePictureBox from "../components/learning/DeletablePictureBox";
 import TranslatorWidget from "../components/TranslatorWidget";
 
@@ -724,22 +725,7 @@ Return JSON with:
 
         {/* Second Tab Content */}
         {activeSecondTab === 'verbs' && (
-          <div className="flex flex-wrap gap-3 justify-center">
-            {langFilteredRatings.filter(w => w.is_verb).length === 0 ? (
-              <p className="text-stone-400 text-center py-8 w-full">No verbs in your backpack yet.</p>
-            ) : (
-              langFilteredRatings.filter(w => w.is_verb).map((word) => (
-                <div key={word.id} className="bg-white/70 border border-stone-200 rounded-lg p-3 w-44 text-center">
-                  <p className="text-cyan-600 font-bold text-base" dir="rtl">{word.word}</p>
-                  <p className="text-cyan-500 text-sm font-medium">{word.phonetic}</p>
-                  <p className="text-stone-500 text-xs mt-0.5">{word.translation}</p>
-                  {word.verb_conjugations && (
-                    <span className="text-[10px] text-purple-500 font-semibold mt-1 block">conjugations ✓</span>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
+          <VerbsTab words={langFilteredRatings} />
         )}
 
         {activeSecondTab === 'corevocab' && (
