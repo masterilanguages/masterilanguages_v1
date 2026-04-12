@@ -611,14 +611,17 @@ Return JSON with: translation (English, 1-4 words), phonetic (clean Latin transl
       }
     }
 
+    const phonetic = addWordForm.phonetic.trim();
+    const isVerb = /^l[aeiou]/i.test(phonetic);
     const newWord = await createWordMutation.mutateAsync({
-      word: hebrewWord || addWordForm.phonetic,
+      word: hebrewWord || phonetic,
       translation,
-      phonetic: addWordForm.phonetic,
+      phonetic,
       category: 'wordbank',
       language: userProfile?.language || 'hebrew',
       times_practiced: 0,
       mastered: false,
+      is_verb: isVerb,
     });
     setAddWordForm({ phonetic: '', translation: '' });
     setAddingWord(false);
@@ -836,6 +839,15 @@ Return JSON with: translation (English, 1-4 words), phonetic (clean Latin transl
                       />
                     </p>
                   </div>
+
+                  {/* Verb infinitive badge */}
+                  {(word.is_verb || /^l[aeiou]/i.test(word.phonetic || '')) && (
+                    <div className="px-3 py-1 bg-purple-50 border-b border-purple-100 flex items-center gap-1">
+                      <span className="text-[10px] text-purple-500 font-semibold">verb</span>
+                      <span className="text-[10px] text-stone-400 mx-1">·</span>
+                      <span className="text-[10px] text-purple-600 font-medium">∞ {word.phonetic}</span>
+                    </div>
+                  )}
 
                   {/* Mnemonic explanation under image */}
                   {(mnemonicExplanations[word.id] || word.mnemonic_explanation) && (
