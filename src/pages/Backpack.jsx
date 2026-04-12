@@ -40,6 +40,7 @@ export default function Backpack() {
   const [imageApproved, setImageApproved] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [lockedWords, setLockedWords] = useState(JSON.parse(localStorage.getItem('lockedWords') || '{}'));
+  const [dismissedWords, setDismissedWords] = useState(() => new Set(JSON.parse(localStorage.getItem('dismissedWords') || '[]')));
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestingMnemonic, setSuggestingMnemonic] = useState(null); // wordId currently suggesting
@@ -312,7 +313,9 @@ Return JSON with:
         seen.set(key, w);
       }
     }
-    let result = [...seen.values()].sort((a, b) => (a.phonetic || a.word).localeCompare(b.phonetic || b.word));
+    let result = [...seen.values()]
+      .filter(w => !dismissedWords.has(w.id))
+      .sort((a, b) => (a.phonetic || a.word).localeCompare(b.phonetic || b.word));
 
     // Apply search filter
     if (searchQuery.trim()) {
@@ -546,6 +549,13 @@ Return JSON with:
   const isAdmin = currentUser?.role === 'admin';
   // Content editable = not approved AND (not locally locked OR is admin)
   const isContentEditable = (word) => !word.approved && (!isWordLocked(word.id) || isAdmin);
+
+  const handleDismissWord = (wordId) => {
+    const updated = new Set([...dismissedWords, wordId]);
+    setDismissedWords(updated);
+    localStorage.setItem('dismissedWords', JSON.stringify([...updated]));
+    toast.success('Removed from your view');
+  };
 
   const handleAddNewWord = async () => {
     if (!addWordForm.phonetic.trim() && !addWordForm.translation.trim()) return;
@@ -877,16 +887,13 @@ Return JSON with:
                       </button>
                     )}
 
-                    {(!word.approved || isAdmin) && (
-                      <button
-                        onClick={() => deleteWordMutation.mutate(word.id)}
-                        disabled={word.approved && !isAdmin}
+                    <button
+                        onClick={() => word.approved && !isAdmin ? handleDismissWord(word.id) : deleteWordMutation.mutate(word.id)}
                         className="w-6 h-6 rounded flex items-center justify-center text-sm hover:bg-red-500/20 transition-all"
-                        title="Delete word"
+                        title={word.approved && !isAdmin ? "Remove from my view" : "Delete word"}
                       >
                         🗑️
                       </button>
-                    )}
                   </div>
 
                 </motion.div>
