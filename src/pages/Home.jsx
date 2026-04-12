@@ -880,12 +880,18 @@ export default function Home() {
                                              if (isDragging) return;
                                              if (isSong) {
                                                const songData = songs.find(s => s.id === task.id || s.id === task.song_id);
-                                               setSelectedSongForTranscript(songData);
+                                               if (songData?.id) {
+                                                 navigate(`/SingingLesson?songId=${songData.id}`);
+                                               } else {
+                                                 navigate('/SingingHome');
+                                               }
                                                return;
                                              }
                                              const ytId = task.video_id || extractYouTubeId(task.youtube_url);
                                              if (ytId) {
                                                navigate(createPageUrl("MediaLibrary") + `?videoId=${ytId}`);
+                                             } else if (task.mediaUrl) {
+                                               navigate('/SingingHome');
                                              } else if (task.page) {
                                                navigate(createPageUrl(task.page));
                                              } else {
