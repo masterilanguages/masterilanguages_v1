@@ -356,10 +356,10 @@ Return JSON with:
     const words = getDisplayWords();
     words.forEach(word => {
       if (word.id && !cardSentences[word.id] && !generatingSentence[word.id]) {
-        generateCardSentence(word);
+        setTimeout(() => generateCardSentence(word), 0);
       }
     });
-  }, [activeTab, wordRatings]); // eslint-disable-line
+  }, [activeTab, wordRatings.length]); // eslint-disable-line
 
   const handleWordClick = async (word) => {
     setSelectedWord(word);
@@ -524,9 +524,9 @@ Return JSON with:
 
   const generateCardSentence = async (word) => {
     setGeneratingSentence(prev => ({ ...prev, [word.id]: true }));
+    setCardSentences(prev => { const next = { ...prev }; delete next[word.id]; return next; });
     try {
       const result = await base44.integrations.Core.InvokeLLM({
-        model: 'claude_sonnet_4_6',
         prompt: `Create one short, natural, commonly-used Hebrew sentence that a native speaker would actually say, using the word "${word.phonetic || word.word}" (meaning: "${word.translation}"). The sentence should feel real and practical, not textbook.
 
 Return JSON with:
