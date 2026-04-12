@@ -80,11 +80,16 @@ function EditableConjugation({ value, onChange }) {
   );
 }
 
+function isHebrew(str) {
+  return /[\u0590-\u05FF]/.test(str || '');
+}
+
 export default function VerbsTab({ words }) {
   const queryClient = useQueryClient();
   const [expanded, setExpanded] = useState({});
   const [generating, setGenerating] = useState({});
   const [localConjugations, setLocalConjugations] = useState({});
+  const [localHebrew, setLocalHebrew] = useState({});
 
   const updateWordMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Word.update(id, data),
@@ -92,6 +97,24 @@ export default function VerbsTab({ words }) {
   });
 
   const verbWords = words.filter(looksLikeVerb);
+
+  // Auto-fetch Hebrew script for any verb missing it
+  useEffect(() => {
+    verbWords.forEach(word => {
+      if (localHebrew[word.id]) return;
+      if (isHebrew(word.word)) return; // already has Hebrew
+      // word.word is just transliteration, fetch Hebrew
+      base44.integrations.Core.InvokeLLM({
+        prompt: `Convert the Hebrew transliteration "${word.phonetic || word.word}" to its Hebrew script characters. Return JSON with: hebrew (Hebrew script only, e.g. לְהִשְׁתַּתֵּף).`,
+        response_json_schema: { type: 'object', properties: { hebrew: { type: 'string' } } }
+      }).then(res => {
+        if (res?.hebrew) {
+          setLocalHebrew(prev => ({ ...prev, [word.id]: res.hebrew }));
+          if (word.id) updateWordMutation.mutateAsync({ id: word.id, data: { word: res.hebrew } }).catch(() => {});
+        }
+      }).catch(() => {});
+    });
+  }, [verbWords.length]); // eslint-disable-line
 
   const generateConjugations = async (word) => {
     setGenerating(prev => ({ ...prev, [word.id]: true }));
@@ -171,7 +194,9 @@ Values should be the transliterated (Latin letters) conjugated form only.`,
                 <span className="text-cyan-600 font-bold text-base">{word.phonetic || word.word}</span>
                 <span className="text-stone-400 text-xs">=</span>
                 <span className="text-stone-600 text-sm">{word.translation}</span>
-                <span className="text-cyan-700 text-sm font-medium" dir="rtl">{word.word}</span>
+                {(localHebrew[word.id] || isHebrew(word.word) ? (localHebrew[word.id] || word.word) : null) && (
+                  <span className="text-cyan-700 text-sm font-medium" dir="rtl">{localHebrew[word.id] || word.word}</span>
+                )}
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
                 {conj && <span className="text-[10px] text-green-500 font-semibold">✓ conjugated</span>}
