@@ -44,6 +44,8 @@ export default function Backpack() {
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestingMnemonic, setSuggestingMnemonic] = useState(null); // wordId currently suggesting
   const [showPhonetics, setShowPhonetics] = useState(false); // global toggle for all cards
+  const [cardSentences, setCardSentences] = useState({});
+  const [generatingSentence, setGeneratingSentence] = useState(null);
 
   // Load current user
   useEffect(() => {
@@ -485,6 +487,38 @@ Return JSON with:
     setGeneratingMnemonic(false);
   };
 
+  const generateCardSentence = async (word) => {
+    setGeneratingSentence(word.id);
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Create one short, simple Hebrew sentence using the word "${word.phonetic || word.word}" (meaning: "${word.translation}"). Return JSON with: transliteration (Latin), english (translation), words (array of {word: transliteration, meaning: English meaning for each word}).`,
+        response_json_schema: {
+          type: 'object',
+          properties: {
+            transliteration: { type: 'string' },
+            english: { type: 'string' },
+            words: { type: 'array', items: { type: 'object', properties: { word: { type: 'string' }, meaning: { type: 'string' } } } }
+          }
+        }
+      });
+      setCardSentences(prev => ({ ...prev, [word.id]: result }));
+    } catch (e) {
+      toast.error('Failed to generate sentence');
+    }
+    setGeneratingSentence(null);
+  };
+
+  const handleAddWordFromSentence = async (wordText, meaning) => {
+    const exists = wordRatings.find(w => (w.phonetic || w.word)?.toLowerCase() === wordText.toLowerCase());
+    if (exists) { toast.info('Already in backpack!'); return; }
+    await createWordMutation.mutateAsync({
+      word: wordText, translation: meaning, phonetic: wordText,
+      category: 'wordbank', language: userProfile?.language || 'hebrew',
+      times_practiced: 0, mastered: false,
+    });
+    toast.success(`"${wordText}" added! 🎒`);
+  };
+
   const toggleWordLock = (wordId) => {
     const updated = { ...lockedWords, [wordId]: !lockedWords[wordId] };
     setLockedWords(updated);
@@ -737,7 +771,7 @@ Return JSON with:
 
                   {/* Mnemonic explanation under image */}
                   {(mnemonicExplanations[word.id] || word.mnemonic_explanation) && (
-                    <p className="text-[10px] text-center px-2 pb-1 italic" style={{ color: '#6b7c5a' }}>
+                    <p className="text-[10px] text-center px-2 pb-1 italic line-clamp-2 overflow-hidden" style={{ color: '#6b7c5a' }}>
                       💡 <EditableWord
                         text={mnemonicExplanations[word.id] || word.mnemonic_explanation}
                         editable={true}
@@ -749,6 +783,36 @@ Return JSON with:
                       />
                     </p>
                   )}
+
+                  {/* Example sentence */}
+                  <div className="px-2 pb-2">
+                    {cardSentences[word.id] ? (
+                      <div className="bg-stone-50 rounded-lg p-2 border border-stone-100">
+                        <p className="text-[10px] text-stone-400 mb-1">tap a word to add it:</p>
+                        <div className="flex flex-wrap gap-x-1 gap-y-0.5 justify-center">
+                          {cardSentences[word.id].words?.map((w, i) => (
+                            <button
+                              key={i}
+                              onClick={() => handleAddWordFromSentence(w.word, w.meaning)}
+                              className="text-[11px] text-cyan-600 font-medium hover:bg-cyan-100 rounded px-0.5 transition-all underline decoration-dotted"
+                              title={w.meaning}
+                            >
+                              {w.word}
+                            </button>
+                          ))}
+                        </div>
+                        <p className="text-[10px] text-stone-400 mt-1 text-center italic">{cardSentences[word.id].english}</p>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => generateCardSentence(word)}
+                        disabled={generatingSentence === word.id}
+                        className="w-full text-[10px] text-stone-300 hover:text-stone-500 transition-colors py-1"
+                      >
+                        {generatingSentence === word.id ? <Loader2 className="w-3 h-3 animate-spin inline" /> : '📝 example sentence'}
+                      </button>
+                    )}
+                  </div>
 
                             {/* Bottom row: ratings + edit/delete buttons */}
                   <div className="px-2 pb-2 flex gap-1 items-center">
