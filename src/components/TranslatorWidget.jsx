@@ -32,7 +32,7 @@ export default function TranslatorWidget() {
   const createWordMutation = useMutation({
     mutationFn: (wordData) => base44.entities.Word.create(wordData),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['wordRatings'] });
+      queryClient.invalidateQueries({ queryKey: ["wordRatings"] });
       toast.success("Added to backpack! 🎒");
       setWordAdded(true);
     },
@@ -49,25 +49,14 @@ export default function TranslatorWidget() {
     try {
       const text = inputText.trim();
       const hasHebrew = /[\u0590-\u05FF]/.test(text);
-      const sl = "auto";
       const tl = hasHebrew ? "en" : learningLanguage;
-
-      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&dt=rm&q=${encodeURIComponent(text)}`;
+      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${tl}&dt=t&dt=rm&q=${encodeURIComponent(text)}`;
       const res = await fetch(url);
       const data = await res.json();
-
       const translatedText = data[0]?.map(seg => seg[0]).join("") || "";
-      const detectedLang = data[2] || sl;
       const romanization = tl === "he" ? (data[0]?.map(seg => seg[2] || "").join("").trim() || null) : null;
 
-      setTranslation({
-        original: text,
-        result: translatedText,
-        fromLang: detectedLang,
-        toLang: tl,
-        isToTarget: !hasHebrew,
-        romanization,
-      });
+      setTranslation({ original: text, result: translatedText, toLang: tl, romanization });
     } catch (e) {
       toast.error("Translation failed");
     }
@@ -79,8 +68,7 @@ export default function TranslatorWidget() {
     setIsLoadingDetails(true);
     try {
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Translate and analyze the word/phrase: "${translation.original}"
-Return JSON with: hebrew (with nikud), transliteration, english, part_of_speech, example_sentence_hebrew, example_sentence_english, notes (1 sentence), is_verb (boolean), infinitive (if verb).`,
+        prompt: `Translate and analyze the word/phrase: "${translation.original}". Return JSON with: hebrew, transliteration, english, part_of_speech, example_sentence_hebrew, example_sentence_english, notes, is_verb, infinitive.`,
         response_json_schema: {
           type: "object",
           properties: {
@@ -106,13 +94,11 @@ Return JSON with: hebrew (with nikud), transliteration, english, part_of_speech,
 
   const handleAddToBackpack = async () => {
     if (!translation) return;
-
-    let resolvedDetails = details;
-    if (!resolvedDetails) {
+    let d = details;
+    if (!d) {
       try {
-        resolvedDetails = await base44.integrations.Core.InvokeLLM({
-          prompt: `Translate and analyze the word/phrase: "${translation.original}"
-Return JSON with: hebrew (with nikud), transliteration, english, is_verb (boolean).`,
+        d = await base44.integrations.Core.InvokeLLM({
+          prompt: `Translate and analyze: "${translation.original}". Return JSON with: hebrew, transliteration, english, is_verb.`,
           response_json_schema: {
             type: "object",
             properties: {
@@ -123,23 +109,19 @@ Return JSON with: hebrew (with nikud), transliteration, english, is_verb (boolea
             }
           }
         });
-        setDetails(resolvedDetails);
-      } catch (e) {
-        // fallback to basic data
-      }
+        setDetails(d);
+      } catch (e) {}
     }
-
-    const hebrew = resolvedDetails?.hebrew || (translation.toLang === "he" ? translation.result : translation.original);
-    const english = resolvedDetails?.english || (translation.toLang === "en" ? translation.result : translation.original);
-    const phonetic = translation.romanization || resolvedDetails?.transliteration || (translation.toLang === "he" ? translation.result : translation.original);
+    const hebrew = d?.hebrew || (translation.toLang === "he" ? translation.result : translation.original);
+    const english = d?.english || (translation.toLang === "en" ? translation.result : translation.original);
+    const phonetic = translation.romanization || d?.transliteration || hebrew;
 
     createWordMutation.mutate({
       word: hebrew,
       translation: english,
       phonetic,
       category: "wordbank",
-      is_verb: resolvedDetails?.is_verb || false,
-      example_sentence: resolvedDetails?.example_sentence_hebrew || "",
+      is_verb: d?.is_verb || false,
       times_practiced: 0,
       mastered: false,
       vocab_level: 0,
@@ -147,7 +129,7 @@ Return JSON with: hebrew (with nikud), transliteration, english, is_verb (boolea
   };
 
   return (
-    <>
+    <React.Fragment>
       {!isOpen && (
         <motion.button
           whileHover={{ scale: 1.05 }}
@@ -167,28 +149,26 @@ Return JSON with: hebrew (with nikud), transliteration, english, is_verb (boolea
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
             className="fixed bottom-20 left-4 z-50 w-80 bg-slate-950/95 backdrop-blur-xl border border-purple-500/30 rounded-2xl shadow-2xl flex flex-col"
-            style={{ maxHeight: '85vh' }}
+            style={{ maxHeight: "85vh" }}
           >
-            {/* Header */}
             <div className="flex items-center justify-between px-4 pt-4 pb-2 flex-shrink-0">
               <div className="flex items-center gap-1.5 text-sm font-semibold text-white">
-                <Languages className="w-4 h-4" /> Translate
+                <Languages className="w-4 h-4" />
+                Translate
               </div>
               <button onClick={() => setIsOpen(false)} className="text-white/60 hover:text-white">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Content */}
             <div className="overflow-y-auto flex-1 px-4 pb-4 space-y-3 pt-1">
-              {/* Input row */}
               <div className="flex gap-2">
                 <Input
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   placeholder="Type a word..."
                   className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
-                  onKeyDown={(e) => e.key === 'Enter' && handleTranslate()}
+                  onKeyDown={(e) => e.key === "Enter" && handleTranslate()}
                 />
                 <Button
                   onClick={handleTranslate}
@@ -200,22 +180,19 @@ Return JSON with: hebrew (with nikud), transliteration, english, is_verb (boolea
                 </Button>
               </div>
 
-              {/* Translation result */}
               {translation && (
-                <div className="bg-white/8 border border-white/15 rounded-xl p-3 space-y-2 relative">
-                  {/* Backpack button top-right */}
+                <div className="relative bg-white/5 border border-white/15 rounded-xl p-3 space-y-2">
                   <button
                     onClick={handleAddToBackpack}
                     disabled={createWordMutation.isPending || wordAdded}
                     className={`absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-md text-base transition-all ${
-                      wordAdded ? 'bg-green-500/30 text-green-400' : 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300'
+                      wordAdded ? "bg-green-500/30 text-green-400" : "bg-amber-500/20 hover:bg-amber-500/30 text-amber-300"
                     } disabled:opacity-50`}
                     title="Add to backpack"
                   >
-                    {wordAdded ? '✓' : '🎒'}
+                    {wordAdded ? "✓" : "🎒"}
                   </button>
 
-                  {/* Word display */}
                   <div className="pr-10">
                     <p className="text-white/50 text-[10px] uppercase mb-0.5">{translation.original}</p>
                     <p className="text-cyan-300 text-xl font-bold" dir={translation.toLang === "he" ? "rtl" : "ltr"}>
@@ -226,7 +203,6 @@ Return JSON with: hebrew (with nikud), transliteration, english, is_verb (boolea
                     )}
                   </div>
 
-                  {/* Details section */}
                   {showDetails && details && (
                     <div className="space-y-2 pt-2 border-t border-white/10">
                       {details.part_of_speech && (
@@ -244,7 +220,6 @@ Return JSON with: hebrew (with nikud), transliteration, english, is_verb (boolea
                     </div>
                   )}
 
-                  {/* More details button */}
                   {!showDetails && (
                     <button
                       onClick={handleGetDetails}
@@ -261,6 +236,6 @@ Return JSON with: hebrew (with nikud), transliteration, english, is_verb (boolea
           </motion.div>
         )}
       </AnimatePresence>
-    </>
+    </React.Fragment>
   );
 }
