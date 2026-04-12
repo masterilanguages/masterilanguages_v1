@@ -177,7 +177,7 @@ Return JSON with:
                 <div className="bg-white/10 border border-white/20 rounded-xl p-3 space-y-2">
                   <p className="text-white/50 text-[10px] uppercase mb-0.5">{translation.original}</p>
                   <p className="text-cyan-300 text-xl font-bold" dir="rtl">{translation.result.hebrew}</p>
-                  <p className="text-white/70 text-sm">{translation.result.transliteration}</p>
+                  <p className="text-white/70 text-sm">{translation.original}</p>
                   <p className="text-white font-semibold text-base">{translation.result.english}</p>
 
                   {translation.result.example_sentence_hebrew && (
