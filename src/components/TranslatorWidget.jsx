@@ -162,23 +162,22 @@ export default function TranslatorWidget() {
             </div>
 
             <div className="overflow-y-auto flex-1 px-4 pb-4 space-y-3 pt-1">
-              <div className="flex gap-2">
+              <form onSubmit={(e) => { e.preventDefault(); handleTranslate(); }} className="flex gap-2">
                 <Input
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   placeholder="Type a word..."
                   className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
-                  onKeyDown={(e) => e.key === "Enter" && handleTranslate()}
                 />
                 <Button
-                  onClick={handleTranslate}
+                  type="submit"
                   disabled={!inputText.trim() || isTranslating}
                   size="sm"
                   className="bg-amber-500 hover:bg-amber-600 flex-shrink-0 text-lg"
                 >
                   {isTranslating ? <Loader2 className="w-4 h-4 animate-spin" /> : "🎒"}
                 </Button>
-              </div>
+              </form>
 
               {translation && (
                 <div className="relative bg-white/10 border border-white/20 rounded-xl p-3 space-y-2">
