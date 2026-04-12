@@ -764,7 +764,8 @@ export default function Home() {
                                              setNewTaskForm(prev => ({ ...prev, [day.id]: { ...prev[day.id], mediaUrl: ytUrl, videoId: ytId, mediaUploaded: true } }));
                                            } else {
                                              const { file_url } = await base44.integrations.Core.UploadFile({ file });
-                                             setNewTaskForm(prev => ({ ...prev, [day.id]: { ...prev[day.id], mediaUrl: file_url, mediaUploaded: true } }));
+                                               const autoTitle = file.name.replace(/\.[^.]+$/, '').replace(/_/g, ' ');
+                                               setNewTaskForm(prev => ({ ...prev, [day.id]: { ...prev[day.id], mediaUrl: file_url, mediaUploaded: true, title: prev[day.id]?.title || autoTitle } }));
                                            }
                                            toast.success('Uploaded!');
                                          }} />
@@ -891,7 +892,8 @@ export default function Home() {
                                              if (ytId) {
                                                navigate(createPageUrl("MediaLibrary") + `?videoId=${ytId}`);
                                              } else if (task.mediaUrl) {
-                                               navigate('/SingingHome');
+                                               sessionStorage.setItem('songListenData', JSON.stringify({ title: task.name, mediaUrl: task.mediaUrl, transcript: task.transcript || '' }));
+                                               navigate('/SongListenPage');
                                              } else if (task.page) {
                                                navigate(createPageUrl(task.page));
                                              } else {
