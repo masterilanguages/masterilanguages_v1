@@ -71,13 +71,14 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
   const baseNavItems = [
     { id: "home", to: "Home", emoji: "🏠", label: "Home" },
     { id: "schedule", to: "Home", emoji: "📅", label: "Schedule" },
+    { id: "backpack", to: "Backpack", emoji: "🎒", label: "Backpack" },
     { id: "videos", to: "MediaLibrary", emoji: "📚", label: "Library" },
     { id: "progress", to: "Progress", emoji: "🏆", label: "Progress" },
     { id: "journal", to: "Journal", emoji: "📖", label: "Journal" },
     { id: "clock", to: null, emoji: "🕐", label: "Clock" },
   ];
 
-  const validNavIds = ["home", "schedule", "videos", "progress", "journal", "clock"];
+  const validNavIds = ["home", "schedule", "backpack", "videos", "progress", "journal", "clock"];
   const getSavedOrder = () => {
     try {
       const saved = JSON.parse(localStorage.getItem('nav_order') || '[]');
@@ -306,7 +307,7 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
 
       {/* Nav grid */}
       <div style={{ borderTop: '1px solid rgba(90, 107, 90, 0.15)' }} className="px-4 py-2">
-        <div className="grid grid-cols-6 gap-1.5 max-w-xl mx-auto">
+        <div className="grid grid-cols-7 gap-1.5 max-w-2xl mx-auto">
           {orderedNav.map(({ id, to, emoji, label }) => {
             const isDragging = draggingId === id;
             const isOver = dragOverId === id && !isDragging;
