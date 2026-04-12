@@ -728,7 +728,6 @@ export default function Home() {
                           style={{ backgroundColor: dayColor.bg + '40' }}
                           onClick={() => {
                             if (isMasterUser) { setExpandedDay(expandedDay === day.day_number ? null : day.day_number); return; }
-                            if (day.day_number === 3) { navigate('/SingingHome'); return; }
                             setSessionModal(day);
                           }}
                         >
