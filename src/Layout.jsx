@@ -146,14 +146,13 @@ export default function Layout({ children, currentPageName }) {
 
   // Show loading during initial auth check
   if (!isAuthChecked) {
-    return <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900" />;
+    return <div className="min-h-screen" style={{ background: "#0B0F1A" }} />;
   }
 
   // Block rendering only for authenticated users who need onboarding
   if (!isOnboardingPage && currentUser && !profileLoading) {
     if (!userProfile || !userProfile.language || userProfile.language === "") {
-      return <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
-        <div className="text-white text-center">
+      return <div className="min-h-screen flex items-center justify-center" style={{ background: "#0B0F1A" }}>        <div className="text-white text-center">
           <p className="mb-2">Redirecting to onboarding...</p>
           <div className="w-8 h-8 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin mx-auto" />
         </div>
@@ -162,7 +161,7 @@ export default function Layout({ children, currentPageName }) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950">
+    <div className="min-h-screen" style={{ background: "#0B0F1A" }}>
       {isDev && isAuthChecked && (
         <div className="fixed top-0 left-0 z-[9999] bg-black/90 text-white text-xs px-3 py-1 font-mono">
           user: {currentUser?.id?.slice(0, 8) || 'none'} | 
