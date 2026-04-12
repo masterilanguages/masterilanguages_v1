@@ -90,7 +90,7 @@ Return JSON with:
       });
 
       const imageResult = await base44.integrations.Core.GenerateImage({
-        prompt: `${concept.image_prompt}. Cartoon illustration, bright vivid colors, solid WHITE background (not transparent, not checkered), single clear subject centered. ABSOLUTELY NO TEXT, NO LETTERS, NO WORDS anywhere in the image. White background only.`
+        prompt: `${concept.image_prompt}. 3D Pixar-style render, high definition, glossy and vibrant, expressive cartoon character with big eyes, cinematic lighting, ultra-detailed textures, colorful and fun. Plain white background. ABSOLUTELY NO TEXT, NO LETTERS, NO WORDS anywhere in the image.`
       });
 
       setMnemonicData(prev => ({
@@ -339,7 +339,7 @@ Return JSON with:
                             setCustomMnemonicInput(null);
                             try {
                               const imageResult = await base44.integrations.Core.GenerateImage({
-                                prompt: `${text}. Cartoon illustration, bright vivid colors, solid WHITE background, single clear subject centered. ABSOLUTELY NO TEXT, NO LETTERS, NO WORDS anywhere in the image. White background only.`
+                                prompt: `${text}. 3D Pixar-style render, high definition, glossy and vibrant, expressive cartoon character with big eyes, cinematic lighting, ultra-detailed textures, colorful and fun. Plain white background. ABSOLUTELY NO TEXT, NO LETTERS, NO WORDS anywhere in the image.`
                               });
                               setMnemonicData(prev => ({ ...prev, [currentKey]: { ...prev[currentKey], image_url: imageResult.url, loading: false } }));
                               if (currentWord.id) base44.entities.Word.update(currentWord.id, { image_url: imageResult.url }).catch(() => {});
@@ -372,7 +372,7 @@ Return JSON with:
                         setCustomMnemonicInput(null);
                         try {
                           const imageResult = await base44.integrations.Core.GenerateImage({
-                            prompt: `${customMnemonicText.trim()}. Cartoon illustration, bright vivid colors, solid WHITE background, single clear subject centered. ABSOLUTELY NO TEXT, NO LETTERS, NO WORDS anywhere in the image. White background only.`
+                            prompt: `${customMnemonicText.trim()}. 3D Pixar-style render, high definition, glossy and vibrant, expressive cartoon character with big eyes, cinematic lighting, ultra-detailed textures, colorful and fun. Plain white background. ABSOLUTELY NO TEXT, NO LETTERS, NO WORDS anywhere in the image.`
                           });
                           setMnemonicData(prev => ({ ...prev, [currentKey]: { ...prev[currentKey], image_url: imageResult.url, loading: false } }));
                           if (currentWord.id) base44.entities.Word.update(currentWord.id, { image_url: imageResult.url }).catch(() => {});

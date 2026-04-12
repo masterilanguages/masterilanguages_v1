@@ -230,7 +230,7 @@ Return JSON with:
       });
 
       const imageResult = await base44.integrations.Core.GenerateImage({
-        prompt: `${concept.image_prompt}. One main subject only. Simple clean composition. Slightly exaggerated or humorous. Bright vivid colors. Transparent or plain white background. ABSOLUTELY NO TEXT, NO LETTERS, NO WORDS, NO WRITING of any kind anywhere in the image.`
+        prompt: `${concept.image_prompt}. 3D Pixar-style render, high definition, glossy and vibrant, expressive cartoon character with big eyes, cinematic lighting, ultra-detailed textures, colorful and fun. Plain white background. ABSOLUTELY NO TEXT, NO LETTERS, NO WORDS anywhere in the image.`
       });
 
       setMnemonicExplanations(prev => ({ ...prev, [word.id]: concept.explanation }));
@@ -522,7 +522,7 @@ Return JSON with:
           response_json_schema: { type: 'object', properties: { sound_anchor: { type: 'string' }, explanation: { type: 'string' }, image_prompt: { type: 'string' } } }
         });
         const img = await base44.integrations.Core.GenerateImage({
-          prompt: `${concept.image_prompt}. Cartoon illustration, bright vivid colors, solid WHITE background, single clear subject centered. ABSOLUTELY NO TEXT anywhere.`
+          prompt: `${concept.image_prompt}. 3D Pixar-style render, high definition, glossy and vibrant, expressive cartoon character with big eyes, cinematic lighting, ultra-detailed textures, colorful and fun. Plain white background. ABSOLUTELY NO TEXT anywhere.`
         });
         await updateWordMutation.mutateAsync({ id: newWord.id, data: { image_url: img.url, mnemonic_explanation: concept.explanation } });
         toast.success('Mnemonic created! 🎨');
