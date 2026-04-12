@@ -491,7 +491,13 @@ Return JSON with:
     setGeneratingSentence(word.id);
     try {
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Create one short, simple Hebrew sentence using the word "${word.phonetic || word.word}" (meaning: "${word.translation}"). Return JSON with: transliteration (Latin), english (translation), words (array of {word: transliteration, meaning: English meaning for each word}).`,
+        model: 'claude_sonnet_4_6',
+        prompt: `Create one short, natural, commonly-used Hebrew sentence that a native speaker would actually say, using the word "${word.phonetic || word.word}" (meaning: "${word.translation}"). The sentence should feel real and practical, not textbook.
+
+Return JSON with:
+- transliteration: the full sentence in Latin phonetic spelling
+- english: natural English translation
+- words: array of each word in the sentence as {word: transliteration of that word, meaning: English meaning of that word}`,
         response_json_schema: {
           type: 'object',
           properties: {
