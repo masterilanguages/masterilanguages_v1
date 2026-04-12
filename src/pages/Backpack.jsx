@@ -18,7 +18,7 @@ import TranslatorWidget from "../components/TranslatorWidget";
 export default function Backpack() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("level0");
-  const [addWordForm, setAddWordForm] = useState({ phonetic: '', translation: '', word: '' });
+  const [addWordForm, setAddWordForm] = useState({ phonetic: '', translation: '' });
   const [addingWord, setAddingWord] = useState(false);
   const [expandedId, setExpandedId] = useState(null);
   const [selectedWord, setSelectedWord] = useState(null);
@@ -500,8 +500,8 @@ Return JSON with:
   const handleAddNewWord = async () => {
     if (!addWordForm.phonetic.trim() && !addWordForm.translation.trim()) return;
     setAddingWord(true);
-    await createWordMutation.mutateAsync({
-      word: addWordForm.word || addWordForm.phonetic,
+    const newWord = await createWordMutation.mutateAsync({
+      word: addWordForm.phonetic,
       translation: addWordForm.translation,
       phonetic: addWordForm.phonetic,
       category: 'wordbank',
@@ -509,9 +509,27 @@ Return JSON with:
       times_practiced: 0,
       mastered: false,
     });
-    setAddWordForm({ phonetic: '', translation: '', word: '' });
+    setAddWordForm({ phonetic: '', translation: '' });
     setAddingWord(false);
-    toast.success('Word added to backpack! 🎒');
+    toast.success('Word added! Generating mnemonic... 🎨');
+    // Auto-generate mnemonic image
+    if (newWord?.id) {
+      try {
+        const rawWord = addWordForm.phonetic;
+        const soundWord = /^l[aeiou]/i.test(rawWord) ? rawWord.slice(1) : rawWord;
+        const concept = await base44.integrations.Core.InvokeLLM({
+          prompt: `Create a mnemonic for the word "${soundWord}" meaning "${addWordForm.translation}". Find an English word/phrase that SOUNDS like "${soundWord}" and connect it visually to the meaning. Return JSON with: sound_anchor, explanation (one punchy sentence), image_prompt (vivid cartoon scene, no text).`,
+          response_json_schema: { type: 'object', properties: { sound_anchor: { type: 'string' }, explanation: { type: 'string' }, image_prompt: { type: 'string' } } }
+        });
+        const img = await base44.integrations.Core.GenerateImage({
+          prompt: `${concept.image_prompt}. Cartoon illustration, bright vivid colors, solid WHITE background, single clear subject centered. ABSOLUTELY NO TEXT anywhere.`
+        });
+        await updateWordMutation.mutateAsync({ id: newWord.id, data: { image_url: img.url, mnemonic_explanation: concept.explanation } });
+        toast.success('Mnemonic created! 🎨');
+      } catch (e) {
+        console.error('Mnemonic generation failed', e);
+      }
+    }
   };
 
   return (
@@ -541,14 +559,6 @@ Return JSON with:
               onChange={(e) => setAddWordForm(prev => ({ ...prev, translation: e.target.value }))}
               placeholder="English meaning"
               className="flex-1 min-w-[140px] bg-white/80 border-stone-300 text-stone-800 text-sm"
-              onKeyDown={(e) => e.key === 'Enter' && handleAddNewWord()}
-            />
-            <Input
-              value={addWordForm.word}
-              onChange={(e) => setAddWordForm(prev => ({ ...prev, word: e.target.value }))}
-              placeholder="Native script (optional)"
-              className="flex-1 min-w-[120px] bg-white/80 border-stone-300 text-stone-800 text-sm"
-              dir="rtl"
               onKeyDown={(e) => e.key === 'Enter' && handleAddNewWord()}
             />
             <Button
