@@ -37,8 +37,7 @@ export default function WordCard({
       key={word.id}
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="bg-white/70 border border-stone-200 rounded-lg overflow-hidden w-48 flex flex-col cursor-pointer"
-      onClick={() => setRevealed(r => !r)}
+      className="bg-white/70 border border-stone-200 rounded-lg overflow-hidden w-48 flex flex-col"
     >
       {word.approved && (
         <div className="flex items-center gap-1 px-2 py-0.5 bg-green-100 border-b border-green-200">
@@ -51,8 +50,11 @@ export default function WordCard({
         </div>
       )}
 
-      {/* Large mnemonic image */}
-      <div className="h-40 bg-stone-100 flex items-center justify-center overflow-hidden">
+      {/* Large mnemonic image — click to reveal */}
+      <div
+        className="h-40 bg-stone-100 flex items-center justify-center overflow-hidden relative cursor-pointer select-none"
+        onClick={() => setRevealed(r => !r)}
+      >
         {word.image_url ? (
           <img src={word.image_url} alt={word.phonetic} className="w-full h-full object-cover" />
         ) : (
@@ -61,10 +63,16 @@ export default function WordCard({
             <p className="text-stone-500 text-sm">{word.phonetic}</p>
           </div>
         )}
+        {/* Reveal overlay */}
+        {!revealed && (
+          <div className="absolute inset-0 flex items-end justify-center pb-2 pointer-events-none">
+            <span className="bg-black/40 text-white text-[10px] px-2 py-0.5 rounded-full">tap to reveal</span>
+          </div>
+        )}
       </div>
 
       {/* Word info */}
-      <div className="p-3 flex-1 flex flex-col" onClick={e => e.stopPropagation()}>
+      <div className="p-3 flex-1 flex flex-col">
         {showingHebrew && (
           <p className="text-cyan-600 font-bold text-base text-center" dir="rtl">
             <EditableWord
@@ -82,9 +90,7 @@ export default function WordCard({
         {showingEnglish && (
           <p className="text-stone-700 font-semibold text-base text-center">{word.translation}</p>
         )}
-        {!revealed && (
-          <p className="text-stone-300 text-[10px] text-center mt-1 italic">tap to reveal</p>
-        )}
+
       </div>
 
       {/* Verb infinitive badge */}
