@@ -628,7 +628,6 @@ Return JSON with: translation (English, 1-4 words), phonetic (clean Latin transl
       is_verb: isVerb,
     });
     setAddWordForm({ phonetic: '', translation: '' });
-    setAddingWord(false);
     toast.success('Word added! Generating mnemonic... 🎨');
     // Auto-generate mnemonic image
     if (newWord?.id) {
@@ -653,6 +652,7 @@ Return JSON with: sound_anchor (the English noun/object/animal), explanation (on
         console.error('Mnemonic generation failed', e);
       }
     }
+    setAddingWord(false);
   };
 
   return (
