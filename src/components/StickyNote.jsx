@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, StickyNote as StickyNoteIcon, Send, Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { useNavigate } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 import { toast } from "sonner";
 
 // Extract @Name mentions from text
@@ -22,6 +24,7 @@ function extractWords(text) {
 }
 
 export default function StickyNote() {
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [notes, setNotes] = useState(() => localStorage.getItem("sticky_notes") || "");
   const [saving, setSaving] = useState(false);
@@ -84,24 +87,20 @@ export default function StickyNote() {
     }
     setAddingToBackpack(true);
     try {
-      let added = 0;
       const existing = await base44.entities.Word.filter({ category: "wordbank" });
       const existingPhonetics = new Set(existing.map(w => (w.phonetic || w.word || "").toLowerCase()));
 
-      for (const word of words) {
-        if (existingPhonetics.has(word.toLowerCase())) continue;
-        await base44.entities.Word.create({
-          word: word,
-          translation: "",
-          phonetic: word,
-          category: "wordbank",
-          times_practiced: 0,
-          mastered: false,
-          vocab_level: 0,
-        });
-        added++;
-      }
-      toast.success(`${added} new word(s) added to your backpack! 🎒`);
+      const newWordsList = words
+        .filter(w => !existingPhonetics.has(w.toLowerCase()))
+        .map(word => ({ word, meaning: "", hebrew: "" }));
+
+      // Store in localStorage so Backpack page picks them up
+      const prev = JSON.parse(localStorage.getItem('pendingBackpackWords') || '[]');
+      localStorage.setItem('pendingBackpackWords', JSON.stringify([...prev, ...newWordsList]));
+
+      toast.success(`${newWordsList.length} word(s) added! Opening backpack...`);
+      setIsOpen(false);
+      navigate(createPageUrl('Backpack'));
     } catch (e) {
       toast.error("Failed to add words");
     }
