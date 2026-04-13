@@ -191,7 +191,7 @@ export default function WordCard({
 
       {/* Example sentence */}
       <div className="px-2 pb-2">
-        <div className="bg-stone-50 rounded-lg p-2 border border-stone-100 min-h-[52px] flex flex-col justify-center">
+        <div className="bg-stone-50 rounded-lg p-2 border border-stone-100 min-h-[52px] flex flex-col justify-center gap-0.5">
           {generatingSentence[word.id] ? (
             <div className="flex items-center justify-center gap-1 py-1">
               <Loader2 className="w-3 h-3 animate-spin text-stone-300" />
@@ -199,10 +199,16 @@ export default function WordCard({
             </div>
           ) : cardSentences[word.id] ? (
             <>
+              {/* Hebrew — RTL, full sentence reconstructed from words */}
+              <p className="text-[11px] text-cyan-700 font-medium text-right leading-snug" dir="rtl">
+                {cardSentences[word.id].words?.map(w => w.hebrew || '').filter(Boolean).join(' ')}
+              </p>
+              {/* Transliteration */}
               <SentenceWords
                 words={cardSentences[word.id].words}
                 onAddToBackpack={handleAddWordFromSentence}
               />
+              {/* English + refresh */}
               <div className="flex items-center justify-between gap-1">
                 <p className="text-[10px] text-stone-400 italic flex-1">{cardSentences[word.id].english}</p>
                 <button

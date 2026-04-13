@@ -556,13 +556,13 @@ CRITICAL — write as a native Israeli would actually say it in daily conversati
 Return JSON:
 - transliteration: full sentence in Latin letters (modern Israeli pronunciation, e.g. "ani ohev et ha-yeled")
 - english: natural English equivalent (not word-for-word)
-- words: array of {word: transliteration of that single word, meaning: its English meaning}`,
+- words: array of {word: transliteration of that single word, hebrew: Hebrew script of that word, meaning: its English meaning}`,
         response_json_schema: {
           type: 'object',
           properties: {
             transliteration: { type: 'string' },
             english: { type: 'string' },
-            words: { type: 'array', items: { type: 'object', properties: { word: { type: 'string' }, meaning: { type: 'string' } } } }
+            words: { type: 'array', items: { type: 'object', properties: { word: { type: 'string' }, hebrew: { type: 'string' }, meaning: { type: 'string' } } } }
           }
         }
       });
