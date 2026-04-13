@@ -218,16 +218,17 @@ export default function Backpack() {
         prompt: `You help create mnemonics for language learning.
 
 Target word: "${targetWord}" (meaning: "${meaning}")
-${word.is_verb || /^l[aeiou]/i.test(word.phonetic || '') ? `This is a VERB. The original word starts with "L" so we already stripped it to get "${targetWord}". Focus on the BEGINNING SOUNDS of "${targetWord}".` : `Focus on the BEGINNING SOUNDS of "${targetWord}".`}
 
-Step 1: Find an English NOUN, OBJECT, or ANIMAL whose name STARTS WITH or SOUNDS LIKE the beginning of "${targetWord}". Example: "kelev" (dog) → "cave" or "Kevin". The sound match must be at the START of the word.
-Step 2: Create a vivid, funny scene where that noun/object/animal is doing something that represents the meaning "${meaning}".
+Step 1: Find a COMMON EVERYDAY English noun (something anyone would instantly recognize — like "cow", "door", "sun", "car", "shoe", "key", "cup", "box") whose pronunciation STARTS WITH or closely SOUNDS LIKE the beginning sounds of "${targetWord}". Prioritize simple, concrete, universally-known objects over abstract or rare words. The sound match must be at the START of the English word.
+
+Step 2: Create a vivid, funny scene where that everyday object is doing something that represents the meaning "${meaning}".
+
 Step 3: Write a 1-sentence visual description for image generation.
 
 Return JSON with:
-- sound_anchor: the English noun/object/animal whose beginning sounds like "${targetWord}"
-- explanation: one punchy sentence connecting the sound anchor to the meaning (e.g. "A KEVin (kelev=dog) chasing his tail")
-- image_prompt: detailed description for generating the image (no text, simple funny scene, one main subject, bright colors)`,
+- sound_anchor: the common everyday English noun that sounds like the start of "${targetWord}"
+- explanation: one punchy sentence connecting the sound anchor to the meaning (e.g. "A SHOE (shu=ask) asking a question")
+- image_prompt: detailed description for generating the image (no text, simple funny scene, one main everyday object as subject, bright colors)`,
         response_json_schema: {
           type: 'object',
           properties: {
@@ -644,10 +645,10 @@ Return JSON with: translation (English, 1-4 words), phonetic (clean Latin transl
         const concept = await base44.integrations.Core.InvokeLLM({
           prompt: `Create a mnemonic for the word "${soundWord}" meaning "${addWordForm.translation || translation}".
 
-Find an English NOUN, OBJECT, or ANIMAL whose name STARTS WITH or SOUNDS LIKE the beginning of "${soundWord}". The sound match must be at the START of the word.
-Then imagine that noun/object/animal doing something funny that represents the meaning.
+Find a COMMON EVERYDAY English noun (something anyone instantly recognizes — like "cow", "door", "sun", "car", "shoe", "key", "cup", "box") whose pronunciation STARTS WITH or closely SOUNDS LIKE the beginning sounds of "${soundWord}". Prioritize simple, concrete, universally-known objects. The sound match must be at the START of the English word.
+Then imagine that everyday object doing something funny that represents the meaning.
 
-Return JSON with: sound_anchor (the English noun/object/animal), explanation (one punchy sentence connecting sound to meaning), image_prompt (vivid funny cartoon scene, no text, bright colors, one main subject).`,
+Return JSON with: sound_anchor (the common everyday English noun), explanation (one punchy sentence connecting sound to meaning), image_prompt (vivid funny cartoon scene, no text, bright colors, one main everyday object as subject).`,
           response_json_schema: { type: 'object', properties: { sound_anchor: { type: 'string' }, explanation: { type: 'string' }, image_prompt: { type: 'string' } } }
         });
         const img = await base44.integrations.Core.GenerateImage({
