@@ -4,12 +4,13 @@ import { Loader2, RefreshCw, Plus, Pencil, Check, X } from "lucide-react";
 import EditableWord from "../learning/EditableWord";
 
 function SentenceWords({ words, onAddToBackpack }) {
+  const [selected, setSelected] = useState(null); // index of clicked word
   const [editing, setEditing] = useState(null); // { index, word, meaning }
 
   if (!words?.length) return null;
 
   return (
-    <div className="flex flex-wrap gap-x-0.5 gap-y-1 justify-center mb-1">
+    <div className="flex flex-wrap gap-x-1 gap-y-1 justify-center mb-1">
       {words.map((w, i) => (
         <span key={i} className="inline-flex items-center gap-0.5">
           {editing?.index === i ? (
@@ -27,26 +28,34 @@ function SentenceWords({ words, onAddToBackpack }) {
                 className="text-[10px] text-stone-500 w-16 outline-none bg-transparent border-l border-cyan-200 pl-1"
               />
               <button
-                onClick={() => { onAddToBackpack(editing.word, editing.meaning); setEditing(null); }}
+                onClick={() => { onAddToBackpack(editing.word, editing.meaning); setEditing(null); setSelected(null); }}
                 className="text-green-500 hover:text-green-700"
                 title="Add to backpack"
               ><Plus className="w-3 h-3" /></button>
-              <button onClick={() => setEditing(null)} className="text-stone-300 hover:text-stone-500"><X className="w-3 h-3" /></button>
+              <button onClick={() => { setEditing(null); setSelected(null); }} className="text-stone-300 hover:text-stone-500"><X className="w-3 h-3" /></button>
             </span>
-          ) : (
-            <>
-              <span className="text-[10px] text-cyan-600 italic">{w.word}</span>
+          ) : selected === i ? (
+            <span className="inline-flex items-center gap-0.5 bg-cyan-50 border border-cyan-200 rounded px-1.5 py-0.5">
+              <span className="text-[10px] text-cyan-700 font-medium">{w.word}</span>
               <button
                 onClick={() => setEditing({ index: i, word: w.word, meaning: w.meaning })}
-                className="text-stone-300 hover:text-cyan-500 transition-all"
-                title="Edit & add"
-              ><Pencil className="w-2.5 h-2.5" /></button>
+                className="text-cyan-400 hover:text-cyan-600 transition-all ml-1"
+                title="Edit word"
+              ><Pencil className="w-3 h-3" /></button>
               <button
-                onClick={() => onAddToBackpack(w.word, w.meaning)}
-                className="text-stone-300 hover:text-green-500 transition-all"
-                title={`Add "${w.meaning}" to backpack`}
-              ><Plus className="w-2.5 h-2.5" /></button>
-            </>
+                onClick={() => { onAddToBackpack(w.word, w.meaning); setSelected(null); }}
+                className="text-green-500 hover:text-green-700 transition-all"
+                title="Add to backpack"
+              >🎒</button>
+              <button onClick={() => setSelected(null)} className="text-stone-300 hover:text-stone-500 ml-0.5"><X className="w-2.5 h-2.5" /></button>
+            </span>
+          ) : (
+            <button
+              onClick={() => setSelected(i)}
+              className="text-[10px] text-cyan-600 italic hover:bg-cyan-50 rounded px-0.5 transition-all"
+            >
+              {w.word}
+            </button>
           )}
         </span>
       ))}
