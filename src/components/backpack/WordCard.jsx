@@ -84,6 +84,21 @@ export default function WordCard({
   generateCardSentence,
 }) {
   const [revealed, setRevealed] = useState(false);
+  const [regeneratingImage, setRegeneratingImage] = useState(false);
+
+  const regenerateImageFromDescription = async (description) => {
+    setRegeneratingImage(true);
+    try {
+      const { base44 } = await import("@/api/base44Client");
+      const result = await base44.integrations.Core.GenerateImage({
+        prompt: `${description}. 3D Pixar-style render, high definition, glossy and vibrant, expressive cartoon character with big eyes, cinematic lighting, ultra-detailed textures, colorful and fun. Plain white background. ABSOLUTELY NO TEXT, NO LETTERS, NO WORDS anywhere in the image.`
+      });
+      updateWordMutation.mutate({ id: word.id, data: { image_url: result.url } });
+    } catch (e) {
+      console.error("Failed to regenerate image", e);
+    }
+    setRegeneratingImage(false);
+  };
 
   useEffect(() => { setRevealed(false); }, [showAllEnglish]);
 
@@ -115,6 +130,12 @@ export default function WordCard({
         className="h-40 bg-stone-100 flex items-center justify-center overflow-hidden relative cursor-pointer select-none"
         onClick={() => setRevealed(r => !r)}
       >
+        {regeneratingImage && (
+          <div className="absolute inset-0 z-10 bg-white/70 flex flex-col items-center justify-center gap-1">
+            <Loader2 className="w-5 h-5 animate-spin text-purple-400" />
+            <span className="text-[10px] text-stone-400">Generating...</span>
+          </div>
+        )}
         {word.image_url ? (
           <img src={word.image_url} alt={word.phonetic} className="w-full h-full object-cover" />
         ) : (
@@ -179,6 +200,7 @@ export default function WordCard({
             onSave={(val) => {
               setMnemonicExplanations(prev => ({ ...prev, [word.id]: val }));
               updateWordMutation.mutate({ id: word.id, data: { mnemonic_explanation: val } });
+              regenerateImageFromDescription(val);
             }}
           />
         </p>
