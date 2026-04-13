@@ -91,7 +91,7 @@ export default function WordCard({
     try {
       const { base44 } = await import("@/api/base44Client");
       const result = await base44.integrations.Core.GenerateImage({
-        prompt: `${description}. 3D Pixar-style render, high definition, glossy and vibrant, expressive cartoon character with big eyes, cinematic lighting, ultra-detailed textures, colorful and fun. Plain white background. ABSOLUTELY NO TEXT, NO LETTERS, NO WORDS anywhere in the image.`
+        prompt: `A colorful cartoon illustration of: ${description}. Vibrant colors, fun and memorable, educational style. ABSOLUTELY NO TEXT, NO LETTERS, NO WORDS anywhere in the image.`
       });
       updateWordMutation.mutate({ id: word.id, data: { image_url: result.url } });
     } catch (e) {
