@@ -136,8 +136,8 @@ export default function WordCard({
         )}
       </div>
 
-      {/* Word info */}
-      <div className="p-3 flex-1 flex flex-col">
+      {/* Word info — also clickable to reveal */}
+      <div className="p-3 flex-1 flex flex-col cursor-pointer select-none" onClick={() => setRevealed(r => !r)}>
         {showingHebrew && (
           <p className="text-cyan-600 font-bold text-base text-center" dir="rtl">
             <EditableWord
@@ -146,6 +146,7 @@ export default function WordCard({
               editable={isContentEditable(word)}
               onSave={(v) => updateWordMutation.mutate({ id: word.id, data: { word: v } })}
               className="text-cyan-600 font-bold text-base"
+              onClick={(e) => e.stopPropagation()}
             />
           </p>
         )}
@@ -159,10 +160,10 @@ export default function WordCard({
               editable={true}
               onSave={(v) => updateWordMutation.mutate({ id: word.id, data: { translation: v } })}
               className="text-stone-700 font-semibold text-base"
+              onClick={(e) => e.stopPropagation()}
             />
           </p>
         )}
-
       </div>
 
       {/* Verb infinitive badge */}
@@ -257,7 +258,7 @@ export default function WordCard({
           </button>
         )}
         <button
-          onClick={() => word.approved && !isAdmin ? handleDismissWord(word.id) : deleteWordMutation.mutate(word.id)}
+          onClick={() => word.approved && !isAdmin ? handleDismissWord(word.id) : deleteWordMutation.mutate({ id: word.id, phonetic: word.phonetic || word.word })}
           className="w-6 h-6 rounded flex items-center justify-center text-sm hover:bg-red-500/20 transition-all"
           title={word.approved && !isAdmin ? "Remove from my view" : "Delete word"}
         >

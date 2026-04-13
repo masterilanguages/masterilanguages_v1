@@ -138,7 +138,17 @@ export default function Backpack() {
   });
 
   const deleteWordMutation = useMutation({
-    mutationFn: (id) => base44.entities.Word.delete(id),
+    mutationFn: async ({ id, phonetic }) => {
+      // Delete the target word
+      await base44.entities.Word.delete(id);
+      // Also delete any duplicates with the same phonetic
+      if (phonetic) {
+        const dupes = wordRatings.filter(w => w.id !== id && (w.phonetic || w.word)?.toLowerCase() === phonetic.toLowerCase());
+        for (const dupe of dupes) {
+          await base44.entities.Word.delete(dupe.id);
+        }
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['wordRatings'] });
       toast.success("Word deleted!");
