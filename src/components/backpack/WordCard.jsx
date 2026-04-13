@@ -1,11 +1,11 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Loader2, RefreshCw } from "lucide-react";
 import EditableWord from "../learning/EditableWord";
 
 export default function WordCard({
   word,
-  showPhonetics,
+  showAllEnglish,
   isContentEditable,
   mnemonicExplanations,
   setMnemonicExplanations,
@@ -23,12 +23,22 @@ export default function WordCard({
   handleAddWordFromSentence,
   generateCardSentence,
 }) {
+  const [revealed, setRevealed] = useState(false);
+
+  useEffect(() => { setRevealed(false); }, [showAllEnglish]);
+
+  // showAllEnglish=false → show Hebrew, click reveals English
+  // showAllEnglish=true  → show English, click reveals Hebrew
+  const showingHebrew = showAllEnglish ? revealed : !revealed;
+  const showingEnglish = showAllEnglish ? !revealed : revealed;
+
   return (
     <motion.div
       key={word.id}
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="bg-white/70 border border-stone-200 rounded-lg overflow-hidden w-48 flex flex-col"
+      className="bg-white/70 border border-stone-200 rounded-lg overflow-hidden w-48 flex flex-col cursor-pointer"
+      onClick={() => setRevealed(r => !r)}
     >
       {word.approved && (
         <div className="flex items-center gap-1 px-2 py-0.5 bg-green-100 border-b border-green-200">
@@ -54,42 +64,27 @@ export default function WordCard({
       </div>
 
       {/* Word info */}
-      <div className="p-3 flex-1 flex flex-col">
-        <p className="text-cyan-400 font-semibold text-sm text-center">
-          {showPhonetics ? (
-            <span>{word.phonetic || word.word}</span>
-          ) : (
+      <div className="p-3 flex-1 flex flex-col" onClick={e => e.stopPropagation()}>
+        {showingHebrew && (
+          <p className="text-cyan-600 font-bold text-base text-center" dir="rtl">
             <EditableWord
-              text={word.phonetic}
+              text={word.word}
+              language="he"
               editable={isContentEditable(word)}
-              onSave={(v) => updateWordMutation.mutate({ id: word.id, data: { phonetic: v } })}
-              className="text-cyan-400 font-semibold text-sm"
+              onSave={(v) => updateWordMutation.mutate({ id: word.id, data: { word: v } })}
+              className="text-cyan-600 font-bold text-base"
             />
-          )}
-        </p>
-        <p className="text-stone-500 text-xs text-center mt-1 flex items-center justify-center gap-0.5">
-          <span>=</span>
-          {fetchingTranslation[word.id] ? (
-            <Loader2 className="w-3 h-3 animate-spin text-stone-300" />
-          ) : (
-            <EditableWord
-              text={word.translation && word.translation.toLowerCase() !== (word.phonetic || word.word).toLowerCase() ? word.translation : ''}
-              editable={true}
-              onSave={(v) => updateWordMutation.mutate({ id: word.id, data: { translation: v } })}
-              className={`text-xs ${!word.translation || word.translation.toLowerCase() === (word.phonetic || word.word).toLowerCase() ? 'text-stone-300 italic' : 'text-stone-600'}`}
-              placeholder="add translation"
-            />
-          )}
-        </p>
-        <p className="text-cyan-600 font-bold text-sm text-center mt-1" dir="rtl">
-          <EditableWord
-            text={word.word}
-            language="he"
-            editable={isContentEditable(word)}
-            onSave={(v) => updateWordMutation.mutate({ id: word.id, data: { word: v } })}
-            className="text-cyan-600 font-bold text-sm"
-          />
-        </p>
+          </p>
+        )}
+        {showingHebrew && (
+          <p className="text-stone-400 text-xs text-center mt-0.5">{word.phonetic}</p>
+        )}
+        {showingEnglish && (
+          <p className="text-stone-700 font-semibold text-base text-center">{word.translation}</p>
+        )}
+        {!revealed && (
+          <p className="text-stone-300 text-[10px] text-center mt-1 italic">tap to reveal</p>
+        )}
       </div>
 
       {/* Verb infinitive badge */}
