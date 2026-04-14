@@ -219,7 +219,7 @@ export default function WordCard({
 
       {/* Mnemonic explanation */}
       {(mnemonicExplanations[word.id] || word.mnemonic_explanation) && (
-        <p className="text-[10px] text-center px-2 pb-1 italic line-clamp-2 overflow-hidden" style={{ color: '#6b7c5a' }}>
+        <p className="text-[10px] text-center px-2 pb-1 italic truncate overflow-hidden whitespace-nowrap" style={{ color: '#6b7c5a' }}>
           💡 <EditableWord
             text={mnemonicExplanations[word.id] || word.mnemonic_explanation}
             editable={true}
