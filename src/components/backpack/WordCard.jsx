@@ -50,12 +50,13 @@ function SentenceWords({ words, onAddToBackpack }) {
         <div className="flex items-center justify-center gap-1 py-1">
           {editingIndex === activeIndex ? (
             <span className="flex items-center gap-1 bg-cyan-50 border border-cyan-200 rounded px-1.5 py-0.5">
+              <span className="text-[10px] font-semibold text-cyan-700 border-r border-cyan-200 pr-1">{words[activeIndex].word}</span>
               <input
                 autoFocus
                 value={editingMeaning}
                 onChange={e => setEditingMeaning(e.target.value)}
                 placeholder="meaning..."
-                className="text-[10px] text-cyan-700 w-20 outline-none bg-transparent"
+                className="text-[10px] text-stone-600 w-20 outline-none bg-transparent"
               />
               <button
                 onClick={() => { onAddToBackpack(words[activeIndex].word, editingMeaning); setActiveIndex(null); setEditingIndex(null); }}
@@ -64,23 +65,25 @@ function SentenceWords({ words, onAddToBackpack }) {
               <button onClick={() => setEditingIndex(null)} className="text-stone-300 hover:text-stone-500"><X className="w-3 h-3" /></button>
             </span>
           ) : (
-            <>
-              <span className="text-[10px] text-stone-500 italic mr-1">{words[activeIndex].word}</span>
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] font-semibold text-cyan-700 bg-cyan-50 border border-cyan-200 rounded px-1.5 py-0.5">
+                {words[activeIndex].word}
+              </span>
               <button
-                onClick={() => { setEditingIndex(activeIndex); setEditingMeaning(words[activeIndex].meaning || ''); }}
+                onClick={(e) => { e.stopPropagation(); setEditingIndex(activeIndex); setEditingMeaning(words[activeIndex].meaning || ''); }}
                 className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-stone-100 hover:bg-stone-200 text-stone-500 transition-all"
-                title="Edit"
+                title="Edit meaning"
               >
                 <Pencil className="w-3 h-3" />
               </button>
               <button
-                onClick={() => { onAddToBackpack(words[activeIndex].word, words[activeIndex].meaning || ''); setActiveIndex(null); }}
+                onClick={(e) => { e.stopPropagation(); onAddToBackpack(words[activeIndex].word, words[activeIndex].meaning || ''); setActiveIndex(null); }}
                 className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-cyan-100 hover:bg-cyan-200 text-cyan-700 transition-all"
                 title="Add to backpack"
               >
                 🎒
               </button>
-            </>
+            </div>
           )}
         </div>
       )}
