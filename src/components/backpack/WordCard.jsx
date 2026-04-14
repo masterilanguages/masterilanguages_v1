@@ -4,45 +4,86 @@ import { Loader2, RefreshCw, Plus, Pencil, Check, X } from "lucide-react";
 import EditableWord from "../learning/EditableWord";
 
 function SentenceWords({ words, onAddToBackpack }) {
-  const [editing, setEditing] = useState(null); // { index, word, meaning }
+  const [activeIndex, setActiveIndex] = useState(null);
+  const [editingIndex, setEditingIndex] = useState(null);
+  const [editingMeaning, setEditingMeaning] = useState('');
 
   if (!words?.length) return null;
 
+  const handleWordClick = (i) => {
+    setActiveIndex(activeIndex === i ? null : i);
+    setEditingIndex(null);
+  };
+
   return (
-    <div className="flex flex-wrap gap-x-1 gap-y-1 justify-center mb-1">
-      {words.map((w, i) => (
-        <span key={i} className="inline-flex items-center gap-0.5">
-          {editing?.index === i ? (
-            <span className="flex items-center gap-0.5 bg-cyan-50 border border-cyan-200 rounded px-1 py-0.5">
+    <div className="space-y-0.5 w-full">
+      {/* Hebrew line — RTL, centered */}
+      <p className="text-[11px] text-cyan-700 font-semibold text-center leading-snug" dir="rtl">
+        {words.map((w, i) => (
+          <span
+            key={i}
+            onClick={() => handleWordClick(i)}
+            className={`cursor-pointer rounded px-0.5 transition-all ${activeIndex === i ? 'bg-cyan-100' : 'hover:bg-cyan-50'}`}
+          >
+            {w.hebrew || ''}
+            {i < words.length - 1 ? ' ' : ''}
+          </span>
+        ))}
+      </p>
+
+      {/* Transliteration line — centered */}
+      <p className="text-[10px] text-stone-500 text-center leading-snug">
+        {words.map((w, i) => (
+          <span
+            key={i}
+            onClick={() => handleWordClick(i)}
+            className={`cursor-pointer rounded px-0.5 transition-all ${activeIndex === i ? 'bg-cyan-100 text-cyan-700' : 'hover:bg-stone-100'}`}
+          >
+            {w.word || ''}
+            {i < words.length - 1 ? '  ' : ''}
+          </span>
+        ))}
+      </p>
+
+      {/* Active word action popup */}
+      {activeIndex !== null && (
+        <div className="flex items-center justify-center gap-1 py-1">
+          {editingIndex === activeIndex ? (
+            <span className="flex items-center gap-1 bg-cyan-50 border border-cyan-200 rounded px-1.5 py-0.5">
               <input
                 autoFocus
-                value={editing.word}
-                onChange={e => setEditing(prev => ({ ...prev, word: e.target.value }))}
-                className="text-[10px] text-cyan-700 w-16 outline-none bg-transparent"
-              />
-              <input
-                value={editing.meaning}
-                onChange={e => setEditing(prev => ({ ...prev, meaning: e.target.value }))}
-                placeholder="meaning"
-                className="text-[10px] text-stone-500 w-16 outline-none bg-transparent border-l border-cyan-200 pl-1"
+                value={editingMeaning}
+                onChange={e => setEditingMeaning(e.target.value)}
+                placeholder="meaning..."
+                className="text-[10px] text-cyan-700 w-20 outline-none bg-transparent"
               />
               <button
-                onClick={() => { onAddToBackpack(editing.word, editing.meaning); setEditing(null); }}
+                onClick={() => { onAddToBackpack(words[activeIndex].word, editingMeaning); setActiveIndex(null); setEditingIndex(null); }}
                 className="text-green-500 hover:text-green-700"
-                title="Add to backpack"
               ><Plus className="w-3 h-3" /></button>
-              <button onClick={() => setEditing(null)} className="text-stone-300 hover:text-stone-500"><X className="w-3 h-3" /></button>
+              <button onClick={() => setEditingIndex(null)} className="text-stone-300 hover:text-stone-500"><X className="w-3 h-3" /></button>
             </span>
           ) : (
-            <button
-              onClick={() => setEditing({ index: i, word: w.word, meaning: w.meaning || '' })}
-              className="text-[10px] text-cyan-600 italic hover:bg-cyan-50 rounded px-0.5 transition-all"
-            >
-              {w.word}
-            </button>
+            <>
+              <span className="text-[10px] text-stone-500 italic mr-1">{words[activeIndex].word}</span>
+              <button
+                onClick={() => { setEditingIndex(activeIndex); setEditingMeaning(words[activeIndex].meaning || ''); }}
+                className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-stone-100 hover:bg-stone-200 text-stone-500 transition-all"
+                title="Edit"
+              >
+                <Pencil className="w-3 h-3" />
+              </button>
+              <button
+                onClick={() => { onAddToBackpack(words[activeIndex].word, words[activeIndex].meaning || ''); setActiveIndex(null); }}
+                className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-cyan-100 hover:bg-cyan-200 text-cyan-700 transition-all"
+                title="Add to backpack"
+              >
+                🎒
+              </button>
+            </>
           )}
-        </span>
-      ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -199,18 +240,14 @@ export default function WordCard({
             </div>
           ) : cardSentences[word.id] ? (
             <>
-              {/* Hebrew — RTL, full sentence reconstructed from words */}
-              <p className="text-[11px] text-cyan-700 font-medium text-right leading-snug" dir="rtl">
-                {cardSentences[word.id].words?.map(w => w.hebrew || '').filter(Boolean).join(' ')}
-              </p>
-              {/* Transliteration */}
+              {/* Hebrew + Transliteration — handled by SentenceWords */}
               <SentenceWords
                 words={cardSentences[word.id].words}
                 onAddToBackpack={handleAddWordFromSentence}
               />
               {/* English + refresh */}
-              <div className="flex items-center justify-between gap-1">
-                <p className="text-[10px] text-stone-400 italic flex-1">{cardSentences[word.id].english}</p>
+              <div className="flex items-center justify-between gap-1 mt-0.5">
+                <p className="text-[10px] text-stone-400 italic flex-1 text-center">{cardSentences[word.id].english}</p>
                 <button
                   onClick={() => generateCardSentence(word)}
                   className="text-stone-300 hover:text-stone-500 flex-shrink-0 p-0.5 rounded hover:bg-stone-100 transition-all"
