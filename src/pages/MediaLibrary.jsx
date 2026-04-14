@@ -1310,31 +1310,33 @@ Return a JSON with a "videos" array. Each video must have:
               </button>
             )}
 
-            {/* Content type multi-select toggles */}
-            {[
-              { id: "videos", label: "Videos", emoji: "📹" },
-              { id: "songs", label: "Songs", emoji: "🎵" },
-              { id: "audio", label: "Audio Training", emoji: "🎧" },
-            ].map(ct => {
-              const active = filterContentTypes.includes(ct.id);
-              return (
-                <button
-                  key={ct.id}
-                  onClick={() => setFilterContentTypes(prev =>
-                    prev.includes(ct.id) ? (prev.length > 1 ? prev.filter(x => x !== ct.id) : prev) : [...prev, ct.id]
-                  )}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all border ${
-                    active ? 'text-stone-800 border-stone-400' : 'text-stone-400 border-stone-200 hover:text-stone-600'
-                  }`}
-                  style={active ? { background: '#ffffff' } : { background: 'transparent' }}
-                >
-                  {ct.emoji} {ct.label}
-                </button>
-              );
-            })}
-
-            {/* Divider */}
-            <div className="h-6 w-px bg-stone-200 flex-shrink-0" />
+            {/* Content type multi-select dropdown */}
+            <div className="relative group">
+              <button className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold bg-white border border-stone-300 text-stone-700 hover:border-stone-400 transition-all">
+                {filterContentTypes.length === 3 ? 'All Types' : filterContentTypes.map(id => ({ videos: 'Videos', songs: 'Songs', audio: 'Audio Training' }[id])).join(', ')}
+                <ChevronDown className="w-3.5 h-3.5 ml-1" />
+              </button>
+              <div className="absolute top-full left-0 mt-1 bg-white rounded-xl shadow-lg border border-stone-200 z-20 min-w-[200px] py-1 hidden group-focus-within:block group-hover:block">
+                {[
+                  { id: "videos", label: "Videos", emoji: "📹" },
+                  { id: "songs", label: "Songs", emoji: "🎵" },
+                  { id: "audio", label: "Audio Training", emoji: "🎧" },
+                ].map(ct => (
+                  <button
+                    key={ct.id}
+                    onClick={() => setFilterContentTypes(prev =>
+                      prev.includes(ct.id) ? (prev.length > 1 ? prev.filter(x => x !== ct.id) : prev) : [...prev, ct.id]
+                    )}
+                    className="w-full text-left px-4 py-2 text-sm flex items-center gap-2 transition-all hover:bg-stone-50"
+                  >
+                    <span className={`w-3.5 h-3.5 rounded border flex-shrink-0 flex items-center justify-center text-[9px] ${filterContentTypes.includes(ct.id) ? 'bg-stone-700 border-stone-700 text-white' : 'border-stone-300'}`}>
+                      {filterContentTypes.includes(ct.id) ? '✓' : ''}
+                    </span>
+                    <span>{ct.emoji} {ct.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
 
             {/* Language */}
             <Select value={filterLanguage} onValueChange={setFilterLanguage}>
