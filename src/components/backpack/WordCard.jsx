@@ -10,7 +10,8 @@ function SentenceWords({ words, onAddToBackpack }) {
 
   if (!words?.length) return null;
 
-  const handleWordClick = (i) => {
+  const handleWordClick = (e, i) => {
+    e.stopPropagation();
     setActiveIndex(activeIndex === i ? null : i);
     setEditingIndex(null);
   };
@@ -22,7 +23,7 @@ function SentenceWords({ words, onAddToBackpack }) {
         {words.map((w, i) => (
           <span
             key={i}
-            onClick={() => handleWordClick(i)}
+            onClick={(e) => handleWordClick(e, i)}
             className={`cursor-pointer rounded px-0.5 transition-all ${activeIndex === i ? 'bg-cyan-100' : 'hover:bg-cyan-50'}`}
           >
             {w.hebrew || ''}
@@ -36,7 +37,7 @@ function SentenceWords({ words, onAddToBackpack }) {
         {words.map((w, i) => (
           <span
             key={i}
-            onClick={() => handleWordClick(i)}
+            onClick={(e) => handleWordClick(e, i)}
             className={`cursor-pointer rounded px-0.5 transition-all ${activeIndex === i ? 'bg-cyan-100 text-cyan-700' : 'hover:bg-stone-100'}`}
           >
             {w.word || ''}
@@ -231,7 +232,7 @@ export default function WordCard({
       )}
 
       {/* Example sentence */}
-      <div className="px-2 pb-2">
+      <div className="px-2 pb-2" onClick={e => e.stopPropagation()}>
         <div className="bg-stone-50 rounded-lg p-2 border border-stone-100 min-h-[52px] flex flex-col justify-center gap-0.5">
           {generatingSentence[word.id] ? (
             <div className="flex items-center justify-center gap-1 py-1">
