@@ -109,26 +109,10 @@ export default function AddVideoDialog({ open, onOpenChange, editingVideo, formD
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Duration (minutes)</Label>
-              <Input type="number" value={formData.duration_minutes} onChange={(e) => setFormData(p => ({ ...p, duration_minutes: e.target.value }))} className="bg-white/5 border-white/20 text-white" />
-            </div>
-            <div>
-              <Label>Accent/Region</Label>
-              <Input value={formData.accent_region} onChange={(e) => setFormData(p => ({ ...p, accent_region: e.target.value }))} placeholder="Optional" className="bg-white/5 border-white/20 text-white" />
-            </div>
-          </div>
-
           <label className="flex items-center gap-2 text-white/80 cursor-pointer">
             <input type="checkbox" checked={formData.is_active} onChange={(e) => setFormData(p => ({ ...p, is_active: e.target.checked }))} className="w-4 h-4" />
             Active
           </label>
-
-          <div>
-            <Label>Notes</Label>
-            <Textarea value={formData.notes} onChange={(e) => setFormData(p => ({ ...p, notes: e.target.value }))} className="bg-white/5 border-white/20 text-white" rows={3} />
-          </div>
 
           <div>
             <Label>Transcript</Label>
