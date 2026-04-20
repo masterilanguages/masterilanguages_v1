@@ -4,10 +4,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { ArrowLeft, BookOpen, Loader2, CheckCircle, X, Languages } from "lucide-react";
+import { ArrowLeft, BookOpen, Loader2, CheckCircle, X, Languages, Music } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import SongTranscriptJournal from "../components/journal/SongTranscriptJournal";
 
 const TranslatorWidget = lazy(() => import("../components/TranslatorWidget"));
 const SignaturePad = lazy(() => import("../components/journal/SignaturePad"));
@@ -36,6 +37,8 @@ export default function Journal() {
   const [showTranslated, setShowTranslated] = useState(false);
   const [exercises, setExercises] = useState([]); // [{english, answer, userInput, revealed}]
   const [generatingExercises, setGeneratingExercises] = useState(false);
+  const [journalMode, setJournalMode] = useState("free"); // "free" | "song"
+  const [songJournalDone, setSongJournalDone] = useState(false);
   const today = new Date().toISOString().split('T')[0];
 
   const { data: userProfile } = useQuery({
@@ -67,6 +70,16 @@ export default function Journal() {
     queryKey: ['publicJournalEntries'],
     queryFn: async () => base44.entities.JournalEntry.filter({ is_public: true }, '-date', 10),
     staleTime: 60000,
+  });
+
+  // Fetch latest media item with a transcript for the song journal
+  const { data: latestMedia } = useQuery({
+    queryKey: ['latestMediaWithTranscript'],
+    queryFn: async () => {
+      const allMedia = await base44.entities.MediaLibrary.list('-created_date', 20);
+      return allMedia.find(m => m.processed_transcript?.length > 0) || null;
+    },
+    staleTime: 5 * 60 * 1000,
   });
 
   const todayEntry = useMemo(() => entries.find(e => e.date === today), [entries, today]);
@@ -307,8 +320,79 @@ Return JSON with an array "exercises" where each item has: word (the vocab word 
           </div>
         </div>
 
+        {/* Mode toggle */}
+        {latestMedia && (
+          <div className="flex gap-2 mb-5">
+            <button
+              onClick={() => setJournalMode("free")}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all`}
+              style={journalMode === "free"
+                ? { background: "#5a6b5a", color: "white", fontFamily: "Jost, sans-serif" }
+                : { background: "rgba(255,254,245,0.8)", color: "#6b7c5a", border: "1px solid rgba(200,180,140,0.5)", fontFamily: "Jost, sans-serif" }
+              }
+            >
+              <BookOpen className="w-4 h-4" /> Free Journal
+            </button>
+            <button
+              onClick={() => setJournalMode("song")}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all`}
+              style={journalMode === "song"
+                ? { background: "#9b7e5a", color: "white", fontFamily: "Jost, sans-serif" }
+                : { background: "rgba(255,254,245,0.8)", color: "#6b7c5a", border: "1px solid rgba(200,180,140,0.5)", fontFamily: "Jost, sans-serif" }
+              }
+            >
+              <Music className="w-4 h-4" /> Song Questions
+            </button>
+          </div>
+        )}
+
+        {/* Song Transcript Journal Mode */}
+        <AnimatePresence mode="wait">
+          {journalMode === "song" && latestMedia && (
+            <motion.div
+              key="song-journal"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -16 }}
+              className="mb-6 rounded-2xl overflow-hidden"
+              style={{
+                background: "#fffef5",
+                border: "1px solid #e0d8c8",
+                boxShadow: "4px 6px 24px rgba(61,74,46,0.10)"
+              }}
+            >
+              {/* Header */}
+              <div className="px-6 pt-5 pb-3 flex items-center gap-3" style={{ borderBottom: "2px solid rgba(200,180,140,0.4)" }}>
+                <Music className="w-4 h-4" style={{ color: "#9b7e5a" }} />
+                <div>
+                  <p className="text-xs font-semibold tracking-widest uppercase" style={{ color: "#9b7e5a", fontFamily: "Jost, sans-serif" }}>
+                    Song Journal
+                  </p>
+                  <p className="text-base font-medium" style={{ color: "#3d4a2e", fontFamily: "Cormorant Garamond, serif" }}>
+                    {latestMedia.title}
+                  </p>
+                </div>
+                {songJournalDone && (
+                  <span className="ml-auto flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(90,160,90,0.12)", color: "#3a7a3a" }}>
+                    <CheckCircle className="w-3 h-3" /> Done
+                  </span>
+                )}
+              </div>
+              <div className="px-6 py-5">
+                <SongTranscriptJournal
+                  transcript={latestMedia.processed_transcript || []}
+                  songTitle={latestMedia.title}
+                  userProfile={userProfile}
+                  onComplete={() => { setSongJournalDone(true); toast.success("Great work! 🎉"); }}
+                />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* ── NOTEBOOK ── */}
-        <motion.div
+        <AnimatePresence>
+        {journalMode === "free" && <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="relative rounded-2xl shadow-2xl overflow-hidden mb-6"
@@ -550,7 +634,8 @@ Return JSON with an array "exercises" where each item has: word (the vocab word 
               </Button>
             </div>
           </div>
-        </motion.div>
+        </motion.div>}
+        </AnimatePresence>
 
         {/* Previous Entries */}
         {entries.filter(e => e.date !== today).length > 0 && (
