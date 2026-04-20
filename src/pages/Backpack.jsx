@@ -31,7 +31,7 @@ export default function Backpack() {
   const [showAllEnglish, setShowAllEnglish] = useState(false);
   const [showHebrew, setShowHebrew] = useState(true);
   const [showTransliteration, setShowTransliteration] = useState(true);
-  const [viewMode, setViewMode] = useState('single'); // 'grid' | 'single'
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'single'
   const [singleCardIndex, setSingleCardIndex] = useState(0);
   const [activeSecondTab, setActiveSecondTab] = useState(null); // 'verbs' | 'corevocab' | null
   const [flippedCards, setFlippedCards] = useState({});
