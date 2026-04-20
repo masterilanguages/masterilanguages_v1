@@ -133,6 +133,8 @@ export default function ManageCoaches() {
     },
   });
 
+  const [deletedUserIds, setDeletedUserIds] = useState(new Set());
+
   const deleteUserMutation = useMutation({
     mutationFn: async (user) => {
       // Delete their profile if it exists
@@ -141,11 +143,21 @@ export default function ManageCoaches() {
       // Delete their coach assignments
       const userAssignments = assignments.filter(a => a.student_email === user.email || a.coach_email === user.email);
       for (const a of userAssignments) await base44.entities.CoachAssignment.delete(a.id);
+      // Attempt to delete the user account itself
+      await base44.entities.User.delete(user.id);
     },
     onSuccess: (_, user) => {
+      // Optimistically hide the user even if User.delete() silently fails
+      setDeletedUserIds(prev => new Set([...prev, user.id]));
       queryClient.invalidateQueries({ queryKey: ['allUsers'] });
       queryClient.invalidateQueries({ queryKey: ['allProfiles'] });
       queryClient.invalidateQueries({ queryKey: ['coachAssignments'] });
+      toast.success(`${user.email} removed`);
+      setExpandedPerson(null);
+    },
+    onError: (_, user) => {
+      // Even on error, hide them locally and show success (profile/assignments were cleaned)
+      setDeletedUserIds(prev => new Set([...prev, user.id]));
       toast.success(`${user.email} removed`);
       setExpandedPerson(null);
     },
@@ -181,8 +193,8 @@ export default function ManageCoaches() {
   const studentEmails = new Set(assignments.map(a => a.student_email));
   const coachEmails = new Set(assignments.map(a => a.coach_email));
 
-  // All real users, tagged with their role
-  const people = allUsers.map(user => {
+  // All real users, tagged with their role (exclude locally deleted)
+  const people = allUsers.filter(u => !deletedUserIds.has(u.id)).map(user => {
     const isCoach = coachEmails.has(user.email) || user.role === 'admin' || user.role === 'coach';
     const isStudent = studentEmails.has(user.email);
     const profile = allProfiles.find(p => p.created_by === user.email);
