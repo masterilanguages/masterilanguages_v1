@@ -449,19 +449,19 @@ export default function ContinuousTranscript({
                   <>
                     {showPhonetics ? (
                       segment.hebrew && (
-                        <p className="text-cyan-300 text-base font-medium leading-tight text-left" dir="rtl">
+                        <p className="text-cyan-300 text-base font-medium leading-tight text-left whitespace-nowrap overflow-x-auto" dir="rtl">
                           {renderWords(segIdx, 'hebrew', segment.hebrew, 'text-cyan-300 text-base font-medium')}
                         </p>
                       )
                     ) : (
                       !hideTranslit && (
-                        <p className="text-white text-base font-medium leading-tight text-left">
+                        <p className="text-white text-base font-medium leading-tight text-left whitespace-nowrap overflow-x-auto">
                           {renderWords(segIdx, 'transliteration', segment.transliteration, 'text-white text-base font-medium')}
                         </p>
                       )
                     )}
                     {(!hideEnglish || revealedSentences.has(segIdx)) && segment.english && (
-                      <p className="text-white/60 text-sm leading-tight text-left">
+                      <p className="text-white/60 text-sm leading-tight text-left whitespace-nowrap overflow-x-auto">
                         {renderWords(segIdx, 'english', segment.english, 'text-white/60 text-sm')}
                       </p>
                     )}
