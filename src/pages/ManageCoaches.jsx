@@ -133,6 +133,24 @@ export default function ManageCoaches() {
     },
   });
 
+  const deleteUserMutation = useMutation({
+    mutationFn: async (user) => {
+      // Delete their profile if it exists
+      const profile = allProfiles.find(p => p.created_by === user.email);
+      if (profile) await base44.entities.UserProfile.delete(profile.id);
+      // Delete their coach assignments
+      const userAssignments = assignments.filter(a => a.student_email === user.email || a.coach_email === user.email);
+      for (const a of userAssignments) await base44.entities.CoachAssignment.delete(a.id);
+    },
+    onSuccess: (_, user) => {
+      queryClient.invalidateQueries({ queryKey: ['allUsers'] });
+      queryClient.invalidateQueries({ queryKey: ['allProfiles'] });
+      queryClient.invalidateQueries({ queryKey: ['coachAssignments'] });
+      toast.success(`${user.email} removed`);
+      setExpandedPerson(null);
+    },
+  });
+
   const handleAssign = () => {
     const studentEmail = studentEmailInput.trim() || selectedStudent;
     if (!selectedCoach || !studentEmail) { toast.error("Select a coach and enter a student email"); return; }
@@ -382,6 +400,25 @@ export default function ManageCoaches() {
                             <Trash2 className="w-3 h-3 mr-1" /> Remove coach assignment
                           </Button>
                         ))}
+                      </div>
+                    )}
+
+                    {/* Delete user */}
+                    {user.role !== 'admin' && (
+                      <div className="flex justify-end pt-2 border-t border-white/10">
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            if (confirm(`Delete ${user.email}? This cannot be undone.`)) {
+                              deleteUserMutation.mutate(user);
+                            }
+                          }}
+                          disabled={deleteUserMutation.isPending}
+                          className="text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-xs"
+                          variant="ghost"
+                        >
+                          <Trash2 className="w-3 h-3 mr-1" /> Delete user
+                        </Button>
                       </div>
                     )}
                   </div>
