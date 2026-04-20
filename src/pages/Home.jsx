@@ -677,7 +677,7 @@ export default function Home() {
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => navigate('/landing')}
+                onClick={() => navigate('/FluentPath')}
                 className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl text-base font-semibold shadow-lg transition-all"
                 style={{ background: 'linear-gradient(135deg, #c9a96e, #e8c98a)', color: '#1a1a1a' }}
               >
