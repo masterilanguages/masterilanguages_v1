@@ -896,10 +896,8 @@ export default function Home() {
                                                return;
                                              }
                                              const ytId = task.video_id || extractYouTubeId(task.youtube_url);
-                                             if (ytId) {
-                                               navigate(createPageUrl("MediaLibrary") + `?videoId=${ytId}`);
-                                             } else if (task.mediaUrl) {
-                                               sessionStorage.setItem('songListenData', JSON.stringify({ title: task.name, mediaUrl: task.mediaUrl, transcript: task.transcript || '' }));
+                                             if (task.mediaUrl || ytId) {
+                                               sessionStorage.setItem('songListenData', JSON.stringify({ title: task.name, mediaUrl: task.mediaUrl || '', transcript: task.transcript || '', videoId: ytId || '' }));
                                                navigate('/SongListenPage');
                                              } else if (task.page) {
                                                navigate(createPageUrl(task.page));

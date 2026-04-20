@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Play, Pause, Volume2 } from "lucide-react";
+import { ArrowLeft, Play, Pause, Volume2, Save } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export default function SongListenPage() {
   const navigate = useNavigate();
@@ -8,13 +11,21 @@ export default function SongListenPage() {
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [editingTranscript, setEditingTranscript] = useState(false);
+  const [transcriptDraft, setTranscriptDraft] = useState("");
 
   const data = JSON.parse(sessionStorage.getItem("songListenData") || "{}");
-  const { title, mediaUrl, transcript } = data;
+  const { title, mediaUrl, transcript: initialTranscript, videoId } = data;
+
+  const [transcript, setTranscript] = useState(initialTranscript || "");
 
   useEffect(() => {
-    if (!mediaUrl) navigate(-1);
-  }, [mediaUrl]);
+    setTranscriptDraft(transcript);
+  }, [transcript]);
+
+  useEffect(() => {
+    if (!mediaUrl && !videoId) navigate(-1);
+  }, [mediaUrl, videoId]);
 
   const togglePlay = () => {
     if (!audioRef.current) return;
@@ -40,6 +51,15 @@ export default function SongListenPage() {
     return `${m}:${sec.toString().padStart(2, "0")}`;
   };
 
+  const handleSaveTranscript = () => {
+    setTranscript(transcriptDraft);
+    // Persist to sessionStorage so it survives a refresh
+    const updated = { ...data, transcript: transcriptDraft };
+    sessionStorage.setItem("songListenData", JSON.stringify(updated));
+    setEditingTranscript(false);
+    toast.success("Transcript saved!");
+  };
+
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "#0B0F1A" }}>
       {/* Header */}
@@ -50,60 +70,115 @@ export default function SongListenPage() {
         <h1 className="text-white font-bold text-lg">{title || "Song"}</h1>
       </div>
 
-      {/* Player */}
-      <div className="flex flex-col items-center justify-center px-6 py-10 gap-6">
-        <div className="w-32 h-32 rounded-full flex items-center justify-center"
-          style={{ background: "linear-gradient(135deg, #3b82f6, #06b6d4)" }}>
-          <Volume2 className="w-14 h-14 text-white" />
-        </div>
-
-        <h2 className="text-white text-xl font-bold text-center">{title || "Audio Track"}</h2>
-
-        {/* Progress bar */}
-        <div className="w-full max-w-sm">
-          <input
-            type="range"
-            min={0}
-            max={duration || 1}
-            value={currentTime}
-            onChange={(e) => {
-              if (audioRef.current) audioRef.current.currentTime = Number(e.target.value);
-              setCurrentTime(Number(e.target.value));
-            }}
-            className="w-full accent-cyan-400"
+      {/* YouTube Video */}
+      {videoId && (
+        <div className="w-full aspect-video max-w-3xl mx-auto">
+          <iframe
+            className="w-full h-full"
+            src={`https://www.youtube.com/embed/${videoId}`}
+            title={title}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
           />
-          <div className="flex justify-between text-white/40 text-xs mt-1">
-            <span>{formatTime(currentTime)}</span>
-            <span>{formatTime(duration)}</span>
-          </div>
         </div>
+      )}
 
-        <button
-          onClick={togglePlay}
-          className="w-16 h-16 rounded-full flex items-center justify-center text-white"
-          style={{ background: "linear-gradient(135deg, #3b82f6, #06b6d4)" }}
-        >
-          {playing ? <Pause className="w-7 h-7" /> : <Play className="w-7 h-7 ml-1" />}
-        </button>
+      {/* Audio Player (only if no video) */}
+      {mediaUrl && !videoId && (
+        <div className="flex flex-col items-center justify-center px-6 py-10 gap-6">
+          <div className="w-32 h-32 rounded-full flex items-center justify-center"
+            style={{ background: "linear-gradient(135deg, #3b82f6, #06b6d4)" }}>
+            <Volume2 className="w-14 h-14 text-white" />
+          </div>
 
-        <audio
-          ref={audioRef}
-          src={mediaUrl}
-          onTimeUpdate={handleTimeUpdate}
-          onLoadedMetadata={handleLoadedMetadata}
-          onEnded={() => setPlaying(false)}
-        />
-      </div>
+          <h2 className="text-white text-xl font-bold text-center">{title || "Audio Track"}</h2>
+
+          {/* Progress bar */}
+          <div className="w-full max-w-sm">
+            <input
+              type="range"
+              min={0}
+              max={duration || 1}
+              value={currentTime}
+              onChange={(e) => {
+                if (audioRef.current) audioRef.current.currentTime = Number(e.target.value);
+                setCurrentTime(Number(e.target.value));
+              }}
+              className="w-full accent-cyan-400"
+            />
+            <div className="flex justify-between text-white/40 text-xs mt-1">
+              <span>{formatTime(currentTime)}</span>
+              <span>{formatTime(duration)}</span>
+            </div>
+          </div>
+
+          <button
+            onClick={togglePlay}
+            className="w-16 h-16 rounded-full flex items-center justify-center text-white"
+            style={{ background: "linear-gradient(135deg, #3b82f6, #06b6d4)" }}
+          >
+            {playing ? <Pause className="w-7 h-7" /> : <Play className="w-7 h-7 ml-1" />}
+          </button>
+
+          <audio
+            ref={audioRef}
+            src={mediaUrl}
+            onTimeUpdate={handleTimeUpdate}
+            onLoadedMetadata={handleLoadedMetadata}
+            onEnded={() => setPlaying(false)}
+          />
+        </div>
+      )}
 
       {/* Transcript */}
-      {transcript && (
-        <div className="px-6 pb-10 max-w-lg mx-auto w-full">
-          <h3 className="text-white/60 text-sm font-semibold mb-3 uppercase tracking-wider">Lyrics / Transcript</h3>
+      <div className="px-6 pb-10 max-w-3xl mx-auto w-full mt-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-white/60 text-sm font-semibold uppercase tracking-wider">Lyrics / Transcript</h3>
+          {!editingTranscript && (
+            <button
+              onClick={() => setEditingTranscript(true)}
+              className="text-cyan-400 hover:text-cyan-300 text-xs font-medium px-3 py-1 rounded-lg border border-cyan-400/30 hover:border-cyan-400/60 transition-all"
+            >
+              {transcript ? "Edit" : "+ Paste Transcript"}
+            </button>
+          )}
+        </div>
+
+        {editingTranscript ? (
+          <div className="space-y-3">
+            <Textarea
+              value={transcriptDraft}
+              onChange={(e) => setTranscriptDraft(e.target.value)}
+              placeholder="Paste your transcript or lyrics here..."
+              className="bg-white/5 border-white/20 text-white min-h-[200px] text-sm leading-relaxed"
+              autoFocus
+            />
+            <div className="flex gap-2 justify-end">
+              <Button
+                variant="ghost"
+                onClick={() => { setEditingTranscript(false); setTranscriptDraft(transcript); }}
+                className="text-white/60 hover:text-white"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSaveTranscript}
+                className="bg-cyan-500 hover:bg-cyan-600 text-white gap-2"
+              >
+                <Save className="w-4 h-4" /> Save
+              </Button>
+            </div>
+          </div>
+        ) : transcript ? (
           <div className="bg-white/5 rounded-2xl p-5 border border-white/10">
             <pre className="text-white/80 text-sm leading-relaxed whitespace-pre-wrap font-sans">{transcript}</pre>
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="bg-white/5 rounded-2xl p-5 border border-white/10 text-center">
+            <p className="text-white/30 text-sm">No transcript yet. Click "+ Paste Transcript" to add one.</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
