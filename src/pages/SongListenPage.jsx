@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Play, Pause, Volume2, Save } from "lucide-react";
+import { ArrowLeft, Play, Pause, Volume2, Save, Loader2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 
 export default function SongListenPage() {
@@ -51,13 +52,32 @@ export default function SongListenPage() {
     return `${m}:${sec.toString().padStart(2, "0")}`;
   };
 
-  const handleSaveTranscript = () => {
+  const [savingTranscript, setSavingTranscript] = useState(false);
+
+  const handleSaveTranscript = async () => {
+    setSavingTranscript(true);
     setTranscript(transcriptDraft);
-    // Persist to sessionStorage so it survives a refresh
+    // Persist to sessionStorage
     const updated = { ...data, transcript: transcriptDraft };
     sessionStorage.setItem("songListenData", JSON.stringify(updated));
     setEditingTranscript(false);
-    toast.success("Transcript saved!");
+
+    // Persist to DB — find the MediaLibrary record by mediaUrl
+    try {
+      if (data.mediaLibraryId) {
+        await base44.entities.MediaLibrary.update(data.mediaLibraryId, { transcript_phonetics: transcriptDraft });
+      } else if (mediaUrl) {
+        const results = await base44.entities.MediaLibrary.filter({ video_url: mediaUrl });
+        if (results[0]) {
+          await base44.entities.MediaLibrary.update(results[0].id, { transcript_phonetics: transcriptDraft });
+        }
+      }
+      toast.success("Transcript saved!");
+    } catch (e) {
+      toast.success("Transcript saved locally!");
+    } finally {
+      setSavingTranscript(false);
+    }
   };
 
   return (
@@ -163,9 +183,11 @@ export default function SongListenPage() {
               </Button>
               <Button
                 onClick={handleSaveTranscript}
+                disabled={savingTranscript}
                 className="bg-cyan-500 hover:bg-cyan-600 text-white gap-2"
               >
-                <Save className="w-4 h-4" /> Save
+                {savingTranscript ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                Save
               </Button>
             </div>
           </div>
