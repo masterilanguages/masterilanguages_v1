@@ -131,6 +131,20 @@ export default function Progress() {
           </div>
         </div>
 
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+          {[
+            { label: 'Current Day', value: userProfile?.current_day || 1 },
+            { label: 'Daily Streak 🔥', value: userProfile?.daily_streak || 0 },
+            { label: 'Total Words', value: wordRatings.length },
+          ].map(stat => (
+            <div key={stat.label} className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 p-5 text-center">
+              <p className="text-white/60 text-sm mb-1">{stat.label}</p>
+              <p className="text-4xl font-bold text-white">{stat.value.toLocaleString()}</p>
+            </div>
+          ))}
+        </div>
+
         {/* Words Backpack Summary */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-white mb-4">🎒 Words Backpack Summary</h2>

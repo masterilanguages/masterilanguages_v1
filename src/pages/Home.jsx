@@ -995,24 +995,6 @@ export default function Home() {
             {/* PROGRESS SECTION */}
             <div className="text-center">
               <h2 className="text-3xl font-bold mb-4 cursor-pointer hover:opacity-80 transition-opacity inline-flex items-center gap-1" style={{ color: '#3d4a2e', fontFamily: 'Cormorant Garamond, Georgia, serif' }} onClick={() => navigate(createPageUrl("Progress"))}>🏆 Progress <ChevronRight className="w-5 h-5 mb-1" /></h2>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 p-4 text-center">
-                  <p style={{ color: '#6b7c5a' }} className="text-xs mb-1">Current Day</p>
-                  <p className="text-3xl font-bold" style={{ color: '#3d4a2e' }}>{currentDay}</p>
-                </div>
-                <div className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 p-4 text-center">
-                  <p style={{ color: '#6b7c5a' }} className="text-xs mb-1">Daily Streak 🔥</p>
-                  <p className="text-3xl font-bold" style={{ color: '#3d4a2e' }}>{userProfile?.daily_streak || 0}</p>
-                </div>
-                <div className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 p-4 text-center">
-                  <p style={{ color: '#6b7c5a' }} className="text-xs mb-1">Total Words</p>
-                  <p className="text-3xl font-bold" style={{ color: '#3d4a2e' }}>{wordRatings.length}</p>
-                </div>
-                <div className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 p-4 text-center">
-                  <p style={{ color: '#6b7c5a' }} className="text-xs mb-1">Coins 🪙</p>
-                  <p className="text-3xl font-bold" style={{ color: '#3d4a2e' }}>{coins.toLocaleString()}</p>
-                </div>
-              </div>
             </div>
           </div>
         )}
