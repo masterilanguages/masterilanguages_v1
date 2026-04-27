@@ -143,6 +143,7 @@ export default function MediaLibrary() {
   const { data: videos = [] } = useQuery({
     queryKey: ['mediaLibrary'],
     queryFn: () => base44.entities.MediaLibrary.list(),
+    initialData: [],
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
@@ -153,6 +154,7 @@ export default function MediaLibrary() {
       const profiles = await base44.entities.UserProfile.list();
       return profiles[0] || null;
     },
+    initialData: null,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
     onSuccess: (profile) => {
