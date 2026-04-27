@@ -4,7 +4,6 @@ import { Mic, Play, Pause, RotateCcw, SkipForward, ChevronLeft, Music } from "lu
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
 
 // Segment timings — these reference timestamps in the actual song audio
 const DEFAULT_SEGMENTS = [
@@ -95,29 +94,17 @@ export default function SpeakingSession() {
 
   const currentSeg = segments[currentSegIdx];
 
-  // Load song from MediaLibrary (MP3 uploads) or DailySong
+  const [manualUrl, setManualUrl] = useState("");
+
+  // Load song from sessionStorage only (must be an actual MP3/audio URL)
   useEffect(() => {
-    const load = async () => {
-      // Check sessionStorage for a song passed from Home/Schedule
-      const stored = sessionStorage.getItem("speakingSongData");
-      if (stored) {
+    const stored = sessionStorage.getItem("speakingSongData");
+    if (stored) {
+      try {
         const d = JSON.parse(stored);
-        if (d.mediaUrl) { setSongUrl(d.mediaUrl); setSongTitle(d.title || "Song"); return; }
-      }
-      // Fallback: grab the latest DailySong with an audio_url
-      try {
-        const songs = await base44.entities.DailySong.list('-created_date', 5);
-        const withAudio = songs.find(s => s.audio_url);
-        if (withAudio) { setSongUrl(withAudio.audio_url); setSongTitle("Daily Song"); return; }
+        if (d.mediaUrl) { setSongUrl(d.mediaUrl); setSongTitle(d.title || "Song"); }
       } catch {}
-      // Fallback: grab any MediaLibrary MP3
-      try {
-        const items = await base44.entities.MediaLibrary.list('-created_date', 20);
-        const mp3 = items.find(i => i.video_url && (i.video_url.includes('.mp3') || i.video_url.includes('audio')));
-        if (mp3) { setSongUrl(mp3.video_url); setSongTitle(mp3.title || "Song"); }
-      } catch {}
-    };
-    load();
+    }
   }, []);
 
   const handleTakeStop = useCallback((url) => {
@@ -297,9 +284,7 @@ export default function SpeakingSession() {
           <h1 className="text-white font-bold text-lg">Speaking Session</h1>
           {songTitle && <p className="text-white/40 text-xs flex items-center gap-1"><Music className="w-3 h-3" />{songTitle}</p>}
         </div>
-        {!songUrl && (
-          <span className="text-amber-400 text-xs bg-amber-400/10 px-2 py-1 rounded-lg">No song loaded</span>
-        )}
+        {/* intentionally empty — url input shown below */}
         <div className="flex gap-1 bg-white/10 rounded-xl p-1">
           {MODES.map(m => (
             <button key={m} onClick={() => setMode(m)}
@@ -309,6 +294,25 @@ export default function SpeakingSession() {
           ))}
         </div>
       </div>
+
+      {/* Song URL input — shown when no audio is loaded */}
+      {!songUrl && (
+        <div className="w-full max-w-md mb-4 bg-white/5 border border-white/10 rounded-2xl p-4 space-y-2">
+          <p className="text-white/60 text-sm">Paste an MP3 audio URL to use as the backing track:</p>
+          <div className="flex gap-2">
+            <input
+              value={manualUrl}
+              onChange={e => setManualUrl(e.target.value)}
+              placeholder="https://example.com/song.mp3"
+              className="flex-1 bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-white text-sm outline-none placeholder:text-white/30 focus:border-indigo-400"
+            />
+            <button
+              onClick={() => { if (manualUrl.trim()) { setSongUrl(manualUrl.trim()); setSongTitle("Song"); } }}
+              className="px-4 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-semibold transition-all"
+            >Load</button>
+          </div>
+        </div>
+      )}
 
       {/* Segment selector */}
       <div className="w-full max-w-md flex gap-2 mb-6 overflow-x-auto pb-1">
