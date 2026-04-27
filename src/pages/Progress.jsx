@@ -34,8 +34,8 @@ function getGraphInsight(graph, chartData) {
       return `You've built a vocabulary of ${latest} words. At your current pace of ~${growthRate} words per active day, you'll hit ${Math.round(latest * 1.5)} words soon. Keep it up!`;
     }
     case "sessionsCompleted": {
-      if (nonZeroDays === 0) return "No sessions completed yet. Open the Schedule and complete your first session!";
-      return `You've completed sessions on ${nonZeroDays} days in the last 30 days. ${nonZeroDays >= 20 ? "Excellent consistency! 🏆" : nonZeroDays >= 10 ? "Good effort — try to be even more consistent." : "Try to study more days each week for faster progress."}`;
+      if (nonZeroDays === 0) return "No completed sessions yet. A session counts when you study for at least 30 minutes without a 5-minute break!";
+      return `You've completed ${nonZeroDays} full sessions (30+ min) in the last 30 days. ${nonZeroDays >= 20 ? "Excellent consistency! 🏆" : nonZeroDays >= 10 ? "Good effort — try to be even more consistent." : "Try to reach 30 minutes each day for faster progress."}`;
     }
     case "minutesStudied": {
       const totalMinutes = values.reduce((a, b) => a + b, 0);
@@ -96,10 +96,14 @@ export default function Progress() {
     }
 
     const sessionsByDate = {};
+    const completedSessionsByDate = {};
     for (const s of studySessions) {
       const d = new Date(s.date).toDateString();
       if (!sessionsByDate[d]) sessionsByDate[d] = 0;
       sessionsByDate[d] += s.duration_minutes || 0;
+      if (s.completed) {
+        completedSessionsByDate[d] = (completedSessionsByDate[d] || 0) + 1;
+      }
     }
 
     let runningStreak = 0;
@@ -112,7 +116,7 @@ export default function Progress() {
       const label = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
       const wordsAddedToday = (wordsByDate[dateStr] || []).length;
-      const sessionsCompletedToday = (progressByDate[dateStr] || []).length;
+      const sessionsCompletedToday = completedSessionsByDate[dateStr] || 0;
       const minutesStudiedToday = Math.round((sessionsByDate[dateStr] || 0) * 10) / 10;
 
       runningTotalWords += wordsAddedToday;

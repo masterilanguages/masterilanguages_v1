@@ -17,6 +17,11 @@
         "manual"
       ],
       "description": "Why the clock stopped"
+    },
+    "completed": {
+      "type": "boolean",
+      "default": false,
+      "description": "True if the session lasted at least 30 minutes"
     }
   },
   "required": [

@@ -63,13 +63,19 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
   });
 
   // Save session to DB
+  // Only saves if >= 60 seconds; only marks completed if >= 30 min
   const saveSession = async (seconds, reason) => {
-    if (seconds < 30) return; // ignore tiny blips
+    if (seconds < 60) return; // ignore tiny blips under 1 min
     const minutes = Math.round(seconds / 60 * 10) / 10;
+    const completed = minutes >= 30;
     const date = new Date().toISOString().split('T')[0];
     try {
-      await base44.entities.StudySession.create({ date, duration_minutes: minutes, stopped_reason: reason });
-      toast.info(`Study session saved: ${minutes} min`);
+      await base44.entities.StudySession.create({ date, duration_minutes: minutes, stopped_reason: reason, completed });
+      if (completed) {
+        toast.success(`✅ Session completed! ${minutes} min saved.`);
+      } else {
+        toast.info(`Session paused at ${minutes} min (need 30 min to count as completed).`);
+      }
     } catch (e) {
       console.error('Failed to save session', e);
     }
@@ -96,8 +102,7 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
     inactivityCheckRef.current = setInterval(() => {
       if (stopwatchRunning && Date.now() - lastActivityRef.current > INACTIVITY_LIMIT_MS) {
         setStopwatchRunning(false);
-        setStopwatchTime(prev => { saveSession(prev, 'inactivity'); return prev; });
-        toast.warning('Clock stopped due to 5 min inactivity. Your time was saved!');
+        setStopwatchTime(prev => { saveSession(prev, 'inactivity'); return 0; });
       }
     }, 30000); // check every 30s
 
