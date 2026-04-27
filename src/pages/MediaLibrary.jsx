@@ -47,7 +47,7 @@ export default function MediaLibrary() {
   const [editingVideo, setEditingVideo] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterLanguage, setFilterLanguage] = useState("");
-  const [filterDifficulty, setFilterDifficulty] = useState("all");
+  const [filterDifficulty, setFilterDifficulty] = useState([]);
   const [filterTopics, setFilterTopics] = useState([]);
   const [filterContentTypes, setFilterContentTypes] = useState(["videos", "songs", "audio"]);
   const [selectedUser, setSelectedUser] = useState("");
@@ -704,7 +704,7 @@ Keep natural sentence breaks. Return a JSON object with a "transcript" array.`,
     const userLang = userProfile?.language;
     const effectiveLangFilter = filterLanguage && filterLanguage !== "all" ? filterLanguage : userLang;
     const matchesLanguage = !effectiveLangFilter || video.language === effectiveLangFilter;
-    const matchesDifficulty = filterDifficulty === "all" || video.difficulty_level === filterDifficulty;
+    const matchesDifficulty = filterDifficulty.length === 0 || filterDifficulty.includes(video.difficulty_level);
     const matchesTopic = filterTopics.length === 0 || filterTopics.some(t => (video.topics || []).includes(t));
     return matchesSearch && matchesLanguage && matchesDifficulty && matchesTopic && video.is_active !== false;
   }).sort((a, b) => {
@@ -1374,19 +1374,37 @@ Return a JSON with a "videos" array. Each video must have:
               </SelectContent>
             </Select>
 
-            {/* Difficulty */}
-            <Select value={filterDifficulty} onValueChange={setFilterDifficulty}>
-              <SelectTrigger className="bg-white border-stone-300 text-stone-700 w-32">
-                <SelectValue placeholder="All Levels" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Levels</SelectItem>
-                <SelectItem value="Beginner">Beginner</SelectItem>
-                <SelectItem value="Intermediate">Intermediate</SelectItem>
-                <SelectItem value="Advanced">Advanced</SelectItem>
-                <SelectItem value="All">All</SelectItem>
-              </SelectContent>
-            </Select>
+            {/* Difficulty - multiselect */}
+            <div className="relative group">
+              <button
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium bg-white border border-stone-300 text-stone-700 hover:border-stone-400 transition-all"
+              >
+                {filterDifficulty.length === 0 ? 'All Levels' : `${filterDifficulty.length} Level${filterDifficulty.length > 1 ? 's' : ''}`}
+                <ChevronDown className="w-3 h-3" />
+              </button>
+              <div className="absolute top-full left-0 mt-1 bg-white rounded-xl shadow-lg border border-stone-200 z-20 min-w-[160px] py-1 hidden group-focus-within:block group-hover:block">
+                <button
+                  onClick={() => setFilterDifficulty([])}
+                  className={`w-full text-left px-4 py-2 text-sm transition-all ${filterDifficulty.length === 0 ? 'font-semibold text-stone-800 bg-stone-100' : 'text-stone-600 hover:text-stone-800 hover:bg-stone-50'}`}
+                >
+                  All Levels
+                </button>
+                {['Beginner', 'Intermediate', 'Advanced'].map(level => (
+                  <button
+                    key={level}
+                    onClick={() => setFilterDifficulty(prev =>
+                      prev.includes(level) ? prev.filter(l => l !== level) : [...prev, level]
+                    )}
+                    className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 transition-all hover:bg-stone-50 ${filterDifficulty.includes(level) ? 'bg-stone-100 font-semibold text-stone-800' : 'text-stone-600'}`}
+                  >
+                    <span className={`w-3.5 h-3.5 rounded border flex-shrink-0 flex items-center justify-center text-[9px] ${filterDifficulty.includes(level) ? 'bg-stone-700 border-stone-700 text-white' : 'border-stone-300'}`}>
+                      {filterDifficulty.includes(level) ? '✓' : ''}
+                    </span>
+                    {level}
+                  </button>
+                ))}
+              </div>
+            </div>
 
             {/* Topics multi-select */}
             <div className="relative group">
