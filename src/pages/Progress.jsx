@@ -182,6 +182,7 @@ export default function Progress() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: idx * 0.08 }}
                 className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-5"
+                style={{ height: 240 }}
               >
                 <div className="mb-3">
                   <h3 className="text-base font-bold text-white">{graph.title}</h3>
@@ -240,7 +241,7 @@ export default function Progress() {
                   style={{
                     background: `linear-gradient(135deg, ${graph.color}12 0%, rgba(255,255,255,0.03) 100%)`,
                     borderColor: `${graph.color}30`,
-                    minHeight: 210, // matches graph card height
+                    height: 240,
                   }}
                 >
                   <div
