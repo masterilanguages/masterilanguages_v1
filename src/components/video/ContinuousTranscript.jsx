@@ -448,23 +448,23 @@ export default function ContinuousTranscript({
                 ) : (
                   <>
                     {showPhonetics ? (
-                      segment.hebrew && (
-                        <p className="text-cyan-300 text-base font-medium leading-tight text-center whitespace-nowrap overflow-x-auto" dir="rtl">
-                          {renderWords(segIdx, 'hebrew', segment.hebrew, 'text-cyan-300 text-base font-medium')}
-                        </p>
-                      )
-                    ) : (
-                      !hideTranslit && (
-                        <p className="text-white text-base font-medium leading-tight text-center whitespace-nowrap overflow-x-auto">
-                          {renderWords(segIdx, 'transliteration', segment.transliteration, 'text-white text-base font-medium')}
-                        </p>
-                      )
-                    )}
-                    {(!hideEnglish || revealedSentences.has(segIdx)) && segment.english && (
-                      <p className="text-white/60 text-sm leading-tight text-center whitespace-nowrap overflow-x-auto">
-                        {renderWords(segIdx, 'english', segment.english, 'text-white/60 text-sm')}
-                      </p>
-                    )}
+                       segment.hebrew && (
+                         <p className="text-cyan-300 text-base font-medium leading-tight text-center break-words" dir="rtl">
+                           {renderWords(segIdx, 'hebrew', segment.hebrew, 'text-cyan-300 text-base font-medium')}
+                         </p>
+                       )
+                     ) : (
+                       !hideTranslit && (
+                         <p className="text-white text-base font-medium leading-tight text-center break-words">
+                           {renderWords(segIdx, 'transliteration', segment.transliteration, 'text-white text-base font-medium')}
+                         </p>
+                       )
+                     )}
+                     {(!hideEnglish || revealedSentences.has(segIdx)) && segment.english && (
+                       <p className="text-white/60 text-sm leading-tight text-center break-words">
+                         {renderWords(segIdx, 'english', segment.english, 'text-white/60 text-sm')}
+                       </p>
+                     )}
                     {segment.english && !canEdit && (
                       <button
                         onClick={(e) => { e.stopPropagation(); toggleSentenceReveal(segIdx); }}
