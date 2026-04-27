@@ -299,7 +299,8 @@ export default function Home() {
       const defaultTasks = [
         { id: "video", name: "Watch a video", duration: "20 minutes", page: "BabyVideos" },
         { id: "flashcards", name: "Vocab Flashcards", duration: "10 minutes", page: "Flashcards" },
-        { id: "speak", name: "Listen to conversation", duration: "5 minutes", page: "Flashcards" }
+        { id: "listen", name: "Listen to conversation", duration: "5 minutes", page: "Flashcards" },
+        { id: "speak", name: "Speak exercise", duration: "5 minutes", page: "SpeakingSession" }
       ];
       
       for (const day of days) {
@@ -464,7 +465,7 @@ export default function Home() {
   // Deduplicate by day_number (keep first occurrence)
   const uniqueDays = Array.from(new Map(sortedDays.map(d => [d.day_number, d])).values());
 
-  const isDayUnlocked = (dayNum) => isMasterUser || dayNum <= 3 || dayNum <= currentDay;
+  const isDayUnlocked = (dayNum) => isMasterUser || dayNum <= currentDay;
   const getDayProgress = (dayId) => dayProgress.find(p => p.day_id === dayId);
 
   const handleAddTask = (dayId) => {
@@ -724,7 +725,7 @@ export default function Home() {
                         if (hasHebrewOnly) return false;
                       }
                       return true;
-                    }).slice(0, 3).map((day, idx) => {
+                    }).slice(0, 5).map((day, idx) => {
                     const dayColors = [
                       { bg: '#5a6b5a', text: '#f5f0e8' },
                       { bg: '#6b7c63', text: '#f5f0e8' },
