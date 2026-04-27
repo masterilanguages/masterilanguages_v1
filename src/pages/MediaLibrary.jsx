@@ -259,18 +259,12 @@ export default function MediaLibrary() {
 
   const updateVideoMutation = useMutation({
     mutationFn: ({ id, data, entity }) => (entity || base44.entities.MediaLibrary).update(id, data),
-    onSuccess: async (_, variables) => {
+    onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['mediaLibrary'] });
-      const updatedVideo = await base44.entities.MediaLibrary.filter({ id: variables.id });
       setEditingVideo(null);
       setShowAddDialog(false);
       resetForm();
       toast.success("Video updated!");
-      
-      // Open transcript view for the updated video
-      if (updatedVideo[0]) {
-        handleVideoClick(updatedVideo[0]);
-      }
     },
   });
 
