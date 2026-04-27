@@ -765,44 +765,50 @@ export default function Home() {
                                     return (
                                       <div key={task.id} className="flex flex-col gap-1">
                                         {isEditing ? (
-                                         <div className="flex flex-col gap-2 px-3 py-3 bg-white/60 rounded-xl border border-cyan-400/50">
-                                            <Input
-                                              autoFocus
-                                              value={editingTaskData.name}
-                                              onChange={(e) => setEditingTaskData({ ...editingTaskData, name: e.target.value })}
-                                              onKeyDown={(e) => { if (e.key === 'Enter') handleSaveEditedTask(day.id); if (e.key === 'Escape') handleCancelEdit(); }}
-                                              placeholder="Title"
-                                              className="bg-white border-stone-300 text-stone-800 text-sm"
-                                            />
-                                            <Input
-                                              value={editingTaskData.youtube_url}
-                                              onChange={(e) => setEditingTaskData({ ...editingTaskData, youtube_url: e.target.value })}
-                                              placeholder="YouTube URL (optional)"
-                                              className="bg-white border-stone-300 text-stone-800 text-sm"
-                                            />
-                                            <div className="flex items-center gap-2">
-                                              <label className="flex-1 flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-stone-400 cursor-pointer hover:bg-stone-100 transition-all text-xs text-stone-500">
-                                                🎵 Upload MP3
-                                                <input
-                                                  type="file"
-                                                  accept="audio/*"
-                                                  className="hidden"
-                                                  onChange={async (e) => {
-                                                    const file = e.target.files[0];
-                                                    if (!file) return;
-                                                    const { file_url } = await base44.integrations.Core.UploadFile({ file });
-                                                    setEditingTaskData(prev => ({ ...prev, mediaUrl: file_url, youtube_url: '' }));
-                                                    toast.success('MP3 uploaded!');
-                                                  }}
-                                                />
-                                              </label>
-                                              {editingTaskData.mediaUrl && <span className="text-xs text-green-600">✓ Audio ready</span>}
-                                            </div>
-                                            <div className="flex gap-2">
-                                              <Button onClick={handleCancelEdit} size="sm" variant="outline" className="flex-1 border-stone-300 text-stone-500 text-xs">Cancel</Button>
-                                              <Button onClick={() => handleSaveEditedTask(day.id)} size="sm" className="flex-1 text-xs" style={{ background: '#5a6b5a', color: 'white' }}>Save</Button>
-                                            </div>
-                                          </div>
+                                         <div className="flex items-center gap-2 px-3 py-2 bg-white/70 rounded-xl border border-cyan-400/50">
+                                             {/* Editable title */}
+                                             <input
+                                               autoFocus
+                                               value={editingTaskData.name}
+                                               onChange={(e) => setEditingTaskData(prev => ({ ...prev, name: e.target.value }))}
+                                               onKeyDown={(e) => { if (e.key === 'Enter') handleSaveEditedTask(day.id); if (e.key === 'Escape') handleCancelEdit(); }}
+                                               className="flex-1 min-w-0 bg-transparent border-none outline-none text-sm font-medium text-stone-800 placeholder:text-stone-400"
+                                               placeholder="Title"
+                                             />
+                                             {/* YouTube URL — saves on blur */}
+                                             <input
+                                               value={editingTaskData.youtube_url}
+                                               onChange={(e) => setEditingTaskData(prev => ({ ...prev, youtube_url: e.target.value }))}
+                                               onBlur={() => { if (editingTaskData.youtube_url.trim()) handleSaveEditedTask(day.id); }}
+                                               onKeyDown={(e) => { if (e.key === 'Enter') handleSaveEditedTask(day.id); }}
+                                               className="w-36 bg-stone-100 border border-stone-200 rounded-lg px-2 py-1 text-xs text-stone-700 outline-none focus:border-cyan-400 placeholder:text-stone-400"
+                                               placeholder="YouTube URL"
+                                             />
+                                             {/* MP3 upload — saves immediately */}
+                                             <label className="flex items-center gap-1 px-2 py-1 rounded-lg border border-dashed border-stone-400 cursor-pointer hover:bg-stone-100 transition-all text-xs text-stone-500 whitespace-nowrap flex-shrink-0">
+                                               🎵 MP3
+                                               <input
+                                                 type="file"
+                                                 accept="audio/*"
+                                                 className="hidden"
+                                                 onChange={async (e) => {
+                                                   const file = e.target.files[0];
+                                                   if (!file) return;
+                                                   const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                                                   const updated = { ...editingTaskData, mediaUrl: file_url, youtube_url: '' };
+                                                   const d = days.find(x => x.id === day.id);
+                                                   const updatedSubs = d.subsections.map(s =>
+                                                     s.id === editingTask.taskId
+                                                       ? { ...s, name: updated.name, youtube_url: '', video_id: null, mediaUrl: file_url, page: updated.page }
+                                                       : s
+                                                   );
+                                                   updateDayMutation.mutate({ id: day.id, data: { subsections: updatedSubs } });
+                                                   setEditingTask(null);
+                                                   toast.success('MP3 uploaded!');
+                                                 }}
+                                               />
+                                             </label>
+                                           </div>
                                         ) : (
                                           <div
                                             draggable
