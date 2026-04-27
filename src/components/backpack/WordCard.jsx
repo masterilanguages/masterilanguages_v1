@@ -219,7 +219,7 @@ export default function WordCard({
         <div className="px-3 py-1 bg-purple-50 border-b border-purple-100 flex items-center gap-1">
           <span className="text-[10px] text-purple-500 font-semibold">verb</span>
           <span className="text-[10px] text-stone-400 mx-1">·</span>
-          <span className="text-[10px] text-purple-600 font-medium">∞ {word.phonetic}</span>
+          <span className="text-[10px] text-purple-600 font-medium">∞ {word.word || word.phonetic}</span>
         </div>
       )}
 
