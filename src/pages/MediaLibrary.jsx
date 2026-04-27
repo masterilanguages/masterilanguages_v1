@@ -415,7 +415,7 @@ export default function MediaLibrary() {
 
       setFormData(prev => ({
         ...prev,
-        title: data.title || prev.title,
+        title: prev.title || data.title || "",
         thumbnail_url: thumbnailUrl,
         language: analysisResult.language || prev.language,
         topics: analysisResult.topics || [],
