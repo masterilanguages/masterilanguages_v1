@@ -847,17 +847,22 @@ export default function Home() {
                                             className={`flex items-center justify-between px-3 py-2 rounded-lg hover:opacity-80 transition-all group ${isDragging ? 'cursor-grabbing opacity-50' : 'cursor-pointer'} ${isDragOver ? 'border-t-2 border-b-2 border-cyan-400 my-2' : ''}`}
                                             style={{ background: isTaskDone ? '#5a6b5a30' : '#ffffff50', border: isDragOver ? undefined : '1px solid #5a6b5a20' }}
                                             onClick={async () => {
-                                             if (isDragging) return;
-                                             if (isSong) {
-                                               const songData = songs.find(s => s.id === task.id || s.id === task.song_id);
-                                               if (songData?.id) {
-                                                 navigate(`/SingingLesson?songId=${songData.id}`);
-                                               } else {
-                                                 navigate('/SingingHome');
-                                               }
-                                               return;
-                                             }
-                                             const ytId = task.video_id || extractYouTubeId(task.youtube_url);
+                                              if (isDragging) return;
+                                              // If generic "Watch a video" placeholder with no video, go to library to select one
+                                              if (task.id === 'video' && !task.video_id && !task.youtube_url) {
+                                                setLibraryPickerDayId(day.id);
+                                                return;
+                                              }
+                                              if (isSong) {
+                                                const songData = songs.find(s => s.id === task.id || s.id === task.song_id);
+                                                if (songData?.id) {
+                                                  navigate(`/SingingLesson?songId=${songData.id}`);
+                                                } else {
+                                                  navigate('/SingingHome');
+                                                }
+                                                return;
+                                              }
+                                              const ytId = task.video_id || extractYouTubeId(task.youtube_url);
                                              if (ytId) {
                                                navigate(createPageUrl('MediaLibrary') + `?videoId=${ytId}`);
                                              } else if (task.mediaUrl) {
