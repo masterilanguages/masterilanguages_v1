@@ -882,7 +882,17 @@ export default function Home() {
                                              if (ytId) {
                                                navigate(createPageUrl('MediaLibrary') + `?videoId=${ytId}`);
                                              } else if (task.mediaUrl) {
-                                               sessionStorage.setItem('songListenData', JSON.stringify({ title: task.name, mediaUrl: task.mediaUrl || '', transcript: task.transcript || '', videoId: '' }));
+                                               // Look up saved transcript from MediaLibrary
+                                               let transcript = task.transcript || '';
+                                               let mediaLibraryId = null;
+                                               try {
+                                                 const results = await base44.entities.MediaLibrary.filter({ video_url: task.mediaUrl });
+                                                 if (results[0]) {
+                                                   transcript = results[0].transcript_phonetics || transcript;
+                                                   mediaLibraryId = results[0].id;
+                                                 }
+                                               } catch {}
+                                               sessionStorage.setItem('songListenData', JSON.stringify({ title: task.name, mediaUrl: task.mediaUrl || '', transcript, videoId: '', mediaLibraryId }));
                                                navigate('/SongListenPage');
                                              } else if (task.page) {
                                                navigate(createPageUrl(task.page));
