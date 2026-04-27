@@ -3,10 +3,12 @@ import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Search, X } from "lucide-react";
+import { Search, X, Upload, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function ContentLibraryPicker({ open, onOpenChange, onSelect, language }) {
   const [search, setSearch] = useState("");
+  const [uploading, setUploading] = useState(false);
 
   const { data: media = [] } = useQuery({
     queryKey: ["mediaLibrary"],
@@ -39,6 +41,34 @@ export default function ContentLibraryPicker({ open, onOpenChange, onSelect, lan
 
   const isAudio = (m) => !m.video_id && !extractYouTubeId(m.video_url) && m.video_url;
 
+  const handleAudioUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.includes('audio')) {
+      toast.error("Please upload an audio file (MP3 or M4A)");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      onSelect({
+        title: file.name.replace(/\.[^/.]+$/, ""),
+        video_url: file_url,
+        is_active: true,
+        difficulty_level: "All",
+        language: language || "hebrew"
+      });
+      onOpenChange(false);
+      toast.success("Audio uploaded!");
+    } catch (err) {
+      toast.error("Failed to upload audio");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[80vh] flex flex-col" style={{ background: '#f5f1eb', border: '1px solid #e0dcd4' }}>
@@ -48,15 +78,37 @@ export default function ContentLibraryPicker({ open, onOpenChange, onSelect, lan
           </DialogTitle>
         </DialogHeader>
 
-        <div className="relative mb-3">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
-          <Input
-            autoFocus
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Search content..."
-            className="pl-9 bg-white border-stone-300 text-stone-800"
-          />
+        <div className="space-y-2 mb-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+            <Input
+              autoFocus
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search content..."
+              className="pl-9 bg-white border-stone-300 text-stone-800"
+            />
+          </div>
+          <label className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-dashed border-stone-300 bg-stone-50 hover:bg-stone-100 cursor-pointer transition-all">
+            {uploading ? (
+              <>
+                <Loader2 className="w-4 h-4 text-stone-600 animate-spin" />
+                <span className="text-sm font-medium text-stone-600">Uploading...</span>
+              </>
+            ) : (
+              <>
+                <Upload className="w-4 h-4 text-stone-600" />
+                <span className="text-sm font-medium text-stone-600">Upload MP3 or M4A</span>
+              </>
+            )}
+            <input
+              type="file"
+              accept=".mp3,.m4a,audio/mpeg,audio/mp4"
+              onChange={handleAudioUpload}
+              disabled={uploading}
+              className="hidden"
+            />
+          </label>
         </div>
 
         <div className="flex-1 overflow-y-auto space-y-2 pr-1">
