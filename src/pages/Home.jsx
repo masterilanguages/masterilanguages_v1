@@ -707,7 +707,13 @@ export default function Home() {
                   </Link>
                 </div>
                   <div className="space-y-2">
-                    {sortedDays.slice(0, 3).map((day, idx) => {
+                    {sortedDays.filter(day => {
+                      // For non-Hebrew users, hide sessions 2 and 3
+                      if (userProfile?.language !== 'hebrew' && (day.day_number === 2 || day.day_number === 3)) {
+                        return false;
+                      }
+                      return true;
+                    }).slice(0, 3).map((day, idx) => {
                     const dayColors = [
                       { bg: '#5a6b5a', text: '#f5f0e8' },
                       { bg: '#6b7c63', text: '#f5f0e8' },

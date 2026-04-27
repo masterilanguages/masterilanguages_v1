@@ -130,9 +130,9 @@ export default function Backpack() {
     queryKey: ['wordRatings', userProfile?.language, currentUser?.email],
     queryFn: async () => {
       const lang = userProfile?.language || 'hebrew';
-      // Fetch only THIS user's own rated words
+      // Fetch only THIS user's own rated words in their selected language
       const ownWords = await base44.entities.Word.filter({ category: "wordbank", language: lang, created_by: currentUser.email });
-      // Fetch all approved words (shared by admin across all users)
+      // Fetch all approved words in their selected language (shared by admin)
       const approvedWords = await base44.entities.Word.filter({ approved: true, language: lang });
       // Find approved words the user hasn't personally rated yet (by phonetic)
       const ownPhonetics = new Set(ownWords.map(w => (w.phonetic || w.word).toLowerCase()));
