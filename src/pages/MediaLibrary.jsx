@@ -1351,13 +1351,6 @@ Return a JSON with a "videos" array. Each video must have:
               </button>
             )}
 
-            {/* Content type - single button */}
-            <button
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold bg-white border border-stone-300 text-stone-700 transition-all cursor-default"
-            >
-              📄 Content
-            </button>
-
             {/* Language */}
             <Select value={filterLanguage} onValueChange={setFilterLanguage}>
               <SelectTrigger className="bg-white border-stone-300 text-stone-700 w-36">
@@ -1498,16 +1491,7 @@ Return a JSON with a "videos" array. Each video must have:
               </div>
             </div>
 
-            {/* Search */}
-            <div className="relative flex-1 min-w-[160px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
-              <Input
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search..."
-                className="pl-9 bg-white border-stone-300 text-stone-800"
-              />
-            </div>
+
           </div>
         </div>
 
