@@ -124,14 +124,14 @@ Return JSON with a "words" array. Each item: { phonetic: Latin transliteration, 
       <h2 className="text-base font-semibold mb-3" style={{ color: '#3d4a2e', fontFamily: 'Jost, sans-serif' }}>
         📖 Session Flashcards
       </h2>
-      <div className="space-y-2">
+      <div className="grid grid-cols-3 gap-3">
         {sessionsWithContent.map((day) => {
           const isExpanded = expandedSession === day.id;
           const words = sessionWords[day.id] || [];
           const isLoading = loadingSession[day.id];
 
           return (
-            <div key={day.id} className="bg-white/60 border border-stone-200 rounded-xl overflow-hidden">
+            <div key={day.id} className="bg-white/60 border border-stone-200 rounded-xl overflow-hidden flex flex-col">
               {/* Header */}
               <button
                 onClick={() => handleToggleSession(day)}
