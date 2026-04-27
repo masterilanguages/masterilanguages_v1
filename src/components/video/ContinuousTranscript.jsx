@@ -411,7 +411,7 @@ export default function ContinuousTranscript({
               </div>
 
               {/* Text Block */}
-              <div className="flex-1 space-y-0">
+              <div className="flex-1 space-y-0" dir="rtl">
                 {editingSegment === segIdx ? (
                   <div className="space-y-1.5">
                     <textarea
