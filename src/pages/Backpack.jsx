@@ -58,6 +58,7 @@ export default function Backpack() {
   const [generatingSentence, setGeneratingSentence] = useState({});
   const [fetchingTranslation, setFetchingTranslation] = useState({});
   const [sessionFlashcardData, setSessionFlashcardData] = useState(null); // { words, title }
+  const [selectedSessionId, setSelectedSessionId] = useState(null); // which session is highlighted
 
   // Load current user
   useEffect(() => {
@@ -781,7 +782,13 @@ Return JSON:
 
         {/* Session Flashcards Section */}
         {userProfile && (
-          <SessionFlashcardsSection userProfile={userProfile} />
+          <SessionFlashcardsSection 
+            userProfile={userProfile}
+            onSessionSelect={(words, title) => {
+              setSessionFlashcardData({ words, title });
+              setActiveTab("level0");
+            }}
+          />
         )}
 
         {/* Tabs - Single Row + Phonetics Toggle */}
@@ -861,7 +868,57 @@ Return JSON:
 
         {/* Content */}
         {!activeSecondTab && <div>
-          {getDisplayWords().length === 0 ? (
+          {sessionFlashcardData && activeTab === "level0" ? (
+            // Show session flashcards when a session is selected and "New" tab is active
+            <div className="flex flex-col items-center gap-4">
+              <div className="flex items-center gap-4 w-full max-w-xs justify-between">
+                <button 
+                  onClick={() => setSessionFlashcardData(null)}
+                  className="px-4 py-2 rounded-xl bg-white/60 border border-stone-200 text-stone-500 font-bold text-lg"
+                >
+                  ←
+                </button>
+                <span className="text-stone-400 text-sm">{sessionFlashcardData.title}</span>
+                <div className="w-8" />
+              </div>
+              <div className="flex flex-wrap gap-4 justify-center">
+                {(sessionFlashcardData.words || []).map((word, idx) => (
+                  <WordCard
+                    key={idx}
+                    word={{
+                      id: `session_${idx}`,
+                      word: word.word || word.hebrew || word.phonetic,
+                      translation: word.translation,
+                      phonetic: word.phonetic,
+                      category: 'wordbank',
+                      times_practiced: 0,
+                      mastered: false,
+                    }}
+                    showAllEnglish={showAllEnglish}
+                    showHebrew={showHebrew}
+                    showTransliteration={showTransliteration}
+                    showPhonetics={showPhonetics}
+                    isContentEditable={() => false}
+                    mnemonicExplanations={mnemonicExplanations}
+                    setMnemonicExplanations={setMnemonicExplanations}
+                    cardSentences={cardSentences}
+                    generatingSentence={generatingSentence}
+                    fetchingTranslation={fetchingTranslation}
+                    suggestingMnemonic={suggestingMnemonic}
+                    isAdmin={isAdmin}
+                    updateWordMutation={updateWordMutation}
+                    handleRateWord={handleRateWord}
+                    suggestMnemonicForWord={suggestMnemonicForWord}
+                    approveWordMutation={approveWordMutation}
+                    handleDismissWord={handleDismissWord}
+                    deleteWordMutation={deleteWordMutation}
+                    handleAddWordFromSentence={handleAddWordFromSentence}
+                    generateCardSentence={generateCardSentence}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : getDisplayWords().length === 0 ? (
             <div className="text-center py-12">
               <p className="text-stone-400 text-lg">No words at this level yet!</p>
             </div>

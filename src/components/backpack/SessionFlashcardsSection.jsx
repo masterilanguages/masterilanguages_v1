@@ -5,7 +5,7 @@ import { Loader2, ChevronRight, BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 
-export default function SessionFlashcardsSection({ userProfile }) {
+export default function SessionFlashcardsSection({ userProfile, onSessionSelect }) {
   const navigate = useNavigate();
   const [expandedSession, setExpandedSession] = useState(null);
   const [sessionWords, setSessionWords] = useState({}); // { [dayId]: [{phonetic, translation, hebrew}] }
