@@ -306,11 +306,11 @@ Return JSON:
 
   const tabs = [
     { id: "level0", label: "✨ New", color: "gray" },
-    { id: "coach", label: `👨‍🏫 From Coach${coachWords.length > 0 ? ` (${coachWords.length})` : ''}`, color: "yellow" },
+
     { id: "level1", label: "Level 1", color: "orange" },
     { id: "level2", label: "Level 2", color: "yellow" },
     { id: "level3", label: "Level 3", color: "purple" },
-    { id: "level5", label: "✓ Mastered", color: "green" },
+    { id: "level5", label: "Mastered", color: "green" },
   ];
 
 
