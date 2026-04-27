@@ -163,49 +163,22 @@ Return JSON with a "words" array. Each item: { phonetic: Latin transliteration, 
                       No transcript found for this session yet.
                     </p>
                   ) : (
-                    <>
-                      {/* Single card view */}
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <button
-                            onClick={() => setCardIndices(prev => ({ ...prev, [day.id]: Math.max(0, (prev[day.id] || 0) - 1) }))}
-                            disabled={(cardIndices[day.id] || 0) === 0}
-                            className="px-2 py-1 rounded-lg text-xs font-bold text-stone-500 disabled:opacity-30"
-                          >
-                            ←
-                          </button>
-                          <span className="text-xs text-stone-400">{(cardIndices[day.id] || 0) + 1} / {words.length}</span>
-                          <button
-                            onClick={() => setCardIndices(prev => ({ ...prev, [day.id]: Math.min(words.length - 1, (prev[day.id] || 0) + 1) }))}
-                            disabled={(cardIndices[day.id] || 0) === words.length - 1}
-                            className="px-2 py-1 rounded-lg text-xs font-bold text-stone-500 disabled:opacity-30"
-                          >
-                            →
-                          </button>
-                        </div>
-                        <div className="flex flex-col items-center px-4 py-4 rounded-lg bg-stone-50 border border-stone-200 text-center space-y-2">
-                          <span className="text-sm text-cyan-700 font-semibold" dir="rtl">{words[cardIndices[day.id] || 0].hebrew}</span>
-                          <span className="text-xs text-stone-500">{words[cardIndices[day.id] || 0].phonetic}</span>
-                          <span className="text-sm text-stone-700 font-medium">{words[cardIndices[day.id] || 0].translation}</span>
-                        </div>
-                        <button
-                          onClick={() => {
-                            const flashcardWords = words.map(w => ({
-                              word: w.hebrew || w.phonetic,
-                              phonetic: w.phonetic,
-                              translation: w.translation,
-                            }));
-                            if (onSessionSelect) {
-                              onSessionSelect(flashcardWords, `Session ${day.day_number}`);
-                            }
-                          }}
-                          className="w-full py-2 rounded-xl text-sm font-semibold text-white transition-all"
-                          style={{ background: 'linear-gradient(135deg, #5a6b5a, #3d4a2e)' }}
-                        >
-                          View in New Tab →
-                        </button>
-                      </div>
-                    </>
+                    <button
+                      onClick={() => {
+                        const flashcardWords = words.map(w => ({
+                          word: w.hebrew || w.phonetic,
+                          phonetic: w.phonetic,
+                          translation: w.translation,
+                        }));
+                        if (onSessionSelect) {
+                          onSessionSelect(flashcardWords, `Session ${day.day_number}`);
+                        }
+                      }}
+                      className="w-full py-2 rounded-xl text-sm font-semibold text-white transition-all"
+                      style={{ background: 'linear-gradient(135deg, #5a6b5a, #3d4a2e)' }}
+                    >
+                      Start Flashcards →
+                    </button>
                   )}
                 </div>
               )}
