@@ -89,6 +89,16 @@ export default function SpeakingSession() {
   const timerRef = useRef(null);
   const countdownRef = useRef(null);
 
+  // Speak text using Web Speech API
+  const speak = useCallback((text, lang = "en-US") => {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = lang;
+    utterance.rate = 0.85;
+    window.speechSynthesis.speak(utterance);
+  }, []);
+
   const currentSeg = segments[currentSegIdx];
 
   const handleTakeStop = useCallback((url) => {
@@ -129,10 +139,15 @@ export default function SpeakingSession() {
     if (!isPlaying) return;
 
     if (t >= seg.t0 && t < seg.t1) {
-      if (phase !== "english") { setPhase("english"); setCountdown(null); }
+      if (phase !== "english") {
+        setPhase("english");
+        setCountdown(null);
+        speak(seg.english, "en-US");
+      }
     } else if (t >= seg.record_start && t < seg.record_end) {
       if (phase !== "record1") {
         setPhase("record1");
+        window.speechSynthesis?.cancel();
         startRecording();
         startCountdown(seg.record_end - seg.record_start);
       }
@@ -141,10 +156,12 @@ export default function SpeakingSession() {
         setPhase("hebrew");
         stopRecording();
         setCountdown(null);
+        speak(seg.translit, "he-IL");
       }
     } else if (t >= seg.repeat_start && t < seg.repeat_end) {
       if (phase !== "record2") {
         setPhase("record2");
+        window.speechSynthesis?.cancel();
         startRecording();
         startCountdown(seg.repeat_end - seg.repeat_start);
       }
@@ -171,6 +188,7 @@ export default function SpeakingSession() {
 
   const togglePlay = () => {
     if (!isPlaying) { setPhase("idle"); setCurrentTime(currentSeg.t0); }
+    else { window.speechSynthesis?.cancel(); }
     setIsPlaying(v => !v);
   };
 
