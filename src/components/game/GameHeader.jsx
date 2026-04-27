@@ -28,9 +28,14 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
   const [stopwatchTime, setStopwatchTime] = useState(0);
   const [stopwatchRunning, setStopwatchRunning] = useState(false);
   const stopwatchRef = useRef(null);
+  const lastActivityRef = useRef(Date.now());
+  const inactivityCheckRef = useRef(null);
+  const INACTIVITY_LIMIT_MS = 5 * 60 * 1000; // 5 minutes
 
   useEffect(() => {
     base44.auth.me().then(setCurrentUser).catch(() => {});
+    // Auto-start clock on sign-in
+    setStopwatchRunning(true);
   }, []);
 
   const languageFlags = {
@@ -57,6 +62,19 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
     },
   });
 
+  // Save session to DB
+  const saveSession = async (seconds, reason) => {
+    if (seconds < 30) return; // ignore tiny blips
+    const minutes = Math.round(seconds / 60 * 10) / 10;
+    const date = new Date().toISOString().split('T')[0];
+    try {
+      await base44.entities.StudySession.create({ date, duration_minutes: minutes, stopped_reason: reason });
+      toast.info(`Study session saved: ${minutes} min`);
+    } catch (e) {
+      console.error('Failed to save session', e);
+    }
+  };
+
   // Stopwatch
   useEffect(() => {
     if (stopwatchRunning) {
@@ -65,6 +83,31 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
       clearInterval(stopwatchRef.current);
     }
     return () => clearInterval(stopwatchRef.current);
+  }, [stopwatchRunning]);
+
+  // Inactivity detection — stop clock after 5 min of no activity
+  useEffect(() => {
+    const handleActivity = () => { lastActivityRef.current = Date.now(); };
+    window.addEventListener('mousemove', handleActivity);
+    window.addEventListener('keydown', handleActivity);
+    window.addEventListener('click', handleActivity);
+    window.addEventListener('scroll', handleActivity);
+
+    inactivityCheckRef.current = setInterval(() => {
+      if (stopwatchRunning && Date.now() - lastActivityRef.current > INACTIVITY_LIMIT_MS) {
+        setStopwatchRunning(false);
+        setStopwatchTime(prev => { saveSession(prev, 'inactivity'); return prev; });
+        toast.warning('Clock stopped due to 5 min inactivity. Your time was saved!');
+      }
+    }, 30000); // check every 30s
+
+    return () => {
+      window.removeEventListener('mousemove', handleActivity);
+      window.removeEventListener('keydown', handleActivity);
+      window.removeEventListener('click', handleActivity);
+      window.removeEventListener('scroll', handleActivity);
+      clearInterval(inactivityCheckRef.current);
+    };
   }, [stopwatchRunning]);
 
   // Build nav items (must be before useEffect that uses them)
@@ -322,7 +365,16 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
                 onClick={() => {
                   if (isDraggingRef.current) return;
                   if (id === 'clock') {
-                    setStopwatchRunning(r => !r);
+                    setStopwatchRunning(r => {
+                      if (r) {
+                        // stopping manually
+                        setStopwatchTime(prev => { saveSession(prev, 'manual'); return 0; });
+                      } else {
+                        // restarting
+                        lastActivityRef.current = Date.now();
+                      }
+                      return !r;
+                    });
                   } else {
                     navigate(createPageUrl(to));
                   }

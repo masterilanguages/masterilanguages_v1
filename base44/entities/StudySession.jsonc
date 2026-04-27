@@ -1,0 +1,26 @@
+{
+  "name": "StudySession",
+  "type": "object",
+  "properties": {
+    "date": {
+      "type": "string",
+      "description": "Date of the session (YYYY-MM-DD)"
+    },
+    "duration_minutes": {
+      "type": "number",
+      "description": "Duration of study session in minutes"
+    },
+    "stopped_reason": {
+      "type": "string",
+      "enum": [
+        "inactivity",
+        "manual"
+      ],
+      "description": "Why the clock stopped"
+    }
+  },
+  "required": [
+    "date",
+    "duration_minutes"
+  ]
+}

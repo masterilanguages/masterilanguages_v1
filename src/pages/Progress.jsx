@@ -29,6 +29,11 @@ export default function Progress() {
     queryFn: () => base44.entities.DayProgress.list(),
   });
 
+  const { data: studySessions = [] } = useQuery({
+    queryKey: ['studySessions'],
+    queryFn: () => base44.entities.StudySession.list(),
+  });
+
   // Build 30-day chart data from real entity timestamps
   const chartData = useMemo(() => {
     const today = new Date();
@@ -52,6 +57,14 @@ export default function Progress() {
       progressByDate[d].push(p);
     }
 
+    // Index study sessions by date
+    const sessionsByDate = {};
+    for (const s of studySessions) {
+      const d = new Date(s.date).toDateString();
+      if (!sessionsByDate[d]) sessionsByDate[d] = 0;
+      sessionsByDate[d] += s.duration_minutes || 0;
+    }
+
     let runningStreak = 0;
     let runningTotalWords = 0;
 
@@ -63,12 +76,13 @@ export default function Progress() {
 
       const wordsAddedToday = (wordsByDate[dateStr] || []).length;
       const sessionsCompletedToday = (progressByDate[dateStr] || []).length;
+      const minutesStudiedToday = Math.round((sessionsByDate[dateStr] || 0) * 10) / 10;
 
       // Running totals for cumulative vocab
       runningTotalWords += wordsAddedToday;
 
       // Streak: +1 if any activity that day, else reset to 0
-      const hadActivity = wordsAddedToday > 0 || sessionsCompletedToday > 0;
+      const hadActivity = wordsAddedToday > 0 || sessionsCompletedToday > 0 || minutesStudiedToday > 0;
       if (hadActivity) {
         runningStreak += 1;
       } else {
@@ -81,11 +95,12 @@ export default function Progress() {
         vocabAdded: wordsAddedToday,
         vocabTotal: runningTotalWords,
         sessionsCompleted: sessionsCompletedToday,
+        minutesStudied: minutesStudiedToday,
       });
     }
 
     return days;
-  }, [wordRatings, dayProgress]);
+  }, [wordRatings, dayProgress, studySessions]);
 
   const graphs = [
     {
@@ -115,6 +130,13 @@ export default function Progress() {
       dataKey: "sessionsCompleted",
       color: "#10b981",
       yAxisLabel: "Sessions",
+    },
+    {
+      title: "Time Studied (min)",
+      description: "Minutes actively studying per day (clock auto-tracked)",
+      dataKey: "minutesStudied",
+      color: "#f59e0b",
+      yAxisLabel: "Minutes",
     },
   ];
 
