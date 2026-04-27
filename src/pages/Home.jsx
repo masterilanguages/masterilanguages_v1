@@ -781,13 +781,7 @@ export default function Home() {
                                          className="flex-1 bg-white border-stone-300 text-stone-800 text-xs h-7"
                                        />
                                      </div>
-                                     {/* Lyrics / Transcript */}
-                                     <Input
-                                       value={newTaskForm[day.id]?.transcript || ''}
-                                       onChange={(e) => setNewTaskForm(prev => ({ ...prev, [day.id]: { ...prev[day.id], transcript: e.target.value } }))}
-                                       placeholder="Lyrics or transcript (optional)"
-                                       className="w-full bg-white border-stone-300 text-stone-800 text-xs h-7"
-                                     />
+                
                                      <div className="flex gap-1 justify-end">
                                        <Button size="sm" className="h-6 px-3 bg-green-600 text-white text-xs" onClick={async () => {
                                          const form = newTaskForm[day.id] || {};
