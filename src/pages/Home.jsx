@@ -102,7 +102,7 @@ export default function Home() {
       const profiles = await base44.entities.UserProfile.list();
       return profiles[0] || null;
     },
-    staleTime: 30 * 60 * 1000,
+    staleTime: 0,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
   });
