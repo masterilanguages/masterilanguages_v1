@@ -9,7 +9,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 
 function getGraphInsight(graph, chartData) {
   const values = chartData.map(d => d[graph.dataKey]).filter(v => v !== undefined);
-  if (!values.length) return "No data yet — start learning to see insights here!";
+  if (!values.length) return ["No data yet — start learning to see insights here!"];
 
   const max = Math.max(...values);
   const latest = values[values.length - 1];
@@ -18,33 +18,50 @@ function getGraphInsight(graph, chartData) {
 
   switch (graph.dataKey) {
     case "streak": {
-      if (max === 0) return "No streak yet. Log in and study every day to build your streak!";
-      if (latest === max) return `🔥 You're at your peak streak of ${max} days — keep it going!`;
-      if (latest > 0) return `You have a ${latest}-day streak going. Your best was ${max} days. Can you beat it?`;
-      return `Your best streak was ${max} days. Start studying today to rebuild it!`;
+      if (max === 0) return ["No streak yet", "Study every day to build your streak!"];
+      if (latest === max) return [`🔥 Current streak: ${latest} days (your best!)`, "Keep going — don't break the chain!"];
+      if (latest > 0) return [`🔥 Current streak: ${latest} days`, `🏆 Best streak: ${max} days`, "Can you beat your record?"];
+      return [`🏆 Best streak: ${max} days`, "Start studying today to rebuild your streak!"];
     }
     case "vocabAdded": {
-      if (max === 0) return "No vocabulary added yet. Head to the Backpack to start collecting words!";
+      if (max === 0) return ["No vocabulary added yet", "Head to the Backpack to start collecting words!"];
       const bestDay = chartData.find(d => d.vocabAdded === max);
-      return `Your most productive day was ${bestDay?.day} with ${max} new words. You've added words on ${nonZeroDays} of the last 30 days — averaging ${avg.toFixed(1)} words/day.`;
+      return [
+        `📅 Best day: ${bestDay?.day} with ${max} new words`,
+        `📆 Active days: ${nonZeroDays} of the last 30`,
+        `📊 Average: ${avg.toFixed(1)} words/day`,
+      ];
     }
     case "vocabTotal": {
-      if (latest === 0) return "No words in your backpack yet. Start adding vocabulary!";
+      if (latest === 0) return ["No words in your backpack yet", "Start adding vocabulary!"];
       const growthRate = nonZeroDays > 0 ? (latest / nonZeroDays).toFixed(1) : 0;
-      return `You've built a vocabulary of ${latest} words. At your current pace of ~${growthRate} words per active day, you'll hit ${Math.round(latest * 1.5)} words soon. Keep it up!`;
+      return [
+        `📚 Total words learned: ${latest}`,
+        `⚡ Pace: ~${growthRate} words per active day`,
+        `🎯 Next milestone: ${Math.round(latest * 1.5)} words`,
+      ];
     }
     case "sessionsCompleted": {
-      if (nonZeroDays === 0) return "No completed sessions yet. A session counts when you study for at least 30 minutes without a 5-minute break!";
-      return `You've completed ${nonZeroDays} full sessions (30+ min) in the last 30 days. ${nonZeroDays >= 20 ? "Excellent consistency! 🏆" : nonZeroDays >= 10 ? "Good effort — try to be even more consistent." : "Try to reach 30 minutes each day for faster progress."}`;
+      if (nonZeroDays === 0) return ["No completed sessions yet", "A session counts when you study 30+ minutes continuously"];
+      const encourage = nonZeroDays >= 20 ? "Excellent consistency! 🏆" : nonZeroDays >= 10 ? "Good effort — keep it up!" : "Aim for 30 min daily for faster progress.";
+      return [
+        `✅ Completed sessions: ${nonZeroDays} in the last 30 days`,
+        `⏱️ A session = 30+ minutes of continuous study`,
+        encourage,
+      ];
     }
     case "minutesStudied": {
       const totalMinutes = values.reduce((a, b) => a + b, 0);
-      if (totalMinutes === 0) return "No study time tracked yet. The clock starts automatically when you sign in!";
+      if (totalMinutes === 0) return ["No study time tracked yet", "The clock starts automatically when you sign in!"];
       const hours = (totalMinutes / 60).toFixed(1);
-      return `You've studied ${totalMinutes.toFixed(0)} minutes (${hours} hours) in the last 30 days. ${totalMinutes > 300 ? "Impressive dedication! 💪" : "Try to study at least 10 minutes a day for steady progress."}`;
+      return [
+        `⏱️ Total time: ${totalMinutes.toFixed(0)} min (${hours} hrs) in 30 days`,
+        `📅 Active days: ${nonZeroDays}`,
+        totalMinutes > 300 ? "Impressive dedication! 💪" : "Try to study at least 10 min a day for steady progress.",
+      ];
     }
     default:
-      return "Keep studying consistently to see trends here.";
+      return ["Keep studying consistently to see trends here."];
   }
 }
 
@@ -258,7 +275,14 @@ export default function Progress() {
                     />
                     {graph.title}
                   </div>
-                  <p className="text-white text-base leading-relaxed">{insight}</p>
+                  <ul className="space-y-1.5">
+                    {insight.map((point, i) => (
+                      <li key={i} className="text-white text-sm flex items-start gap-2">
+                        <span className="mt-1 w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: graph.color }} />
+                        {point}
+                      </li>
+                    ))}
+                  </ul>
                 </motion.div>
               );
             })}
