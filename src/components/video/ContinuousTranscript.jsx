@@ -431,49 +431,99 @@ export default function ContinuousTranscript({
                   </div>
                 ) : (
                   <>
-                    {showPhonetics ? (
-                       segment.hebrew && (
-                         <p className="text-cyan-300 text-base font-medium leading-tight text-center break-words" dir="rtl">
-                           {renderWords(segIdx, 'hebrew', segment.hebrew, 'text-cyan-300 text-base font-medium')}
-                         </p>
-                       )
-                     ) : (
-                       !hideTranslit && (
-                         <p className="text-white text-base font-medium leading-tight text-center break-words">
-                           {renderWords(segIdx, 'transliteration', segment.transliteration, 'text-white text-base font-medium')}
-                         </p>
-                       )
+                   {showPhonetics ? (
+                      segment.hebrew && (
+                        <p className="text-cyan-300 text-base font-medium leading-tight text-center break-words" dir="rtl">
+                          {renderWords(segIdx, 'hebrew', segment.hebrew, 'text-cyan-300 text-base font-medium')}
+                        </p>
+                      )
+                    ) : (
+                      !hideTranslit && (
+                        <p className="text-white text-base font-medium leading-tight text-center break-words">
+                          {renderWords(segIdx, 'transliteration', segment.transliteration, 'text-white text-base font-medium')}
+                          {canEdit && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); startEditSegment(segIdx); }}
+                              className="ml-2 text-sm text-yellow-300 hover:text-yellow-200 transition-colors inline"
+                              title="Edit sentence"
+                            >
+                              ✏️
+                            </button>
+                          )}
+                        </p>
+                      )
+                    )}
+                    {(!hideEnglish || revealedSentences.has(segIdx)) && segment.english && (
+                      <p className="text-white/60 text-sm leading-tight text-center break-words">
+                        {renderWords(segIdx, 'english', segment.english, 'text-white/60 text-sm')}
+                      </p>
+                    )}
+                   <div className="flex items-center justify-center gap-2 mt-1">
+                     {segment.english && !canEdit && (
+                       <button
+                         onClick={(e) => { e.stopPropagation(); toggleSentenceReveal(segIdx); }}
+                         className="text-[10px] text-white/30 hover:text-green-300 transition-colors"
+                       >
+                         {revealedSentences.has(segIdx) ? '🙈 hide' : '👁 see'}
+                       </button>
                      )}
-                     {(!hideEnglish || revealedSentences.has(segIdx)) && segment.english && (
-                       <p className="text-white/60 text-sm leading-tight text-center break-words">
-                         {renderWords(segIdx, 'english', segment.english, 'text-white/60 text-sm')}
-                       </p>
-                     )}
-                    <div className="flex items-center justify-center gap-2 mt-1">
-                      {segment.english && !canEdit && (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); toggleSentenceReveal(segIdx); }}
-                          className="text-[10px] text-white/30 hover:text-green-300 transition-colors"
-                        >
-                          {revealedSentences.has(segIdx) ? '🙈 hide' : '👁 see'}
-                        </button>
-                      )}
-                      {canEdit && (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); startEditSegment(segIdx); }}
-                          className="text-sm text-yellow-300 hover:text-yellow-200 transition-colors"
-                          title="Edit sentence"
-                        >
-                          ✏️
-                        </button>
-                      )}
-                    </div>
+                   </div>
                   </>
-                )}
+                  )}
               </div>
             </div>
           );
         })}
+        
+        {/* Add new sentence form */}
+        {canEdit && (
+          <div className="mt-6 p-4 border-t border-white/10">
+            <p className="text-white/60 text-sm mb-3">Add new sentence:</p>
+            <div className="space-y-2">
+              <textarea
+                value={editSegmentData.transliteration}
+                onChange={e => setEditSegmentData(prev => ({ ...prev, transliteration: e.target.value }))}
+                placeholder="Transliteration..."
+                rows={2}
+                className="w-full bg-white/10 border border-white/20 text-white text-sm rounded-lg px-2 py-1 outline-none resize-none"
+              />
+              <textarea
+                value={editSegmentData.english}
+                onChange={e => setEditSegmentData(prev => ({ ...prev, english: e.target.value }))}
+                placeholder="English..."
+                rows={1}
+                className="w-full bg-white/10 border border-white/20 text-white/70 text-sm rounded-lg px-2 py-1 outline-none resize-none"
+              />
+              <textarea
+                value={editSegmentData.hebrew}
+                onChange={e => setEditSegmentData(prev => ({ ...prev, hebrew: e.target.value }))}
+                placeholder="Hebrew..."
+                rows={1}
+                dir="rtl"
+                className="w-full bg-white/10 border border-white/20 text-cyan-300 text-sm rounded-lg px-2 py-1 outline-none resize-none"
+              />
+              <button 
+                onClick={() => {
+                  if (editSegmentData.transliteration.trim()) {
+                    const newSegment = {
+                      text: editSegmentData.transliteration,
+                      transliteration: editSegmentData.transliteration,
+                      english: editSegmentData.english,
+                      hebrew: editSegmentData.hebrew,
+                      start: Math.max(...transcript.map(t => t.start || 0), 0) + 5
+                    };
+                    transcript.push(newSegment);
+                    setEditSegmentData({ transliteration: '', english: '', hebrew: '' });
+                    toast?.success?.('Sentence added!');
+                  }
+                }}
+                className="w-full px-3 py-2 bg-green-500/20 border border-green-500/40 text-green-400 rounded-lg text-sm hover:bg-green-500/30 transition-all font-medium"
+              >
+                + Add Sentence
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
