@@ -222,8 +222,8 @@ export default function Backpack() {
     setSuggestingMnemonic(word.id);
     try {
       const rawWord = word.phonetic || word.word;
-      // Strip Hebrew infinitive "l" prefix (e.g. "lehorot" → "horot") for sound matching
-      const targetWord = /^l[aeiou]/i.test(rawWord) ? rawWord.slice(1) : rawWord;
+      // Strip Hebrew infinitive "l" prefix for verbs (e.g. "lahavot" → "havot", "lehorot" → "horot")
+      const targetWord = (word.is_verb || word.phonetic?.startsWith('l')) && /^l/i.test(rawWord) ? rawWord.slice(1) : rawWord;
       const meaning = word.translation || '';
 
       const concept = await base44.integrations.Core.InvokeLLM({
@@ -678,7 +678,7 @@ Return JSON with: translation (English, 1-4 words), phonetic (clean Latin transl
     if (newWord?.id) {
       try {
         const rawWord = phonetic; // use captured value, not cleared form
-        const soundWord = /^l[aeiou]/i.test(rawWord) ? rawWord.slice(1) : rawWord;
+        const soundWord = /^l/i.test(rawWord) ? rawWord.slice(1) : rawWord;
         const concept = await base44.integrations.Core.InvokeLLM({
           prompt: `You create sound-based visual mnemonics for language learning.
 
