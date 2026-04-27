@@ -730,6 +730,11 @@ export default function Home() {
                     </div>
                   </Link>
                 </div>
+                  {sortedDays.length === 0 ? (
+                    <div className="text-center py-8 text-stone-400 text-sm">
+                      No sessions available yet
+                    </div>
+                  ) : (
                   <div className="space-y-2">
                     {sortedDays.slice(0, 3).map((day, idx) => {
                     const dayColors = [
@@ -949,6 +954,7 @@ export default function Home() {
                     );
                   })}
                   </div>
+                  )}
               </div>
             </div>
               );
