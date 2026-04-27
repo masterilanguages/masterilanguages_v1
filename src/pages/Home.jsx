@@ -166,7 +166,7 @@ export default function Home() {
       return base44.entities.Day.filter({ language: userProfile.language });
     },
     enabled: profileLoaded && !!userProfile.language,
-    staleTime: 30 * 60 * 1000,
+    staleTime: 0,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
   });
