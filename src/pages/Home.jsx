@@ -4,7 +4,7 @@ import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingCart, Dumbbell, Church, UtensilsCrossed, Heart, ShoppingBag, BookOpen, Users, Play, Trophy, Sparkles, ArrowRight, Flame, Briefcase, School, Baby, Star, ChevronRight, ChevronDown, X, Home as HomeIcon, Video, Library, Book, Calendar, Check, Lock, Plus, Trash2 } from "lucide-react";
+import { ShoppingCart, Dumbbell, Church, UtensilsCrossed, Heart, ShoppingBag, BookOpen, Users, Play, Trophy, Sparkles, ArrowRight, Flame, Briefcase, School, Baby, Star, ChevronRight, ChevronDown, X, Home as HomeIcon, Library, Book, Calendar, Check, Lock, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -16,6 +16,7 @@ import BabyGame from "../components/game/BabyGame";
 import AvatarMenu from "../components/game/AvatarMenu";
 import PostVideoFlashcards from "../components/video/PostVideoFlashcards";
 import SongTranscriptModal from "../components/songs/SongTranscriptModal";
+import ContentLibraryPicker from "../components/home/ContentLibraryPicker";
 
 
 
@@ -73,6 +74,7 @@ export default function Home() {
   const [quickVideoUrl, setQuickVideoUrl] = useState({});
   const [addingVideoToDayId, setAddingVideoToDayId] = useState(null);
   const [newTaskForm, setNewTaskForm] = useState({}); // { [dayId]: { title, transcript, mediaUrl, videoId, mediaUploaded } }
+  const [libraryPickerDayId, setLibraryPickerDayId] = useState(null);
   const [sessionModal, setSessionModal] = useState(null); // day object
 
   const [showSessionFlashcards, setShowSessionFlashcards] = useState(false);
@@ -740,85 +742,16 @@ export default function Home() {
                               className="overflow-hidden"
                             >
                               <div className="mt-1 space-y-1 pl-3">
-                                {/* Quick add video */}
-                                {isMasterUser && (addingTaskToDayId === day.id || addingVideoToDayId === day.id) ? (
-                                   <div className="flex flex-col gap-1.5 mb-2 p-2 bg-white/60 rounded-xl border border-stone-200">
-                                     <div className="flex gap-1.5 items-center">
-                                       {/* Upload button */}
-                                       <label className={`flex-shrink-0 h-7 px-2.5 flex items-center gap-1 rounded-lg text-xs font-semibold cursor-pointer transition-all ${
-                                         newTaskForm[day.id]?.mediaUploaded ? 'bg-green-500 text-white' : 'bg-stone-700 hover:bg-stone-800 text-white'
-                                       }`}>
-                                         {newTaskForm[day.id]?.mediaUploaded ? <Check className="w-3 h-3" /> : <Video className="w-3 h-3" />}
-                                         {newTaskForm[day.id]?.mediaUploaded ? 'Uploaded ✓' : 'Add video or song'}
-                                         <input type="file" accept="video/*,audio/*,.mp3,.mp4" className="hidden" onChange={async (e) => {
-                                           const file = e.target.files?.[0];
-                                           if (!file) return;
-                                           toast.info('Uploading...');
-                                           const ytUrl = newTaskForm[day.id]?.youtubeUrl || '';
-                                           const ytId = extractYouTubeId(ytUrl);
-                                           if (ytId) {
-                                             setNewTaskForm(prev => ({ ...prev, [day.id]: { ...prev[day.id], mediaUrl: ytUrl, videoId: ytId, mediaUploaded: true } }));
-                                           } else {
-                                             const { file_url } = await base44.integrations.Core.UploadFile({ file });
-                                               const autoTitle = file.name.replace(/\.[^.]+$/, '').replace(/_/g, ' ');
-                                               setNewTaskForm(prev => ({ ...prev, [day.id]: { ...prev[day.id], mediaUrl: file_url, mediaUploaded: true, title: prev[day.id]?.title || autoTitle } }));
-                                           }
-                                           toast.success('Uploaded!');
-                                         }} />
-                                       </label>
-                                       {/* Title */}
-                                       <Input
-                                         value={newTaskForm[day.id]?.title || ''}
-                                         onChange={(e) => setNewTaskForm(prev => ({ ...prev, [day.id]: { ...prev[day.id], title: e.target.value } }))}
-                                         placeholder="Title"
-                                         className="flex-1 bg-white border-stone-300 text-stone-800 text-xs h-7"
-                                       />
-                                       {/* Or paste YouTube URL */}
-                                       <Input
-                                         value={newTaskForm[day.id]?.youtubeUrl || ''}
-                                         onChange={(e) => setNewTaskForm(prev => ({ ...prev, [day.id]: { ...prev[day.id], youtubeUrl: e.target.value } }))}
-                                         placeholder="YouTube URL"
-                                         className="flex-1 bg-white border-stone-300 text-stone-800 text-xs h-7"
-                                       />
-                                     </div>
-                
-                                     <div className="flex gap-1 justify-end">
-                                       <Button size="sm" className="h-6 px-3 bg-green-600 text-white text-xs" onClick={async () => {
-                                         const form = newTaskForm[day.id] || {};
-                                         const title = form.title?.trim();
-                                         if (!title) { toast.error('Title required'); return; }
-                                         const ytUrl = form.youtubeUrl?.trim();
-                                         const ytId = ytUrl ? extractYouTubeId(ytUrl) : null;
-                                         if (ytId && !form.mediaUploaded) {
-                                           // auto-add YouTube
-                                           let ytTitle = title;
-                                           try { const r = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(ytUrl)}&format=json`); const m = await r.json(); ytTitle = title || m.title; } catch {}
-                                           await base44.entities.MediaLibrary.create({ title: ytTitle, language: userProfile?.language || 'hebrew', video_url: ytUrl, video_id: ytId, topics: [], difficulty_level: 'All', tags: '', is_active: true, thumbnail_url: `https://i.ytimg.com/vi/${ytId}/hqdefault.jpg`, notes: `Session ${day.day_number}`, transcript_phonetics: form.transcript || '' });
-                                           const d = days.find(d => d.id === day.id);
-                                           const sub = { id: `video_${ytId}`, name: `▶ ${ytTitle}`, video_id: ytId, page: 'MediaLibrary' };
-                                           updateDayMutation.mutate({ id: day.id, data: { subsections: [...(d?.subsections || []), sub] } });
-                                         } else {
-                                           const d = days.find(d => d.id === day.id);
-                                           const taskId = `task_${Date.now()}`;
-                                           const sub = { id: taskId, name: title, page: '', transcript: form.transcript || '', ...(form.mediaUrl ? { mediaUrl: form.mediaUrl } : {}) };
-                                           updateDayMutation.mutate({ id: day.id, data: { subsections: [...(d?.subsections || []), sub] } });
-                                         }
-                                         setNewTaskForm(prev => ({ ...prev, [day.id]: {} }));
-                                         setAddingTaskToDayId(null); setAddingVideoToDayId(null);
-                                         queryClient.invalidateQueries({ queryKey: ['mediaLibrary'] });
-                                       }}>Save</Button>
-                                       <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => { setAddingTaskToDayId(null); setAddingVideoToDayId(null); setNewTaskForm(prev => ({ ...prev, [day.id]: {} })); }}>✕</Button>
-                                     </div>
-                                   </div>
-                                 ) : isMasterUser ? (
-                                   <button
-                                     onClick={() => setAddingTaskToDayId(day.id)}
-                                     className="w-full text-left px-3 py-1.5 text-xs rounded-lg transition-all flex items-center gap-1 mb-1"
-                                     style={{ color: '#6b7c5a', background: '#5a6b5a10', border: '1px dashed #5a6b5a40' }}
-                                   >
-                                     <Plus className="w-3 h-3" /> + Add video or song
-                                   </button>
-                                 ) : null}
+                                {/* Add from content library */}
+                                {isMasterUser && (
+                                  <button
+                                    onClick={() => setLibraryPickerDayId(day.id)}
+                                    className="w-full text-left px-3 py-1.5 text-xs rounded-lg transition-all flex items-center gap-1 mb-1"
+                                    style={{ color: '#6b7c5a', background: '#5a6b5a10', border: '1px dashed #5a6b5a40' }}
+                                  >
+                                    <Plus className="w-3 h-3" /> + Add from content library
+                                  </button>
+                                )}
                                 {(day.subsections || []).filter(task => {
                                   // Hide generic "Watch a video" if a specific video task exists
                                   if (task.id === 'video' && (day.subsections || []).some(s => s.video_id)) return false;
@@ -1095,6 +1028,26 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      {/* Content Library Picker */}
+      <ContentLibraryPicker
+        open={!!libraryPickerDayId}
+        onOpenChange={(open) => { if (!open) setLibraryPickerDayId(null); }}
+        language={userProfile?.language}
+        onSelect={(media) => {
+          const day = days.find(d => d.id === libraryPickerDayId);
+          if (!day) return;
+          const isYouTube = !!media.video_id;
+          const taskId = isYouTube ? `video_${media.video_id}` : `task_${Date.now()}`;
+          const existing = (day.subsections || []).find(s => s.id === taskId);
+          if (existing) { toast.info('Already in this session'); return; }
+          const sub = isYouTube
+            ? { id: taskId, name: `▶ ${media.title}`, video_id: media.video_id, page: 'MediaLibrary' }
+            : { id: taskId, name: media.title, page: '', mediaUrl: media.video_url || '' };
+          updateDayMutation.mutate({ id: libraryPickerDayId, data: { subsections: [...(day.subsections || []), sub] } });
+          toast.success(`"${media.title}" added to session!`);
+        }}
+      />
 
       {/* Song Transcript Modal */}
       <SongTranscriptModal
