@@ -449,7 +449,7 @@ export default function ContinuousTranscript({
                   <>
                     {showPhonetics ? (
                       segment.hebrew && (
-                        <p className="text-cyan-300 text-base font-medium leading-tight text-left whitespace-nowrap overflow-x-auto" dir="rtl">
+                        <p className="text-cyan-300 text-base font-medium leading-tight text-right whitespace-nowrap overflow-x-auto" dir="rtl">
                           {renderWords(segIdx, 'hebrew', segment.hebrew, 'text-cyan-300 text-base font-medium')}
                         </p>
                       )
