@@ -591,8 +591,8 @@ export default function Home() {
   const fluentWords = (wordRatings || []).filter(w => w.times_practiced >= 5);
   const learningWords = (wordRatings || []).filter(w => w.times_practiced > 0 && w.times_practiced < 5);
 
-  // Don't render if loading or no language
-  if (profileLoading || !selected_language) {
+  // Don't render if profile still loading
+  if (profileLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
         <motion.div
