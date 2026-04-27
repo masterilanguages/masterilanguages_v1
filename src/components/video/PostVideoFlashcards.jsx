@@ -75,10 +75,13 @@ export default function PostVideoFlashcards({ words, onClose, onJournal, videoTi
       const concept = await base44.integrations.Core.InvokeLLM({
         prompt: `Create a mnemonic to remember the word "${soundPhonetic}" meaning "${word.translation}".
 Find an English word/phrase that SOUNDS like "${soundPhonetic}"${isVerb ? ` (the "l" at the start of "${word.phonetic}" is just the Hebrew infinitive prefix — completely ignore it, base the sound only on "${soundPhonetic}")` : ''} and connect it visually to the meaning "${word.translation}".
+
+CRITICAL: Do NOT name any character, creature, animal, or person in the image with the sound-anchor word, the target word, or any variant. They are just generic characters/objects performing the action.
+
 Return JSON with:
 - sound_anchor: English word/phrase that sounds like "${soundPhonetic}"
 - explanation: one punchy memorable sentence using the sound_anchor that hints at the meaning WITHOUT using the exact English translation "${word.translation}" or "${word.phonetic}". Use synonyms or indirect references.
-- image_prompt: vivid cartoon scene description (no text in image, single clear subject, bright colors)`,
+- image_prompt: vivid cartoon scene description (no text in image, single clear subject, bright colors, no naming any creatures or characters)`,
         response_json_schema: {
           type: "object",
           properties: {

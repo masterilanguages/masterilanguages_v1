@@ -253,14 +253,16 @@ Target word: "${targetWord}" (meaning: "${meaning}")
 
 STEP 1 — SOUND MATCH: Find a real, common English noun whose spelling/pronunciation sounds like "${targetWord}" or its first 1-2 syllables. Think of words that rhyme or start the same way. Examples: "ask" → "Ask-him" → "eskimo", "shalom" → "shallow", "kelev" → "collar". The noun must be a physical, concrete, everyday object or creature. IMPORTANT: Do NOT use colors (like ivory, red, blue, gold, etc.) as the sound anchor — use objects or animals only.
 
-STEP 2 — SCENE: Place that physical noun object in a funny visual scene that ALSO shows the meaning "${meaning}". The object itself (not speech bubbles, not labels) should remind you of the sound.
+STEP 2 — SCENE: Place that physical noun object in a funny visual scene that ALSO shows the meaning "${meaning}". The object itself (not speech bubbles, not labels) should remind you of the sound. 
+
+CRITICAL: Do NOT name any character, creature, animal, or person in the scene with the sound-anchor word, the target word, or any variant. They are just generic characters performing the action.
 
 STEP 3 — The image must show the OBJECT doing something related to the meaning. NO speech bubbles, NO text, NO characters speaking or calling out. PURE VISUAL ACTION ONLY — no mouths open to speak, no gesturing as if calling out.
 
 Return JSON:
 - sound_anchor: the English noun that sounds like "${targetWord}" (e.g. "eskimo" for "askeem")
 - explanation: one punchy sentence like "An ESKIMO (askeem=agree) shaking hands in the snow"
-- image_prompt: vivid scene description with the sound_anchor object + visual action showing the meaning. No talking, no speech, no text.`,
+- image_prompt: vivid scene description with the sound_anchor object + visual action showing the meaning. No talking, no speech, no text, no naming any creatures.`,
         response_json_schema: {
           type: 'object',
           properties: {
