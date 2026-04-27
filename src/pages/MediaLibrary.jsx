@@ -1098,21 +1098,50 @@ For each segment:
     if (!transcriptSegments?.length) { toast.error("No transcript to extract from"); return; }
     setExtractingVocab(true);
     try {
-      const fullText = transcriptSegments.map(s => s.transliteration || s.text).join(' ');
-      const sessionLabel = video.notes?.match(/Session \d+/)?.[0] || video.default_day ? `Session ${video.default_day}` : video.title;
+      const sessionLabel = video.notes?.match(/Session \d+/)?.[0] || (video.default_day ? `Session ${video.default_day}` : video.title);
       const lang = video.language || userProfile?.language || 'spanish';
       const langCap = lang.charAt(0).toUpperCase() + lang.slice(1);
+      
+      // Build sentence mapping: word -> list of sentences it appears in (from transcript)
+      const wordToSentences = {};
+      for (const segment of transcriptSegments) {
+        const sentence = segment.transliteration || segment.text || segment.english || '';
+        if (!sentence.trim()) continue;
+        const words = sentence.split(/\s+/).map(w => w.toLowerCase().replace(/[.,!?;:]/g, ''));
+        for (const word of words) {
+          if (!word) continue;
+          if (!wordToSentences[word]) wordToSentences[word] = [];
+          if (!wordToSentences[word].includes(sentence)) wordToSentences[word].push(sentence);
+        }
+      }
+      
+      const fullText = transcriptSegments.map(s => s.transliteration || s.text).join(' ');
       const result = await base44.integrations.Core.InvokeLLM({
         prompt: `Extract the 10-15 most important vocabulary words from this ${langCap} learning transcript for a beginner. Transcript: "${fullText.slice(0, 3000)}". Only meaningful content words (nouns, verbs, adjectives). For each: the word in ${langCap}, phonetic (Latin spelling if needed, else the word itself), and English translation.`,
         response_json_schema: { type: "object", properties: { words: { type: "array", items: { type: "object", properties: { word: { type: "string" }, phonetic: { type: "string" }, translation: { type: "string" } } } } } }
       });
+      
       let added = 0;
       for (const w of (result.words || [])) {
         if (!w.word || !w.translation) continue;
         const phonetic = w.phonetic || w.word;
         const existing = await base44.entities.Word.filter({ phonetic });
+        
+        // Find a sentence from the video that contains this word
+        const wordKey = w.word.toLowerCase().replace(/[.,!?;:]/g, '');
+        const exampleSentence = wordToSentences[wordKey]?.[0] || sessionLabel;
+        
         if (existing.length === 0) {
-          await base44.entities.Word.create({ word: w.word, translation: w.translation, phonetic, category: "wordbank", times_practiced: 0, mastered: false, vocab_level: 0, example_sentence: sessionLabel });
+          await base44.entities.Word.create({ 
+            word: w.word, 
+            translation: w.translation, 
+            phonetic, 
+            category: "wordbank", 
+            times_practiced: 0, 
+            mastered: false, 
+            vocab_level: 0, 
+            example_sentence: exampleSentence 
+          });
           added++;
         }
       }
