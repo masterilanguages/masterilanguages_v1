@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Play, Pause, Loader2, Check, X, Plus } from "lucide-react";
+import { toast } from "sonner";
 
 export default function ContinuousTranscript({ 
   transcript: transcriptProp, 
@@ -12,10 +14,10 @@ export default function ContinuousTranscript({
   canEdit,
   isPlaying: isPlayingProp = false,
 }) {
-  const [showPhonetics, setShowPhonetics] = useState(true);
-  const [hideEnglish, setHideEnglish] = useState(true);
-  const [hideTranslit, setHideTranslit] = useState(false);
-  const [localTranscript, setLocalTranscript] = useState(transcriptProp);
+  const [showPhonetics, setShowPhonetics] = React.useState(true);
+  const [hideEnglish, setHideEnglish] = React.useState(true);
+  const [hideTranslit, setHideTranslit] = React.useState(false);
+  const [localTranscript, setLocalTranscript] = React.useState(transcriptProp);
 
   // Sync when prop changes (e.g. loaded from DB)
   React.useEffect(() => {
@@ -28,19 +30,19 @@ export default function ContinuousTranscript({
     setLocalTranscript(prev => prev.map((seg, i) => i === segIdx ? { ...seg, [field]: value } : seg));
   };
 
-  const [editingSegmentTime, setEditingSegmentTime] = useState(null);
-  const [editingTimeValue, setEditingTimeValue] = useState("");
-  const [wasPlayingBeforeEdit, setWasPlayingBeforeEdit] = useState(false);
+  const [editingSegmentTime, setEditingSegmentTime] = React.useState(null);
+  const [editingTimeValue, setEditingTimeValue] = React.useState("");
+  const [wasPlayingBeforeEdit, setWasPlayingBeforeEdit] = React.useState(false);
 
-  const [editingCell, setEditingCell] = useState(null);
-  const [editingSegment, setEditingSegment] = useState(null); // segIdx
-  const [editSegmentData, setEditSegmentData] = useState({});
-  const [editCellValue, setEditCellValue] = useState("");
-  const [savingCell, setSavingCell] = useState(false);
-  const [activeWordKey, setActiveWordKey] = useState(null); // "segIdx-field-wordIdx"
-  const [wordTranslations, setWordTranslations] = useState({}); // key -> translation string
-  const [translatingKey, setTranslatingKey] = useState(null);
-  const [revealedSentences, setRevealedSentences] = useState(new Set());
+  const [editingCell, setEditingCell] = React.useState(null);
+  const [editingSegment, setEditingSegment] = React.useState(null); // segIdx
+  const [editSegmentData, setEditSegmentData] = React.useState({});
+  const [editCellValue, setEditCellValue] = React.useState("");
+  const [savingCell, setSavingCell] = React.useState(false);
+  const [activeWordKey, setActiveWordKey] = React.useState(null); // "segIdx-field-wordIdx"
+  const [wordTranslations, setWordTranslations] = React.useState({}); // key -> translation string
+  const [translatingKey, setTranslatingKey] = React.useState(null);
+  const [revealedSentences, setRevealedSentences] = React.useState(new Set());
 
   const toggleSentenceReveal = (segIdx) => {
     setRevealedSentences(prev => {
