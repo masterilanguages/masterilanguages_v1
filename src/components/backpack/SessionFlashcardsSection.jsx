@@ -109,6 +109,20 @@ Return JSON with a "words" array. Each item: { phonetic: Latin transliteration, 
     }
   };
 
+  const handleSessionWordLoaded = (day) => {
+    const words = sessionWords[day.id];
+    if (words && words.length > 0) {
+      const flashcardWords = words.map(w => ({
+        word: w.hebrew || w.phonetic,
+        phonetic: w.phonetic,
+        translation: w.translation,
+      }));
+      if (onSessionSelect) {
+        onSessionSelect(flashcardWords, `Session ${day.day_number}`);
+      }
+    }
+  };
+
   const handleStartFlashcards = (day) => {
     const words = sessionWords[day.id] || [];
     if (!words.length) return;
@@ -151,35 +165,9 @@ Return JSON with a "words" array. Each item: { phonetic: Latin transliteration, 
               </button>
 
               {/* Expanded content */}
-              {isExpanded && (
-                <div className="border-t border-stone-100 px-4 py-3">
-                  {isLoading ? (
-                    <div className="flex items-center gap-2 py-4 justify-center">
-                      <Loader2 className="w-4 h-4 animate-spin" style={{ color: '#5a6b5a' }} />
-                      <span className="text-sm text-stone-400">Extracting vocabulary from script...</span>
-                    </div>
-                  ) : words.length === 0 ? (
-                    <p className="text-stone-400 text-sm text-center py-3">
-                      No transcript found for this session yet.
-                    </p>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        const flashcardWords = words.map(w => ({
-                          word: w.hebrew || w.phonetic,
-                          phonetic: w.phonetic,
-                          translation: w.translation,
-                        }));
-                        if (onSessionSelect) {
-                          onSessionSelect(flashcardWords, `Session ${day.day_number}`);
-                        }
-                      }}
-                      className="w-full py-2 rounded-xl text-sm font-semibold text-white transition-all"
-                      style={{ background: 'linear-gradient(135deg, #5a6b5a, #3d4a2e)' }}
-                    >
-                      Start Flashcards →
-                    </button>
-                  )}
+              {isExpanded && words.length > 0 && !isLoading && (
+                <div className="border-t border-stone-100 mt-2 pt-3">
+                  {handleSessionWordLoaded(day)}
                 </div>
               )}
             </div>
