@@ -122,9 +122,9 @@ Return JSON with a "words" array. Each item: { phonetic: Latin transliteration, 
   return (
     <div className="mb-6">
       <h2 className="text-base font-semibold mb-3" style={{ color: '#3d4a2e', fontFamily: 'Jost, sans-serif' }}>
-        📖 Session Flashcards
+        📖 Session Words
       </h2>
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-4 gap-3">
         {sessionsWithContent.map((day) => {
           const isExpanded = expandedSession === day.id;
           const words = sessionWords[day.id] || [];
@@ -140,7 +140,7 @@ Return JSON with a "words" array. Each item: { phonetic: Latin transliteration, 
                 <div className="flex items-center gap-2">
                   <span className="text-base">📚</span>
                   <span className="font-semibold text-sm" style={{ color: '#3d4a2e' }}>
-                    Session {day.day_number} Flashcards
+                    Session {day.day_number} Words
                   </span>
                   {words.length > 0 && (
                     <span className="text-xs px-2 py-0.5 rounded-full bg-stone-100 text-stone-500">
@@ -206,6 +206,25 @@ Return JSON with a "words" array. Each item: { phonetic: Latin transliteration, 
             </div>
           );
         })}
+        
+        {/* All words button */}
+        <button
+          onClick={() => {
+            sessionStorage.setItem('pendingFlashcardWords', JSON.stringify({
+              words: [],
+              title: 'All Words',
+              allWords: true,
+            }));
+            navigate('/Backpack?flashcard=all');
+          }}
+          className="bg-white/60 border border-stone-200 rounded-xl overflow-hidden flex flex-col items-center justify-center p-6 hover:bg-white/80 transition-all"
+        >
+          <span className="text-3xl mb-2">⭐</span>
+          <span className="font-semibold text-sm text-center" style={{ color: '#3d4a2e' }}>
+            All Words
+          </span>
+          <span className="text-xs text-stone-400 mt-1">Practice & rank</span>
+        </button>
       </div>
     </div>
   );
