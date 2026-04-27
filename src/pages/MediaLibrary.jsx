@@ -42,6 +42,7 @@ const DEFAULT_TOPICS = [
 export default function MediaLibrary() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { selected_language } = useLanguage();
   const [currentUser, setCurrentUser] = useState(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingVideo, setEditingVideo] = useState(null);
@@ -160,12 +161,12 @@ export default function MediaLibrary() {
     }
   });
 
-  // Set language filter once profile loads
+  // Set language filter from global context
   useEffect(() => {
-    if (userProfile?.language && !filterLanguage) {
-      setFilterLanguage(userProfile.language);
+    if (selected_language) {
+      setFilterLanguage(selected_language);
     }
-  }, [userProfile?.language]);
+  }, [selected_language]);
 
   const { data: userCoins } = useQuery({
     queryKey: ['userCoins'],
@@ -701,8 +702,7 @@ Keep natural sentence breaks. Return a JSON object with a "transcript" array.`,
   const filteredVideos = videos.filter(video => {
     const matchesSearch = video.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (video.tags || "").toLowerCase().includes(searchTerm.toLowerCase());
-    const userLang = userProfile?.language;
-    const effectiveLangFilter = filterLanguage && filterLanguage !== "all" ? filterLanguage : userLang;
+    const effectiveLangFilter = filterLanguage && filterLanguage !== "all" ? filterLanguage : selected_language;
     const matchesLanguage = !effectiveLangFilter || video.language === effectiveLangFilter;
     const matchesDifficulty = filterDifficulty.length === 0 || filterDifficulty.includes(video.difficulty_level);
     const matchesTopic = filterTopics.length === 0 || filterTopics.some(t => (video.topics || []).includes(t));

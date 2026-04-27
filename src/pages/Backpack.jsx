@@ -21,6 +21,7 @@ import PostVideoFlashcards from "../components/video/PostVideoFlashcards";
 
 export default function Backpack() {
   const queryClient = useQueryClient();
+  const { selected_language } = useLanguage();
   const [activeTab, setActiveTab] = useState("level0");
   const [addWordForm, setAddWordForm] = useState({ phonetic: '', translation: '' });
   const [addingWord, setAddingWord] = useState(false);
@@ -127,9 +128,9 @@ export default function Backpack() {
   });
 
   const { data: wordRatings = [] } = useQuery({
-    queryKey: ['wordRatings', userProfile?.language, currentUser?.email],
+    queryKey: ['wordRatings', selected_language, currentUser?.email],
     queryFn: async () => {
-      const lang = userProfile?.language || 'hebrew';
+      const lang = selected_language || 'hebrew';
       // Fetch only THIS user's own rated words in their selected language
       const ownWords = await base44.entities.Word.filter({ category: "wordbank", language: lang, created_by: currentUser.email });
       // Fetch all approved words in their selected language (shared by admin)
@@ -141,7 +142,7 @@ export default function Backpack() {
       const sharedCards = unratedApproved.map(w => ({ ...w, _shared: true, times_practiced: 0, mastered: false }));
       return [...ownWords, ...sharedCards];
     },
-    enabled: !!userProfile && !!currentUser?.email,
+    enabled: !!userProfile && !!currentUser?.email && !!selected_language,
     staleTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
@@ -316,8 +317,7 @@ Return JSON:
     setSuggestingMnemonic(null);
   };
 
-  const userLang = userProfile?.language || 'hebrew';
-  const langFilteredRatings = wordRatings.filter(w => !w.language || w.language === userLang);
+  const langFilteredRatings = wordRatings.filter(w => !w.language || w.language === selected_language);
   const level0Words = langFilteredRatings.filter(w => (w.times_practiced || 0) === 0);
   const level1Words = langFilteredRatings.filter(w => w.times_practiced === 1);
   const level2Words = langFilteredRatings.filter(w => w.times_practiced === 2);

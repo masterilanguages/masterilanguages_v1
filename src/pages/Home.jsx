@@ -22,6 +22,11 @@ import ContentLibraryPicker from "../components/home/ContentLibraryPicker";
 
 
 
+const languageNames = {
+  hebrew: 'Hebrew', english: 'English', spanish: 'Spanish',
+  french: 'French', portuguese: 'Portuguese', italian: 'Italian'
+};
+
 const activities = [
   { id: "supermarket", name: "Supermarket", icon: ShoppingCart, gradient: "from-green-500 to-emerald-500", cost: 50, minAge: 5, description: "Buy groceries in Hebrew" },
   { id: "sports", name: "Sports Club", icon: Trophy, gradient: "from-amber-500 to-yellow-500", cost: 60, minAge: 8, description: "Play and learn sports terms" },
@@ -48,6 +53,7 @@ const storeItems = [
 export default function Home() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { selected_language } = useLanguage();
   const [buyCoinsDialog, setBuyCoinsDialog] = useState(false);
   const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState(null);
@@ -160,12 +166,12 @@ export default function Home() {
   });
 
   const { data: days = [] } = useQuery({
-    queryKey: ['days', userProfile?.language],
+    queryKey: ['days', selected_language],
     queryFn: () => {
-      if (!userProfile?.language) return [];
-      return base44.entities.Day.filter({ language: userProfile.language });
+      if (!selected_language) return [];
+      return base44.entities.Day.filter({ language: selected_language });
     },
-    enabled: profileLoaded && !!userProfile.language,
+    enabled: profileLoaded && !!selected_language,
     staleTime: 0,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
@@ -584,8 +590,8 @@ export default function Home() {
   const fluentWords = (wordRatings || []).filter(w => w.times_practiced >= 5);
   const learningWords = (wordRatings || []).filter(w => w.times_practiced > 0 && w.times_practiced < 5);
 
-  // Don't render if loading or no language (Layout handles redirect)
-  if (profileLoading || !userProfile?.language) {
+  // Don't render if loading or no language
+  if (profileLoading || !selected_language) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
         <motion.div
@@ -593,6 +599,26 @@ export default function Home() {
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
           className="w-12 h-12 border-4 border-cyan-400 border-t-transparent rounded-full"
         />
+      </div>
+    );
+  }
+
+  // No content for this language
+  if (sortedDays.length === 0 && !isMasterUser) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4" style={{ background: 'linear-gradient(160deg, #f0ece4 0%, #e8e4d8 40%, #eae6da 100%)' }}>
+        <div className="text-center max-w-sm">
+          <div className="text-6xl mb-4">📚</div>
+          <h2 className="text-2xl font-bold mb-2" style={{ color: '#3d4a2e', fontFamily: 'Cormorant Garamond, serif' }}>No Content Available</h2>
+          <p className="text-stone-500 mb-4">There are no lessons available for {languageNames[selected_language] || 'this language'} yet.</p>
+          <button
+            onClick={() => navigate(createPageUrl("LanguageSelect"))}
+            className="px-6 py-3 rounded-xl text-white font-semibold transition-all"
+            style={{ background: '#5a6b5a' }}
+          >
+            Choose Different Language
+          </button>
+        </div>
       </div>
     );
   }
@@ -707,22 +733,7 @@ export default function Home() {
                   </Link>
                 </div>
                   <div className="space-y-2">
-                    {sortedDays.filter(day => {
-                      const userLang = userProfile?.language || 'hebrew';
-                      // For non-Hebrew users, hide sessions 2 and 3
-                      if (userLang !== 'hebrew' && (day.day_number === 2 || day.day_number === 3)) {
-                        return false;
-                      }
-                      // For non-Hebrew users, hide days with Hebrew-only content
-                      if (userLang !== 'hebrew') {
-                        const hasHebrewOnly = (day.subsections || []).some(s => {
-                          const taskName = s.name?.toLowerCase() || '';
-                          return taskName.includes('the bride');
-                        });
-                        if (hasHebrewOnly) return false;
-                      }
-                      return true;
-                    }).slice(0, 3).map((day, idx) => {
+                    {sortedDays.slice(0, 3).map((day, idx) => {
                     const dayColors = [
                       { bg: '#5a6b5a', text: '#f5f0e8' },
                       { bg: '#6b7c63', text: '#f5f0e8' },
@@ -767,15 +778,14 @@ export default function Home() {
                                     <Plus className="w-3 h-3" /> + Add from content library
                                   </button>
                                 )}
-                                {(day.subsections || []).filter(task => {
-                                  const taskName = task.name?.toLowerCase() || '';
-                                  const userLang = userProfile?.language || 'hebrew';
-                                  // "The Bride" is Hebrew-only
-                                  if (taskName.includes('the bride') && userLang !== 'hebrew') return false;
-                                  // Hide generic "Watch a video" if a specific video task exists
-                                  if (task.id === 'video' && (day.subsections || []).some(s => s.video_id)) return false;
-                                  return true;
-                                }).map((task, idx) => {
+                                           {(day.subsections || []).filter(task => {
+                                             const taskName = task.name?.toLowerCase() || '';
+                                             // "The Bride" is Hebrew-only — hide for all non-Hebrew languages
+                                             if (taskName.includes('the bride') && selected_language !== 'hebrew') return false;
+                                             // Hide generic "Watch a video" if a specific video task exists
+                                             if (task.id === 'video' && (day.subsections || []).some(s => s.video_id)) return false;
+                                             return true;
+                                           }).map((task, idx) => {
                                   const isSong = task.song_id || (songs && songs.find(s => s.id === task.id));
                                     const isTaskDone = progress?.subsections_completed?.includes(task.id);
                                     const isDragging = draggedTask?.dayId === day.id && draggedTask?.idx === idx;
