@@ -272,7 +272,7 @@ Return JSON with:
                 {/* Always show the AI explanation if present */}
                 {currentMnemonic?.explanation && (
                   <div className="flex items-center gap-2">
-                    <p className="text-purple-600 text-xs italic flex-1">💡 {currentMnemonic.explanation}</p>
+                    <p className="text-purple-600 text-xs italic flex-1 truncate">💡 {currentMnemonic.explanation}</p>
                     {!customMnemonicInput && (
                       <button
                         onClick={(e) => { e.stopPropagation(); setCustomMnemonicInput(currentKey); setCustomMnemonicText(currentMnemonic.customExplanation || ""); }}
@@ -363,8 +363,8 @@ Return JSON with:
 
                 {/* Show custom override if set */}
                 {!customMnemonicInput && currentMnemonic?.customExplanation && (
-                  <div className="flex items-start gap-1 justify-center mt-1">
-                    <p className="text-emerald-600 text-xs text-center italic flex-1">🌟 {currentMnemonic.customExplanation}</p>
+                  <div className="flex items-center gap-1 justify-center mt-1">
+                    <p className="text-emerald-600 text-xs text-center italic flex-1 truncate">🌟 {currentMnemonic.customExplanation}</p>
                     <button onClick={e => { e.stopPropagation(); setCustomMnemonicInput(currentKey); setCustomMnemonicText(currentMnemonic.customExplanation); }} className="text-sm hover:scale-110 transition-transform flex-shrink-0">✏️</button>
                   </div>
                 )}

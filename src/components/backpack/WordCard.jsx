@@ -225,9 +225,9 @@ export default function WordCard({
 
       {/* Mnemonic explanation */}
       {(mnemonicExplanations[word.id] || word.mnemonic_explanation) && (
-        <p className="text-[10px] text-center px-2 pb-1 italic leading-tight" style={{ color: '#6b7c5a' }}>
+        <p className="text-[10px] text-center px-2 pb-1 italic leading-tight truncate" style={{ color: '#6b7c5a' }}>
           💡 <EditableWord
-            text={(() => { const t = mnemonicExplanations[word.id] || word.mnemonic_explanation; const words = t.split(' '); return words.length > 8 ? words.slice(0, 8).join(' ') + '…' : t; })()}
+            text={mnemonicExplanations[word.id] || word.mnemonic_explanation}
             editable={true}
             className="text-[10px] italic"
             onSave={(val) => {
