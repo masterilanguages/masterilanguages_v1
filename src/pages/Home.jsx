@@ -70,7 +70,7 @@ export default function Home() {
   const [showAssignDialog, setShowAssignDialog] = useState(false);
   const [selectedCoach, setSelectedCoach] = useState("");
   const [selectedStudent, setSelectedStudent] = useState("");
-  const [expandedDay, setExpandedDay] = useState(null);
+  const [expandedDay, setExpandedDay] = useState(1);
   const [draggedTask, setDraggedTask] = useState(null);
   const [dragOverTask, setDragOverTask] = useState(null);
   const [newTask, setNewTask] = useState({ name: "", youtube_url: "", page: "" });
