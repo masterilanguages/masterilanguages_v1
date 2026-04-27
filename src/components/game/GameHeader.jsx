@@ -388,7 +388,7 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
                 style={{
                   background: isDragging ? 'rgba(90, 107, 90, 0.08)' : isOver ? 'rgba(90, 107, 90, 0.15)' : 'rgba(90, 107, 90, 0.06)',
                   border: `1px solid ${isDragging ? 'rgba(90, 107, 90, 0.3)' : isOver ? 'rgba(90, 107, 90, 0.4)' : 'rgba(90, 107, 90, 0.15)'}`,
-                  cursor: 'grab',
+                  cursor: 'pointer',
                   opacity: isDragging ? 0.35 : 1,
                   transform: isOver ? 'scale(1.05)' : 'scale(1)',
                   transition: 'all 0.15s ease',
