@@ -18,11 +18,9 @@ import DeletablePictureBox from "../components/learning/DeletablePictureBox";
 import TranslatorWidget from "../components/TranslatorWidget";
 import SessionFlashcardsSection from "../components/backpack/SessionFlashcardsSection";
 import PostVideoFlashcards from "../components/video/PostVideoFlashcards";
-import { useLanguage } from "@/lib/LanguageContext";
 
 export default function Backpack() {
   const queryClient = useQueryClient();
-  const { selected_language, isLoading: languageLoading } = useLanguage();
   const [activeTab, setActiveTab] = useState("level0");
   const [addWordForm, setAddWordForm] = useState({ phonetic: '', translation: '' });
   const [addingWord, setAddingWord] = useState(false);
@@ -129,9 +127,9 @@ export default function Backpack() {
   });
 
   const { data: wordRatings = [] } = useQuery({
-    queryKey: ['wordRatings', selected_language, currentUser?.email],
+    queryKey: ['wordRatings', userProfile?.language, currentUser?.email],
     queryFn: async () => {
-      const lang = selected_language || 'hebrew';
+      const lang = userProfile?.language || 'hebrew';
       // Fetch only THIS user's own rated words in their selected language
       const ownWords = await base44.entities.Word.filter({ category: "wordbank", language: lang, created_by: currentUser.email });
       // Fetch all approved words in their selected language (shared by admin)
@@ -143,8 +141,7 @@ export default function Backpack() {
       const sharedCards = unratedApproved.map(w => ({ ...w, _shared: true, times_practiced: 0, mastered: false }));
       return [...ownWords, ...sharedCards];
     },
-    initialData: [],
-    enabled: !!userProfile && !!currentUser?.email && !!selected_language,
+    enabled: !!userProfile && !!currentUser?.email,
     staleTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
@@ -319,7 +316,8 @@ Return JSON:
     setSuggestingMnemonic(null);
   };
 
-  const langFilteredRatings = wordRatings.filter(w => !w.language || w.language === selected_language);
+  const userLang = userProfile?.language || 'hebrew';
+  const langFilteredRatings = wordRatings.filter(w => !w.language || w.language === userLang);
   const level0Words = langFilteredRatings.filter(w => (w.times_practiced || 0) === 0);
   const level1Words = langFilteredRatings.filter(w => w.times_practiced === 1);
   const level2Words = langFilteredRatings.filter(w => w.times_practiced === 2);

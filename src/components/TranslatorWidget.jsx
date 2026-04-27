@@ -123,7 +123,7 @@ Return JSON with:
   };
 
   return (
-    <>
+    <React.Fragment>
       {!isOpen && (
         <motion.button
           whileHover={{ scale: 1.05 }}
@@ -194,6 +194,6 @@ Return JSON with:
           </motion.div>
         )}
       </AnimatePresence>
-    </>
+    </React.Fragment>
   );
 }

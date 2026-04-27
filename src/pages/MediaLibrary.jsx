@@ -21,7 +21,6 @@ import TranslatorWidget from "../components/TranslatorWidget";
 import ContinuousTranscript from "../components/video/ContinuousTranscript";
 import AddVideoDialog from "../components/media/AddVideoDialog";
 import PostVideoFlashcards from "../components/video/PostVideoFlashcards";
-import { useLanguage } from "@/lib/LanguageContext";
 
 const DEFAULT_TOPICS = [
   "Religion / Spirituality",
@@ -43,7 +42,6 @@ const DEFAULT_TOPICS = [
 export default function MediaLibrary() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { selected_language, isLoading: languageLoading } = useLanguage();
   const [currentUser, setCurrentUser] = useState(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingVideo, setEditingVideo] = useState(null);
@@ -143,7 +141,6 @@ export default function MediaLibrary() {
   const { data: videos = [] } = useQuery({
     queryKey: ['mediaLibrary'],
     queryFn: () => base44.entities.MediaLibrary.list(),
-    initialData: [],
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
@@ -154,7 +151,6 @@ export default function MediaLibrary() {
       const profiles = await base44.entities.UserProfile.list();
       return profiles[0] || null;
     },
-    initialData: null,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
     onSuccess: (profile) => {
@@ -164,12 +160,12 @@ export default function MediaLibrary() {
     }
   });
 
-  // Set language filter from global context
+  // Set language filter once profile loads
   useEffect(() => {
-    if (selected_language) {
-      setFilterLanguage(selected_language);
+    if (userProfile?.language && !filterLanguage) {
+      setFilterLanguage(userProfile.language);
     }
-  }, [selected_language]);
+  }, [userProfile?.language]);
 
   const { data: userCoins } = useQuery({
     queryKey: ['userCoins'],
@@ -190,17 +186,18 @@ export default function MediaLibrary() {
   });
 
   const { data: userVideos = [] } = useQuery({
-    queryKey: ['userVideos', selected_language],
+    queryKey: ['userVideos', userProfile?.language],
     queryFn: async () => {
       const videos = await base44.entities.Video.list();
+      const lang = userProfile?.language;
       return videos
         .filter(v => !v.deleted_at && v.is_active !== false)
-        .filter(v => !selected_language || v.language === selected_language || v.language === selected_language.slice(0, 2))
+        .filter(v => !lang || v.language === lang || v.language === lang.slice(0, 2))
         .sort((a, b) => (a.order || 0) - (b.order || 0));
     },
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
-    enabled: !!currentUser && !!selected_language,
+    enabled: !!currentUser && !!userProfile,
   });
 
   const { data: myProgram = [] } = useQuery({
@@ -704,7 +701,8 @@ Keep natural sentence breaks. Return a JSON object with a "transcript" array.`,
   const filteredVideos = videos.filter(video => {
     const matchesSearch = video.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (video.tags || "").toLowerCase().includes(searchTerm.toLowerCase());
-    const effectiveLangFilter = filterLanguage && filterLanguage !== "all" ? filterLanguage : selected_language;
+    const userLang = userProfile?.language;
+    const effectiveLangFilter = filterLanguage && filterLanguage !== "all" ? filterLanguage : userLang;
     const matchesLanguage = !effectiveLangFilter || video.language === effectiveLangFilter;
     const matchesDifficulty = filterDifficulty.length === 0 || filterDifficulty.includes(video.difficulty_level);
     const matchesTopic = filterTopics.length === 0 || filterTopics.some(t => (video.topics || []).includes(t));

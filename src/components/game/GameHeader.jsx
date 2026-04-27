@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { useLanguage } from "@/lib/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -14,7 +13,6 @@ import { toast } from "sonner";
 const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { changeLanguage } = useLanguage();
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [showMenu, setShowMenu] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
@@ -56,8 +54,9 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
 
   const changeLanguageMutation = useMutation({
     mutationFn: (newLanguage) => base44.entities.UserProfile.update(profile?.id, { language: newLanguage }),
-    onSuccess: async (_, newLanguage) => {
-      await changeLanguage(newLanguage);
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['userProfile'] });
+      queryClient.invalidateQueries({ queryKey: ['days'] });
       toast.success("Language updated!");
       setShowMenu(false);
     },
