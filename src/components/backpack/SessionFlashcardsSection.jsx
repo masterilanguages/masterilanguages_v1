@@ -188,6 +188,22 @@ Return JSON with a "words" array. Each item: { phonetic: Latin transliteration, 
                           <span className="text-xs text-stone-500">{words[cardIndices[day.id] || 0].phonetic}</span>
                           <span className="text-sm text-stone-700 font-medium">{words[cardIndices[day.id] || 0].translation}</span>
                         </div>
+                        <button
+                          onClick={() => {
+                            const flashcardWords = words.map(w => ({
+                              word: w.hebrew || w.phonetic,
+                              phonetic: w.phonetic,
+                              translation: w.translation,
+                            }));
+                            if (onSessionSelect) {
+                              onSessionSelect(flashcardWords, `Session ${day.day_number}`);
+                            }
+                          }}
+                          className="w-full py-2 rounded-xl text-sm font-semibold text-white transition-all"
+                          style={{ background: 'linear-gradient(135deg, #5a6b5a, #3d4a2e)' }}
+                        >
+                          View in New Tab →
+                        </button>
                       </div>
                     </>
                   )}
