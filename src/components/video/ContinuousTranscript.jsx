@@ -244,22 +244,6 @@ export default function ContinuousTranscript({
                         🎒
                       </button>
                     )}
-                    {(canEdit || field === 'transliteration') && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); startEditWord(segIdx, field, wordIdx, words); setActiveWordKey(null); }}
-                        className="text-xs text-yellow-300 hover:text-yellow-200 px-1"
-                      >
-                        ✏️
-                      </button>
-                    )}
-                    {canEdit && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); addWordToSegment(segIdx, field, wordIdx); setActiveWordKey(null); }}
-                        className="text-xs text-cyan-400 hover:text-cyan-300 px-1"
-                      >
-                        <Plus className="w-3 h-3" />
-                      </button>
-                    )}
                   </span>
                 </span>
               )}
@@ -465,22 +449,25 @@ export default function ContinuousTranscript({
                          {renderWords(segIdx, 'english', segment.english, 'text-white/60 text-sm')}
                        </p>
                      )}
-                    {segment.english && !canEdit && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); toggleSentenceReveal(segIdx); }}
-                        className="mt-0.5 text-[10px] text-white/30 hover:text-green-300 transition-colors"
-                      >
-                        {revealedSentences.has(segIdx) ? '🙈 hide' : '👁 see translation'}
-                      </button>
-                    )}
-                    {canEdit && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); startEditSegment(segIdx); }}
-                        className="mt-0.5 text-[10px] text-white/30 hover:text-yellow-300 transition-colors"
-                      >
-                        ✏️ edit sentence
-                      </button>
-                    )}
+                    <div className="flex items-center justify-center gap-2 mt-1">
+                      {segment.english && !canEdit && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); toggleSentenceReveal(segIdx); }}
+                          className="text-[10px] text-white/30 hover:text-green-300 transition-colors"
+                        >
+                          {revealedSentences.has(segIdx) ? '🙈 hide' : '👁 see'}
+                        </button>
+                      )}
+                      {canEdit && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); startEditSegment(segIdx); }}
+                          className="text-sm text-yellow-300 hover:text-yellow-200 transition-colors"
+                          title="Edit sentence"
+                        >
+                          ✏️
+                        </button>
+                      )}
+                    </div>
                   </>
                 )}
               </div>
