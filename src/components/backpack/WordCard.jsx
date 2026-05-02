@@ -218,8 +218,8 @@ export default function WordCard({
       {/* Mnemonic explanation below image */}
       {(mnemonicExplanations[word.id] || word.mnemonic_explanation) && (
         <div className="px-3 py-1.5 bg-purple-50 border-t border-purple-100">
-          <p className="text-[10px] text-purple-600 italic text-center leading-snug">
-            💡 {mnemonicExplanations[word.id] || word.mnemonic_explanation}
+          <p className="text-[10px] text-purple-600 italic text-center leading-none truncate">
+            💡 {(mnemonicExplanations[word.id] || word.mnemonic_explanation).split(' ').slice(0, 5).join(' ')}
           </p>
         </div>
       )}
