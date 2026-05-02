@@ -178,12 +178,7 @@ export default function WordCard({
             <p className="text-stone-500 text-sm">{word.phonetic}</p>
           </div>
         )}
-        {/* Reveal overlay */}
-        {!revealed && (
-          <div className="absolute inset-0 flex items-end justify-center pb-2 pointer-events-none">
-            <span className="bg-black/40 text-white text-[10px] px-2 py-0.5 rounded-full">tap to reveal</span>
-          </div>
-        )}
+
       </div>
 
       {/* Word info — also clickable to reveal */}
@@ -220,6 +215,15 @@ export default function WordCard({
         )}
       </div>
 
+      {/* Mnemonic explanation below image */}
+      {(mnemonicExplanations[word.id] || word.mnemonic_explanation) && (
+        <div className="px-3 py-1.5 bg-purple-50 border-t border-purple-100">
+          <p className="text-[10px] text-purple-600 italic text-center leading-snug">
+            💡 {mnemonicExplanations[word.id] || word.mnemonic_explanation}
+          </p>
+        </div>
+      )}
+
       {/* Source content label */}
       {word.example_sentence && (
         <div className="px-2 py-0.5 flex items-center justify-center">
@@ -236,21 +240,7 @@ export default function WordCard({
         </div>
       )}
 
-      {/* Mnemonic explanation */}
-      {(mnemonicExplanations[word.id] || word.mnemonic_explanation) && (
-        <p className="text-[10px] text-center px-2 pb-1 italic leading-tight truncate" style={{ color: '#6b7c5a' }}>
-          💡 <EditableWord
-            text={mnemonicExplanations[word.id] || word.mnemonic_explanation}
-            editable={true}
-            className="text-[10px] italic"
-            onSave={(val) => {
-              setMnemonicExplanations(prev => ({ ...prev, [word.id]: val }));
-              updateWordMutation.mutate({ id: word.id, data: { mnemonic_explanation: val } });
-              regenerateImageFromDescription(val);
-            }}
-          />
-        </p>
-      )}
+
 
       {/* Example sentence */}
       <div className="px-2 pb-2" onClick={e => e.stopPropagation()}>
