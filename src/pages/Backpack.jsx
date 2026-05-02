@@ -17,6 +17,7 @@ import WordCard from "../components/backpack/WordCard";
 import DeletablePictureBox from "../components/learning/DeletablePictureBox";
 import TranslatorWidget from "../components/TranslatorWidget";
 import SessionFlashcardsSection from "../components/backpack/SessionFlashcardsSection";
+import PasteWordsList from "../components/backpack/PasteWordsList";
 import PostVideoFlashcards from "../components/video/PostVideoFlashcards";
 
 export default function Backpack() {
@@ -774,12 +775,14 @@ Return JSON:
             <Button
               onClick={handleAddNewWord}
               disabled={addingWord || (!addWordForm.phonetic.trim() && !addWordForm.translation.trim())}
-
               style={{ background: '#5a6b5a', color: 'white' }}
             >
               {addingWord ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Add'}
             </Button>
           </div>
+
+          {/* Paste bulk words */}
+          <PasteWordsList userProfile={userProfile} onWordsAdded={() => queryClient.invalidateQueries({ queryKey: ['wordRatings'] })} />
         </div>
 
         {/* Session Flashcards Section */}
