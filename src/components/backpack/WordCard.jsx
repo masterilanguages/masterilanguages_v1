@@ -201,8 +201,8 @@ export default function WordCard({
           </p>
         )}
 
-        {showingHebrew && showTransliteration && (
-          <p className="text-stone-500 text-sm text-center font-medium">
+        {showingHebrew && !showHebrew && showTransliteration && (
+          <p className="text-cyan-600 font-bold text-base text-center">
             {word.phonetic || word.word}
           </p>
         )}
