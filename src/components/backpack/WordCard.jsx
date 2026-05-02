@@ -83,8 +83,9 @@ function SentenceWords({ words, onAddToBackpack, showHebrew = true, showTranslit
 export default function WordCard({
   word,
   showAllEnglish,
-  showHebrew = true,
-  showTransliteration = true,
+  showHebrew: showHebrewProp = true,
+  showTransliteration: showTransliterationProp = true,
+  onScriptToggle,
   isContentEditable,
   mnemonicExplanations,
   setMnemonicExplanations,
@@ -105,6 +106,17 @@ export default function WordCard({
 }) {
   const [revealed, setRevealed] = useState(false);
   const [regeneratingImage, setRegeneratingImage] = useState(false);
+  const [localScript, setLocalScript] = useState(null); // null = use parent prop
+
+  const showHebrew = localScript !== null ? localScript === 'hebrew' : showHebrewProp;
+  const showTransliteration = localScript !== null ? localScript === 'translit' : showTransliterationProp;
+
+  const handleScriptToggle = (e) => {
+    e.stopPropagation();
+    const next = showHebrew ? 'translit' : 'hebrew';
+    setLocalScript(next);
+    if (onScriptToggle) onScriptToggle(next);
+  };
 
   const regenerateImageFromDescription = async (description) => {
     setRegeneratingImage(true);
@@ -150,6 +162,14 @@ export default function WordCard({
         className="h-40 bg-stone-100 flex items-center justify-center overflow-hidden relative cursor-pointer select-none"
         onClick={() => setRevealed(r => !r)}
       >
+        {/* Script toggle button — top right */}
+        <button
+          onClick={handleScriptToggle}
+          className="absolute top-1.5 right-1.5 z-10 px-1.5 py-0.5 rounded bg-white/80 border border-stone-200 text-[9px] font-bold text-stone-500 hover:bg-white hover:text-stone-700 transition-all leading-none"
+          title={showHebrew ? "Switch to transliteration" : "Switch to Hebrew"}
+        >
+          {showHebrew ? 'א' : 'abc'}
+        </button>
         {regeneratingImage && (
           <div className="absolute inset-0 z-10 bg-white/70 flex flex-col items-center justify-center gap-1">
             <Loader2 className="w-5 h-5 animate-spin text-purple-400" />
