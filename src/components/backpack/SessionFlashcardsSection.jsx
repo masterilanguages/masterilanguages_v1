@@ -47,62 +47,58 @@ export default function SessionFlashcardsSection({ userProfile, onSessionSelect 
   const extractWordsFromSession = async (day) => {
     setLoadingSession(prev => ({ ...prev, [day.id]: true }));
 
-    // Gather all transcripts for this session's content
-    const transcriptParts = [];
+    let words = [];
 
     for (const subsection of (day.subsections || [])) {
       const videoId = subsection.video_id;
       if (videoId) {
-        // Find matching MediaLibrary entry
         const media = mediaLibrary.find(m => m.video_id === videoId);
-        if (media?.transcript_phonetics) {
-          transcriptParts.push(media.transcript_phonetics);
+        // Use pre-stored vocab words if available (no AI call needed)
+        if (media?.session_vocab_words?.length) {
+          words = [...words, ...media.session_vocab_words];
         } else if (media?.processed_transcript?.length) {
-          const text = media.processed_transcript.map(t => t.hebrew || t.text || '').join(' ');
-          if (text.trim()) transcriptParts.push(text);
+          // Fall back to AI extraction if no pre-stored words
+          try {
+            const text = media.processed_transcript.map(t => t.hebrew || t.transliteration || t.text || '').join(' ');
+            if (text.trim()) {
+              const lang = media.language || userProfile?.language || 'hebrew';
+              const langCap = lang.charAt(0).toUpperCase() + lang.slice(1);
+              const result = await base44.integrations.Core.InvokeLLM({
+                prompt: `Extract 8-12 important vocabulary words from this ${langCap} transcript. Only meaningful content words. Transcript: "${text.slice(0, 3000)}". Return JSON with a "words" array, each: { phonetic: Latin transliteration, translation: English (1-4 words), hebrew: native script }.`,
+                response_json_schema: {
+                  type: 'object',
+                  properties: {
+                    words: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          phonetic: { type: 'string' },
+                          translation: { type: 'string' },
+                          hebrew: { type: 'string' }
+                        }
+                      }
+                    }
+                  }
+                }
+              });
+              words = [...words, ...(result?.words || [])];
+            }
+          } catch (e) {
+            console.error('Failed to extract words', e);
+          }
         }
       }
     }
 
-    let words = [];
-
-    if (transcriptParts.length > 0) {
-      try {
-        const combinedText = transcriptParts.join('\n').slice(0, 3000); // limit tokens
-        const result = await base44.integrations.Core.InvokeLLM({
-          prompt: `From this Hebrew script/transcript, extract the 8-12 most important vocabulary words a learner should know.
-
-TRANSCRIPT:
-${combinedText}
-
-Return JSON with a "words" array. Each item: { phonetic: Latin transliteration, translation: English meaning (1-4 words), hebrew: Hebrew script }. Only include unique, meaningful words (no articles or tiny filler words).`,
-          response_json_schema: {
-            type: 'object',
-            properties: {
-              words: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    phonetic: { type: 'string' },
-                    translation: { type: 'string' },
-                    hebrew: { type: 'string' },
-                  }
-                }
-              }
-            }
-          }
-        });
-        words = result?.words || [];
-      } catch (e) {
-        console.error('Failed to extract words', e);
-      }
-    }
-
-    // Fallback: if no transcript, prompt LLM to infer from session context
-    if (words.length === 0) {
-      words = []; // show empty state
-    }
+    // Deduplicate by phonetic
+    const seen = new Set();
+    words = words.filter(w => {
+      const key = (w.phonetic || w.hebrew || '').toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
 
     setSessionWords(prev => ({ ...prev, [day.id]: words }));
     setLoadingSession(prev => ({ ...prev, [day.id]: false }));

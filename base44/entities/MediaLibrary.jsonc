@@ -1,0 +1,164 @@
+{
+  "name": "MediaLibrary",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Video title"
+    },
+    "language": {
+      "type": "string",
+      "enum": [
+        "hebrew",
+        "english",
+        "spanish",
+        "french",
+        "portuguese",
+        "italian"
+      ],
+      "description": "Language of the video"
+    },
+    "video_url": {
+      "type": "string",
+      "description": "YouTube URL or video link"
+    },
+    "video_id": {
+      "type": "string",
+      "description": "Unique video identifier (YouTube ID or custom)"
+    },
+    "topics": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "Religion / Spirituality",
+          "Sports / Fitness",
+          "Cooking / Food",
+          "Nutrition",
+          "Health / Wellness",
+          "Meditation / Mindfulness",
+          "Music",
+          "Travel",
+          "Culture",
+          "Education / Learning",
+          "Business / Career",
+          "Personal Growth",
+          "Relationships",
+          "News / Current Events"
+        ]
+      },
+      "default": [],
+      "description": "Video topics (multi-select)"
+    },
+    "difficulty_level": {
+      "type": "string",
+      "enum": [
+        "Beginner",
+        "Intermediate",
+        "Advanced",
+        "All"
+      ],
+      "default": "All",
+      "description": "Content difficulty level"
+    },
+    "duration_minutes": {
+      "type": "number",
+      "description": "Video duration in minutes"
+    },
+    "tags": {
+      "type": "string",
+      "description": "Comma-separated keywords"
+    },
+    "accent_region": {
+      "type": "string",
+      "description": "Accent or regional dialect"
+    },
+    "default_day": {
+      "type": "number",
+      "description": "Default day number (1-100) when this video appears in user's day list"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Active/inactive status"
+    },
+    "thumbnail_url": {
+      "type": "string",
+      "description": "Video thumbnail image"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Admin/coach notes"
+    },
+    "transcript_phonetics": {
+      "type": "string",
+      "description": "Hebrew phonetic transcript input"
+    },
+    "processed_transcript": {
+      "type": "array",
+      "description": "Processed transcript with Hebrew, transliteration, and English",
+      "items": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "hebrew": {
+            "type": "string"
+          },
+          "transliteration": {
+            "type": "string"
+          },
+          "english": {
+            "type": "string"
+          },
+          "start": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "session_vocab_words": {
+      "type": "array",
+      "description": "Pre-extracted vocab words from transcript for flashcard sessions",
+      "items": {
+        "type": "object",
+        "properties": {
+          "phonetic": {
+            "type": "string"
+          },
+          "translation": {
+            "type": "string"
+          },
+          "hebrew": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "title",
+    "language",
+    "video_url",
+    "video_id"
+  ],
+  "security": {
+    "create": [
+      "admin",
+      "coach"
+    ],
+    "read": [
+      "user",
+      "admin",
+      "coach"
+    ],
+    "update": [
+      "admin",
+      "coach"
+    ],
+    "delete": [
+      "admin"
+    ]
+  }
+}

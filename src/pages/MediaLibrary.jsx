@@ -268,6 +268,42 @@ export default function MediaLibrary() {
     },
   });
 
+  // Helper: extract vocab words from processed transcript and store on the MediaLibrary record
+  const extractAndStoreVocabWords = async (videoId, processedTranscript, language) => {
+    try {
+      const fullText = processedTranscript.map(s => s.transliteration || s.hebrew || s.text || '').join(' ');
+      if (!fullText.trim()) return;
+      const lang = language || userProfile?.language || 'hebrew';
+      const langCap = lang.charAt(0).toUpperCase() + lang.slice(1);
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Extract 8-12 important vocabulary words from this ${langCap} learning transcript. Only meaningful content words (nouns, verbs, adjectives). Transcript: "${fullText.slice(0, 3000)}". Return JSON with a "words" array, each item: { phonetic: Latin transliteration, translation: English meaning (1-4 words), hebrew: native script }.`,
+        response_json_schema: {
+          type: 'object',
+          properties: {
+            words: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  phonetic: { type: 'string' },
+                  translation: { type: 'string' },
+                  hebrew: { type: 'string' }
+                }
+              }
+            }
+          }
+        }
+      });
+      const words = result?.words || [];
+      if (words.length > 0) {
+        await base44.entities.MediaLibrary.update(videoId, { session_vocab_words: words });
+        queryClient.invalidateQueries({ queryKey: ['mediaLibrary'] });
+      }
+    } catch (e) {
+      console.error('Failed to extract vocab words:', e);
+    }
+  };
+
   const saveTranscriptEdit = async (segmentIdx, field, value) => {
     if (!selectedVideo) return;
     setTranscript(prev => {
@@ -599,6 +635,10 @@ Keep natural sentence breaks. Return a JSON object with a "transcript" array.`,
 
     if (editingVideo) {
       updateVideoMutation.mutate({ id: editingVideo.id, data });
+      // If a transcript was just processed, extract vocab words
+      if (processedTranscript?.length) {
+        extractAndStoreVocabWords(editingVideo.id, processedTranscript, data.language);
+      }
     } else {
       const created = await base44.entities.MediaLibrary.create(data);
       queryClient.invalidateQueries({ queryKey: ['mediaLibrary'] });
@@ -845,6 +885,8 @@ For each segment:
       setTranscript(processedSegments);
       setPastedTranscript("");
       toast.success("Transcript processed!");
+      // Auto-extract vocab words for session flashcards
+      extractAndStoreVocabWords(video.id, processedSegments, video.language);
     } catch (e) {
       console.error('Error:', e);
       toast.error(e.message || "Failed to process");
@@ -976,6 +1018,8 @@ For each segment:
 
       setTranscript(processedSegments);
       toast.success("Transcript generated!");
+      // Auto-extract vocab words for session flashcards
+      extractAndStoreVocabWords(video.id, processedSegments, video.language);
       } catch (timeoutError) {
         toast.dismiss(statusToast);
         console.error('Timeout or fetch error:', timeoutError);
