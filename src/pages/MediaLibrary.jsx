@@ -1128,8 +1128,8 @@ For each segment:
       return;
     }
 
-    // No saved transcript found
-    setLoadingTranscript(false);
+    // No saved transcript found — auto-generate from YouTube
+    generateTranscriptFromYouTube(video);
   };
 
   const extractVocabFromTranscript = async (video, transcriptSegments) => {
