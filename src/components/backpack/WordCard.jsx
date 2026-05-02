@@ -201,6 +201,12 @@ export default function WordCard({
           </p>
         )}
 
+        {showingHebrew && showTransliteration && (
+          <p className="text-stone-500 text-sm text-center font-medium">
+            {word.phonetic || word.word}
+          </p>
+        )}
+
         {showingEnglish && (
           <p className="text-stone-700 font-semibold text-base text-center">
             <EditableWord
