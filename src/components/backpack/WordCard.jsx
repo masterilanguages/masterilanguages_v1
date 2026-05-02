@@ -6,6 +6,7 @@ import EditableWord from "../learning/EditableWord";
 function SentenceWords({ words, onAddToBackpack, showHebrew = true, showTransliteration = true }) {
   const [activeIndex, setActiveIndex] = useState(null);
   const [editingIndex, setEditingIndex] = useState(null);
+  const [editingWord, setEditingWord] = useState('');
   const [editingMeaning, setEditingMeaning] = useState('');
 
   if (!words?.length) return null;
@@ -54,16 +55,21 @@ function SentenceWords({ words, onAddToBackpack, showHebrew = true, showTranslit
         <div className="flex items-center justify-center gap-1 py-1">
           {editingIndex === activeIndex ? (
             <span className="flex items-center gap-1 bg-cyan-50 border border-cyan-200 rounded px-1.5 py-0.5">
-              <span className="text-[10px] font-semibold text-cyan-700 border-r border-cyan-200 pr-1">{words[activeIndex].word}</span>
               <input
                 autoFocus
+                value={editingWord}
+                onChange={e => setEditingWord(e.target.value)}
+                placeholder="transliteration..."
+                className="text-[10px] font-semibold text-cyan-700 w-20 outline-none bg-transparent border-r border-cyan-200 pr-1"
+              />
+              <input
                 value={editingMeaning}
                 onChange={e => setEditingMeaning(e.target.value)}
                 placeholder="meaning..."
                 className="text-[10px] text-stone-600 w-20 outline-none bg-transparent"
               />
               <button
-                onClick={() => { onAddToBackpack(words[activeIndex].word, editingMeaning); setActiveIndex(null); setEditingIndex(null); }}
+                onClick={() => { onAddToBackpack(editingWord || words[activeIndex].word, editingMeaning); setActiveIndex(null); setEditingIndex(null); }}
                 className="text-green-500 hover:text-green-700"
               ><Plus className="w-3 h-3" /></button>
               <button onClick={() => setEditingIndex(null)} className="text-stone-300 hover:text-stone-500"><X className="w-3 h-3" /></button>
@@ -74,9 +80,9 @@ function SentenceWords({ words, onAddToBackpack, showHebrew = true, showTranslit
                 {words[activeIndex].word}
               </span>
               <button
-                onClick={(e) => { e.stopPropagation(); setEditingIndex(activeIndex); setEditingMeaning(words[activeIndex].meaning || ''); }}
+                onClick={(e) => { e.stopPropagation(); setEditingIndex(activeIndex); setEditingWord(words[activeIndex].word || ''); setEditingMeaning(words[activeIndex].meaning || ''); }}
                 className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-stone-100 hover:bg-stone-200 text-stone-500 transition-all"
-                title="Edit meaning"
+                title="Edit transliteration & meaning"
               >
                 <Pencil className="w-3 h-3" />
               </button>
