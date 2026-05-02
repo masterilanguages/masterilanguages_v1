@@ -693,6 +693,15 @@ Return JSON with: translation (English, 1-4 words), phonetic (clean Latin transl
     }
 
     const finalTranslation = translation; // capture before form clear
+    // Deduplicate check
+    const existingCheck = await base44.entities.Word.filter({ phonetic });
+    if (existingCheck.length > 0) {
+      toast.info(`"${phonetic}" is already in your backpack!`);
+      setAddWordForm({ phonetic: '', translation: '' });
+      setAddingWord(false);
+      return;
+    }
+
     const isVerb = /^l[aeiou]/i.test(phonetic);
     const newWord = await createWordMutation.mutateAsync({
       word: hebrewWord || phonetic,

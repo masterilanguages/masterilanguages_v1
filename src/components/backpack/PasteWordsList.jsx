@@ -73,12 +73,15 @@ export default function PasteWordsList({ userProfile, onWordsAdded }) {
       }
     }
 
-    // Create all words at level 0
+    // Create all words at level 0, skipping duplicates
     let added = 0;
+    let skipped = 0;
     const lang = userProfile?.language || "hebrew";
     for (const w of parsed) {
       if (!w.phonetic) continue;
       try {
+        const existing = await base44.entities.Word.filter({ phonetic: w.phonetic });
+        if (existing.length > 0) { skipped++; continue; }
         await base44.entities.Word.create({
           word: w.hebrew || w.phonetic,
           translation: w.translation || w.phonetic,
@@ -95,7 +98,8 @@ export default function PasteWordsList({ userProfile, onWordsAdded }) {
       }
     }
 
-    toast.success(`${added} word${added !== 1 ? "s" : ""} added to New cards! ✨`);
+    const skippedMsg = skipped > 0 ? ` (${skipped} duplicate${skipped > 1 ? "s" : ""} skipped)` : "";
+    toast.success(`${added} word${added !== 1 ? "s" : ""} added to New cards!${skippedMsg} ✨`);
     setText("");
     setOpen(false);
     onWordsAdded?.();
