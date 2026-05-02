@@ -920,7 +920,7 @@ Return JSON:
             <div className="text-center py-12">
               <p className="text-stone-400 text-lg">No words at this level yet!</p>
             </div>
-          ) : (activeTab === 'level0' || viewMode === 'single') ? (() => {
+          ) : activeTab !== 'level0' ? (() => {
             const words = getDisplayWords();
             const idx = Math.min(singleCardIndex, words.length - 1);
             const word = words[idx];
