@@ -230,15 +230,27 @@ Return JSON with:
               className="w-full rounded-3xl overflow-hidden select-none shadow-lg"
               style={{ background: '#ffffff', border: '1px solid #e5e7eb' }}
             >
-              {/* Pause button top-right of card */}
-              <div className="flex justify-end px-3 pt-3">
-                <button
-                  onClick={() => setConfirmLeave(true)}
-                  className="text-stone-300 hover:text-stone-600 transition-colors p-1.5 rounded-full hover:bg-stone-100"
-                  title="Exit session"
-                >
-                  <Pause className="w-4 h-4" />
-                </button>
+              {/* Top-right controls: Hebrew/translit toggle + pause */}
+              <div className="flex justify-between items-center px-3 pt-3">
+                <div />
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setShowHebrew(v => !v); }}
+                    className={`px-2 py-1 rounded-lg text-xs font-bold transition-all border ${
+                      showHebrew ? 'bg-cyan-50 border-cyan-200 text-cyan-600' : 'bg-stone-50 border-stone-200 text-stone-400'
+                    }`}
+                    title={showHebrew ? "Switch to transliteration" : "Switch to Hebrew"}
+                  >
+                    {showHebrew ? 'א' : 'abc'}
+                  </button>
+                  <button
+                    onClick={() => setConfirmLeave(true)}
+                    className="text-stone-300 hover:text-stone-600 transition-colors p-1.5 rounded-full hover:bg-stone-100"
+                    title="Exit session"
+                  >
+                    <Pause className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
               {/* Approved badge - always shown at top if approved */}
@@ -431,17 +443,6 @@ Return JSON with:
                     title="New mnemonic"
                   >
                     {currentMnemonic?.loading ? <Loader2 className="w-3 h-3 animate-spin" /> : '🎨'}
-                  </button>
-
-                  {/* Hebrew toggle */}
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setShowHebrew(v => !v); }}
-                    className={`px-2 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
-                      showHebrew ? 'bg-cyan-50 border-cyan-200 text-cyan-600' : 'bg-white border-stone-200 text-stone-300'
-                    }`}
-                    title="Toggle Hebrew"
-                  >
-                    {showHebrew ? '👁 HE' : '🙈 HE'}
                   </button>
 
                   {/* English toggle */}
