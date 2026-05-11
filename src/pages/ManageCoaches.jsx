@@ -141,6 +141,8 @@ export default function ManageCoaches() {
 
   const [deletedUserIds, setDeletedUserIds] = useState(new Set());
   const [viewingQuestionnaire, setViewingQuestionnaire] = useState(null); // FluentLead object
+  const [viewingAgreement, setViewingAgreement] = useState(null); // { user, profile } object
+  const [agreementText, setAgreementText] = useState("");
 
   const deleteUserMutation = useMutation({
     mutationFn: async (user) => {
@@ -341,7 +343,7 @@ export default function ManageCoaches() {
                     )}
                     <Button
                       size="sm"
-                      onClick={(e) => { e.stopPropagation(); toast.info("Agreement feature coming soon"); }}
+                      onClick={(e) => { e.stopPropagation(); setViewingAgreement({ user, profile }); setAgreementText(profile?.agreement_notes || ""); }}
                       className="bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/30 text-xs"
                       variant="ghost"
                     >
@@ -604,6 +606,42 @@ export default function ManageCoaches() {
               ))}
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Agreement Modal */}
+      <Dialog open={!!viewingAgreement} onOpenChange={() => setViewingAgreement(null)}>
+        <DialogContent className="bg-slate-900 border-white/20 text-white max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ClipboardList className="w-5 h-5 text-purple-400" />
+              Agreement — {viewingAgreement?.user?.full_name || viewingAgreement?.user?.email}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 mt-2">
+            <textarea
+              value={agreementText}
+              onChange={(e) => setAgreementText(e.target.value)}
+              placeholder="Write the coaching agreement here..."
+              className="w-full h-48 p-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-white/30 text-sm resize-none outline-none focus:border-purple-400/50"
+            />
+            <div className="flex gap-2">
+              <Button onClick={() => setViewingAgreement(null)} variant="outline" className="flex-1 border-white/20 text-white">Cancel</Button>
+              <Button
+                onClick={async () => {
+                  if (viewingAgreement?.profile) {
+                    await base44.entities.UserProfile.update(viewingAgreement.profile.id, { agreement_notes: agreementText });
+                  }
+                  queryClient.invalidateQueries({ queryKey: ['allProfiles'] });
+                  toast.success("Agreement saved!");
+                  setViewingAgreement(null);
+                }}
+                className="flex-1 bg-purple-600 hover:bg-purple-700"
+              >
+                Save Agreement
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 
