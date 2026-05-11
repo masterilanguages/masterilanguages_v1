@@ -24,6 +24,7 @@ export default function ManageCoaches() {
   const [newUserEmail, setNewUserEmail] = useState("");
   const [newUserRole, setNewUserRole] = useState("user");
   const [expandedPerson, setExpandedPerson] = useState(null);
+  const [expandedSection, setExpandedSection] = useState({}); // { [userId]: 'questionnaire'|'onboarding'|'agreement'|null }
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -143,8 +144,6 @@ export default function ManageCoaches() {
   });
 
   const [deletedUserIds, setDeletedUserIds] = useState(new Set());
-  const [viewingQuestionnaire, setViewingQuestionnaire] = useState(null); // FluentLead object
-  const [viewingAgreement, setViewingAgreement] = useState(null); // { user, profile } object
   const [agreementText, setAgreementText] = useState("");
 
   const deleteUserMutation = useMutation({
@@ -288,6 +287,12 @@ export default function ManageCoaches() {
             const isExpanded = expandedPerson === user.id;
             const allNoteWords = [...new Set(userNotes.flatMap(n => n.words || []))];
 
+            const activeSection = expandedSection[user.id] || null;
+            const toggleSection = (e, section) => {
+              e.stopPropagation();
+              setExpandedSection(prev => ({ ...prev, [user.id]: prev[user.id] === section ? null : section }));
+            };
+
             return (
               <div key={user.id} className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden">
                 {/* Row */}
@@ -295,8 +300,8 @@ export default function ManageCoaches() {
                   className="flex items-center justify-between p-4 cursor-pointer hover:bg-white/5 transition-all"
                   onClick={() => setExpandedPerson(isExpanded ? null : user.id)}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-lg font-bold text-white">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-lg font-bold text-white flex-shrink-0">
                       {(user.full_name || user.email || "?")[0].toUpperCase()}
                     </div>
                     <div>
@@ -309,49 +314,35 @@ export default function ManageCoaches() {
                     {profile?.language && (
                       <span className="text-xs text-white/40 bg-white/5 px-2 py-0.5 rounded-full">{profile.language}</span>
                     )}
-                    {userNotes.length > 0 && (
-                      <span className="text-xs text-yellow-300/70 flex items-center gap-0.5">
-                        <StickyNote className="w-3 h-3" />{userNotes.length}
-                      </span>
-                    )}
-                    {lead ? (
-                      <span className="text-xs text-green-400/80 flex items-center gap-0.5 bg-green-500/10 px-2 py-0.5 rounded-full">
-                        <FileText className="w-3 h-3" /> Questionnaire ✓
-                      </span>
-                    ) : (
-                      <span className="text-xs text-white/30 flex items-center gap-0.5">
-                        <FileText className="w-3 h-3" /> No questionnaire
-                      </span>
-                    )}
-                    {profile?.onboarding_completed ? (
-                      <span className="text-xs text-emerald-400/80 flex items-center gap-0.5 bg-emerald-500/10 px-2 py-0.5 rounded-full">
-                        <CheckCircle className="w-3 h-3" /> Onboarding ✓
-                      </span>
-                    ) : (
-                      <span className="text-xs text-orange-400/70 flex items-center gap-0.5 bg-orange-500/10 px-2 py-0.5 rounded-full">
-                        <Globe className="w-3 h-3" /> Onboarding pending
-                      </span>
-                    )}
                   </div>
                   <div className="flex items-center gap-2">
-                    {lead && (
-                      <Button
-                        size="sm"
-                        onClick={(e) => { e.stopPropagation(); setViewingQuestionnaire(lead); }}
-                        className="bg-green-500/20 hover:bg-green-500/30 text-green-300 border border-green-500/30 text-xs"
-                        variant="ghost"
-                      >
-                        <FileText className="w-3.5 h-3.5 mr-1" /> Questionnaire
-                      </Button>
-                    )}
-                    <Button
-                      size="sm"
-                      onClick={(e) => { e.stopPropagation(); setViewingAgreement({ user, profile }); setAgreementText(profile?.agreement_notes || ""); }}
-                      className="bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/30 text-xs"
-                      variant="ghost"
+                    {/* Questionnaire dropdown toggle */}
+                    <button
+                      onClick={(e) => toggleSection(e, 'questionnaire')}
+                      className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border transition-all ${lead ? 'border-green-500/40 bg-green-500/10 text-green-300' : 'border-white/10 bg-white/5 text-white/40'} ${activeSection === 'questionnaire' ? 'ring-1 ring-green-400/40' : ''}`}
                     >
-                      <ClipboardList className="w-3.5 h-3.5 mr-1" /> Agreement
-                    </Button>
+                      {lead ? <CheckCircle className="w-3.5 h-3.5" /> : <FileText className="w-3.5 h-3.5" />}
+                      <span>Questionnaire</span>
+                      <ChevronDown className={`w-3 h-3 transition-transform ${activeSection === 'questionnaire' ? 'rotate-180' : ''}`} />
+                    </button>
+                    {/* Onboarding dropdown toggle */}
+                    <button
+                      onClick={(e) => toggleSection(e, 'onboarding')}
+                      className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border transition-all ${profile?.onboarding_completed ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300' : 'border-orange-500/30 bg-orange-500/5 text-orange-300/70'} ${activeSection === 'onboarding' ? 'ring-1 ring-emerald-400/40' : ''}`}
+                    >
+                      {profile?.onboarding_completed ? <CheckCircle className="w-3.5 h-3.5" /> : <Globe className="w-3.5 h-3.5" />}
+                      <span>Onboarding</span>
+                      <ChevronDown className={`w-3 h-3 transition-transform ${activeSection === 'onboarding' ? 'rotate-180' : ''}`} />
+                    </button>
+                    {/* Agreement dropdown toggle */}
+                    <button
+                      onClick={(e) => toggleSection(e, 'agreement')}
+                      className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border transition-all ${profile?.agreement_notes ? 'border-purple-500/40 bg-purple-500/10 text-purple-300' : 'border-white/10 bg-white/5 text-white/40'} ${activeSection === 'agreement' ? 'ring-1 ring-purple-400/40' : ''}`}
+                    >
+                      {profile?.agreement_notes ? <CheckCircle className="w-3.5 h-3.5" /> : <ClipboardList className="w-3.5 h-3.5" />}
+                      <span>Agreement</span>
+                      <ChevronDown className={`w-3 h-3 transition-transform ${activeSection === 'agreement' ? 'rotate-180' : ''}`} />
+                    </button>
                     {user.role !== 'admin' && (
                       <Button
                         size="sm"
@@ -366,70 +357,105 @@ export default function ManageCoaches() {
                   </div>
                 </div>
 
-                {/* Expanded panel */}
-                {isExpanded && (
-                  <div className="border-t border-white/10 px-4 py-4 space-y-4">
-
-                    {/* Profile info */}
-                    {profile && (
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                {/* Inline section dropdowns */}
+                {activeSection === 'questionnaire' && (
+                  <div className="border-t border-green-500/20 bg-green-500/5 px-4 py-3" onClick={e => e.stopPropagation()}>
+                    {lead ? (
+                      <div className="space-y-2">
                         {[
-                          { label: 'Day', value: profile.current_day || 1 },
-                          { label: 'Streak', value: `${profile.daily_streak || 0} 🔥` },
-                          { label: 'XP', value: profile.xp || 0 },
-                          { label: 'Difficulty', value: profile.difficulty_level || '—' },
-                        ].map(stat => (
-                          <div key={stat.label} className="bg-white/5 rounded-lg p-2 text-center">
-                            <p className="text-white/40 text-xs">{stat.label}</p>
-                            <p className="text-white font-bold">{stat.value}</p>
+                          { label: 'Language', value: lead.language },
+                          { label: 'Current Level', value: lead.current_level },
+                          { label: 'Goal Level', value: lead.goal_level },
+                          { label: 'Motivation', value: lead.motivation },
+                          { label: 'Why Important', value: lead.why_important },
+                          { label: 'Frustration', value: lead.frustration },
+                          { label: 'Tried Before', value: lead.tried_before },
+                          { label: "Why Didn't Work", value: lead.why_didnt_work },
+                          { label: 'Daily Time', value: lead.daily_time },
+                          { label: 'Ready to Commit', value: lead.ready_to_commit },
+                          { label: 'Phone', value: lead.phone },
+                          { label: 'Email', value: lead.email },
+                        ].filter(r => r.value).map(r => (
+                          <div key={r.label} className="flex gap-2">
+                            <span className="text-white/40 text-xs w-32 flex-shrink-0">{r.label}:</span>
+                            <span className="text-white text-xs">{r.value}</span>
                           </div>
                         ))}
                       </div>
+                    ) : (
+                      <p className="text-white/40 text-xs">No questionnaire submitted yet.</p>
                     )}
+                  </div>
+                )}
 
-                    {/* Questionnaire */}
-                    <div className="flex items-center gap-3 flex-wrap">
-                      {lead ? (
-                        <Button
-                          size="sm"
-                          onClick={() => setViewingQuestionnaire(lead)}
-                          className="bg-green-500/20 hover:bg-green-500/30 text-green-300 border border-green-500/30 text-xs"
-                          variant="ghost"
-                        >
-                          <FileText className="w-3.5 h-3.5 mr-1" /> View Questionnaire
-                        </Button>
+                {activeSection === 'onboarding' && (
+                  <div className="border-t border-emerald-500/20 bg-emerald-500/5 px-4 py-3 flex items-center justify-between" onClick={e => e.stopPropagation()}>
+                    <div>
+                      {profile?.onboarding_completed ? (
+                        <p className="text-emerald-400 text-sm flex items-center gap-1">
+                          <CheckCircle className="w-4 h-4" /> Completed{profile.onboarding_completed_at ? ` on ${new Date(profile.onboarding_completed_at).toLocaleDateString()}` : ''}
+                        </p>
                       ) : (
-                        <span className="text-white/30 text-xs flex items-center gap-1"><FileText className="w-3.5 h-3.5" /> No questionnaire filled out yet</span>
+                        <p className="text-orange-400/80 text-sm">Not yet completed</p>
+                      )}
+                      {profile && (
+                        <div className="flex gap-3 mt-1">
+                          {[
+                            { label: 'Day', value: profile.current_day || 1 },
+                            { label: 'Streak', value: `${profile.daily_streak || 0}🔥` },
+                            { label: 'XP', value: profile.xp || 0 },
+                          ].map(s => (
+                            <span key={s.label} className="text-white/40 text-xs">{s.label}: <span className="text-white/70">{s.value}</span></span>
+                          ))}
+                        </div>
                       )}
                     </div>
+                    {user.role !== 'admin' && (
+                      <Button
+                        size="sm"
+                        onClick={() => { localStorage.setItem('admin_managing_user', user.email); window.location.href = createPageUrl("LanguageSelect"); }}
+                        className="bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/30 text-xs"
+                        variant="ghost"
+                      >
+                        <Globe className="w-3.5 h-3.5 mr-1" /> Start Onboarding
+                      </Button>
+                    )}
+                  </div>
+                )}
 
-                    {/* Onboarding status */}
-                    <div className="flex items-center gap-3 bg-white/5 rounded-xl p-3">
-                      <Globe className="w-4 h-4 text-purple-400 flex-shrink-0" />
-                      <div className="flex-1">
-                        <p className="text-white/70 text-xs font-semibold mb-0.5">Onboarding</p>
-                        {profile?.onboarding_completed ? (
-                          <p className="text-emerald-400 text-xs flex items-center gap-1">
-                            <CheckCircle className="w-3 h-3" /> Completed {profile.onboarding_completed_at ? `on ${new Date(profile.onboarding_completed_at).toLocaleDateString()}` : ''}
-                          </p>
-                        ) : (
-                          <p className="text-orange-400/80 text-xs">Not yet completed</p>
-                        )}
-                      </div>
-                      {user.role !== 'admin' && (
-                        <Button
-                          size="sm"
-                          onClick={() => {
-                            localStorage.setItem('admin_managing_user', user.email);
-                            window.location.href = createPageUrl("LanguageSelect");
-                          }}
-                          className="bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/30 text-xs"
-                          variant="ghost"
-                        >
-                          <Globe className="w-3.5 h-3.5 mr-1" /> Start Onboarding
-                        </Button>
-                      )}
+                {activeSection === 'agreement' && (
+                  <div className="border-t border-purple-500/20 bg-purple-500/5 px-4 py-3 space-y-2" onClick={e => e.stopPropagation()}>
+                    <textarea
+                      defaultValue={profile?.agreement_notes || ""}
+                      onChange={(e) => setAgreementText(e.target.value)}
+                      onFocus={() => setAgreementText(profile?.agreement_notes || "")}
+                      placeholder="Write the coaching agreement here..."
+                      className="w-full h-28 p-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder:text-white/30 text-xs resize-none outline-none focus:border-purple-400/50"
+                    />
+                    <div className="flex justify-end">
+                      <Button
+                        size="sm"
+                        onClick={async () => {
+                          if (profile) {
+                            await base44.entities.UserProfile.update(profile.id, { agreement_notes: agreementText });
+                            queryClient.invalidateQueries({ queryKey: ['allProfiles'] });
+                            toast.success("Agreement saved!");
+                            setExpandedSection(prev => ({ ...prev, [user.id]: null }));
+                          } else {
+                            toast.error("No profile found for this user");
+                          }
+                        }}
+                        className="bg-purple-600 hover:bg-purple-700 text-xs h-7"
+                      >
+                        Save
+                      </Button>
                     </div>
+                  </div>
+                )}
+
+                {/* Expanded panel */}
+                {isExpanded && (
+                  <div className="border-t border-white/10 px-4 py-4 space-y-4">
 
                     {/* Coach / Students relationships */}
                     {myCoach && (
@@ -572,81 +598,6 @@ export default function ManageCoaches() {
           </div>
         )}
       </div>
-
-      {/* Questionnaire Modal */}
-      <Dialog open={!!viewingQuestionnaire} onOpenChange={() => setViewingQuestionnaire(null)}>
-        <DialogContent className="bg-slate-900 border-white/20 text-white max-w-lg max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <FileText className="w-5 h-5 text-green-400" />
-              Questionnaire — {viewingQuestionnaire?.first_name || viewingQuestionnaire?.email}
-            </DialogTitle>
-          </DialogHeader>
-          {viewingQuestionnaire && (
-            <div className="space-y-3 mt-2">
-              {[
-                { label: 'Language', value: viewingQuestionnaire.language },
-                { label: 'Current Level', value: viewingQuestionnaire.current_level },
-                { label: 'Goal Level', value: viewingQuestionnaire.goal_level },
-                { label: 'Motivation', value: viewingQuestionnaire.motivation },
-                { label: 'Why Important', value: viewingQuestionnaire.why_important },
-                { label: 'Frustration', value: viewingQuestionnaire.frustration },
-                { label: 'Tried Before', value: viewingQuestionnaire.tried_before },
-                { label: "Why Didn't Work", value: viewingQuestionnaire.why_didnt_work },
-                { label: 'Learning Duration', value: viewingQuestionnaire.learning_duration },
-                { label: 'Fluency Impact', value: viewingQuestionnaire.fluency_impact },
-                { label: 'Why Now', value: viewingQuestionnaire.why_now },
-                { label: 'Ready to Commit', value: viewingQuestionnaire.ready_to_commit },
-                { label: 'Daily Time', value: viewingQuestionnaire.daily_time },
-                { label: 'Ready to Move', value: viewingQuestionnaire.ready_to_move },
-                { label: 'Phone', value: viewingQuestionnaire.phone },
-                { label: 'Email', value: viewingQuestionnaire.email },
-              ].filter(row => row.value).map(row => (
-                <div key={row.label} className="bg-white/5 rounded-lg px-3 py-2">
-                  <p className="text-white/40 text-xs mb-0.5">{row.label}</p>
-                  <p className="text-white text-sm">{row.value}</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Agreement Modal */}
-      <Dialog open={!!viewingAgreement} onOpenChange={() => setViewingAgreement(null)}>
-        <DialogContent className="bg-slate-900 border-white/20 text-white max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <ClipboardList className="w-5 h-5 text-purple-400" />
-              Agreement — {viewingAgreement?.user?.full_name || viewingAgreement?.user?.email}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3 mt-2">
-            <textarea
-              value={agreementText}
-              onChange={(e) => setAgreementText(e.target.value)}
-              placeholder="Write the coaching agreement here..."
-              className="w-full h-48 p-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-white/30 text-sm resize-none outline-none focus:border-purple-400/50"
-            />
-            <div className="flex gap-2">
-              <Button onClick={() => setViewingAgreement(null)} variant="outline" className="flex-1 border-white/20 text-white">Cancel</Button>
-              <Button
-                onClick={async () => {
-                  if (viewingAgreement?.profile) {
-                    await base44.entities.UserProfile.update(viewingAgreement.profile.id, { agreement_notes: agreementText });
-                  }
-                  queryClient.invalidateQueries({ queryKey: ['allProfiles'] });
-                  toast.success("Agreement saved!");
-                  setViewingAgreement(null);
-                }}
-                className="flex-1 bg-purple-600 hover:bg-purple-700"
-              >
-                Save Agreement
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Add User Dialog */}
       <Dialog open={showAddUserDialog} onOpenChange={setShowAddUserDialog}>
