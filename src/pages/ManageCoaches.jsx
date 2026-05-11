@@ -398,17 +398,7 @@ export default function ManageCoaches() {
                       ) : (
                         <p className="text-orange-400/80 text-sm">Not yet completed</p>
                       )}
-                      {profile && (
-                        <div className="flex gap-3 mt-1">
-                          {[
-                            { label: 'Day', value: profile.current_day || 1 },
-                            { label: 'Streak', value: `${profile.daily_streak || 0}🔥` },
-                            { label: 'XP', value: profile.xp || 0 },
-                          ].map(s => (
-                            <span key={s.label} className="text-white/40 text-xs">{s.label}: <span className="text-white/70">{s.value}</span></span>
-                          ))}
-                        </div>
-                      )}
+  
                     </div>
                     {user.role !== 'admin' && (
                       <Button
