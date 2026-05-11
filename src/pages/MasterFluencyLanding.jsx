@@ -31,7 +31,7 @@ function MicGlow({ active = true }) {
         <>
           <motion.div
             className="absolute rounded-full"
-            style={{ background: "radial-gradient(circle, #3B82F620 0%, transparent 70%)", width: 120, height: 120 }}
+            style={{ background: "radial-gradient(circle, #2563EB20 0%, transparent 70%)", width: 120, height: 120 }}
             animate={{ scale: [1, 1.4, 1], opacity: [0.5, 0.2, 0.5] }}
             transition={{ duration: 2, repeat: Infinity }}
           />
@@ -45,7 +45,7 @@ function MicGlow({ active = true }) {
       )}
       <div
         className="relative z-10 w-16 h-16 rounded-full flex items-center justify-center"
-        style={{ background: "linear-gradient(135deg, #3B82F6, #22D3EE)", boxShadow: "0 0 30px #3B82F640" }}
+        style={{ background: "linear-gradient(135deg, #1D4ED8, #3B82F6)", boxShadow: "0 0 30px rgba(29,78,216,0.4)" }}
       >
         <Mic2 className="w-7 h-7 text-white" />
       </div>
@@ -116,7 +116,7 @@ export default function MasterFluencyLanding() {
   ];
 
   return (
-    <div style={{ background: "#0B0F1A", color: "#FFFFFF", fontFamily: "'Inter', system-ui, sans-serif", minHeight: "100vh" }}>
+    <div style={{ background: "#0A1628", color: "#FFFFFF", fontFamily: "'Inter', system-ui, sans-serif", minHeight: "100vh" }}>
 
       {/* ─── HERO ─────────────────────────────────────────────── */}
       <section className="relative min-h-screen flex items-center overflow-hidden">
@@ -131,20 +131,20 @@ export default function MasterFluencyLanding() {
         <div className="relative z-10 max-w-6xl mx-auto px-6 py-24 grid lg:grid-cols-2 gap-16 items-center">
           {/* Left */}
           <motion.div {...fadeUp} className="space-y-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-widest"
-              style={{ background: "rgba(59,130,246,0.1)", border: "1px solid rgba(59,130,246,0.3)", color: "#22D3EE" }}>
-              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-              Music-first Hebrew learning
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-widest"
+              style={{ background: "rgba(96,165,250,0.12)", border: "1px solid rgba(96,165,250,0.35)", color: "#93C5FD" }}>
+              <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: "#60A5FA" }} />
+              Music-first language learning
             </div>
 
             <h1 className="font-black leading-[1.08] tracking-tight" style={{ fontSize: "clamp(2.8rem, 6vw, 4.5rem)", fontFamily: "'Inter Tight', 'Inter', sans-serif" }}>
-              Learn Hebrew through music.<br />
-              <span style={{ background: "linear-gradient(135deg, #3B82F6, #22D3EE)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-                Then perform it.
+              Masteri Languages.<br />
+              <span style={{ background: "linear-gradient(135deg, #60A5FA, #93C5FD)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                Speak it. Perform it.
               </span>
             </h1>
 
-            <p style={{ color: "#A1A1AA", fontSize: "1.15rem", lineHeight: 1.75, maxWidth: 480 }}>
+            <p style={{ color: "#94A3B8", fontSize: "1.15rem", lineHeight: 1.75, maxWidth: 480 }}>
               Speak real Hebrew through songs, conversation, and repetition — then record your own version of the track.
             </p>
 
@@ -154,22 +154,22 @@ export default function MasterFluencyLanding() {
                 whileTap={{ scale: 0.97 }}
                 onClick={() => navigate("/SingingHome")}
                 className="px-8 py-4 rounded-xl font-bold text-white text-base flex items-center gap-2"
-                style={{ background: "linear-gradient(135deg, #3B82F6, #22D3EE)", boxShadow: "0 0 20px #3B82F630" }}
+                style={{ background: "linear-gradient(135deg, #2563EB, #60A5FA)", boxShadow: "0 0 20px #2563EB40" }}
               >
                 Start Singing <ChevronRight className="w-5 h-5" />
               </motion.button>
               <motion.button
-                whileHover={{ scale: 1.03, boxShadow: "0 0 20px rgba(255,255,255,0.1)" }}
+                whileHover={{ scale: 1.03, boxShadow: "0 0 20px rgba(96,165,250,0.12)" }}
                 whileTap={{ scale: 0.97 }}
                 onClick={() => navigate("/?lesson=intro")}
                 className="px-8 py-4 rounded-xl font-bold text-base"
-                style={{ border: "1px solid rgba(255,255,255,0.15)", color: "#A1A1AA", background: "transparent" }}
+                style={{ border: "1px solid rgba(96,165,250,0.25)", color: "#93C5FD", background: "transparent" }}
               >
                 Try First Lesson Free
               </motion.button>
             </div>
 
-            <p style={{ color: "#71717A", fontSize: "0.8rem" }}>No boring drills. No passive lessons. Just real speaking through music.</p>
+            <p style={{ color: "#64748B", fontSize: "0.8rem" }}>No boring drills. No passive lessons. Just real speaking through music.</p>
           </motion.div>
 
           {/* Right — Product Mockup */}
@@ -247,21 +247,21 @@ export default function MasterFluencyLanding() {
       <section className="py-24 px-6 max-w-6xl mx-auto">
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {[
-            { icon: Music, title: "Learn through real songs", desc: "Every lesson is a song you'll actually want to sing", accent: "#3B82F6" },
-            { icon: Volume2, title: "Speak from day one", desc: "No listening-only lessons. You speak immediately", accent: "#22D3EE" },
-            { icon: Mic2, title: "Record your voice", desc: "Your voice becomes part of the performance", accent: "#F59E0B" },
-            { icon: Award, title: "Actually remember", desc: "Music + repetition = real long-term memory", accent: "#22C55E" },
+            { icon: Music, title: "Learn through real songs", desc: "Every lesson is a song you'll actually want to sing", accent: "#60A5FA" },
+            { icon: Volume2, title: "Speak from day one", desc: "No listening-only lessons. You speak immediately", accent: "#93C5FD" },
+            { icon: Mic2, title: "Record your voice", desc: "Your voice becomes part of the performance", accent: "#BFDBFE" },
+            { icon: Award, title: "Actually remember", desc: "Music + repetition = real long-term memory", accent: "#7DD3FC" },
           ].map((card, i) => (
             <motion.div key={i} {...fadeUp} transition={{ ...fadeUp.transition, delay: i * 0.1 }}
-              className="group rounded-2xl p-6 transition-all duration-300 cursor-default"
-              style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)", backdropFilter: "blur(10px)" }}
-              whileHover={{ background: "rgba(255,255,255,0.04)", borderColor: `${card.accent}30` }}>
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-all duration-300 group-hover:scale-110"
-                style={{ background: `${card.accent}15`, border: `1px solid ${card.accent}30` }}>
-                <card.icon className="w-5 h-5" style={{ color: card.accent }} />
+              className="group rounded-xl p-5 transition-all duration-300 cursor-default inline-block w-full"
+              style={{ background: "rgba(30,58,138,0.3)", border: "1px solid rgba(96,165,250,0.15)", backdropFilter: "blur(10px)" }}
+              whileHover={{ background: "rgba(30,58,138,0.5)", borderColor: `${card.accent}40` }}>
+              <div className="inline-flex items-center justify-center rounded-lg mb-3 p-2 transition-all duration-300 group-hover:scale-110"
+                style={{ background: `rgba(96,165,250,0.12)`, border: `1px solid rgba(96,165,250,0.2)` }}>
+                <card.icon className="w-4 h-4" style={{ color: card.accent }} />
               </div>
-              <h3 className="font-bold text-white mb-2">{card.title}</h3>
-              <p style={{ color: "#71717A", fontSize: "0.875rem", lineHeight: 1.6 }}>{card.desc}</p>
+              <h3 className="font-bold text-white mb-1 text-sm">{card.title}</h3>
+              <p style={{ color: "#94A3B8", fontSize: "0.8rem", lineHeight: 1.6 }}>{card.desc}</p>
             </motion.div>
           ))}
         </div>
@@ -270,11 +270,11 @@ export default function MasterFluencyLanding() {
       {/* ─── HOW IT WORKS ─────────────────────────────────────── */}
       <section className="py-24 px-6 max-w-6xl mx-auto">
         <motion.div {...fadeUp} className="text-center mb-16">
-          <p style={{ color: "#3B82F6", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.15em", fontWeight: 600, marginBottom: 12 }}>The process</p>
+          <p style={{ color: "#93C5FD", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.15em", fontWeight: 600, marginBottom: 12 }}>The process</p>
           <h2 className="font-black tracking-tight" style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", fontFamily: "'Inter Tight', 'Inter', sans-serif" }}>
             Six steps to fluency
           </h2>
-          <p style={{ color: "#71717A", marginTop: 16, fontSize: "1.05rem" }}>Each lesson is a complete musical experience</p>
+          <p style={{ color: "#94A3B8", marginTop: 16, fontSize: "1.05rem" }}>Each lesson is a complete musical experience</p>
         </motion.div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -282,12 +282,12 @@ export default function MasterFluencyLanding() {
             <motion.div key={i} {...fadeUp} transition={{ ...fadeUp.transition, delay: i * 0.08 }}
               className="rounded-2xl p-6 transition-all duration-500"
               style={{
-                background: activeStep === i ? "rgba(59,130,246,0.08)" : "rgba(255,255,255,0.025)",
-                border: `1px solid ${activeStep === i ? "rgba(59,130,246,0.35)" : "rgba(255,255,255,0.06)"}`,
-                boxShadow: activeStep === i ? "0 0 30px #3B82F615" : "none",
+                background: activeStep === i ? "rgba(37,99,235,0.18)" : "rgba(15,40,100,0.35)",
+                border: `1px solid ${activeStep === i ? "rgba(96,165,250,0.45)" : "rgba(96,165,250,0.1)"}`,
+                boxShadow: activeStep === i ? "0 0 20px rgba(96,165,250,0.12)" : "none",
               }}>
               <div className="flex items-center gap-3 mb-3">
-                <span style={{ color: "#3B82F6", fontWeight: 800, fontSize: "0.75rem", fontFamily: "monospace" }}>{step.num}</span>
+                <span style={{ color: "#93C5FD", fontWeight: 800, fontSize: "0.75rem", fontFamily: "monospace" }}>{step.num}</span>
                 <span className="text-2xl">{step.icon}</span>
               </div>
               <h3 className="font-bold text-white">{step.title}</h3>
@@ -305,19 +305,19 @@ export default function MasterFluencyLanding() {
         </motion.div>
 
         <motion.div {...fadeUp} className="grid md:grid-cols-2 gap-6">
-          <div className="rounded-2xl p-8" style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)" }}>
-            <h3 className="font-bold mb-6" style={{ color: "#71717A", fontSize: "1.2rem" }}>Most apps</h3>
+          <div className="rounded-2xl p-8" style={{ background: "rgba(15,40,100,0.3)", border: "1px solid rgba(96,165,250,0.1)" }}>
+            <h3 className="font-bold mb-6" style={{ color: "#64748B", fontSize: "1.2rem" }}>Most apps</h3>
             <ul className="space-y-4">
               {["Tap and guess", "Forget by tomorrow", "Never actually speak"].map((t, i) => (
-                <li key={i} className="flex items-center gap-3" style={{ color: "#71717A" }}>
-                  <span style={{ color: "#EF4444", fontSize: "1.2rem" }}>✕</span>{t}
+                <li key={i} className="flex items-center gap-3" style={{ color: "#64748B" }}>
+                  <span style={{ color: "#F87171", fontSize: "1.2rem" }}>✕</span>{t}
                 </li>
               ))}
             </ul>
           </div>
 
-          <div className="rounded-2xl p-8" style={{ background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.25)", boxShadow: "0 0 40px #3B82F610" }}>
-            <h3 className="font-black mb-6" style={{ fontSize: "1.2rem", background: "linear-gradient(135deg, #3B82F6, #22D3EE)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>MasterFluency</h3>
+          <div className="rounded-2xl p-8" style={{ background: "rgba(37,99,235,0.12)", border: "1px solid rgba(96,165,250,0.3)", boxShadow: "0 0 40px rgba(37,99,235,0.1)" }}>
+            <h3 className="font-black mb-6" style={{ fontSize: "1.2rem", background: "linear-gradient(135deg, #60A5FA, #93C5FD)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Masteri Languages</h3>
             <ul className="space-y-4">
               {["Hear → repeat → perform", "Music burns it into memory", "You speak from lesson one", "You walk away with a recording"].map((t, i) => (
                 <li key={i} className="flex items-center gap-3 text-white font-medium">
@@ -329,8 +329,8 @@ export default function MasterFluencyLanding() {
         </motion.div>
 
         <motion.p {...fadeUp} className="text-center font-black mt-14" style={{ fontSize: "clamp(1.4rem, 3vw, 2rem)", fontFamily: "'Inter Tight', 'Inter', sans-serif" }}>
-          You don't study Hebrew.{" "}
-          <span style={{ background: "linear-gradient(135deg, #F59E0B, #FB923C)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>You use it.</span>
+        You don't study languages.{" "}
+        <span style={{ background: "linear-gradient(135deg, #60A5FA, #93C5FD)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>You use them.</span>
         </motion.p>
       </section>
 
@@ -354,7 +354,7 @@ export default function MasterFluencyLanding() {
       {/* ─── WHAT YOU'LL SAY ──────────────────────────────────── */}
       <section className="py-24 px-6 max-w-5xl mx-auto">
         <motion.div {...fadeUp} className="text-center mb-16">
-          <p style={{ color: "#F59E0B", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.15em", fontWeight: 600, marginBottom: 12 }}>After one lesson</p>
+          <p style={{ color: "#93C5FD", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.15em", fontWeight: 600, marginBottom: 12 }}>After one lesson</p>
           <h2 className="font-black tracking-tight" style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", fontFamily: "'Inter Tight', 'Inter', sans-serif" }}>
             You'll be saying this
           </h2>
@@ -362,16 +362,16 @@ export default function MasterFluencyLanding() {
         <div className="grid sm:grid-cols-2 gap-4">
           {phrases.map((p, i) => (
             <motion.div key={i} {...fadeUp} transition={{ ...fadeUp.transition, delay: i * 0.1 }}
-              className="rounded-2xl p-6 group cursor-default transition-all duration-300"
-              style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)" }}
-              whileHover={{ background: "rgba(34,211,238,0.04)", borderColor: "rgba(34,211,238,0.2)", boxShadow: "0 0 25px #22D3EE08" }}>
-              <p className="font-bold text-xl mb-2 text-white">{p.en}</p>
-              <p className="font-bold text-2xl mb-1" style={{ color: "#22D3EE", fontFamily: "'Heebo', 'Rubik', sans-serif", direction: "rtl" }}>{p.he}</p>
-              <p style={{ color: "#71717A", fontSize: "0.875rem" }}>{p.tr}</p>
+              className="rounded-xl p-5 group cursor-default transition-all duration-300"
+              style={{ background: "rgba(15,40,100,0.35)", border: "1px solid rgba(96,165,250,0.15)" }}
+              whileHover={{ background: "rgba(37,99,235,0.2)", borderColor: "rgba(96,165,250,0.35)" }}>
+              <p className="font-bold text-lg mb-1 text-white">{p.en}</p>
+              <p className="font-bold text-xl mb-1" style={{ color: "#93C5FD", fontFamily: "'Heebo', 'Rubik', sans-serif", direction: "rtl" }}>{p.he}</p>
+              <p style={{ color: "#64748B", fontSize: "0.8rem" }}>{p.tr}</p>
             </motion.div>
           ))}
         </div>
-        <motion.p {...fadeUp} className="text-center mt-8" style={{ color: "#71717A" }}>Built for speaking — not just recognizing.</motion.p>
+        <motion.p {...fadeUp} className="text-center mt-8" style={{ color: "#64748B" }}>Built for speaking — not just recognizing.</motion.p>
       </section>
 
       {/* ─── LEVEL SYSTEM ─────────────────────────────────────── */}
@@ -383,22 +383,22 @@ export default function MasterFluencyLanding() {
         </motion.div>
         <div className="flex flex-col md:flex-row gap-3">
           {[
-            { level: 1, label: "Repeat", color: "#3B82F6" },
-            { level: 2, label: "Understand", color: "#22D3EE" },
-            { level: 3, label: "Respond", color: "#F59E0B" },
-            { level: 4, label: "Speak freely", color: "#FB923C" },
-            { level: 5, label: "Perform", color: "#22C55E", highlight: true },
+            { level: 1, label: "Repeat", color: "#BFDBFE" },
+            { level: 2, label: "Understand", color: "#93C5FD" },
+            { level: 3, label: "Respond", color: "#60A5FA" },
+            { level: 4, label: "Speak freely", color: "#3B82F6" },
+            { level: 5, label: "Perform", color: "#2563EB", highlight: true },
           ].map((item, i) => (
             <motion.div key={i} {...fadeUp} transition={{ ...fadeUp.transition, delay: i * 0.1 }}
-              className="flex-1 rounded-2xl p-6 text-center transition-all duration-300"
+              className="flex-1 rounded-xl py-4 px-3 text-center transition-all duration-300"
               style={{
-                background: item.highlight ? `${item.color}18` : "rgba(255,255,255,0.025)",
-                border: `1px solid ${item.highlight ? `${item.color}50` : "rgba(255,255,255,0.06)"}`,
-                boxShadow: item.highlight ? `0 0 30px ${item.color}15` : "none",
+                background: item.highlight ? "rgba(37,99,235,0.2)" : "rgba(15,40,100,0.3)",
+                border: `1px solid ${item.highlight ? "rgba(96,165,250,0.5)" : "rgba(96,165,250,0.12)"}`,
+                boxShadow: item.highlight ? "0 0 20px rgba(37,99,235,0.2)" : "none",
                 transform: item.highlight ? "scale(1.04)" : "scale(1)",
               }}>
-              <p className="font-bold text-xs uppercase tracking-widest mb-2" style={{ color: item.color }}>Level {item.level}</p>
-              <p className="font-black" style={{ fontSize: "1.1rem", color: item.highlight ? item.color : "#A1A1AA" }}>{item.label}</p>
+              <p className="font-bold text-xs uppercase tracking-widest mb-1" style={{ color: item.color }}>Level {item.level}</p>
+              <p className="font-black text-sm" style={{ color: item.highlight ? "#BFDBFE" : "#64748B" }}>{item.label}</p>
             </motion.div>
           ))}
         </div>
@@ -418,7 +418,7 @@ export default function MasterFluencyLanding() {
           ].map((t, i) => (
             <motion.div key={i} {...fadeUp} transition={{ ...fadeUp.transition, delay: i * 0.15 }}
               className="rounded-2xl p-8"
-              style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)" }}>
+              style={{ background: "rgba(15,40,100,0.3)", border: "1px solid rgba(96,165,250,0.12)" }}>
               <div className="flex gap-1 mb-4">
                 {[1,2,3,4,5].map(s => <Star key={s} className="w-4 h-4 fill-yellow-400" style={{ color: "#F59E0B" }} />)}
               </div>
@@ -463,7 +463,7 @@ export default function MasterFluencyLanding() {
               whileTap={{ scale: 0.97 }}
               onClick={() => navigate("/SingingHome")}
               className="px-10 py-5 rounded-xl font-bold text-white text-lg flex items-center justify-center gap-2"
-              style={{ background: "linear-gradient(135deg, #3B82F6, #22D3EE)", boxShadow: "0 0 25px #3B82F640" }}>
+              style={{ background: "linear-gradient(135deg, #2563EB, #60A5FA)", boxShadow: "0 0 25px rgba(37,99,235,0.35)" }}>
               Start Your First Song <ChevronRight className="w-5 h-5" />
             </motion.button>
             <motion.button
@@ -471,7 +471,7 @@ export default function MasterFluencyLanding() {
               whileTap={{ scale: 0.97 }}
               onClick={() => navigate("/?lesson=intro")}
               className="px-10 py-5 rounded-xl font-bold text-base"
-              style={{ border: "1px solid rgba(255,255,255,0.12)", color: "#A1A1AA", background: "transparent" }}>
+              style={{ border: "1px solid rgba(96,165,250,0.25)", color: "#93C5FD", background: "transparent" }}>
               Try It Free
             </motion.button>
           </motion.div>
@@ -479,24 +479,24 @@ export default function MasterFluencyLanding() {
       </section>
 
       {/* ─── FOOTER ───────────────────────────────────────────── */}
-      <footer className="py-12 px-6" style={{ borderTop: "1px solid rgba(255,255,255,0.06)", background: "#121826" }}>
+      <footer className="py-12 px-6" style={{ borderTop: "1px solid rgba(96,165,250,0.1)", background: "#071020" }}>
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div>
-            <p className="font-black text-xl" style={{ fontFamily: "'Inter Tight', 'Inter', sans-serif", background: "linear-gradient(135deg, #3B82F6, #22D3EE)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-              MasterFluency
+            <p className="font-black text-xl" style={{ fontFamily: "'Inter Tight', 'Inter', sans-serif", background: "linear-gradient(135deg, #60A5FA, #93C5FD)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+              Masteri Languages
             </p>
-            <p style={{ color: "#71717A", fontSize: "0.8rem", marginTop: 4 }}>Built for people who want to speak, not just understand.</p>
+            <p style={{ color: "#475569", fontSize: "0.8rem", marginTop: 4 }}>Built for people who want to speak, not just understand.</p>
           </div>
           <div className="flex gap-8">
             {["Features", "How It Works", "Pricing", "Contact"].map((link) => (
-              <a key={link} href="#" style={{ color: "#71717A", fontSize: "0.875rem", textDecoration: "none" }}
-                onMouseEnter={e => e.target.style.color = "#22D3EE"}
-                onMouseLeave={e => e.target.style.color = "#71717A"}>
+              <a key={link} href="#" style={{ color: "#475569", fontSize: "0.875rem", textDecoration: "none" }}
+                onMouseEnter={e => e.target.style.color = "#93C5FD"}
+                onMouseLeave={e => e.target.style.color = "#475569"}>
                 {link}
               </a>
             ))}
           </div>
-          <p style={{ color: "#71717A", fontSize: "0.75rem" }}>© 2026 MasterFluency</p>
+          <p style={{ color: "#334155", fontSize: "0.75rem" }}>© 2026 Masteri Languages</p>
         </div>
       </footer>
     </div>
