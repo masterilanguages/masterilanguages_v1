@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Plus, Trash2, Users, UserCheck, ClipboardList, StickyNote, BookOpen, LogIn, ChevronDown, ChevronUp, Shield, GraduationCap, User, FileText } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Users, UserCheck, ClipboardList, StickyNote, BookOpen, LogIn, ChevronDown, ChevronUp, Shield, GraduationCap, User, FileText, CheckCircle, Globe } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
@@ -318,6 +318,15 @@ export default function ManageCoaches() {
                         <FileText className="w-3 h-3" /> No questionnaire
                       </span>
                     )}
+                    {profile?.onboarding_completed ? (
+                      <span className="text-xs text-emerald-400/80 flex items-center gap-0.5 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                        <CheckCircle className="w-3 h-3" /> Onboarding ✓
+                      </span>
+                    ) : (
+                      <span className="text-xs text-orange-400/70 flex items-center gap-0.5 bg-orange-500/10 px-2 py-0.5 rounded-full">
+                        <Globe className="w-3 h-3" /> Onboarding pending
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     {lead && (
@@ -374,7 +383,7 @@ export default function ManageCoaches() {
                     )}
 
                     {/* Questionnaire */}
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 flex-wrap">
                       {lead ? (
                         <Button
                           size="sm"
@@ -386,6 +395,34 @@ export default function ManageCoaches() {
                         </Button>
                       ) : (
                         <span className="text-white/30 text-xs flex items-center gap-1"><FileText className="w-3.5 h-3.5" /> No questionnaire filled out yet</span>
+                      )}
+                    </div>
+
+                    {/* Onboarding status */}
+                    <div className="flex items-center gap-3 bg-white/5 rounded-xl p-3">
+                      <Globe className="w-4 h-4 text-purple-400 flex-shrink-0" />
+                      <div className="flex-1">
+                        <p className="text-white/70 text-xs font-semibold mb-0.5">Onboarding</p>
+                        {profile?.onboarding_completed ? (
+                          <p className="text-emerald-400 text-xs flex items-center gap-1">
+                            <CheckCircle className="w-3 h-3" /> Completed {profile.onboarding_completed_at ? `on ${new Date(profile.onboarding_completed_at).toLocaleDateString()}` : ''}
+                          </p>
+                        ) : (
+                          <p className="text-orange-400/80 text-xs">Not yet completed</p>
+                        )}
+                      </div>
+                      {user.role !== 'admin' && (
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            localStorage.setItem('admin_managing_user', user.email);
+                            window.location.href = createPageUrl("LanguageSelect");
+                          }}
+                          className="bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/30 text-xs"
+                          variant="ghost"
+                        >
+                          <Globe className="w-3.5 h-3.5 mr-1" /> Start Onboarding
+                        </Button>
                       )}
                     </div>
 

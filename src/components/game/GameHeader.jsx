@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Flame, Clock, LogOut, Globe, UserPlus, X, Loader2, BookOpen } from "lucide-react";
+import { Flame, Clock, LogOut, UserPlus, X, Loader2, BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -303,9 +303,6 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
                     ))}
                   </div>
                   <div className="mt-2 pt-2" style={{ borderTop: '1px solid rgba(96,165,250,0.12)' }}>
-                    <Button onClick={() => { setShowMenu(false); navigate(createPageUrl("LanguageSelect")); }} className="w-full justify-start text-sm mb-1" style={{ background: 'rgba(96,165,250,0.08)', color: '#93C5FD' }} variant="ghost">
-                      <Globe className="w-4 h-4 mr-2" />Start Onboarding
-                    </Button>
                     <Button onClick={handleLogout} className="w-full justify-start text-sm" style={{ background: 'rgba(239,68,68,0.08)', color: '#FCA5A5' }} variant="ghost">
                       <LogOut className="w-4 h-4 mr-2" />Logout
                     </Button>
