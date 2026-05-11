@@ -20,6 +20,9 @@ export default function ManageCoaches() {
   const [selectedCoach, setSelectedCoach] = useState("");
   const [selectedStudent, setSelectedStudent] = useState("");
   const [studentEmailInput, setStudentEmailInput] = useState("");
+  const [showAddUserDialog, setShowAddUserDialog] = useState(false);
+  const [newUserEmail, setNewUserEmail] = useState("");
+  const [newUserRole, setNewUserRole] = useState("user");
   const [expandedPerson, setExpandedPerson] = useState(null);
 
   useEffect(() => {
@@ -268,7 +271,7 @@ export default function ManageCoaches() {
               Questionnaire
             </Button>
             <Button
-              onClick={() => setShowAssignDialog(true)}
+              onClick={() => setShowAddUserDialog(true)}
               className="bg-gradient-to-r from-green-500 to-emerald-500"
             >
               <Users className="w-5 h-5 mr-2" />
@@ -639,6 +642,62 @@ export default function ManageCoaches() {
                 className="flex-1 bg-purple-600 hover:bg-purple-700"
               >
                 Save Agreement
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add User Dialog */}
+      <Dialog open={showAddUserDialog} onOpenChange={setShowAddUserDialog}>
+        <DialogContent className="bg-slate-900 border-white/20 text-white max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-green-400" />
+              Add New User
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <div>
+              <label className="text-white/60 text-sm mb-1 block">Email</label>
+              <input
+                type="email"
+                value={newUserEmail}
+                onChange={(e) => setNewUserEmail(e.target.value)}
+                placeholder="user@example.com"
+                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder:text-white/30 outline-none focus:border-green-400/50"
+              />
+            </div>
+            <div>
+              <label className="text-white/60 text-sm mb-1 block">Role</label>
+              <select
+                value={newUserRole}
+                onChange={(e) => setNewUserRole(e.target.value)}
+                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
+              >
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={() => { setShowAddUserDialog(false); setNewUserEmail(""); setNewUserRole("user"); }} variant="outline" className="flex-1 border-white/20 text-white">Cancel</Button>
+              <Button
+                disabled={!newUserEmail}
+                onClick={async () => {
+                  try {
+                    await base44.users.inviteUser(newUserEmail.trim(), newUserRole);
+                    toast.success(`Invite sent to ${newUserEmail}`);
+                    queryClient.invalidateQueries({ queryKey: ['allUsers'] });
+                    setShowAddUserDialog(false);
+                    setNewUserEmail("");
+                    setNewUserRole("user");
+                  } catch (e) {
+                    toast.error(e.message || "Failed to invite user");
+                  }
+                }}
+                className="flex-1 bg-gradient-to-r from-green-500 to-emerald-500"
+              >
+                Send Invite
               </Button>
             </div>
           </div>
