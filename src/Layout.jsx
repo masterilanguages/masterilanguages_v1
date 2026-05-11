@@ -160,7 +160,7 @@ export default function Layout({ children, currentPageName }) {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: "#0A1628" }}>
+    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #0f0c29, #302b63, #24243e)' }}>
       {isDev && isAuthChecked && (
         <div className="fixed top-0 left-0 z-[9999] bg-black/90 text-white text-xs px-3 py-1 font-mono">
           user: {currentUser?.id?.slice(0, 8) || 'none'} | 
