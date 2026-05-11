@@ -1397,14 +1397,14 @@ Return a JSON with a "videos" array. Each video must have:
 
   return (
     <>
-    <div className="min-h-screen" style={{ background: 'linear-gradient(160deg, #f0ece4 0%, #e8e4d8 50%, #eae6da 100%)' }}>
+    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #0f0c29, #302b63, #24243e)' }}>
       <div className="max-w-7xl mx-auto p-6">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold" style={{ color: '#3d4a2e', fontFamily: 'Cormorant Garamond, Georgia, serif' }}>📚 Content Library</h1>
+          <h1 className="text-4xl font-bold text-white" style={{ fontFamily: 'Cormorant Garamond, Georgia, serif' }}>📚 Content Library</h1>
         </div>
 
         {/* Unified filter bar */}
-        <div className="bg-white/60 rounded-2xl border border-stone-200 p-4 mb-6">
+        <div className="bg-white/10 rounded-2xl border border-white/20 p-4 mb-6">
           <div className="flex flex-wrap items-center gap-3">
 
             {/* + Add New Content */}
@@ -1646,7 +1646,7 @@ Return a JSON with a "videos" array. Each video must have:
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   onClick={() => handleVideoClick(video)}
-                  className="bg-white/70 rounded-2xl border border-stone-200 overflow-hidden hover:border-stone-400 transition-all cursor-pointer"
+                  className="bg-white/10 rounded-2xl border border-white/20 overflow-hidden hover:border-white/40 transition-all cursor-pointer"
                 >
                   <div className="w-full aspect-video bg-black">
                     <img
@@ -1658,7 +1658,7 @@ Return a JSON with a "videos" array. Each video must have:
                   </div>
                   <div className="p-3">
                     <div className="flex items-start justify-between gap-2 mb-2">
-                      <h3 className="font-bold text-base flex-1" style={{ color: '#3d4a2e' }}>{video.title}</h3>
+                      <h3 className="font-bold text-base flex-1 text-white">{video.title}</h3>
                       <div className="flex gap-1 flex-shrink-0">
                         {canEdit && (
                           <button onClick={(e) => { e.stopPropagation(); handleEdit(video); }} className="text-stone-400 hover:text-stone-700 transition-colors p-1">
