@@ -259,7 +259,7 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
 
   return (
     <>
-    <div style={{ background: '#0A1628', borderBottom: '1px solid rgba(96,165,250,0.15)' }} className="backdrop-blur-xl">
+    <div style={{ background: 'linear-gradient(135deg, #0f0c29, #302b63, #24243e)', borderBottom: '1px solid rgba(150,120,255,0.2)' }} className="backdrop-blur-xl">
       {/* Top row */}
       <div className="flex items-center justify-between max-w-7xl mx-auto px-4 py-2">
         {/* Language selector */}
