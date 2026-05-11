@@ -406,35 +406,34 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
 
     {/* Invite User Dialog */}
     <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
-      <DialogContent className="max-w-sm" style={{ background: '#f5f0e8', border: '1px solid rgba(90, 107, 90, 0.2)' }}>
+      <DialogContent className="max-w-sm" style={{ background: '#0D1F3C', border: '1px solid rgba(96,165,250,0.2)' }}>
         <DialogHeader>
-          <DialogTitle style={{ color: '#3d4a2e', fontFamily: 'Cormorant Garamond, serif', fontWeight: 500, fontSize: '1.4rem' }}>
+          <DialogTitle style={{ color: '#BFDBFE', fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: '1.2rem' }}>
             Invite a Student
           </DialogTitle>
         </DialogHeader>
-        <p className="text-sm mb-4" style={{ color: '#6b7c5a' }}>
+        <p className="text-sm mb-4" style={{ color: '#64748B' }}>
           They'll receive an email with a link to set their password and access their personal learning portal.
         </p>
         <div className="space-y-3">
           <div>
-            <label className="text-xs font-medium mb-1 block" style={{ color: '#6b7c5a', fontFamily: 'Jost, sans-serif' }}>Email address</label>
+            <label className="text-xs font-medium mb-1 block" style={{ color: '#93C5FD', fontFamily: 'Jost, sans-serif' }}>Email address</label>
             <Input
               type="email"
               placeholder="student@example.com"
               value={inviteEmail}
               onChange={(e) => setInviteEmail(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleInvite()}
-              className="border-stone-300 bg-white/70"
-              style={{ color: '#3d4a2e' }}
+              className="border-blue-800 bg-blue-950/50 text-white placeholder:text-slate-500"
             />
           </div>
           <div>
-            <label className="text-xs font-medium mb-1 block" style={{ color: '#6b7c5a', fontFamily: 'Jost, sans-serif' }}>Role</label>
+            <label className="text-xs font-medium mb-1 block" style={{ color: '#93C5FD', fontFamily: 'Jost, sans-serif' }}>Role</label>
             <select
               value={inviteRole}
               onChange={(e) => setInviteRole(e.target.value)}
-              className="w-full h-9 rounded-md border border-stone-300 bg-white/70 px-3 text-sm"
-              style={{ color: '#3d4a2e' }}
+              className="w-full h-9 rounded-md border px-3 text-sm"
+              style={{ background: '#0A1628', borderColor: 'rgba(96,165,250,0.3)', color: '#BFDBFE' }}
             >
               <option value="user">Student</option>
               <option value="admin">Admin</option>
@@ -444,7 +443,7 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
             onClick={handleInvite}
             disabled={!inviteEmail.trim() || inviting}
             className="w-full"
-            style={{ background: '#5a6b5a', color: 'white' }}
+            style={{ background: 'linear-gradient(135deg, #2563EB, #60A5FA)', color: 'white' }}
           >
             {inviting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Sending...</> : <><UserPlus className="w-4 h-4 mr-2" />Send Invitation</>}
           </Button>
