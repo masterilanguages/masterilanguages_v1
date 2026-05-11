@@ -271,8 +271,8 @@ export default function ManageCoaches() {
               onClick={() => setShowAssignDialog(true)}
               className="bg-gradient-to-r from-green-500 to-emerald-500"
             >
-              <Plus className="w-5 h-5 mr-2" />
-              Assign Coach
+              <Users className="w-5 h-5 mr-2" />
+              Add User
             </Button>
           </div>
         </div>
