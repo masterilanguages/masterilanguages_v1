@@ -261,7 +261,6 @@ export default function Backpack() {
   const [mnemonicExplanations, setMnemonicExplanations] = useState({});
 
   const suggestMnemonicForWord = async (word) => {
-    if (suggestingMnemonic && suggestingMnemonic !== word.id) return; // already generating for a different word
     setSuggestingMnemonic(word.id);
     try {
       const rawWord = word.phonetic || word.word;
@@ -341,6 +340,24 @@ Return JSON:
 
   const userLang = userProfile?.language || 'hebrew';
   const langFilteredRatings = wordRatings.filter(w => !w.language || w.language === userLang);
+
+  // Auto-generate images for all words missing them — sequential queue
+  useEffect(() => {
+    const wordsNeedingImages = langFilteredRatings.filter(
+      w => !w.image_url && w.id && !w.id.startsWith('session_') && !w._shared
+    );
+    if (wordsNeedingImages.length === 0) return;
+    let cancelled = false;
+    const runQueue = async () => {
+      for (const word of wordsNeedingImages) {
+        if (cancelled) break;
+        await suggestMnemonicForWord(word);
+        await new Promise(r => setTimeout(r, 500));
+      }
+    };
+    runQueue();
+    return () => { cancelled = true; };
+  }, [langFilteredRatings.length]); // eslint-disable-line
 
   // Populate allWords flashcard once wordRatings loads
   useEffect(() => {

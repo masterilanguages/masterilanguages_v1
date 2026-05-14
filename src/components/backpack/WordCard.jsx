@@ -107,19 +107,6 @@ export default function WordCard({
 }) {
   const [revealed, setRevealed] = useState(false);
   const [regeneratingImage, setRegeneratingImage] = useState(false);
-  const [autoTriggered, setAutoTriggered] = useState(false);
-
-  // Auto-generate image if missing — only once per card mount, staggered
-  useEffect(() => {
-    if (!word.image_url && word.id && !word.id.startsWith('session_') && !autoTriggered) {
-      setAutoTriggered(true);
-      const delay = Math.random() * 4000 + 1000; // 1-5s stagger
-      const timer = setTimeout(() => {
-        suggestMnemonicForWord(word);
-      }, delay);
-      return () => clearTimeout(timer);
-    }
-  }, []); // eslint-disable-line
 
   const isGeneratingImage = suggestingMnemonic === word.id;
 
