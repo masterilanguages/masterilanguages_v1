@@ -310,8 +310,14 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
         </div>
 
         {/* Brand */}
-        <div className="text-center flex-1">
-          <p className="font-black text-xl tracking-widest" style={{ background: 'linear-gradient(135deg, #60A5FA, #93C5FD)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontFamily: "'Inter Tight', 'Inter', sans-serif", letterSpacing: '0.06em' }}>Masteri Languages</p>
+        <div className="text-center flex-1 flex flex-col items-center justify-center">
+          <div className="flex items-center gap-2">
+            <img src="https://media.base44.com/images/public/691b9324b0c0f25014c5938d/5f741568e_logomasterinavy.jpg" alt="Masteri Logo" className="w-8 h-8 object-contain rounded-sm" />
+            <div className="flex flex-col items-start leading-none">
+              <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 500, fontSize: '1.1rem', letterSpacing: '0.25em', color: '#D4AF6A', lineHeight: 1 }}>MASTERI</span>
+              <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 300, fontSize: '0.6rem', letterSpacing: '0.35em', color: '#A89050', lineHeight: 1.4, borderTop: '1px solid rgba(212,175,106,0.4)', paddingTop: '2px', marginTop: '2px', width: '100%', textAlign: 'center' }}>LANGUAGES</span>
+            </div>
+          </div>
         </div>
 
         {/* Streak + Clock + Logout */}
