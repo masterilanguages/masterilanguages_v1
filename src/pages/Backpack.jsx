@@ -260,6 +260,9 @@ export default function Backpack() {
 
   const [mnemonicExplanations, setMnemonicExplanations] = useState({});
 
+  // Keep a ref so the queue always uses the latest version (avoids stale closure)
+  const suggestMnemonicRef = React.useRef(null);
+
   const suggestMnemonicForWord = async (word) => {
     setSuggestingMnemonic(word.id);
     try {
@@ -338,26 +341,39 @@ Return JSON:
     setSuggestingMnemonic(null);
   };
 
+  // Always keep ref up to date
+  suggestMnemonicRef.current = suggestMnemonicForWord;
+
   const userLang = userProfile?.language || 'hebrew';
   const langFilteredRatings = wordRatings.filter(w => !w.language || w.language === userLang);
+
+  // Track which word IDs have been queued for auto-generation (persists across re-renders)
+  const queuedWordIds = React.useRef(new Set());
+  const isRunningQueue = React.useRef(false);
 
   // Auto-generate images for all words missing them — sequential queue
   useEffect(() => {
     const wordsNeedingImages = langFilteredRatings.filter(
-      w => !w.image_url && w.id && !w.id.startsWith('session_') && !w._shared
+      w => !w.image_url && w.id && !w.id.startsWith('session_') && !w._shared && !queuedWordIds.current.has(w.id)
     );
-    if (wordsNeedingImages.length === 0) return;
+    if (wordsNeedingImages.length === 0 || isRunningQueue.current) return;
+
+    // Mark them as queued immediately to prevent duplicate queuing on re-renders
+    wordsNeedingImages.forEach(w => queuedWordIds.current.add(w.id));
+
     let cancelled = false;
+    isRunningQueue.current = true;
     const runQueue = async () => {
       for (const word of wordsNeedingImages) {
         if (cancelled) break;
-        await suggestMnemonicForWord(word);
+        await suggestMnemonicRef.current(word);
         await new Promise(r => setTimeout(r, 500));
       }
+      isRunningQueue.current = false;
     };
     runQueue();
-    return () => { cancelled = true; };
-  }, [langFilteredRatings.length]); // eslint-disable-line
+    return () => { cancelled = true; isRunningQueue.current = false; };
+  }, [langFilteredRatings.map(w => w.id + (w.image_url ? '1' : '0')).join(',')]); // eslint-disable-line
 
   // Populate allWords flashcard once wordRatings loads
   useEffect(() => {
