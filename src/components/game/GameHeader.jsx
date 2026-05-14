@@ -312,7 +312,9 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
         {/* Brand */}
         <div className="text-center flex-1 flex flex-col items-center justify-center">
           <div className="flex items-center gap-2">
-            <img src="https://media.base44.com/images/public/691b9324b0c0f25014c5938d/5f741568e_logomasterinavy.jpg" alt="Masteri Logo" className="w-8 h-8 object-contain rounded-sm" />
+            <div className="w-9 h-9 overflow-hidden flex-shrink-0" style={{ borderRadius: '4px' }}>
+              <img src="https://media.base44.com/images/public/691b9324b0c0f25014c5938d/5f741568e_logomasterinavy.jpg" alt="Masteri Logo" style={{ width: '180%', height: '180%', objectFit: 'cover', objectPosition: '50% 30%', marginLeft: '-40%', marginTop: '-15%', mixBlendMode: 'lighten' }} />
+            </div>
             <div className="flex flex-col items-start leading-none">
               <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 500, fontSize: '1.1rem', letterSpacing: '0.25em', color: '#D4AF6A', lineHeight: 1 }}>MASTERI</span>
               <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 300, fontSize: '0.6rem', letterSpacing: '0.35em', color: '#A89050', lineHeight: 1.4, borderTop: '1px solid rgba(212,175,106,0.4)', paddingTop: '2px', marginTop: '2px', width: '100%', textAlign: 'center' }}>LANGUAGES</span>
