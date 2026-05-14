@@ -165,9 +165,10 @@ export default function WordCard({
         </div>
       )}
 
-      {/* Large mnemonic image — click to reveal */}
+      {/* Large mnemonic image — always visible */}
       <div
-        className="h-40 bg-stone-100 flex items-center justify-center overflow-hidden relative cursor-pointer select-none"
+        className="relative cursor-pointer select-none bg-stone-100 overflow-hidden"
+        style={{ height: '160px', minHeight: '160px' }}
         onClick={() => setRevealed(r => !r)}
       >
         {/* Top-right controls: EN, Translit, Hebrew toggles */}
@@ -201,7 +202,7 @@ export default function WordCard({
           </button>
         </div>
         {word.image_url ? (
-          <img src={word.image_url} alt={word.phonetic} className="w-full h-full object-cover" />
+          <img src={word.image_url} alt={word.phonetic} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', position: 'absolute', top: 0, left: 0 }} />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-cyan-400/10 via-purple-400/10 to-pink-400/10 flex flex-col items-center justify-center text-center px-4 gap-2">
             {(isGeneratingImage || regeneratingImage) ? (
