@@ -107,7 +107,6 @@ export default function WordCard({
 }) {
   const [revealed, setRevealed] = useState(false);
   const [regeneratingImage, setRegeneratingImage] = useState(false);
-  const [localScript, setLocalScript] = useState(null); // null = use parent prop
 
   const [pendingGeneration, setPendingGeneration] = useState(false);
 
@@ -125,15 +124,11 @@ export default function WordCard({
 
   const isGeneratingImage = suggestingMnemonic === word.id || pendingGeneration;
 
-  const showHebrew = localScript !== null ? localScript === 'hebrew' : showHebrewProp;
-  const showTransliteration = localScript !== null ? localScript === 'translit' : showTransliterationProp;
+  const [showHebrewLocal, setShowHebrewLocal] = useState(showHebrewProp ?? true);
+  const [showTranslitLocal, setShowTranslitLocal] = useState(showTransliterationProp ?? true);
 
-  const handleScriptToggle = (e) => {
-    e.stopPropagation();
-    const next = showHebrew ? 'translit' : 'hebrew';
-    setLocalScript(next);
-    if (onScriptToggle) onScriptToggle(next);
-  };
+  const showHebrew = showHebrewLocal;
+  const showTransliteration = showTranslitLocal;
 
   const regenerateImageFromDescription = async (description) => {
     setRegeneratingImage(true);
@@ -149,12 +144,8 @@ export default function WordCard({
     setRegeneratingImage(false);
   };
 
-  useEffect(() => { setRevealed(false); }, [showAllEnglish]);
-
-  // showAllEnglish=false → show Hebrew, click reveals English
-  // showAllEnglish=true  → show English, click reveals Hebrew
-  const showingHebrew = showAllEnglish ? revealed : !revealed;
-  const showingEnglish = showAllEnglish ? !revealed : revealed;
+  // click on card toggles English reveal
+  const showingEnglish = showAllEnglish || revealed;
 
   return (
     <motion.div
@@ -179,7 +170,7 @@ export default function WordCard({
         className="h-40 bg-stone-100 flex items-center justify-center overflow-hidden relative cursor-pointer select-none"
         onClick={() => setRevealed(r => !r)}
       >
-        {/* Top-right controls: EN toggle + script toggle */}
+        {/* Top-right controls: EN, Translit, Hebrew toggles */}
         <div className="absolute top-1.5 right-1.5 z-10 flex gap-1">
           <button
             onClick={(e) => { e.stopPropagation(); if (onEnglishToggle) onEnglishToggle(); }}
@@ -191,11 +182,22 @@ export default function WordCard({
             EN
           </button>
           <button
-            onClick={handleScriptToggle}
-            className="px-1.5 py-0.5 rounded bg-white/80 border border-stone-200 text-[9px] font-bold text-stone-500 hover:bg-white hover:text-stone-700 transition-all leading-none"
-            title={showHebrew ? "Switch to transliteration" : "Switch to Hebrew"}
+            onClick={(e) => { e.stopPropagation(); setShowTranslitLocal(v => !v); }}
+            className={`px-1.5 py-0.5 rounded text-[9px] font-bold transition-all leading-none border ${
+              showTranslitLocal ? 'bg-stone-700 text-white border-stone-600' : 'bg-white/80 border-stone-200 text-stone-500 hover:bg-white hover:text-stone-700'
+            }`}
+            title="Toggle transliteration"
           >
-            {showHebrew ? 'א' : 'abc'}
+            abc
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); setShowHebrewLocal(v => !v); }}
+            className={`px-1.5 py-0.5 rounded text-[9px] font-bold transition-all leading-none border ${
+              showHebrewLocal ? 'bg-stone-700 text-white border-stone-600' : 'bg-white/80 border-stone-200 text-stone-500 hover:bg-white hover:text-stone-700'
+            }`}
+            title="Toggle Hebrew"
+          >
+            א
           </button>
         </div>
         {word.image_url ? (
@@ -218,9 +220,9 @@ export default function WordCard({
 
       </div>
 
-      {/* Word info — also clickable to reveal */}
-      <div className="p-3 flex-1 flex flex-col cursor-pointer select-none" onClick={() => setRevealed(r => !r)}>
-        {showingHebrew && showHebrew && (
+      {/* Word info — click to toggle English reveal */}
+      <div className="p-3 flex-1 flex flex-col gap-0.5 cursor-pointer select-none" onClick={() => setRevealed(r => !r)}>
+        {showHebrew && (
           <p className="text-cyan-600 font-bold text-base text-center" dir="rtl">
             <EditableWord
               text={word.word}
@@ -233,13 +235,13 @@ export default function WordCard({
           </p>
         )}
 
-        {showingHebrew && !showHebrew && showTransliteration && (
-          <p className="text-cyan-600 font-bold text-base text-center">
+        {showTransliteration && (
+          <p className="text-stone-500 text-sm text-center">
             <EditableWord
               text={word.phonetic || word.word}
               editable={true}
               onSave={(v) => updateWordMutation.mutate({ id: word.id, data: { phonetic: v } })}
-              className="text-cyan-600 font-bold text-base"
+              className="text-stone-500 text-sm"
               onClick={(e) => e.stopPropagation()}
             />
           </p>
