@@ -881,20 +881,6 @@ Return JSON:
                     ←
                   </button>
                   <span className="text-stone-400 text-sm">{singleCardIndex + 1} / {sessionFlashcardData.words.length}</span>
-                  <div className="flex gap-1">
-                    <button
-                      onClick={() => setShowAllEnglish(!showAllEnglish)}
-                      className={`px-2 py-1 rounded-lg text-xs font-medium transition-all border ${showAllEnglish ? "bg-stone-600 text-stone-100 border-stone-500" : "bg-white/60 text-stone-500 border-stone-200"}`}
-                    >
-                      {showAllEnglish ? "✓ EN" : "EN"}
-                    </button>
-                    <button
-                      onClick={() => setScriptMode(m => m === 'hebrew' ? 'translit' : 'hebrew')}
-                      className="px-2 py-1 rounded-lg text-xs font-medium transition-all bg-stone-600 text-stone-100 border border-stone-500"
-                    >
-                      {scriptMode === 'hebrew' ? 'א' : 'abc'}
-                    </button>
-                  </div>
                   <button 
                     onClick={() => setSingleCardIndex(i => Math.min(sessionFlashcardData.words.length - 1, i + 1))}
                     disabled={singleCardIndex === sessionFlashcardData.words.length - 1}
@@ -914,6 +900,7 @@ Return JSON:
                     mastered: false,
                   }}
                   showAllEnglish={showAllEnglish}
+                  onEnglishToggle={() => setShowAllEnglish(v => !v)}
                   showHebrew={showHebrew}
                   showTransliteration={showTransliteration}
                   showPhonetics={showPhonetics}
@@ -950,25 +937,12 @@ Return JSON:
                 <div className="flex items-center gap-2 w-full max-w-xs justify-between">
                   <button onClick={() => setSingleCardIndex(i => Math.max(0, i - 1))} disabled={idx === 0} className="px-4 py-2 rounded-xl bg-white/60 border border-stone-200 text-stone-500 disabled:opacity-30 font-bold text-lg">←</button>
                   <span className="text-stone-400 text-sm">{idx + 1} / {words.length}</span>
-                  <div className="flex gap-1">
-                    <button
-                      onClick={() => setShowAllEnglish(!showAllEnglish)}
-                      className={`px-2 py-1 rounded-lg text-xs font-medium transition-all border ${showAllEnglish ? "bg-stone-600 text-stone-100 border-stone-500" : "bg-white/60 text-stone-500 border-stone-200"}`}
-                    >
-                      {showAllEnglish ? "✓ EN" : "EN"}
-                    </button>
-                    <button
-                      onClick={() => setScriptMode(m => m === 'hebrew' ? 'translit' : 'hebrew')}
-                      className="px-2 py-1 rounded-lg text-xs font-medium transition-all bg-stone-600 text-stone-100 border border-stone-500"
-                    >
-                      {scriptMode === 'hebrew' ? 'א' : 'abc'}
-                    </button>
-                  </div>
                   <button onClick={() => setSingleCardIndex(i => Math.min(words.length - 1, i + 1))} disabled={idx === words.length - 1} className="px-4 py-2 rounded-xl bg-white/60 border border-stone-200 text-stone-500 disabled:opacity-30 font-bold text-lg">→</button>
                 </div>
                 <WordCard
                   word={word}
                   showAllEnglish={showAllEnglish}
+                  onEnglishToggle={() => setShowAllEnglish(v => !v)}
                   showHebrew={showHebrew}
                   showTransliteration={showTransliteration}
                   showPhonetics={showPhonetics}
@@ -999,6 +973,7 @@ Return JSON:
                   key={word.id}
                   word={word}
                   showAllEnglish={showAllEnglish}
+                  onEnglishToggle={() => setShowAllEnglish(v => !v)}
                   showHebrew={showHebrew}
                   showTransliteration={showTransliteration}
                   showPhonetics={showPhonetics}

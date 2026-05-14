@@ -86,6 +86,7 @@ export default function WordCard({
   showHebrew: showHebrewProp = true,
   showTransliteration: showTransliterationProp = true,
   onScriptToggle,
+  onEnglishToggle,
   isContentEditable,
   mnemonicExplanations,
   setMnemonicExplanations,
@@ -169,14 +170,25 @@ export default function WordCard({
         className="h-40 bg-stone-100 flex items-center justify-center overflow-hidden relative cursor-pointer select-none"
         onClick={() => setRevealed(r => !r)}
       >
-        {/* Script toggle button — top right */}
-        <button
-          onClick={handleScriptToggle}
-          className="absolute top-1.5 right-1.5 z-10 px-1.5 py-0.5 rounded bg-white/80 border border-stone-200 text-[9px] font-bold text-stone-500 hover:bg-white hover:text-stone-700 transition-all leading-none"
-          title={showHebrew ? "Switch to transliteration" : "Switch to Hebrew"}
-        >
-          {showHebrew ? 'א' : 'abc'}
-        </button>
+        {/* Top-right controls: EN toggle + script toggle */}
+        <div className="absolute top-1.5 right-1.5 z-10 flex gap-1">
+          <button
+            onClick={(e) => { e.stopPropagation(); if (onEnglishToggle) onEnglishToggle(); }}
+            className={`px-1.5 py-0.5 rounded text-[9px] font-bold transition-all leading-none border ${
+              showAllEnglish ? 'bg-stone-700 text-white border-stone-600' : 'bg-white/80 border-stone-200 text-stone-500 hover:bg-white hover:text-stone-700'
+            }`}
+            title="Toggle English"
+          >
+            EN
+          </button>
+          <button
+            onClick={handleScriptToggle}
+            className="px-1.5 py-0.5 rounded bg-white/80 border border-stone-200 text-[9px] font-bold text-stone-500 hover:bg-white hover:text-stone-700 transition-all leading-none"
+            title={showHebrew ? "Switch to transliteration" : "Switch to Hebrew"}
+          >
+            {showHebrew ? 'א' : 'abc'}
+          </button>
+        </div>
         {regeneratingImage && (
           <div className="absolute inset-0 z-10 bg-white/70 flex flex-col items-center justify-center gap-1">
             <Loader2 className="w-5 h-5 animate-spin text-purple-400" />
