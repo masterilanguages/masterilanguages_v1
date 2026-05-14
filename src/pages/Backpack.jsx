@@ -69,13 +69,18 @@ export default function Backpack() {
   // Check for pending session flashcard data
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('flashcard') === 'session') {
+    const flashcardParam = urlParams.get('flashcard');
+    if (flashcardParam === 'session' || flashcardParam === 'all') {
       const stored = sessionStorage.getItem('pendingFlashcardWords');
       if (stored) {
         const data = JSON.parse(stored);
         sessionStorage.removeItem('pendingFlashcardWords');
-        setSessionFlashcardData(data);
-        // Clean the URL
+        if (data.allWords) {
+          // Will load all words once wordRatings loads — flag it
+          setSessionFlashcardData({ words: null, title: 'All Words', allWords: true });
+        } else {
+          setSessionFlashcardData(data);
+        }
         window.history.replaceState({}, '', window.location.pathname);
       }
     }
@@ -335,6 +340,20 @@ Return JSON:
 
   const userLang = userProfile?.language || 'hebrew';
   const langFilteredRatings = wordRatings.filter(w => !w.language || w.language === userLang);
+
+  // Populate allWords flashcard once wordRatings loads
+  useEffect(() => {
+    if (sessionFlashcardData?.allWords && langFilteredRatings.length > 0 && sessionFlashcardData.words === null) {
+      const allFlashcardWords = langFilteredRatings.map(w => ({
+        word: w.word,
+        phonetic: w.phonetic,
+        translation: w.translation,
+        image_url: w.image_url,
+        id: w.id,
+      }));
+      setSessionFlashcardData({ words: allFlashcardWords, title: 'All Words', allWords: true });
+    }
+  }, [langFilteredRatings.length, sessionFlashcardData?.allWords]); // eslint-disable-line
   const level0Words = langFilteredRatings.filter(w => (w.times_practiced || 0) === 0);
   const level1Words = langFilteredRatings.filter(w => w.times_practiced === 1);
   const level2Words = langFilteredRatings.filter(w => w.times_practiced === 2);
