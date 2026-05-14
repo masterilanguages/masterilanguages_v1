@@ -108,21 +108,7 @@ export default function WordCard({
   const [revealed, setRevealed] = useState(false);
   const [regeneratingImage, setRegeneratingImage] = useState(false);
 
-  const [pendingGeneration, setPendingGeneration] = useState(false);
-
-  // Auto-generate image if missing — queue with small delay to avoid hammering
-  useEffect(() => {
-    if (!word.image_url && word.id && !word.id.startsWith('session_')) {
-      setPendingGeneration(true);
-      const timer = setTimeout(() => {
-        suggestMnemonicForWord(word);
-        setPendingGeneration(false);
-      }, Math.random() * 2000); // stagger requests
-      return () => clearTimeout(timer);
-    }
-  }, [word.id]); // eslint-disable-line
-
-  const isGeneratingImage = suggestingMnemonic === word.id || pendingGeneration;
+  const isGeneratingImage = suggestingMnemonic === word.id;
 
   const [showHebrewLocal, setShowHebrewLocal] = useState(showHebrewProp ?? true);
   const [showTranslitLocal, setShowTranslitLocal] = useState(showTransliterationProp ?? true);
