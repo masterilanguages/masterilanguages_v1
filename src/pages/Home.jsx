@@ -745,14 +745,14 @@ export default function Home() {
                               className="overflow-hidden"
                             >
                               <div className="mt-1 space-y-1 pl-3">
-                                {/* Add from content library — only show if no content yet */}
-                                {isMasterUser && (day.subsections || []).length === 0 && (
+                                {/* Add from content library — always show for admin */}
+                                {isMasterUser && (
                                   <button
                                     onClick={() => setLibraryPickerDayId(day.id)}
                                     className="w-full text-left px-3 py-1.5 text-xs rounded-lg transition-all flex items-center gap-1 mb-1"
-                                    style={{ color: '#6b7c5a', background: '#5a6b5a10', border: '1px dashed #5a6b5a40' }}
+                                    style={{ color: '#93C5FD', background: 'rgba(96,165,250,0.06)', border: '1px dashed rgba(96,165,250,0.3)' }}
                                   >
-                                    <Plus className="w-3 h-3" /> + Add from content library
+                                    <Plus className="w-3 h-3" /> + Add item
                                   </button>
                                 )}
                                 {(day.subsections || []).filter(task => {
