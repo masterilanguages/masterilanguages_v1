@@ -261,7 +261,7 @@ export default function Backpack() {
   const [mnemonicExplanations, setMnemonicExplanations] = useState({});
 
   const suggestMnemonicForWord = async (word) => {
-    if (suggestingMnemonic) return; // already generating for another word
+    if (suggestingMnemonic && suggestingMnemonic !== word.id) return; // already generating for a different word
     setSuggestingMnemonic(word.id);
     try {
       const rawWord = word.phonetic || word.word;
