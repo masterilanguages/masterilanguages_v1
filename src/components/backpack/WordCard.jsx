@@ -108,6 +108,13 @@ export default function WordCard({
   const [regeneratingImage, setRegeneratingImage] = useState(false);
   const [localScript, setLocalScript] = useState(null); // null = use parent prop
 
+  // Auto-generate image if missing
+  useEffect(() => {
+    if (!word.image_url && word.id && !word.id.startsWith('session_') && suggestingMnemonic !== word.id) {
+      suggestMnemonicForWord(word);
+    }
+  }, [word.id]); // eslint-disable-line
+
   const showHebrew = localScript !== null ? localScript === 'hebrew' : showHebrewProp;
   const showTransliteration = localScript !== null ? localScript === 'translit' : showTransliterationProp;
 
