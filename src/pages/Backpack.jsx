@@ -351,24 +351,36 @@ Return JSON:
   const queuedWordIds = React.useRef(new Set());
   const isRunningQueue = React.useRef(false);
 
+  // Keep a ref to all words so the running queue always sees latest data
+  const allWordsRef = React.useRef([]);
+  allWordsRef.current = langFilteredRatings;
+
   // Auto-generate images for all words missing them — sequential queue
   useEffect(() => {
     const wordsNeedingImages = langFilteredRatings.filter(
       w => !w.image_url && w.id && !w.id.startsWith('session_') && !queuedWordIds.current.has(w.id)
     );
-    if (wordsNeedingImages.length === 0 || isRunningQueue.current) return;
+    if (wordsNeedingImages.length === 0) return;
 
     // Mark them as queued immediately to prevent duplicate queuing on re-renders
     wordsNeedingImages.forEach(w => queuedWordIds.current.add(w.id));
     setMnemonicQueue(prev => { const next = new Set(prev); wordsNeedingImages.forEach(w => next.add(w.id)); return next; });
 
+    // If queue is already running, the newly queued words will be picked up automatically
+    if (isRunningQueue.current) return;
+
     let cancelled = false;
     isRunningQueue.current = true;
     const runQueue = async () => {
-      for (const word of wordsNeedingImages) {
-        if (cancelled) break;
-        await suggestMnemonicRef.current(word);
-        setMnemonicQueue(prev => { const next = new Set(prev); next.delete(word.id); return next; });
+      while (!cancelled) {
+        // Always look up from the latest word list for next queued word without an image
+        const nextWord = allWordsRef.current.find(
+          w => !w.image_url && w.id && !w.id.startsWith('session_') && queuedWordIds.current.has(w.id)
+        );
+        if (!nextWord) break;
+        queuedWordIds.current.delete(nextWord.id); // remove before processing to avoid re-pick
+        await suggestMnemonicRef.current(nextWord);
+        setMnemonicQueue(prev => { const next = new Set(prev); next.delete(nextWord.id); return next; });
         await new Promise(r => setTimeout(r, 500));
       }
       isRunningQueue.current = false;
