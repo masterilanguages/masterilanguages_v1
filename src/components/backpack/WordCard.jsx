@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Loader2, RefreshCw, Plus, Check, X } from "lucide-react";
 import EditableWord from "../learning/EditableWord";
@@ -107,6 +107,7 @@ export default function WordCard({
 }) {
   const [revealed, setRevealed] = useState(false);
   const [regeneratingImage, setRegeneratingImage] = useState(false);
+  const [imgFailed, setImgFailed] = useState(false);
 
   const isGeneratingImage = suggestingMnemonic === word.id;
 
@@ -187,8 +188,13 @@ export default function WordCard({
             א
           </button>
         </div>
-        {word.image_url ? (
-          <img src={word.image_url} alt={word.phonetic} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', position: 'absolute', top: 0, left: 0 }} />
+        {word.image_url && !imgFailed ? (
+          <img
+            src={word.image_url}
+            alt={word.phonetic}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', position: 'absolute', top: 0, left: 0 }}
+            onError={() => setImgFailed(true)}
+          />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-cyan-400/10 via-purple-400/10 to-pink-400/10 flex flex-col items-center justify-center text-center px-4 gap-2">
             {(isGeneratingImage || regeneratingImage) ? (
@@ -200,6 +206,14 @@ export default function WordCard({
               <>
                 <p className="text-cyan-600 font-bold text-xl" dir="rtl">{word.word}</p>
                 <p className="text-stone-500 text-sm">{word.phonetic}</p>
+                {imgFailed && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setImgFailed(false); suggestMnemonicForWord(word); }}
+                    className="text-[9px] text-purple-400 underline mt-1"
+                  >
+                    🎨 Regenerate
+                  </button>
+                )}
               </>
             )}
           </div>
