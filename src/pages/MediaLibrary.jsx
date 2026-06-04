@@ -515,7 +515,7 @@ export default function MediaLibrary() {
       toast.error("Title is required");
       return;
     }
-    if (!formData.video_url && !formData.video_id) {
+    if (!editingVideo && !formData.video_url && !formData.video_id) {
       toast.error("Please add a video URL or upload an audio file first");
       return;
     }
