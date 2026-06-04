@@ -48,22 +48,43 @@ export default function DictationExercise() {
     };
   }, [videoId]);
 
-  const seekToSegment = (idx) => {
+  const segmentTimerRef = useRef(null);
+
+  const playCurrentSegment = (idx) => {
     const seg = transcript[idx];
-    if (!seg || playerRef.current?.seekTo === undefined) return;
-    playerRef.current.seekTo(seg.start || 0, true);
+    if (!seg || !playerRef.current?.seekTo) return;
+    // Clear any previous timer
+    if (segmentTimerRef.current) clearTimeout(segmentTimerRef.current);
+    const start = seg.start || 0;
+    const nextSeg = transcript[idx + 1];
+    const end = nextSeg?.start ?? null;
+    playerRef.current.seekTo(start, true);
     playerRef.current.playVideo();
+    if (end !== null) {
+      const duration = (end - start) * 1000;
+      segmentTimerRef.current = setTimeout(() => {
+        playerRef.current?.pauseVideo();
+      }, duration);
+    }
+  };
+
+  const seekToSegment = (idx) => {
     setCurrentSegIdx(idx);
+    playCurrentSegment(idx);
   };
 
   const togglePlay = () => {
     if (!playerRef.current) return;
     if (isPlaying) {
+      if (segmentTimerRef.current) clearTimeout(segmentTimerRef.current);
       playerRef.current.pauseVideo();
     } else {
-      playerRef.current.playVideo();
+      playCurrentSegment(currentSegIdx);
     }
   };
+
+  // Cleanup timer on unmount
+  useEffect(() => () => { if (segmentTimerRef.current) clearTimeout(segmentTimerRef.current); }, []);
 
   const handleReveal = (idx) => {
     setRevealed((prev) => ({ ...prev, [idx]: true }));
