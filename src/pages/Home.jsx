@@ -762,6 +762,9 @@ export default function Home() {
                                   if (taskName.includes('the bride') && userLang !== 'hebrew') return false;
                                   // Hide generic "Watch a video" if a specific video task exists
                                   if (task.id === 'video' && (day.subsections || []).some(s => s.video_id)) return false;
+                                  // Hide tasks that reference a different language by name
+                                  const otherLanguages = ['hebrew', 'english', 'spanish', 'french', 'portuguese', 'italian'].filter(l => l !== userLang);
+                                  if (otherLanguages.some(l => taskName.includes(l))) return false;
                                   return true;
                                 }).map((task, idx) => {
                                   const isSong = task.song_id || (songs && songs.find(s => s.id === task.id));
