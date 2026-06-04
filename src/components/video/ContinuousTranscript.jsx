@@ -54,7 +54,17 @@ export default function ContinuousTranscript({
     setGeneratingHebrew(true);
     try {
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Convert these ${missing.length} Hebrew transliterations back into Hebrew script. Each entry is numbered. Return JSON with a "segments" array in the same order, each: { hebrew: string (Hebrew script) }.
+        model: "claude_sonnet_4_6",
+        prompt: `You are an expert Hebrew linguist. Convert each of these Hebrew transliterations into precise, correct Hebrew script (without nikud/vowel marks). 
+
+Rules:
+- Be extremely accurate — match every word exactly to its correct Hebrew spelling
+- Use standard modern Israeli Hebrew spelling
+- Do NOT add vowel marks (nikud)
+- Each transliteration maps to exactly one Hebrew sentence
+- Return JSON with a "segments" array in the same order, each object: { hebrew: string }
+
+Transliterations:
 ${missing.map((s, i) => `${i + 1}. ${s.transliteration}`).join('\n')}`,
         response_json_schema: {
           type: 'object',
