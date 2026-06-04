@@ -80,6 +80,8 @@ export default function MediaLibrary() {
   const [loadingRecommendations, setLoadingRecommendations] = useState(false);
   const [showPostVideoFlashcards, setShowPostVideoFlashcards] = useState(false);
   const [sessionVocabWords, setSessionVocabWords] = useState([]);
+  const [videoEnded, setVideoEnded] = useState(false);
+  const [loadingFlashcards, setLoadingFlashcards] = useState(false);
   const [topics, setTopics] = useState(() => {
     const saved = localStorage.getItem("mediaLibraryTopics");
     return saved ? JSON.parse(saved) : DEFAULT_TOPICS;
@@ -88,6 +90,32 @@ export default function MediaLibrary() {
   const [newTopicInput, setNewTopicInput] = useState("");
 
   const sessionDay = new URLSearchParams(window.location.search).get('sessionDay');
+
+  const handleStartFlashcards = async () => {
+    setLoadingFlashcards(true);
+    try {
+      const vid = selectedVideo;
+      const sessionLabel = vid?.default_day ? `Session ${vid.default_day}` : vid?.title;
+      const words = await base44.entities.Word.filter({ example_sentence: sessionLabel });
+      if (words.length > 0) {
+        setSessionVocabWords(words);
+        setShowPostVideoFlashcards(true);
+      } else if (transcript.length > 0) {
+        const fullText = transcript.map(s => s.transliteration || s.text).join(' ');
+        const lang = vid?.language || userProfile?.language || 'hebrew';
+        const langCap = lang.charAt(0).toUpperCase() + lang.slice(1);
+        const result = await base44.integrations.Core.InvokeLLM({
+          prompt: `Extract 8-12 key vocabulary words from this ${langCap} transcript for a language learner. Only meaningful content words. Transcript: "${fullText.slice(0, 2000)}". Return JSON with words array, each having: word (native script), phonetic (Latin), translation (English).`,
+          response_json_schema: { type: 'object', properties: { words: { type: 'array', items: { type: 'object', properties: { word: { type: 'string' }, phonetic: { type: 'string' }, translation: { type: 'string' } } } } } }
+        });
+        if (result.words?.length) {
+          setSessionVocabWords(result.words);
+          setShowPostVideoFlashcards(true);
+        }
+      }
+    } catch (e) { console.error('Failed to load session vocab', e); }
+    setLoadingFlashcards(false);
+  };
 
   const handleRankWords = async () => {
     if (!sessionDay) return;
@@ -1047,6 +1075,7 @@ For each segment:
     setTranscript([]);
     setLoadingTranscript(true);
     setVideoPlayer(null);
+    setVideoEnded(false);
 
     const videoId = video.video_id || video.youtube_video_id || extractYouTubeId(video.video_url);
 
@@ -1071,29 +1100,9 @@ For each segment:
         playerVars: { enablejsapi: 1, autoplay: 0, controls: 1 },
         events: {
           onReady: (event) => setVideoPlayer(event.target),
-          onStateChange: async (event) => {
+          onStateChange: (event) => {
             if (event.data === 0) {
-              try {
-                const vid = selectedVideo;
-                const sessionLabel = vid?.default_day ? `Session ${vid.default_day}` : vid?.title;
-                const words = await base44.entities.Word.filter({ example_sentence: sessionLabel });
-                if (words.length > 0) {
-                  setSessionVocabWords(words);
-                  setShowPostVideoFlashcards(true);
-                } else if (transcript.length > 0) {
-                  const fullText = transcript.map(s => s.transliteration || s.text).join(' ');
-                  const lang = vid?.language || userProfile?.language || 'hebrew';
-                  const langCap = lang.charAt(0).toUpperCase() + lang.slice(1);
-                  const result = await base44.integrations.Core.InvokeLLM({
-                    prompt: `Extract 8-12 key vocabulary words from this ${langCap} transcript for a language learner. Only meaningful content words. Transcript: "${fullText.slice(0, 2000)}". Return JSON with words array, each having: word (native script), phonetic (Latin), translation (English).`,
-                    response_json_schema: { type: 'object', properties: { words: { type: 'array', items: { type: 'object', properties: { word: { type: 'string' }, phonetic: { type: 'string' }, translation: { type: 'string' } } } } } }
-                  });
-                  if (result.words?.length) {
-                    setSessionVocabWords(result.words);
-                    setShowPostVideoFlashcards(true);
-                  }
-                }
-              } catch (e) { console.error('Failed to load session vocab', e); }
+              setVideoEnded(true);
             }
           }
         }
@@ -1873,8 +1882,8 @@ Return a JSON with a "videos" array. Each video must have:
                     canEdit={canEdit}
                     isPlaying={isPlaying}
                   />
-                  {sessionDay && (
-                    <div className="mt-6 pb-8 flex justify-center">
+                  <div className="mt-6 pb-8 flex justify-center">
+                    {sessionDay ? (
                       <button
                         onClick={handleRankWords}
                         className="px-8 py-4 rounded-2xl text-white font-bold text-lg transition-all hover:scale-105"
@@ -1882,8 +1891,18 @@ Return a JSON with a "videos" array. Each video must have:
                       >
                         ✅ I'm Done — Rank Words
                       </button>
-                    </div>
-                  )}
+                    ) : (
+                      <button
+                        onClick={handleStartFlashcards}
+                        disabled={loadingFlashcards}
+                        className={`px-8 py-4 rounded-2xl text-white font-bold text-lg transition-all hover:scale-105 flex items-center gap-2 ${videoEnded ? 'animate-pulse' : ''}`}
+                        style={{ background: 'linear-gradient(135deg, #5a6b5a, #3d4a2e)' }}
+                      >
+                        {loadingFlashcards ? <span className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : '✅'}
+                        {loadingFlashcards ? 'Loading...' : "I'm Done — Start Flashcards"}
+                      </button>
+                    )}
+                  </div>
                 </>
               ) : (
                 <div className="max-w-3xl mx-auto bg-white/5 rounded-xl p-8 space-y-6">
