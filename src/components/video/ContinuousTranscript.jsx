@@ -16,6 +16,7 @@ export default function ContinuousTranscript({
 }) {
   const isHebrew = language === 'hebrew';
   const [hideTranslit, setHideTranslit] = React.useState(false);
+  const [hideHebrew, setHideHebrew] = React.useState(false);
   const [hideEnglish, setHideEnglish] = React.useState(false);
   const [localTranscript, setLocalTranscript] = React.useState(transcriptProp);
 
@@ -338,6 +339,16 @@ ${missing.map((s, i) => `${i + 1}. Transliteration: "${s.transliteration}" | Eng
             {hideTranslit ? '👁 Show phonetics' : '🙈 Hide phonetics'}
           </button>
           <button
+            onClick={() => setHideHebrew(prev => !prev)}
+            className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold transition-all border ${
+              hideHebrew
+                ? 'bg-orange-500/20 border-orange-500/50 text-orange-300'
+                : 'bg-white/10 border-white/20 text-white/60 hover:bg-white/20'
+            }`}
+          >
+            {hideHebrew ? '👁 Show Hebrew' : '🙈 Hide Hebrew'}
+          </button>
+          <button
             onClick={() => setHideEnglish(prev => !prev)}
             className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold transition-all border ${
               hideEnglish
@@ -345,7 +356,7 @@ ${missing.map((s, i) => `${i + 1}. Transliteration: "${s.transliteration}" | Eng
                 : 'bg-white/10 border-white/20 text-white/60 hover:bg-white/20'
             }`}
           >
-            {hideEnglish ? '✓ Show English' : '✗ Hide English'}
+            {hideEnglish ? '👁 Show English' : '🙈 Hide English'}
           </button>
         </div>
       </div>
@@ -466,6 +477,11 @@ ${missing.map((s, i) => `${i + 1}. Transliteration: "${s.transliteration}" | Eng
                            ✏️
                          </button>
                        )}
+                     </p>
+                   )}
+                   {!hideHebrew && segment.hebrew && (
+                     <p className="text-cyan-300 text-base font-medium leading-tight text-center break-words" dir="rtl">
+                       {renderWords(segIdx, 'hebrew', segment.hebrew, 'text-cyan-300 text-base font-medium')}
                      </p>
                    )}
                    {!hideEnglish && segment.english && (
