@@ -699,22 +699,7 @@ export default function Home() {
 
                 </div>
                   <div className="space-y-2">
-                    {uniqueDays.filter(day => {
-                      const userLang = userProfile?.language || 'hebrew';
-                      // For non-Hebrew users, hide sessions 2 and 3
-                      if (userLang !== 'hebrew' && (day.day_number === 2 || day.day_number === 3)) {
-                        return false;
-                      }
-                      // For non-Hebrew users, hide days with Hebrew-only content
-                      if (userLang !== 'hebrew') {
-                        const hasHebrewOnly = (day.subsections || []).some(s => {
-                          const taskName = s.name?.toLowerCase() || '';
-                          return taskName.includes('the bride');
-                        });
-                        if (hasHebrewOnly) return false;
-                      }
-                      return true;
-                    }).slice(0, 5).map((day, idx) => {
+                    {uniqueDays.slice(0, 5).map((day, idx) => {
                     const dayColors = [
                       { bg: '#5a6b5a', text: '#f5f0e8' },
                       { bg: '#6b7c63', text: '#f5f0e8' },
