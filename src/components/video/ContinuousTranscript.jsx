@@ -22,6 +22,13 @@ export default function ContinuousTranscript({
     setLocalTranscript(transcriptProp);
   }, [transcriptProp]);
 
+  // Auto-generate Hebrew if missing when transcript loads
+  React.useEffect(() => {
+    if (transcriptProp?.length > 0 && transcriptProp.some(s => s.transliteration && !s.hebrew)) {
+      generateMissingHebrew();
+    }
+  }, [transcriptProp]);
+
   const transcript = localTranscript;
 
   const applyLocalEdit = (segIdx, field, value) => {
@@ -313,15 +320,10 @@ ${missing.map((s, i) => `${i + 1}. Transliteration: "${s.transliteration}" | Eng
           <p className="text-white/30 text-xs">Hover a word and click 🎒 to add to backpack</p>
         )}
         <div className="ml-auto flex items-center gap-1.5 flex-wrap">
-          {canEdit && missingHebrew && (
-            <button
-              onClick={generateMissingHebrew}
-              disabled={generatingHebrew}
-              className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold transition-all border bg-purple-500/20 border-purple-500/50 text-purple-300 hover:bg-purple-500/30"
-            >
-              {generatingHebrew ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
-              {generatingHebrew ? 'Generating...' : 'Generate Hebrew'}
-            </button>
+          {generatingHebrew && (
+            <span className="flex items-center gap-1 px-2 py-1 text-xs text-purple-300">
+              <Loader2 className="w-3 h-3 animate-spin" /> Generating Hebrew...
+            </span>
           )}
           <button
             onClick={() => setHideEnglish(prev => !prev)}
