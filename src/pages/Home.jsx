@@ -460,7 +460,11 @@ export default function Home() {
 
 
   const currentDay = userProfile?.current_day || 1;
-  const sortedDays = [...days].sort((a, b) => a.day_number - b.day_number);
+  // Filter by current language client-side (guards against stale cache after language switch)
+  const currentLang = userProfile?.language || 'hebrew';
+  const sortedDays = [...days]
+    .filter(d => d.language === currentLang)
+    .sort((a, b) => a.day_number - b.day_number);
   
   // Deduplicate by day_number (keep first occurrence)
   const uniqueDays = Array.from(new Map(sortedDays.map(d => [d.day_number, d])).values());
