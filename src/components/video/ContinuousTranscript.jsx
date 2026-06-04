@@ -336,7 +336,7 @@ ${missing.map((s, i) => `${i + 1}. Transliteration: "${s.transliteration}" | Eng
                 : 'bg-white/10 border-white/20 text-white/60 hover:bg-white/20'
             }`}
           >
-            {hideTranslit ? '👁 Show phonetics' : '🙈 Hide phonetics'}
+            {hideTranslit ? '👁 Show transliteration' : '🙈 Hide transliteration'}
           </button>
           <button
             onClick={() => setHideHebrew(prev => !prev)}
