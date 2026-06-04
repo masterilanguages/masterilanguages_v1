@@ -65,7 +65,7 @@ Rules:
 - Return JSON with a "segments" array in the same order, each object: { hebrew: string }
 
 Transliterations:
-${missing.map((s, i) => `${i + 1}. ${s.transliteration}`).join('\n')}`,
+${missing.map((s, i) => `${i + 1}. Transliteration: "${s.transliteration}" | English meaning: "${s.english || ''}"`).join('\n')}`,
         response_json_schema: {
           type: 'object',
           properties: {
