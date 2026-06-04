@@ -15,8 +15,8 @@ export default function ContinuousTranscript({
   language = 'hebrew',
 }) {
   const isHebrew = language === 'hebrew';
-  const [showPhonetics, setShowPhonetics] = React.useState(true);
-  const [hideEnglish, setHideEnglish] = React.useState(true);
+  const [hideTranslit, setHideTranslit] = React.useState(false);
+  const [hideEnglish, setHideEnglish] = React.useState(false);
   const [localTranscript, setLocalTranscript] = React.useState(transcriptProp);
 
   // Sync when prop changes (e.g. loaded from DB)
@@ -328,6 +328,16 @@ ${missing.map((s, i) => `${i + 1}. Transliteration: "${s.transliteration}" | Eng
             </span>
           )}
           <button
+            onClick={() => setHideTranslit(prev => !prev)}
+            className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold transition-all border ${
+              hideTranslit
+                ? 'bg-orange-500/20 border-orange-500/50 text-orange-300'
+                : 'bg-white/10 border-white/20 text-white/60 hover:bg-white/20'
+            }`}
+          >
+            {hideTranslit ? '✓ Show Target' : '✗ Hide Target'}
+          </button>
+          <button
             onClick={() => setHideEnglish(prev => !prev)}
             className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold transition-all border ${
               hideEnglish
@@ -335,20 +345,8 @@ ${missing.map((s, i) => `${i + 1}. Transliteration: "${s.transliteration}" | Eng
                 : 'bg-white/10 border-white/20 text-white/60 hover:bg-white/20'
             }`}
           >
-            {hideEnglish ? '👁 English' : '🚫 English'}
+            {hideEnglish ? '✓ Show English' : '✗ Hide English'}
           </button>
-          {isHebrew && (
-            <button
-              onClick={() => setShowPhonetics(prev => !prev)}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all border ${
-                showPhonetics
-                  ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-300'
-                  : 'bg-white/10 border-white/20 text-white/60 hover:bg-white/20'
-              }`}
-            >
-              {showPhonetics ? 'אָ Show Hebrew' : '🔤 Show Phonetics'}
-            </button>
-          )}
         </div>
       </div>
       <div className="space-y-1 flex flex-col items-center" onClick={() => setActiveWordKey(null)}>
@@ -456,43 +454,25 @@ ${missing.map((s, i) => `${i + 1}. Transliteration: "${s.transliteration}" | Eng
                   </div>
                 ) : (
                   <>
-                   {showPhonetics ? (
-                      segment.transliteration && (
-                        <p className="text-white text-base font-medium leading-tight text-center break-words">
-                          {renderWords(segIdx, 'transliteration', segment.transliteration, 'text-white text-base font-medium')}
-                          {canEdit && (
-                            <button
-                              onClick={(e) => { e.stopPropagation(); startEditSegment(segIdx); }}
-                              className="ml-2 text-sm text-yellow-300 hover:text-yellow-200 transition-colors inline"
-                              title="Edit sentence"
-                            >
-                              ✏️
-                            </button>
-                          )}
-                        </p>
-                      )
-                    ) : (
-                      segment.hebrew && (
-                        <p className="text-cyan-300 text-base font-medium leading-tight text-center break-words" dir="rtl">
-                          {renderWords(segIdx, 'hebrew', segment.hebrew, 'text-cyan-300 text-base font-medium')}
-                        </p>
-                      )
-                    )}
-                    {(!hideEnglish || revealedSentences.has(segIdx)) && segment.english && (
-                      <p className="text-white/60 text-sm leading-tight text-center break-words">
-                        {renderWords(segIdx, 'english', segment.english, 'text-white/60 text-sm')}
-                      </p>
-                    )}
-                   <div className="flex items-center justify-center gap-2 mt-1">
-                     {segment.english && !canEdit && (
-                       <button
-                         onClick={(e) => { e.stopPropagation(); toggleSentenceReveal(segIdx); }}
-                         className="text-[10px] text-white/30 hover:text-green-300 transition-colors"
-                       >
-                         {revealedSentences.has(segIdx) ? '🙈 hide' : '👁 see'}
-                       </button>
-                     )}
-                   </div>
+                   {!hideTranslit && segment.transliteration && (
+                     <p className="text-white text-base font-medium leading-tight text-center break-words">
+                       {renderWords(segIdx, 'transliteration', segment.transliteration, 'text-white text-base font-medium')}
+                       {canEdit && (
+                         <button
+                           onClick={(e) => { e.stopPropagation(); startEditSegment(segIdx); }}
+                           className="ml-2 text-sm text-yellow-300 hover:text-yellow-200 transition-colors inline"
+                           title="Edit sentence"
+                         >
+                           ✏️
+                         </button>
+                       )}
+                     </p>
+                   )}
+                   {!hideEnglish && segment.english && (
+                     <p className="text-white/60 text-sm leading-tight text-center break-words">
+                       {renderWords(segIdx, 'english', segment.english, 'text-white/60 text-sm')}
+                     </p>
+                   )}
                   </>
                   )}
               </div>
