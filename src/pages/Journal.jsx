@@ -320,31 +320,7 @@ Return JSON with an array "exercises" where each item has: word (the vocab word 
           </div>
         </div>
 
-        {/* Mode toggle */}
-        {latestMedia && (
-          <div className="flex gap-2 mb-5">
-            <button
-              onClick={() => setJournalMode("free")}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all`}
-              style={journalMode === "free"
-                ? { background: "#5a6b5a", color: "white", fontFamily: "Jost, sans-serif" }
-                : { background: "rgba(255,254,245,0.8)", color: "#6b7c5a", border: "1px solid rgba(200,180,140,0.5)", fontFamily: "Jost, sans-serif" }
-              }
-            >
-              <BookOpen className="w-4 h-4" /> Free Journal
-            </button>
-            <button
-              onClick={() => setJournalMode("song")}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all`}
-              style={journalMode === "song"
-                ? { background: "#9b7e5a", color: "white", fontFamily: "Jost, sans-serif" }
-                : { background: "rgba(255,254,245,0.8)", color: "#6b7c5a", border: "1px solid rgba(200,180,140,0.5)", fontFamily: "Jost, sans-serif" }
-              }
-            >
-              <Music className="w-4 h-4" /> Song Questions
-            </button>
-          </div>
-        )}
+
 
         {/* Song Transcript Journal Mode */}
         <AnimatePresence mode="wait">
@@ -462,28 +438,9 @@ Return JSON with an array "exercises" where each item has: word (the vocab word 
             )}
           </AnimatePresence>
 
-          {/* Writing area */}
-          <div className="relative z-10 pl-16 pr-6 pt-4">
-            <Textarea
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              onClick={handleTextClick}
-              placeholder="Write about your day in English..."
-              className="w-full bg-transparent border-none shadow-none focus:outline-none focus:ring-0 resize-none"
-              style={{
-                fontFamily: 'Georgia, serif',
-                lineHeight: '32px',
-                fontSize: '15px',
-                color: '#2d3a1e',
-                minHeight: '480px',
-                padding: '4px 0',
-              }}
-            />
-          </div>
-
-          {/* Vocab word bubbles */}
+          {/* Vocab word bubbles — above the writing area */}
           {suggestedVocab.length > 0 && (
-            <div className="relative z-10 px-6 pb-4 pt-2" style={{ borderTop: '1px dashed rgba(200,180,140,0.5)' }}>
+            <div className="relative z-10 px-6 pb-4 pt-4" style={{ borderBottom: '1px dashed rgba(200,180,140,0.5)' }}>
               <p className="text-xs mb-3 text-center font-semibold tracking-wide uppercase" style={{ color: '#9b7e5a', fontFamily: 'Jost, sans-serif' }}>
                 Your latest words — use them in your entry ({usedWords.length}/{suggestedVocab.length})
               </p>
@@ -495,7 +452,6 @@ Return JSON with an array "exercises" where each item has: word (the vocab word 
                       key={word.id}
                       whileHover={{ scale: 1.05 }}
                       onClick={() => {
-                        // Insert word into text at cursor
                         const textarea = document.querySelector('textarea');
                         if (textarea) {
                           const start = textarea.selectionStart;
@@ -525,6 +481,27 @@ Return JSON with an array "exercises" where each item has: word (the vocab word 
               </div>
             </div>
           )}
+
+          {/* Writing area */}
+          <div className="relative z-10 pl-16 pr-6 pt-4">
+            <Textarea
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              onClick={handleTextClick}
+              placeholder={`Write about your day using your new words above. Try to include: what you did today, how you felt, something you learned, and a goal for tomorrow. Click a word above to insert it!`}
+              className="w-full bg-transparent border-none shadow-none focus:outline-none focus:ring-0 resize-none"
+              style={{
+                fontFamily: 'Georgia, serif',
+                lineHeight: '32px',
+                fontSize: '15px',
+                color: '#2d3a1e',
+                minHeight: '480px',
+                padding: '4px 0',
+              }}
+            />
+          </div>
+
+
 
           {/* Translation Exercises */}
           {suggestedVocab.length > 0 && (
