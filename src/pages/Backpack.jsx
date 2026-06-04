@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
@@ -19,6 +19,34 @@ import TranslatorWidget from "../components/TranslatorWidget";
 import SessionFlashcardsSection from "../components/backpack/SessionFlashcardsSection";
 import PasteWordsList from "../components/backpack/PasteWordsList";
 import PostVideoFlashcards from "../components/video/PostVideoFlashcards";
+
+// Simple English singularizer for common plural patterns
+function toSingular(word) {
+  if (!word || typeof word !== 'string') return word;
+  const w = word.trim();
+  // Don't singularize short words or phrases with spaces that aren't simple nouns
+  const lw = w.toLowerCase();
+  if (lw.endsWith('ies') && lw.length > 4) return w.slice(0, -3) + (w[0] === w[0].toUpperCase() ? 'Y' : 'y');
+  if (lw.endsWith('sses') || lw.endsWith('shes') || lw.endsWith('ches') || lw.endsWith('xes') || lw.endsWith('zes')) return w.slice(0, -2);
+  if (lw.endsWith('ves') && lw.length > 4) return w.slice(0, -3) + (lw.endsWith('ves') ? (w[0] === w[0].toUpperCase() ? 'F' : 'f') : '') + 'e'; 
+  if (lw.endsWith('s') && !lw.endsWith('ss') && !lw.endsWith('us') && !lw.endsWith('is') && lw.length > 3) return w.slice(0, -1);
+  return w;
+}
+
+function singularizeTranslation(translation) {
+  if (!translation) return translation;
+  // Only singularize single-word translations
+  const parts = translation.trim().split(' ');
+  if (parts.length === 1) return toSingular(translation);
+  // For multi-word, singularize the last word if it looks like a plain noun
+  // e.g. "red flowers" → "red flower"
+  const last = parts[parts.length - 1];
+  const singularLast = toSingular(last);
+  if (singularLast !== last) {
+    return [...parts.slice(0, -1), singularLast].join(' ');
+  }
+  return translation;
+}
 
 export default function Backpack() {
   const queryClient = useQueryClient();
@@ -219,7 +247,7 @@ export default function Backpack() {
       // Save a copy for this user
       await createWordMutation.mutateAsync({
         word: word.word,
-        translation: word.translation,
+        translation: singularizeTranslation(word.translation),
         phonetic: word.phonetic,
         category: 'wordbank',
         language: word.language || userProfile?.language || 'hebrew',
@@ -567,7 +595,7 @@ Return JSON:
     
     const newWord = await createWordMutation.mutateAsync({
       word: activeNewWord.hebrew || activeNewWord.word,
-      translation: activeNewWord.meaning,
+      translation: singularizeTranslation(activeNewWord.meaning),
       phonetic: activeNewWord.word,
       category: "wordbank",
       language: userProfile?.language || 'hebrew',
@@ -711,7 +739,7 @@ Return JSON with:
     const exists = wordRatings.find(w => (w.phonetic || w.word)?.toLowerCase() === wordText.toLowerCase());
     if (exists) { toast.info('Already in backpack!'); return; }
     await createWordMutation.mutateAsync({
-      word: hebrew || wordText, translation: meaning, phonetic: wordText,
+      word: hebrew || wordText, translation: singularizeTranslation(meaning), phonetic: wordText,
       category: 'wordbank', language: userProfile?.language || 'hebrew',
       times_practiced: 0, mastered: false,
     });
@@ -788,7 +816,7 @@ Return JSON with: translation (English, 1-4 words), phonetic (clean Latin transl
     const isVerb = /^l[aeiou]/i.test(phonetic);
     const newWord = await createWordMutation.mutateAsync({
       word: hebrewWord || phonetic,
-      translation: finalTranslation,
+      translation: singularizeTranslation(finalTranslation),
       phonetic,
       category: 'wordbank',
       language: userProfile?.language || 'hebrew',
