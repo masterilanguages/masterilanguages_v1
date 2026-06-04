@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { Loader2, RefreshCw, Plus, Check, X } from "lucide-react";
+import { Loader2, RefreshCw, Plus, Check, X, Pencil } from "lucide-react";
 import EditableWord from "../learning/EditableWord";
 
 function SentenceWords({ words, onAddToBackpack, showHebrew = true, showTransliteration = true }) {
@@ -100,6 +100,9 @@ export default function WordCard({
   const [revealed, setRevealed] = useState(false);
   const [regeneratingImage, setRegeneratingImage] = useState(false);
   const [imgFailed, setImgFailed] = useState(false);
+  const [showCustomMnemonic, setShowCustomMnemonic] = useState(false);
+  const [customDesc, setCustomDesc] = useState("");
+  const inputRef = useRef(null);
 
   const isGeneratingImage = suggestingMnemonic === word.id || mnemonicQueue.has(word.id);
 
@@ -116,6 +119,24 @@ export default function WordCard({
       updateWordMutation.mutate({ id: word.id, data: { image_url: result.url } });
     } catch (e) {
       console.error("Failed to regenerate image", e);
+    }
+    setRegeneratingImage(false);
+  };
+
+  const generateCustomMnemonic = async () => {
+    if (!customDesc.trim()) return;
+    setRegeneratingImage(true);
+    setShowCustomMnemonic(false);
+    try {
+      const { base44 } = await import("@/api/base44Client");
+      const result = await base44.integrations.Core.GenerateImage({
+        prompt: `${customDesc}. Colorful cartoon illustration, vibrant colors, fun and memorable, plain white background. ABSOLUTELY NO TEXT, NO LETTERS, NO WORDS anywhere in the image.`
+      });
+      updateWordMutation.mutate({ id: word.id, data: { image_url: result.url, mnemonic_explanation: customDesc } });
+      setCustomDesc("");
+      setImgFailed(false);
+    } catch (e) {
+      console.error("Failed to generate custom mnemonic", e);
     }
     setRegeneratingImage(false);
   };
@@ -248,6 +269,27 @@ export default function WordCard({
         </div>
       )}
 
+      {/* Custom mnemonic designer */}
+      {showCustomMnemonic ? (
+        <div className="px-2 pb-1 flex gap-1 items-center" onClick={e => e.stopPropagation()}>
+          <input
+            ref={inputRef}
+            autoFocus
+            value={customDesc}
+            onChange={e => setCustomDesc(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') generateCustomMnemonic(); if (e.key === 'Escape') setShowCustomMnemonic(false); }}
+            placeholder="Describe a scene..."
+            className="flex-1 text-[10px] px-2 py-1 rounded border border-purple-200 bg-purple-50 text-stone-700 outline-none min-w-0"
+          />
+          <button
+            onClick={generateCustomMnemonic}
+            disabled={!customDesc.trim()}
+            className="px-1.5 py-1 bg-purple-500 text-white rounded text-[9px] font-bold hover:bg-purple-600 disabled:opacity-40 flex-shrink-0"
+          >✓</button>
+          <button onClick={() => setShowCustomMnemonic(false)} className="text-stone-300 hover:text-stone-500 flex-shrink-0"><X className="w-3 h-3" /></button>
+        </div>
+      ) : null}
+
       {/* Source content label */}
       {word.example_sentence && (
         <div className="px-2 py-0.5 flex items-center justify-center">
@@ -325,6 +367,13 @@ export default function WordCard({
           title="Generate mnemonic image"
         >
           {suggestingMnemonic === word.id ? <Loader2 className="w-3 h-3 animate-spin text-purple-500" /> : '🎨'}
+        </button>
+        <button
+          onClick={(e) => { e.stopPropagation(); setShowCustomMnemonic(v => !v); setCustomDesc(""); }}
+          className={`w-6 h-6 rounded flex items-center justify-center transition-all ${showCustomMnemonic ? 'bg-purple-200 text-purple-700' : 'hover:bg-purple-500/20 text-stone-400'}`}
+          title="Design your own mnemonic"
+        >
+          <Pencil className="w-3 h-3" />
         </button>
         {isAdmin && (
           <button
