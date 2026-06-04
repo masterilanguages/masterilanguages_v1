@@ -151,6 +151,15 @@ export default function WordCard({
       animate={{ opacity: 1, scale: 1 }}
       className="bg-white/70 border border-stone-200 rounded-lg overflow-hidden w-48 flex flex-col"
     >
+      {/* Source content label — top of card */}
+      {word.example_sentence && (
+        <div className="px-2 py-1 flex items-center justify-center border-b border-stone-100 bg-stone-50">
+          <span className="text-[10px] text-stone-400 italic truncate">
+            📺 {sessionTitleMap[word.example_sentence] || word.example_sentence}
+          </span>
+        </div>
+      )}
+
       {word.approved && (
         <div className="flex items-center gap-1 px-2 py-0.5 bg-green-100 border-b border-green-200">
           <span className="text-green-600 text-[10px] font-semibold">✅ Approved card</span>
@@ -290,14 +299,7 @@ export default function WordCard({
         </div>
       ) : null}
 
-      {/* Source content label */}
-      {word.example_sentence && (
-        <div className="px-2 py-0.5 flex items-center justify-center">
-          <span className="text-[10px] text-stone-400 italic truncate">
-            📺 {sessionTitleMap[word.example_sentence] || word.example_sentence}
-          </span>
-        </div>
-      )}
+
 
       {/* Verb infinitive badge */}
       {(word.is_verb || /^l/i.test(word.phonetic || '')) && (
