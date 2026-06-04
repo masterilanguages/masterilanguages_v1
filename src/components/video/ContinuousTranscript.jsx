@@ -368,30 +368,6 @@ ${missing.map((s, i) => `${i + 1}. ${s.transliteration}`).join('\n')}`,
                       }}
                       className="w-14 px-1 py-0.5 rounded text-xs font-mono bg-yellow-400/20 border border-yellow-400 text-yellow-300 outline-none"
                     />
-                    <button
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        const parts = editingTimeValue.split(':');
-                        if (parts.length === 2) {
-                          const secs = parseInt(parts[0]) * 60 + parseInt(parts[1]);
-                          if (!isNaN(secs)) {
-                            applyLocalEdit(segIdx, 'start', secs);
-                            if (onEditWord) onEditWord(segIdx, 'start', secs);
-                            onSeekTo(secs, wasPlayingBeforeEdit);
-                          }
-                        }
-                        setEditingSegmentTime(null);
-                      }}
-                      className="text-green-400 hover:text-green-300"
-                    >
-                      <Check className="w-3 h-3" />
-                    </button>
-                    <button
-                      onMouseDown={(e) => { e.preventDefault(); setEditingSegmentTime(null); }}
-                      className="text-red-400 hover:text-red-300"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
                     {canEdit && (
                       <button
                         onMouseDown={(e) => { e.preventDefault(); deleteSegment(segIdx); }}
