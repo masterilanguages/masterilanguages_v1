@@ -56,7 +56,7 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
     mutationFn: (newLanguage) => base44.entities.UserProfile.update(profile?.id, { language: newLanguage }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userProfile'] });
-      queryClient.invalidateQueries({ queryKey: ['days'] });
+      queryClient.removeQueries({ queryKey: ['days'] });
       toast.success("Language updated!");
       setShowMenu(false);
     },
