@@ -331,9 +331,7 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
               <motion.button onClick={() => navigate(createPageUrl("ManageCoaches"))} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg cursor-pointer" style={{ background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.2)' }}>
                 <span className="font-bold text-xs" style={{ color: '#93C5FD', fontFamily: 'Jost, sans-serif' }}>⚙️ Admin</span>
               </motion.button>
-              <motion.button onClick={() => setShowInviteDialog(true)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1 px-2 py-1 rounded-lg cursor-pointer" style={{ background: 'rgba(96,165,250,0.12)', border: '1px solid rgba(96,165,250,0.25)' }} title="Invite new user">
-                <UserPlus className="w-3.5 h-3.5" style={{ color: '#93C5FD' }} />
-              </motion.button>
+
             </div>
           )}
 
