@@ -391,6 +391,7 @@ export default function ContinuousTranscript({
                     <textarea
                       value={editSegmentData.transliteration}
                       onChange={e => setEditSegmentData(prev => ({ ...prev, transliteration: e.target.value }))}
+                      onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEditSegment(segIdx); } if (e.key === 'Escape') setEditingSegment(null); }}
                       placeholder="Transliteration..."
                       rows={2}
                       className="w-full bg-white/10 border border-yellow-400/50 text-white text-sm rounded-lg px-2 py-1 outline-none resize-none"
@@ -398,6 +399,7 @@ export default function ContinuousTranscript({
                     <textarea
                       value={editSegmentData.english}
                       onChange={e => setEditSegmentData(prev => ({ ...prev, english: e.target.value }))}
+                      onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEditSegment(segIdx); } if (e.key === 'Escape') setEditingSegment(null); }}
                       placeholder="English..."
                       rows={1}
                       className="w-full bg-white/10 border border-yellow-400/30 text-white/70 text-sm rounded-lg px-2 py-1 outline-none resize-none"
@@ -405,19 +407,13 @@ export default function ContinuousTranscript({
                     <textarea
                       value={editSegmentData.hebrew}
                       onChange={e => setEditSegmentData(prev => ({ ...prev, hebrew: e.target.value }))}
+                      onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEditSegment(segIdx); } if (e.key === 'Escape') setEditingSegment(null); }}
                       placeholder="Hebrew..."
                       rows={1}
                       dir="rtl"
                       className="w-full bg-white/10 border border-cyan-400/30 text-cyan-300 text-sm rounded-lg px-2 py-1 outline-none resize-none"
                     />
-                    <div className="flex gap-2">
-                      <button onClick={() => saveEditSegment(segIdx)} className="flex items-center gap-1 px-2 py-1 bg-green-500/20 border border-green-500/40 text-green-400 rounded text-xs hover:bg-green-500/30">
-                        <Check className="w-3 h-3" /> Save
-                      </button>
-                      <button onClick={() => setEditingSegment(null)} className="flex items-center gap-1 px-2 py-1 bg-white/10 border border-white/20 text-white/60 rounded text-xs hover:bg-white/20">
-                        <X className="w-3 h-3" /> Cancel
-                      </button>
-                    </div>
+                    <p className="text-white/30 text-xs">Enter to save · Esc to cancel</p>
                   </div>
                 ) : (
                   <>
