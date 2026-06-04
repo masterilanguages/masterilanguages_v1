@@ -15,7 +15,6 @@ export default function ContinuousTranscript({
 }) {
   const [showPhonetics, setShowPhonetics] = React.useState(true);
   const [hideEnglish, setHideEnglish] = React.useState(true);
-  const [hideTranslit, setHideTranslit] = React.useState(false);
   const [localTranscript, setLocalTranscript] = React.useState(transcriptProp);
 
   // Sync when prop changes (e.g. loaded from DB)
@@ -268,16 +267,6 @@ export default function ContinuousTranscript({
         )}
         <div className="ml-auto flex items-center gap-1.5 flex-wrap">
           <button
-            onClick={() => setHideTranslit(prev => !prev)}
-            className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold transition-all border ${
-              hideTranslit
-                ? 'bg-orange-500/20 border-orange-500/50 text-orange-300'
-                : 'bg-white/10 border-white/20 text-white/60 hover:bg-white/20'
-            }`}
-          >
-            {hideTranslit ? '👁 Translit' : '🚫 Translit'}
-          </button>
-          <button
             onClick={() => setHideEnglish(prev => !prev)}
             className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold transition-all border ${
               hideEnglish
@@ -433,7 +422,7 @@ export default function ContinuousTranscript({
                 ) : (
                   <>
                    {showPhonetics ? (
-                      !hideTranslit && segment.transliteration && (
+                      segment.transliteration && (
                         <p className="text-white text-base font-medium leading-tight text-center break-words">
                           {renderWords(segIdx, 'transliteration', segment.transliteration, 'text-white text-base font-medium')}
                           {canEdit && (
