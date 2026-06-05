@@ -226,7 +226,7 @@ export default function DictationExercise() {
       </div>
 
       {/* Sentence selector pills */}
-      <div className="flex gap-1.5 px-4 py-2 overflow-x-auto">
+      <div className="flex gap-1.5 px-4 py-2 overflow-x-auto justify-center">
         {transcript.map((_, i) => (
           <button
             key={i}
