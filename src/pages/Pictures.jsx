@@ -73,21 +73,30 @@ export default function Pictures() {
   const [pictureCardIndex, setPictureCardIndex] = useState(0);
   const [selectedLevel, setSelectedLevel] = useState("all");
   const queryClient = useQueryClient();
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    base44.auth.me().then(setCurrentUser).catch(() => {});
+  }, []);
 
   const { data: userProfile } = useQuery({
-    queryKey: ['userProfile'],
+    queryKey: ['userProfile', currentUser?.email],
     queryFn: async () => {
-      const profiles = await base44.entities.UserProfile.list();
+      if (!currentUser?.email) return null;
+      const profiles = await base44.entities.UserProfile.filter({ created_by: currentUser.email });
       return profiles[0] || null;
     },
+    enabled: !!currentUser?.email,
   });
 
   const { data: userCoins } = useQuery({
-    queryKey: ['userCoins'],
+    queryKey: ['userCoins', currentUser?.email],
     queryFn: async () => {
-      const coins = await base44.entities.UserCoins.list();
+      if (!currentUser?.email) return { coins: 0 };
+      const coins = await base44.entities.UserCoins.filter({ created_by: currentUser.email });
       return coins[0] || { coins: 0 };
     },
+    enabled: !!currentUser?.email,
   });
 
   const { data: ratings = [] } = useQuery({

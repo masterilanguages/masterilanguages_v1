@@ -2,35 +2,61 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Play, Pause, Loader2, Check, X, Plus, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { languageLabel, isRTLLanguage } from "@/lib/language";
 
-export default function ContinuousTranscript({ 
-  transcript: transcriptProp, 
-  currentTime, 
-  onSeekTo, 
+export default function ContinuousTranscript({
+  transcript: transcriptProp,
+  currentTime,
+  onSeekTo,
   onAddWord,
   onEditWord,
   onDeleteSegment,
   canEdit,
   isPlaying: isPlayingProp = false,
   language = 'hebrew',
+  translationInProgress = false,
 }) {
-  const isHebrew = language === 'hebrew';
+  const lang = language || 'hebrew';
+  const isHebrew = lang === 'hebrew';
+  const langLabel = languageLabel(lang);
+  const isRTL = isRTLLanguage(lang);
   const [hideTranslit, setHideTranslit] = React.useState(false);
   const [hideHebrew, setHideHebrew] = React.useState(false);
   const [hideEnglish, setHideEnglish] = React.useState(false);
   const [localTranscript, setLocalTranscript] = React.useState(transcriptProp);
+  // Re-entrancy guards for auto Hebrew generation (bug #31):
+  // generatingRef = a generateMissingHebrew() pass is currently in flight;
+  // generatedKeyRef = the content key we have already generated for, so the
+  // effect runs at most once per settled transcript even as its array identity
+  // changes (the background translation replaces it on every batch).
+  const generatingRef = React.useRef(false);
+  const generatedKeyRef = React.useRef(null);
 
-  // Sync when prop changes (e.g. loaded from DB)
+  // Sync when prop changes (e.g. loaded from DB). Don't clobber locally-generated
+  // Hebrew while a generation pass is in flight (bug #31).
   React.useEffect(() => {
+    if (generatingRef.current) return;
     setLocalTranscript(transcriptProp);
   }, [transcriptProp]);
 
-  // Auto-generate Hebrew if missing when transcript loads (Hebrew only)
+  // Auto-generate Hebrew if missing when transcript loads (Hebrew only).
+  // Skip while the parent's background translation is still running, while a
+  // pass is already in flight, or if we've already handled this exact content —
+  // otherwise the effect re-fires on every translation batch and races itself.
   React.useEffect(() => {
-    if (language === 'hebrew' && transcriptProp?.length > 0 && transcriptProp.some(s => s.transliteration && !s.hebrew)) {
-      generateMissingHebrew();
-    }
-  }, [transcriptProp]);
+    if (language !== 'hebrew') return;
+    if (translationInProgress) return;
+    if (generatingRef.current) return;
+    if (!(transcriptProp?.length > 0)) return;
+    if (!transcriptProp.some(s => s.transliteration && !s.hebrew)) return;
+
+    const contentKey = transcriptProp
+      .map(s => `${s.start || 0}:${s.transliteration || ''}`)
+      .join('|');
+    if (generatedKeyRef.current === contentKey) return;
+    generatedKeyRef.current = contentKey;
+    generateMissingHebrew();
+  }, [transcriptProp, translationInProgress, language]);
 
   const transcript = localTranscript;
 
@@ -60,19 +86,21 @@ export default function ContinuousTranscript({
       .map((s, i) => ({ ...s, _idx: i }))
       .filter(s => s.transliteration && !s.hebrew);
     if (!missing.length) return;
+    // Re-entrancy guard: never run two passes at once (bug #31).
+    if (generatingRef.current) return;
+    generatingRef.current = true;
 
     setGeneratingHebrew(true);
     try {
       const result = await base44.integrations.Core.InvokeLLM({
         model: "claude_sonnet_4_6",
-        prompt: `You are an expert Hebrew linguist. Convert each of these Hebrew transliterations into precise, correct Hebrew script (without nikud/vowel marks). 
+        prompt: `You are an expert ${langLabel} linguist. Convert each of these ${langLabel} transliterations into precise, correct ${langLabel} ${isHebrew ? 'script (without nikud/vowel marks)' : 'native spelling (including any accents or diacritics)'}.
 
 Rules:
-- Be extremely accurate — match every word exactly to its correct Hebrew spelling
-- Use standard modern Israeli Hebrew spelling
-- Do NOT add vowel marks (nikud)
-- Each transliteration maps to exactly one Hebrew sentence
-- Return JSON with a "segments" array in the same order, each object: { hebrew: string }
+- Be extremely accurate — match every word exactly to its correct ${langLabel} spelling
+- Use standard ${isHebrew ? 'modern Israeli Hebrew' : langLabel} spelling
+${isHebrew ? '- Do NOT add vowel marks (nikud)\n' : ''}- Each transliteration maps to exactly one ${langLabel} sentence
+- Return JSON with a "segments" array in the same order, each object: { hebrew: string } (the "hebrew" field must contain the ${langLabel} text)
 
 Transliterations:
 ${missing.map((s, i) => `${i + 1}. Transliteration: "${s.transliteration}" | English meaning: "${s.english || ''}"`).join('\n')}`,
@@ -95,8 +123,10 @@ ${missing.map((s, i) => `${i + 1}. Transliteration: "${s.transliteration}" | Eng
       });
     } catch (e) {
       console.error('Failed to generate Hebrew', e);
+    } finally {
+      generatingRef.current = false;
+      setGeneratingHebrew(false);
     }
-    setGeneratingHebrew(false);
   };
 
   const toggleSentenceReveal = (segIdx) => {
@@ -112,7 +142,7 @@ ${missing.map((s, i) => `${i + 1}. Transliteration: "${s.transliteration}" | Eng
     setTranslatingKey(wordKey);
     try {
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Translate this single Hebrew word to English: "${word}". Return JSON with: english (string, short 1-3 word translation).`,
+        prompt: `Translate this single ${langLabel} word to English: "${word}". Return JSON with: english (string, short 1-3 word translation).`,
         response_json_schema: { type: 'object', properties: { english: { type: 'string' } } }
       });
       setWordTranslations(prev => ({ ...prev, [wordKey]: result.english }));
@@ -191,7 +221,7 @@ ${missing.map((s, i) => `${i + 1}. Transliteration: "${s.transliteration}" | Eng
       } else if (field === 'hebrew') {
         await new Promise(r => setTimeout(r, 1000)); // rate limit buffer
         const result = await base44.integrations.Core.InvokeLLM({
-          prompt: `For this Hebrew text: "${newFieldText}", provide: transliteration (Latin phonetic) and english (English translation). Return JSON.`,
+          prompt: `For this ${langLabel} text: "${newFieldText}", provide: transliteration (Latin phonetic) and english (English translation). Return JSON.`,
           response_json_schema: { type: "object", properties: { transliteration: { type: "string" }, english: { type: "string" } } }
         });
         if (result.transliteration) { applyLocalEdit(segIdx, 'transliteration', result.transliteration); onEditWord(segIdx, 'transliteration', result.transliteration); }
@@ -325,7 +355,7 @@ ${missing.map((s, i) => `${i + 1}. Transliteration: "${s.transliteration}" | Eng
         <div className="ml-auto flex items-center gap-1.5 flex-wrap">
           {generatingHebrew && (
             <span className="flex items-center gap-1 px-2 py-1 text-xs text-purple-300">
-              <Loader2 className="w-3 h-3 animate-spin" /> Generating Hebrew...
+              <Loader2 className="w-3 h-3 animate-spin" /> Generating {langLabel}...
             </span>
           )}
           <button
@@ -346,7 +376,7 @@ ${missing.map((s, i) => `${i + 1}. Transliteration: "${s.transliteration}" | Eng
                 : 'bg-white/10 border-white/20 text-white/60 hover:bg-white/20'
             }`}
           >
-            {hideHebrew ? '👁 Show Hebrew' : '🙈 Hide Hebrew'}
+            {hideHebrew ? `👁 Show ${langLabel}` : `🙈 Hide ${langLabel}`}
           </button>
           <button
             onClick={() => setHideEnglish(prev => !prev)}
@@ -456,9 +486,9 @@ ${missing.map((s, i) => `${i + 1}. Transliteration: "${s.transliteration}" | Eng
                       value={editSegmentData.hebrew}
                       onChange={e => setEditSegmentData(prev => ({ ...prev, hebrew: e.target.value }))}
                       onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEditSegment(segIdx); } if (e.key === 'Escape') setEditingSegment(null); }}
-                      placeholder="Hebrew..."
+                      placeholder={`${langLabel}...`}
                       rows={1}
-                      dir="rtl"
+                      dir={isRTL ? "rtl" : "ltr"}
                       className="w-full bg-white/10 border border-cyan-400/30 text-cyan-300 text-sm rounded-lg px-2 py-1 outline-none resize-none"
                     />
                     <p className="text-white/30 text-xs">Enter to save · Esc to cancel</p>
@@ -480,7 +510,7 @@ ${missing.map((s, i) => `${i + 1}. Transliteration: "${s.transliteration}" | Eng
                      </p>
                    )}
                    {!hideHebrew && segment.hebrew && (
-                     <p className="text-cyan-300 text-base font-medium leading-tight text-center break-words" dir="rtl">
+                     <p className="text-cyan-300 text-base font-medium leading-tight text-center break-words" dir={isRTL ? "rtl" : "ltr"}>
                        {renderWords(segIdx, 'hebrew', segment.hebrew, 'text-cyan-300 text-base font-medium')}
                      </p>
                    )}
@@ -518,9 +548,9 @@ ${missing.map((s, i) => `${i + 1}. Transliteration: "${s.transliteration}" | Eng
               <textarea
                 value={editSegmentData.hebrew}
                 onChange={e => setEditSegmentData(prev => ({ ...prev, hebrew: e.target.value }))}
-                placeholder="Hebrew..."
+                placeholder={`${langLabel}...`}
                 rows={1}
-                dir="rtl"
+                dir={isRTL ? "rtl" : "ltr"}
                 className="w-full bg-white/10 border border-white/20 text-cyan-300 text-sm rounded-lg px-2 py-1 outline-none resize-none"
               />
               <button 

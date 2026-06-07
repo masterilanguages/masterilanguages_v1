@@ -30,11 +30,13 @@ export default function Days() {
   const isAdmin = currentUser?.role === 'admin';
 
   const { data: userProfile } = useQuery({
-    queryKey: ['userProfile'],
+    queryKey: ['userProfile', currentUser?.email],
     queryFn: async () => {
-      const profiles = await base44.entities.UserProfile.list();
+      if (!currentUser?.email) return null;
+      const profiles = await base44.entities.UserProfile.filter({ created_by: currentUser.email });
       return profiles[0] || null;
     },
+    enabled: !!currentUser?.email,
   });
 
   const { data: days = [] } = useQuery({

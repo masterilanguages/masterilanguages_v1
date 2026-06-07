@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import SongTranscriptJournal from "../components/journal/SongTranscriptJournal";
+import { isRTLLanguage } from "@/lib/language";
 
 const TranslatorWidget = lazy(() => import("../components/TranslatorWidget"));
 const SignaturePad = lazy(() => import("../components/journal/SignaturePad"));
@@ -40,14 +41,20 @@ export default function Journal() {
   const [showPhonetics, setShowPhonetics] = useState(false);
   const [journalMode, setJournalMode] = useState("free"); // "free" | "song"
   const [songJournalDone, setSongJournalDone] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
   const today = new Date().toISOString().split('T')[0];
 
+  useEffect(() => {
+    base44.auth.me().then(setCurrentUser).catch(() => {});
+  }, []);
+
   const { data: userProfile } = useQuery({
-    queryKey: ['userProfile'],
+    queryKey: ['userProfile', currentUser?.email],
     queryFn: async () => {
-      const profiles = await base44.entities.UserProfile.list();
+      const profiles = await base44.entities.UserProfile.filter({ created_by: currentUser.email });
       return profiles[0] || null;
-    }
+    },
+    enabled: !!currentUser?.email,
   });
 
   const { data: entries = [] } = useQuery({
@@ -57,14 +64,14 @@ export default function Journal() {
 
   // Fetch latest 10 words from flashcards (wordbank), sorted by newest first
   const { data: backpackWords = [] } = useQuery({
-    queryKey: ['backpackWords', userProfile?.language],
+    queryKey: ['backpackWords', userProfile?.language, currentUser?.email],
     queryFn: async () => {
-      const allWords = await base44.entities.Word.filter({ category: "wordbank" });
+      const allWords = await base44.entities.Word.filter({ category: "wordbank", created_by: currentUser.email });
       const userLang = userProfile?.language || 'hebrew';
       // Only show words matching current language
       return allWords.filter(w => !w.language || w.language === userLang);
     },
-    enabled: !!userProfile,
+    enabled: !!userProfile && !!currentUser?.email,
   });
 
   const { data: publicEntries = [] } = useQuery({
@@ -100,6 +107,10 @@ export default function Journal() {
       queryClient.invalidateQueries({ queryKey: ['publicJournalEntries'] });
       setShowFeedback(true);
       toast.success("Journal entry saved! 📖");
+    },
+    onError: (e) => {
+      console.error("Journal save failed", e);
+      toast.error("Could not save your journal entry — please try again.");
     }
   });
 
@@ -109,6 +120,10 @@ export default function Journal() {
       queryClient.invalidateQueries({ queryKey: ['journalEntries'] });
       queryClient.invalidateQueries({ queryKey: ['publicJournalEntries'] });
       toast.success("Entry updated! ✓");
+    },
+    onError: (e) => {
+      console.error("Journal update failed", e);
+      toast.error("Could not save your journal entry — please try again.");
     }
   });
 
@@ -441,7 +456,7 @@ Return JSON with an array "exercises" where each item has: word (the vocab word 
                   <span className="text-xs font-semibold tracking-wider uppercase" style={{ color: '#6b7c5a', fontFamily: 'Jost, sans-serif' }}>{langName} Translation</span>
                   <button onClick={() => setShowTranslated(false)} style={{ color: '#9b7e5a' }}><X className="w-3.5 h-3.5" /></button>
                 </div>
-                <p dir={userProfile?.language === 'hebrew' ? 'rtl' : 'ltr'}>{translatedText}</p>
+                <p dir={isRTLLanguage(userProfile?.language) ? 'rtl' : 'ltr'}>{translatedText}</p>
               </motion.div>
             )}
           </AnimatePresence>
@@ -550,7 +565,7 @@ Return JSON with an array "exercises" where each item has: word (the vocab word 
                         placeholder={`Translate to ${langName}...`}
                         className="w-full px-3 py-1.5 rounded-lg text-sm outline-none"
                         style={{ background: 'rgba(255,255,255,0.7)', border: '1px solid rgba(200,180,140,0.5)', fontFamily: 'Georgia, serif', color: '#2d3a1e' }}
-                        dir={userProfile?.language === 'hebrew' ? 'rtl' : 'ltr'}
+                        dir={isRTLLanguage(userProfile?.language) ? 'rtl' : 'ltr'}
                       />
                       {ex.revealed ? (
                         <p className="text-xs px-2 py-1 rounded-lg" style={{ background: 'rgba(90,160,90,0.1)', color: '#3a7a3a', fontFamily: 'Georgia, serif' }}>

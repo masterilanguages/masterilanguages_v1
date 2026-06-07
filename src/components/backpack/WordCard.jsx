@@ -2,8 +2,13 @@ import React, { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { Loader2, RefreshCw, Plus, Check, X, Pencil } from "lucide-react";
 import EditableWord from "../learning/EditableWord";
+import { toast } from "sonner";
+import { isRTLLanguage, isRTLText, languageLabel, needsTransliteration } from "@/lib/language";
+import { mnemonicImagePrompt } from "@/lib/imageStyle";
 
-function SentenceWords({ words, onAddToBackpack, showHebrew = true, showTransliteration = true }) {
+function SentenceWords({ words, onAddToBackpack, showHebrew = true, showTransliteration = true, lang = 'hebrew' }) {
+  // Native-script line direction follows the actual generated text (RTL for Hebrew/Arabic, LTR for Latin).
+  const nativeIsRTL = isRTLText((words || []).map(w => w.hebrew || '').join(' '));
   const [activeIndex, setActiveIndex] = useState(null);
   const [editingWord, setEditingWord] = useState('');
   const [editingMeaning, setEditingMeaning] = useState('');
@@ -20,9 +25,9 @@ function SentenceWords({ words, onAddToBackpack, showHebrew = true, showTranslit
 
   return (
     <div className="space-y-0.5 w-full">
-      {/* Hebrew line — RTL, centered */}
+      {/* Native-script line — RTL for Hebrew/Arabic, LTR for Latin scripts, centered */}
       {showHebrew && (
-        <p className="text-[11px] text-cyan-700 font-semibold text-center leading-snug" dir="rtl">
+        <p className="text-[11px] text-cyan-700 font-semibold text-center leading-snug" dir={nativeIsRTL ? "rtl" : "ltr"}>
           {words.map((w, i) => (
             <span
               key={i}
@@ -36,8 +41,8 @@ function SentenceWords({ words, onAddToBackpack, showHebrew = true, showTranslit
         </p>
       )}
 
-      {/* Transliteration line — centered, single line */}
-      {showTransliteration && (
+      {/* Transliteration line — only for languages that need it (Hebrew/Arabic); Latin words are already their own transliteration */}
+      {showTransliteration && needsTransliteration(lang) && (
         <p className="text-[10px] text-stone-500 text-center leading-snug flex flex-nowrap justify-center gap-x-0.5 overflow-hidden">
           {words.map((w, i) => (
             <span
@@ -71,6 +76,7 @@ function SentenceWords({ words, onAddToBackpack, showHebrew = true, showTranslit
 
 export default function WordCard({
   word,
+  language,
   showAllEnglish,
   showHebrew: showHebrewProp = true,
   showTransliteration: showTransliterationProp = true,
@@ -109,12 +115,22 @@ export default function WordCard({
   const showHebrew = showHebrewProp ?? true;
   const showTransliteration = showTransliterationProp ?? true;
 
+  // Target language for this card (drives native-script direction + transliteration/script toggles).
+  // Prefer an explicit language prop (e.g. passed from a session view), then the word's own language, then Hebrew.
+  const lang = language || word.language || 'hebrew';
+  // Render the native word RTL only for RTL languages / actual RTL text — Latin renders LTR.
+  const nativeWordRTL = isRTLLanguage(lang) || isRTLText(word.word);
+
+  // Synthetic/session cards (e.g. id "session_0") are not persisted rows — guard
+  // against attempting a real delete on them.
+  const isRealWordId = word.id != null && !String(word.id).startsWith('session_');
+
   const regenerateImageFromDescription = async (description) => {
     setRegeneratingImage(true);
     try {
       const { base44 } = await import("@/api/base44Client");
       const result = await base44.integrations.Core.GenerateImage({
-        prompt: `A colorful cartoon illustration of: ${description}. Vibrant colors, fun and memorable, educational style. ABSOLUTELY NO TEXT, NO LETTERS, NO WORDS anywhere in the image.`
+        prompt: mnemonicImagePrompt(description)
       });
       updateWordMutation.mutate({ id: word.id, data: { image_url: result.url } });
     } catch (e) {
@@ -124,19 +140,43 @@ export default function WordCard({
   };
 
   const generateCustomMnemonic = async () => {
-    if (!customDesc.trim()) return;
+    const description = customDesc.trim();
+    if (!description) return;
     setRegeneratingImage(true);
     setShowCustomMnemonic(false);
     try {
       const { base44 } = await import("@/api/base44Client");
       const result = await base44.integrations.Core.GenerateImage({
-        prompt: `${customDesc}. Colorful cartoon illustration, vibrant colors, fun and memorable, plain white background. ABSOLUTELY NO TEXT, NO LETTERS, NO WORDS anywhere in the image.`
+        prompt: mnemonicImagePrompt(description)
       });
-      updateWordMutation.mutate({ id: word.id, data: { image_url: result.url, mnemonic_explanation: customDesc } });
+      // For approved or shared cards, create a personal copy instead of editing the
+      // original (a non-owner edit would otherwise silently no-op).
+      if (word.approved || word._shared) {
+        await base44.entities.Word.create({
+          word: word.word,
+          translation: word.translation,
+          phonetic: word.phonetic,
+          category: 'wordbank',
+          language: word.language || lang,
+          times_practiced: word.times_practiced || 0,
+          mastered: word.mastered || false,
+          image_url: result.url,
+          mnemonic_explanation: description,
+        });
+        toast.success("Saved to your personal cards");
+      } else {
+        await updateWordMutation.mutateAsync({ id: word.id, data: { image_url: result.url, mnemonic_explanation: description } });
+        toast.success("Mnemonic saved!");
+      }
+      // Refresh the caption immediately so it doesn't stay stale.
+      if (setMnemonicExplanations) {
+        setMnemonicExplanations(prev => ({ ...prev, [word.id]: description }));
+      }
       setCustomDesc("");
       setImgFailed(false);
     } catch (e) {
       console.error("Failed to generate custom mnemonic", e);
+      toast.error("Failed to generate mnemonic");
     }
     setRegeneratingImage(false);
   };
@@ -188,15 +228,19 @@ export default function WordCard({
           >
             EN
           </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); if (onHebrewToggle) onHebrewToggle(); }}
-            className={`px-1.5 py-0.5 rounded text-[9px] font-bold transition-all leading-none border ${
-              showHebrew ? 'bg-stone-700 text-white border-stone-600' : 'bg-white/80 border-stone-200 text-stone-500 hover:bg-white hover:text-stone-700'
-            }`}
-            title="Toggle Hebrew"
-          >
-            א
-          </button>
+          {/* Native-script toggle — only for languages with a distinct native script (Hebrew/Arabic).
+              Latin-script languages have no separate native script, so the toggle is hidden. */}
+          {needsTransliteration(lang) && (
+            <button
+              onClick={(e) => { e.stopPropagation(); if (onHebrewToggle) onHebrewToggle(); }}
+              className={`px-1.5 py-0.5 rounded text-[9px] font-bold transition-all leading-none border ${
+                showHebrew ? 'bg-stone-700 text-white border-stone-600' : 'bg-white/80 border-stone-200 text-stone-500 hover:bg-white hover:text-stone-700'
+              }`}
+              title={`Toggle ${languageLabel(lang)}`}
+            >
+              {String(lang).toLowerCase() === 'arabic' ? 'ع' : 'א'}
+            </button>
+          )}
         </div>
         {word.image_url && !imgFailed ? (
           <img
@@ -214,7 +258,7 @@ export default function WordCard({
               </>
             ) : (
               <>
-                <p className="text-cyan-600 font-bold text-xl" dir="rtl">{word.word}</p>
+                <p className="text-cyan-600 font-bold text-xl" dir={nativeWordRTL ? "rtl" : "ltr"}>{word.word}</p>
                 <p className="text-stone-500 text-sm">{word.phonetic}</p>
                 <button
                   onClick={(e) => { e.stopPropagation(); setImgFailed(false); suggestMnemonicForWord(word); }}
@@ -232,10 +276,10 @@ export default function WordCard({
       {/* Word info — click to toggle English reveal */}
       <div className="p-3 flex-1 flex flex-col gap-0.5 cursor-pointer select-none" onClick={() => setRevealed(r => !r)}>
         {showHebrew && (
-          <p className="text-cyan-600 font-bold text-base text-center" dir="rtl">
+          <p className="text-cyan-600 font-bold text-base text-center" dir={nativeWordRTL ? "rtl" : "ltr"}>
             <EditableWord
               text={word.word}
-              language="he"
+              language={nativeWordRTL ? "he" : "en"}
               editable={isContentEditable(word)}
               onSave={(v) => updateWordMutation.mutate({ id: word.id, data: { word: v } })}
               className="text-cyan-600 font-bold text-base"
@@ -248,7 +292,7 @@ export default function WordCard({
           <p className="text-stone-500 text-sm text-center">
             <EditableWord
               text={word.phonetic || word.word}
-              editable={true}
+              editable={isContentEditable(word)}
               onSave={(v) => updateWordMutation.mutate({ id: word.id, data: { phonetic: v } })}
               className="text-stone-500 text-sm"
               onClick={(e) => e.stopPropagation()}
@@ -260,7 +304,7 @@ export default function WordCard({
           <p className="text-stone-700 font-semibold text-base text-center">
             <EditableWord
               text={word.translation || "(no translation)"}
-              editable={true}
+              editable={isContentEditable(word)}
               onSave={(v) => updateWordMutation.mutate({ id: word.id, data: { translation: v } })}
               className="text-stone-700 font-semibold text-base"
               onClick={(e) => e.stopPropagation()}
@@ -272,8 +316,8 @@ export default function WordCard({
       {/* Mnemonic explanation below image */}
       {(mnemonicExplanations[word.id] || word.mnemonic_explanation) && (
         <div className="px-3 py-1.5 bg-purple-50 border-t border-purple-100">
-          <p className="text-[10px] text-purple-600 italic text-center leading-none truncate">
-            💡 {(mnemonicExplanations[word.id] || word.mnemonic_explanation).split(' ').slice(0, 5).join(' ')}
+          <p className="text-[10px] text-purple-600 italic text-center leading-snug">
+            💡 {mnemonicExplanations[word.id] || word.mnemonic_explanation}
           </p>
         </div>
       )}
@@ -328,6 +372,7 @@ export default function WordCard({
                 onAddToBackpack={(w, meaning, hebrew) => handleAddWordFromSentence(w, meaning, hebrew)}
                 showHebrew={showHebrew}
                 showTransliteration={showTransliteration}
+                lang={lang}
               />
               {/* English + refresh */}
               <div className="flex items-center justify-between gap-1 mt-0.5">
@@ -351,7 +396,13 @@ export default function WordCard({
           {[{ value: 1, label: "1" }, { value: 2, label: "2" }, { value: 3, label: "3" }, { value: 5, label: "M" }].map(({ value, label }) => (
             <button
               key={value}
-              onClick={(e) => handleRateWord(word.id, value, e)}
+              onClick={(e) => handleRateWord(
+                word.id,
+                // Legacy preservation: a word already at level 4 should not be demoted to 3
+                // when the "3" button is tapped — keep the existing level-4 value.
+                (value === 3 && word.times_practiced === 4) ? 4 : value,
+                e
+              )}
               className={`flex-1 h-6 rounded text-xs font-bold transition-all ${
                 word.times_practiced === value || (value === 3 && word.times_practiced === 4)
                   ? value === 5 ? 'bg-green-600 text-white' : 'bg-stone-600 text-white'
@@ -390,7 +441,12 @@ export default function WordCard({
           </button>
         )}
         <button
-          onClick={() => word.approved && !isAdmin ? handleDismissWord(word.id) : deleteWordMutation.mutate({ id: word.id, phonetic: word.phonetic || word.word })}
+          onClick={() => {
+            // Don't try to delete a synthetic/session card — it isn't a real persisted row.
+            if (!isRealWordId) { toast.info("This card isn't saved yet"); return; }
+            if (word.approved && !isAdmin) { handleDismissWord(word.id); return; }
+            deleteWordMutation.mutate({ id: word.id, phonetic: word.phonetic || word.word });
+          }}
           className="w-6 h-6 rounded flex items-center justify-center text-sm hover:bg-red-500/20 transition-all"
           title={word.approved && !isAdmin ? "Remove from my view" : "Delete word"}
         >

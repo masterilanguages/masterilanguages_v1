@@ -4,6 +4,7 @@ import { Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { languageLabel, nativeScriptInstruction } from "@/lib/language";
 
 /**
  * Accepts a pasted list of words (one per line, or comma-separated).
@@ -20,6 +21,14 @@ export default function PasteWordsList({ userProfile, onWordsAdded }) {
   const handleImport = async () => {
     if (!text.trim()) return;
     setLoading(true);
+
+    // Fetch current user so the dedup check is scoped to this user's own words
+    let me = null;
+    try {
+      me = await base44.auth.me();
+    } catch (e) {
+      console.error("Could not load current user", e);
+    }
 
     // Parse lines
     const lines = text
@@ -39,9 +48,9 @@ export default function PasteWordsList({ userProfile, onWordsAdded }) {
     if (needsTranslation.length > 0) {
       try {
         const lang = userProfile?.language || "hebrew";
-        const langCap = lang.charAt(0).toUpperCase() + lang.slice(1);
+        const langCap = languageLabel(lang);
         const result = await base44.integrations.Core.InvokeLLM({
-          prompt: `Translate these ${langCap} words/transliterations to English. Return JSON with a "words" array matching the input order, each with: phonetic (keep as given), translation (English meaning, 1-4 words), hebrew (native script if applicable).\n\nWords: ${needsTranslation.map(w => w.phonetic).join(", ")}`,
+          prompt: `Translate these ${langCap} words/transliterations to English. Return JSON with a "words" array matching the input order, each with: phonetic (keep as given), translation (English meaning, 1-4 words), hebrew (${nativeScriptInstruction(lang)}).\n\nWords: ${needsTranslation.map(w => w.phonetic).join(", ")}`,
           response_json_schema: {
             type: "object",
             properties: {
@@ -80,7 +89,8 @@ export default function PasteWordsList({ userProfile, onWordsAdded }) {
     for (const w of parsed) {
       if (!w.phonetic) continue;
       try {
-        const existing = await base44.entities.Word.filter({ phonetic: w.phonetic });
+        // Scope dedup to this user's own words (word_sel is world-readable)
+        const existing = await base44.entities.Word.filter({ phonetic: w.phonetic, created_by: me?.email });
         if (existing.length > 0) { skipped++; continue; }
         await base44.entities.Word.create({
           word: w.hebrew || w.phonetic,

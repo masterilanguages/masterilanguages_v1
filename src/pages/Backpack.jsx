@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { ArrowLeft, Star, Loader2, X, Wand2, Check, Search, RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -19,6 +19,8 @@ import TranslatorWidget from "../components/TranslatorWidget";
 import SessionFlashcardsSection from "../components/backpack/SessionFlashcardsSection";
 import PasteWordsList from "../components/backpack/PasteWordsList";
 import PostVideoFlashcards from "../components/video/PostVideoFlashcards";
+import { languageLabel, usesNikud, nativeScriptInstruction, isRTLText } from "@/lib/language";
+import { mnemonicImagePrompt } from "@/lib/imageStyle";
 
 // Simple English singularizer for common plural patterns
 function toSingular(word) {
@@ -50,6 +52,7 @@ function singularizeTranslation(translation) {
 
 export default function Backpack() {
   const queryClient = useQueryClient();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState("level0");
   const [addWordForm, setAddWordForm] = useState({ phonetic: '', translation: '' });
   const [addingWord, setAddingWord] = useState(false);
@@ -94,9 +97,11 @@ export default function Backpack() {
     base44.auth.me().then(setCurrentUser).catch(() => {});
   }, []);
 
-  // Check for pending session flashcard data
+  // Check for pending session flashcard data.
+  // Reactive to the URL query (location.search) so navigating to the "All Words"
+  // / session flashcard view updates without a manual page reload.
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
+    const urlParams = new URLSearchParams(location.search || window.location.search);
     const flashcardParam = urlParams.get('flashcard');
     if (flashcardParam === 'session' || flashcardParam === 'all') {
       const stored = sessionStorage.getItem('pendingFlashcardWords');
@@ -109,10 +114,12 @@ export default function Backpack() {
         } else {
           setSessionFlashcardData(data);
         }
+        // Land on the New tab where the flashcard single-card view is rendered.
+        setActiveTab('level0');
         window.history.replaceState({}, '', window.location.pathname);
       }
     }
-  }, []);
+  }, [location.search]);
 
   // Migrate: move all "pictures" category words to "wordbank" level0
   useEffect(() => {
@@ -150,11 +157,12 @@ export default function Backpack() {
   }, [newWordCustomMnemonic, activeNewWord]);
 
   const { data: userProfile } = useQuery({
-    queryKey: ['userProfile'],
+    queryKey: ['userProfile', currentUser?.email],
     queryFn: async () => {
-      const profiles = await base44.entities.UserProfile.list();
+      const profiles = await base44.entities.UserProfile.filter({ created_by: currentUser.email });
       return profiles[0] || null;
     },
+    enabled: !!currentUser?.email,
     staleTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
@@ -199,6 +207,10 @@ export default function Backpack() {
   const createWordMutation = useMutation({
     mutationFn: (word) => base44.entities.Word.create(word),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['wordRatings'] }),
+    onError: (e) => {
+      console.error("createWordMutation failed", e);
+      toast.error("Could not add word");
+    },
   });
 
   const updateWordMutation = useMutation({
@@ -207,15 +219,29 @@ export default function Backpack() {
       queryClient.invalidateQueries({ queryKey: ['wordRatings'] });
       toast.success("Word rating updated!");
     },
+    onError: (e) => {
+      console.error("updateWordMutation failed", e);
+      toast.error("Could not update word — you may not have permission to edit this card");
+    },
   });
 
   const deleteWordMutation = useMutation({
-    mutationFn: async ({ id, phonetic }) => {
+    mutationFn: async ({ id, phonetic, language }) => {
       // Delete the target word
       await base44.entities.Word.delete(id);
-      // Also delete any duplicates with the same phonetic
+      // Also delete any duplicates with the same phonetic — but ONLY the current
+      // user's own personal copies in the same language. Never delete other users'
+      // words, words in other languages, or shared/approved cards.
+      // Callers that don't pass a language fall back to the active view language.
+      const dupeLang = language || userProfile?.language || 'hebrew';
       if (phonetic) {
-        const dupes = wordRatings.filter(w => w.id !== id && (w.phonetic || w.word)?.toLowerCase() === phonetic.toLowerCase());
+        const dupes = wordRatings.filter(w =>
+          w.id !== id &&
+          (w.phonetic || w.word)?.toLowerCase() === phonetic.toLowerCase() &&
+          w.created_by === currentUser?.email &&
+          w.language === dupeLang &&
+          !w._shared && !w.approved
+        );
         for (const dupe of dupes) {
           await base44.entities.Word.delete(dupe.id);
         }
@@ -224,6 +250,10 @@ export default function Backpack() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['wordRatings'] });
       toast.success("Word deleted!");
+    },
+    onError: (e) => {
+      console.error("deleteWordMutation failed", e);
+      toast.error("Could not delete word");
     },
   });
 
@@ -237,6 +267,10 @@ export default function Backpack() {
       queryClient.invalidateQueries({ queryKey: ['wordRatings'] });
       toast.success(approved ? "Card approved ✅ — now shared with all users" : "Approval removed");
     },
+    onError: (e) => {
+      console.error("approveWordMutation failed", e);
+      toast.error("Could not update approval status");
+    },
   });
 
   const handleRateWord = async (wordId, rating, event) => {
@@ -244,22 +278,41 @@ export default function Backpack() {
     // Check if it's a shared (approved) card not yet owned by this user
     const word = wordRatings.find(w => w.id === wordId);
     if (word?._shared) {
-      // Save a copy for this user
-      await createWordMutation.mutateAsync({
-        word: word.word,
-        translation: singularizeTranslation(word.translation),
-        phonetic: word.phonetic,
-        category: 'wordbank',
-        language: word.language || userProfile?.language || 'hebrew',
-        times_practiced: rating,
-        mastered: rating >= 5,
-        image_url: word.image_url || null,
-      });
+      // Optimistically reflect the rating on the shared card so the UI updates
+      // immediately (the real personal copy is created below).
+      const ratingsKey = ['wordRatings', userProfile?.language, currentUser?.email];
+      const prevRatings = queryClient.getQueryData(ratingsKey);
+      queryClient.setQueryData(ratingsKey, (old) =>
+        Array.isArray(old)
+          ? old.map(w => w.id === wordId ? { ...w, times_practiced: rating, mastered: rating >= 5 } : w)
+          : old
+      );
+      try {
+        // Save a copy for this user
+        await createWordMutation.mutateAsync({
+          word: word.word,
+          translation: singularizeTranslation(word.translation),
+          phonetic: word.phonetic,
+          category: 'wordbank',
+          language: word.language || userProfile?.language || 'hebrew',
+          times_practiced: rating,
+          mastered: rating >= 5,
+          image_url: word.image_url || null,
+        });
+        toast.success(rating >= 5 ? "Saved to your backpack — Mastered! ⭐" : "Saved to your backpack!");
+      } catch (e) {
+        // Roll back the optimistic update on failure
+        if (prevRatings !== undefined) queryClient.setQueryData(ratingsKey, prevRatings);
+      }
       return;
     }
+    // Tapping "3" represents the level-3 bucket, which also contains legacy
+    // level-4 words (the "3" button is shown active for times_practiced 3 or 4).
+    // Don't demote a level-4 word back to 3 when the user taps the active "3".
+    const effectiveRating = (rating === 3 && word?.times_practiced === 4) ? 4 : rating;
     await updateWordMutation.mutateAsync({
       id: wordId,
-      data: { times_practiced: rating, mastered: rating >= 5 }
+      data: { times_practiced: effectiveRating, mastered: effectiveRating >= 5 }
     });
   };
 
@@ -267,11 +320,9 @@ export default function Backpack() {
     if (!mnemonicDescription.trim()) return;
     setGeneratingMnemonic(true);
     try {
+      const lang = userProfile?.language || 'hebrew';
       const result = await base44.integrations.Core.GenerateImage({
-        prompt: `A colorful, memorable mnemonic illustration: ${mnemonicDescription}. 
-        For learning Hebrew word "${word.phonetic}" meaning "${word.translation}".
-        Cartoon style, vibrant colors, educational, fun and memorable.
-        ABSOLUTELY NO TEXT, NO LETTERS, NO WORDS, NO WRITING, NO LABELS of any kind in the image - purely visual illustration only.`
+        prompt: mnemonicImagePrompt(`A scene to help learn the ${languageLabel(lang)} word "${word.phonetic}" meaning "${word.translation}": ${mnemonicDescription}`)
       });
       await updateWordMutation.mutateAsync({
         id: word.id,
@@ -295,8 +346,10 @@ export default function Backpack() {
     setSuggestingMnemonic(word.id);
     try {
       const rawWord = word.phonetic || word.word;
-      // Strip Hebrew infinitive "l" prefix for verbs (e.g. "lahavot" → "havot", "lehorot" → "horot")
-      const targetWord = (word.is_verb || word.phonetic?.startsWith('l')) && /^l/i.test(rawWord) ? rawWord.slice(1) : rawWord;
+      // Strip Hebrew infinitive "l" prefix for verbs (e.g. "lahavot" → "havot", "lehorot" → "horot").
+      // Hebrew only — never chop the first letter of Latin words ("luna" → "una", "love" → "ove").
+      const mnemonicLang = word.language || userProfile?.language || 'hebrew';
+      const targetWord = mnemonicLang === 'hebrew' && (word.is_verb || word.phonetic?.startsWith('l')) && /^l/i.test(rawWord) ? rawWord.slice(1) : rawWord;
       const meaning = word.translation || '';
 
       const concept = await base44.integrations.Core.InvokeLLM({
@@ -306,7 +359,7 @@ Target word: "${targetWord}" (meaning: "${meaning}")
 
 STEP 1 — SOUND MATCH: Find a real, common English noun whose spelling/pronunciation sounds like "${targetWord}" or its first 1-2 syllables. Think of words that rhyme or start the same way. Examples: "ask" → "Ask-him" → "eskimo", "shalom" → "shallow", "kelev" → "collar". The noun must be a physical, concrete, everyday object or creature. IMPORTANT: Do NOT use colors (like ivory, red, blue, gold, etc.) as the sound anchor — use objects or animals only.
 
-STEP 2 — SCENE: Place that physical noun object in a funny visual scene that ALSO shows the meaning "${meaning}". The object itself (not speech bubbles, not labels) should remind you of the sound. 
+STEP 2 — SCENE: Place that physical noun object in a funny visual scene that ALSO shows the meaning "${meaning}". The object itself (not speech bubbles, not labels) should remind you of the sound. The MEANING "${meaning}" must be the BIG, obvious visual focus of the scene; the sound-anchor object is only a supporting prop inside it. Keep the scene MODERN, timeless and child-friendly — NEVER use historical/period or violent settings (no medieval, knights, soldiers, armor, battlefield, war, ancient, Victorian). If the sound-anchor would normally be historical or military (e.g. "armor"), reimagine it as a cute, modern, harmless cartoon version. NEVER write art-style or realism words (like "medieval", "realistic", "photograph", "oil painting", "cinematic", "render", "3D") inside the description — describe only WHAT happens, not how it is drawn.
 
 CRITICAL: Do NOT name any character, creature, animal, or person in the scene with the sound-anchor word, the target word, or any variant. They are just generic characters performing the action.
 
@@ -315,7 +368,7 @@ STEP 3 — The image must show the OBJECT doing something related to the meaning
 Return JSON:
 - sound_anchor: the English noun that sounds like "${targetWord}" (e.g. "eskimo" for "askeem")
 - explanation: one punchy sentence like "An ESKIMO (askeem=agree) shaking hands in the snow"
-- image_prompt: vivid scene description with the sound_anchor object + visual action showing the meaning. No talking, no speech, no text, no naming any creatures.`,
+- image_prompt: a vivid description of the SCENE and ACTION only, where the meaning "${meaning}" is the clear centerpiece and the sound_anchor object is just a small prop. Modern/timeless setting. NO era/period words, NO art-style or realism words, no talking, no speech, no text, no naming any creatures.`,
         response_json_schema: {
           type: 'object',
           properties: {
@@ -327,7 +380,7 @@ Return JSON:
       });
 
       const imageResult = await base44.integrations.Core.GenerateImage({
-        prompt: `${concept.image_prompt}. 3D Pixar-style render, high definition, glossy and vibrant, expressive cartoon character with big eyes, cinematic lighting, ultra-detailed textures, colorful and fun. Plain white background. ABSOLUTELY NO TEXT, NO LETTERS, NO WORDS, NO SPEECH BUBBLES, NO TALKING, NO DIALOGUE, NO CHARACTERS SPEAKING OR CALLING OUT anywhere in the image. Pure visual action only.`
+        prompt: mnemonicImagePrompt(concept.image_prompt)
       });
 
       setMnemonicExplanations(prev => ({ ...prev, [word.id]: concept.explanation }));
@@ -496,8 +549,9 @@ Return JSON:
         if (cancelled) break;
         setFetchingTranslation(prev => ({ ...prev, [word.id]: true }));
         try {
+          const lang = word.language || userProfile?.language || 'hebrew';
           const result = await base44.integrations.Core.InvokeLLM({
-            prompt: `What is the English meaning of the Hebrew word "${word.phonetic || word.word}"? Return JSON with just: translation (English meaning, 1-4 words max).`,
+            prompt: `What is the English meaning of the ${languageLabel(lang)} word "${word.phonetic || word.word}"? Return JSON with just: translation (English meaning, 1-4 words max).`,
             response_json_schema: { type: 'object', properties: { translation: { type: 'string' } } }
           });
           if (result?.translation) {
@@ -536,11 +590,14 @@ Return JSON:
     setSentences(null);
     setLoadingSentences(true);
     try {
+      const lang = word.language || userProfile?.language || 'hebrew';
+      const label = languageLabel(lang);
+      const nikud = usesNikud(lang);
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Create 3 simple sentences using the word "${word.phonetic || word.word}" which means "${word.translation}".
-                      For each sentence provide the transliterated version (not Hebrew letters) and English translation.
-                      List each word separately with its Hebrew WITH FULL VOWELS/NIKKUD (nikud marks), transliteration, and meaning.
-                      CRITICAL: All Hebrew words MUST include vowel points (nikkud).`,
+        prompt: `Create 3 simple sentences in ${label} using the word "${word.phonetic || word.word}" which means "${word.translation}".
+                      For each sentence provide the transliterated version (Latin letters, not ${label} script) and English translation.
+                      List each word separately with ${nativeScriptInstruction(lang)}, transliteration, and meaning.${nikud ? `
+                      CRITICAL: All ${label} words MUST include vowel points (nikkud).` : ''}`,
                       response_json_schema: {
                         type: "object",
                         properties: {
@@ -556,7 +613,7 @@ Return JSON:
                                   items: {
                                     type: "object",
                                     properties: {
-                                      hebrew: { type: "string", description: "Hebrew word WITH FULL vowels/nikkud marks" },
+                                      hebrew: { type: "string", description: `the word in ${label} native script${nikud ? ' WITH FULL vowels/nikkud marks' : ''}` },
                                       word: { type: "string", description: "Transliteration" },
                                       meaning: { type: "string" }
                                     }
@@ -604,27 +661,11 @@ Return JSON:
       image_url: newWordImage || null,
     });
 
-    // Auto-generate mnemonic if no image yet
-    if (!newWordImage && newWord?.id) {
-      try {
-        setGeneratingMnemonic(true);
-        const mnemonicPrompt = `A memorable picture to help learn the Hebrew word "${activeNewWord.word}" meaning "${activeNewWord.meaning}". 
-        Create a colorful, cartoon-style illustration that visually represents the meaning. Fun and educational. ABSOLUTELY NO TEXT, NO LETTERS, NO WORDS, NO WRITING of any kind in the image.`;
-        
-        const result = await base44.integrations.Core.GenerateImage({
-          prompt: mnemonicPrompt
-        });
-
-        await updateWordMutation.mutateAsync({
-          id: newWord.id,
-          data: { image_url: result.url }
-        });
-        setGeneratingMnemonic(false);
-      } catch (e) {
-        setGeneratingMnemonic(false);
-        console.error("Auto-generation failed", e);
-      }
-    }
+    // NOTE: no inline image generation here. If the user didn't already make a
+    // custom image (newWordImage), the global "auto-generate missing images"
+    // effect (suggestMnemonicForWord) creates one once the word appears without
+    // an image_url. Generating inline too would race that effect and produce a
+    // second, different image ("the photo changed" bug).
 
     if (rating >= 5) {
       toast.success("Added to Fluent! ⭐");
@@ -641,9 +682,7 @@ Return JSON:
     setLastImagePrompt(prompt);
     try {
       const result = await base44.integrations.Core.GenerateImage({
-        prompt: `A colorful, memorable mnemonic illustration: ${prompt}. 
-        For learning the word "${activeNewWord.word}" meaning "${activeNewWord.meaning}".
-        Cartoon style, vibrant colors, educational, fun and memorable. ABSOLUTELY NO TEXT, NO LETTERS, NO WORDS, NO WRITING of any kind in the image.`
+        prompt: mnemonicImagePrompt(`A scene to help remember the word "${activeNewWord.word}" meaning "${activeNewWord.meaning}": ${prompt}`)
       });
       setNewWordImage(result.url);
       
@@ -674,8 +713,8 @@ Return JSON:
     for (const word of words) {
       try {
         setGeneratingMnemonic(true);
-        const mnemonicPrompt = `A memorable, colorful cartoon illustration to help learn the Hebrew word "${word.phonetic}" meaning "${word.translation}". 
-        Visually represent the meaning. Fun, educational style. ABSOLUTELY NO TEXT, NO LETTERS, NO WORDS, NO WRITING of any kind in the image.`;
+        const lang = word.language || userProfile?.language || 'hebrew';
+        const mnemonicPrompt = mnemonicImagePrompt(`A scene to help learn the ${languageLabel(lang)} word "${word.phonetic}" meaning "${word.translation}", visually representing the meaning`);
         
         const result = await base44.integrations.Core.GenerateImage({
           prompt: mnemonicPrompt
@@ -693,31 +732,40 @@ Return JSON:
   };
 
   const generateCardSentence = async (word) => {
+    // NOTE: Generated example sentences are intentionally kept session-only in
+    // `cardSentences` (keyed by word.id) rather than persisted to the Word entity.
+    // Persisting is unsafe here: session/flashcard cards use synthetic ids
+    // (e.g. "session_N") that aren't real DB rows, and the schema must not change.
+    // They simply regenerate on reload — no crash, no data written.
     setGeneratingSentence(prev => ({ ...prev, [word.id]: true }));
     setCardSentences(prev => { const next = { ...prev }; delete next[word.id]; return next; });
     try {
-      const hebrewScript = word.word && /[\u0590-\u05FF]/.test(word.word) ? word.word : null;
+      const lang = word.language || userProfile?.language || 'hebrew';
+      const label = languageLabel(lang);
+      const nikud = usesNikud(lang);
+      // Native-script form of the word, if the stored word.word differs from its transliteration.
+      const hebrewScript = word.word && word.word !== word.phonetic ? word.word : null;
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are an expert Hebrew linguist and language teacher creating example sentences for learners.
+        prompt: `You are an expert ${label} linguist and language teacher creating example sentences for learners.
 
-TARGET WORD: ${hebrewScript ? `Hebrew: "${hebrewScript}"` : ''} Transliteration: "${word.phonetic || word.word}" | English meaning: "${word.translation}"
+TARGET WORD: ${hebrewScript ? `${label}: "${hebrewScript}"` : ''} Transliteration: "${word.phonetic || word.word}" | English meaning: "${word.translation}"
 
-TASK: Write ONE grammatically perfect, natural modern Hebrew sentence that clearly demonstrates the meaning of "${word.translation}".
+TASK: Write ONE grammatically perfect, natural modern ${label} sentence that clearly demonstrates the meaning of "${word.translation}".
 
 STRICT RULES:
 1. The sentence MUST contain the word ${hebrewScript || word.phonetic} (or its correctly conjugated/declined form)
-2. The Hebrew sentence and the English translation MUST convey the EXACT same meaning — no creative liberties
-3. Use correct nikud-less Hebrew script (standard modern written Hebrew)
+2. The ${label} sentence and the English translation MUST convey the EXACT same meaning — no creative liberties
+3. Use correct ${nikud ? 'nikud-less Hebrew script (standard modern written Hebrew)' : `${label} native spelling (including any accents or diacritics)`}
 4. 4–7 words only
-5. The English translation must be a direct, accurate translation of the Hebrew — not a paraphrase
-6. Each word in the "words" array must map 1-to-1 to the actual Hebrew words in the sentence in order
-7. Do NOT invent words or use placeholder meanings — every Hebrew word must have its real translation
+5. The English translation must be a direct, accurate translation of the ${label} — not a paraphrase
+6. Each word in the "words" array must map 1-to-1 to the actual ${label} words in the sentence in order
+7. Do NOT invent words or use placeholder meanings — every ${label} word must have its real translation
 
 Return JSON with:
-- hebrew_sentence: the full sentence in Hebrew script
-- transliteration: the full sentence in Latin letters (Israeli pronunciation)
-- english: the direct English translation of the Hebrew sentence
-- words: array (one per Hebrew word, in order) of { hebrew: Hebrew word, word: its transliteration, meaning: its English meaning }`,
+- hebrew_sentence: the full sentence in ${label} native script
+- transliteration: the full sentence in Latin letters (natural pronunciation)
+- english: the direct English translation of the ${label} sentence
+- words: array (one per ${label} word, in order) of { hebrew: the word in ${label} native script, word: its transliteration, meaning: its English meaning }`,
         response_json_schema: {
           type: 'object',
           properties: {
@@ -769,6 +817,8 @@ Return JSON with:
     if (!addWordForm.phonetic.trim() && !addWordForm.translation.trim()) return;
     setAddingWord(true);
 
+    const lang = userProfile?.language || 'hebrew';
+    const langLabel = languageLabel(lang);
     let translation = addWordForm.translation.trim();
     let phonetic = addWordForm.phonetic.trim();
     let hebrewWord = '';
@@ -779,9 +829,9 @@ Return JSON with:
         const input = phonetic || translation;
         const isEnglishOnly = !phonetic && !!translation;
         const lookup = await base44.integrations.Core.InvokeLLM({
-          prompt: `The user typed "${input}" which is ${isEnglishOnly ? 'an English meaning for a Hebrew word' : 'a transliteration of a Hebrew word'}.
-Identify the Hebrew word, its correct phonetic transliteration, and its English meaning.
-Return JSON with: translation (English, 1-4 words), phonetic (clean Latin transliteration), hebrew (Hebrew script).`,
+          prompt: `The user typed "${input}" which is ${isEnglishOnly ? `an English meaning for a ${langLabel} word` : `a transliteration of a ${langLabel} word`}.
+Identify the ${langLabel} word, its correct phonetic transliteration, and its English meaning.
+Return JSON with: translation (English, 1-4 words), phonetic (clean Latin transliteration), hebrew (${nativeScriptInstruction(lang)}).`,
           response_json_schema: {
             type: 'object',
             properties: {
@@ -804,8 +854,8 @@ Return JSON with: translation (English, 1-4 words), phonetic (clean Latin transl
     }
 
     const finalTranslation = translation; // capture before form clear
-    // Deduplicate check
-    const existingCheck = await base44.entities.Word.filter({ phonetic });
+    // Deduplicate check — scope to this user's own words only (word_sel is world-readable)
+    const existingCheck = await base44.entities.Word.filter({ phonetic, created_by: currentUser?.email });
     if (existingCheck.length > 0) {
       toast.info(`"${phonetic}" is already in your backpack!`);
       setAddWordForm({ phonetic: '', translation: '' });
@@ -826,39 +876,11 @@ Return JSON with: translation (English, 1-4 words), phonetic (clean Latin transl
     });
     setAddWordForm({ phonetic: '', translation: '' });
     toast.success('Word added! Generating mnemonic... 🎨');
-    // Auto-generate mnemonic image
-    if (newWord?.id) {
-      try {
-        const rawWord = phonetic; // use captured value, not cleared form
-        const soundWord = /^l/i.test(rawWord) ? rawWord.slice(1) : rawWord;
-        const concept = await base44.integrations.Core.InvokeLLM({
-          prompt: `You create sound-based visual mnemonics for language learning.
-
-Target word: "${soundWord}" (meaning: "${finalTranslation}")
-
-STEP 1 — SOUND MATCH: Find a real, common English noun whose spelling/pronunciation sounds like "${soundWord}" or its first 1-2 syllables. Think of words that rhyme or start the same way. The noun must be a physical, concrete, everyday object or creature. IMPORTANT: Do NOT use colors (like ivory, red, blue, gold, etc.) as the sound anchor — use objects or animals only.
-
-STEP 2 — SCENE: Place that physical noun object in a funny visual scene that ALSO shows the meaning "${finalTranslation}". The object itself (not speech bubbles, not labels) should remind you of the sound.
-
-STEP 3 — The image must show the OBJECT doing something related to the meaning. NO speech bubbles, NO text, NO characters speaking or calling out. PURE VISUAL ACTION ONLY — no mouths open to speak, no gesturing as if calling out.
-
-Return JSON:
-- sound_anchor: the English noun that sounds like "${soundWord}"
-- explanation: one punchy sentence like "An ESKIMO (askeem=agree) shaking hands in the snow"
-- image_prompt: vivid scene description with the sound_anchor object + visual action showing the meaning. No talking, no speech, no text.`,
-          response_json_schema: { type: 'object', properties: { sound_anchor: { type: 'string' }, explanation: { type: 'string' }, image_prompt: { type: 'string' } } }
-        });
-        const img = await base44.integrations.Core.GenerateImage({
-          prompt: `${concept.image_prompt}. 3D Pixar-style render, high definition, glossy and vibrant, expressive cartoon character with big eyes, cinematic lighting, ultra-detailed textures, colorful and fun. Plain white background. ABSOLUTELY NO TEXT, NO LETTERS, NO SPEECH BUBBLES, NO TALKING, NO DIALOGUE, NO CHARACTERS SPEAKING OR CALLING OUT anywhere in the image. Pure visual action only.`
-        });
-        await updateWordMutation.mutateAsync({ id: newWord.id, data: { image_url: img.url, mnemonic_explanation: concept.explanation } });
-        queryClient.invalidateQueries({ queryKey: ['wordRatings'] });
-        toast.success('Mnemonic created! 🎨');
-      } catch (e) {
-        console.error('Mnemonic generation failed', e);
-        toast.error('Mnemonic generation failed');
-      }
-    }
+    // NOTE: no inline mnemonic/image generation here. The global
+    // "auto-generate missing images" effect (suggestMnemonicForWord) creates the
+    // sound-based concept + Pixar image once this new word appears without an
+    // image_url. Generating inline too would race that effect and overwrite it
+    // with a second, different image ("the photo changed" bug).
     setAddingWord(false);
   };
 
@@ -991,13 +1013,15 @@ Return JSON:
                     translation: sessionFlashcardData.words[singleCardIndex]?.translation,
                     phonetic: sessionFlashcardData.words[singleCardIndex]?.phonetic,
                     category: 'wordbank',
+                    // Carry the target language so Latin-script words render LTR
+                    // (WordCard derives direction from word.language).
+                    language: sessionFlashcardData.words[singleCardIndex]?.language || userProfile?.language || 'hebrew',
                     times_practiced: 0,
                     mastered: false,
                   }}
                   showAllEnglish={showAllEnglish}
                   onEnglishToggle={() => setShowAllEnglish(v => !v)}
                   onHebrewToggle={() => setShowHebrew(v => !v)}
-                  onTranslitToggle={() => setShowTransliteration(v => !v)}
                   showHebrew={showHebrew}
                   showTransliteration={showTransliteration}
                   showPhonetics={showPhonetics}
@@ -1035,7 +1059,6 @@ Return JSON:
                   showAllEnglish={showAllEnglish}
                   onEnglishToggle={() => setShowAllEnglish(v => !v)}
                   onHebrewToggle={() => setShowHebrew(v => !v)}
-                  onTranslitToggle={() => setShowTransliteration(v => !v)}
                   showHebrew={showHebrew}
                   showTransliteration={showTransliteration}
                   showPhonetics={showPhonetics}
@@ -1076,7 +1099,6 @@ Return JSON:
                   showAllEnglish={showAllEnglish}
                   onEnglishToggle={() => setShowAllEnglish(v => !v)}
                   onHebrewToggle={() => setShowHebrew(v => !v)}
-                  onTranslitToggle={() => setShowTransliteration(v => !v)}
                   showHebrew={showHebrew}
                   showTransliteration={showTransliteration}
                   showPhonetics={showPhonetics}
@@ -1110,7 +1132,6 @@ Return JSON:
                   showAllEnglish={showAllEnglish}
                   onEnglishToggle={() => setShowAllEnglish(v => !v)}
                   onHebrewToggle={() => setShowHebrew(v => !v)}
-                  onTranslitToggle={() => setShowTransliteration(v => !v)}
                   showHebrew={showHebrew}
                   showTransliteration={showTransliteration}
                   showPhonetics={showPhonetics}
@@ -1179,7 +1200,7 @@ Return JSON:
                                                       : "hover:bg-cyan-500/20 cursor-pointer"
                                                   }`}
                                                 >
-                                                  <span className="text-white/70 text-[13px] h-[15px] leading-[15px]" dir="rtl">{wordInfo?.hebrew || ""}</span>
+                                                  <span className="text-white/70 text-[13px] h-[15px] leading-[15px]" dir={isRTLText(wordInfo?.hebrew) ? "rtl" : "ltr"}>{wordInfo?.hebrew || ""}</span>
                                                   <span className={`text-cyan-400 text-[13px] h-[15px] leading-[15px] ${isQueued ? "" : "underline decoration-dotted"}`}>{word}</span>
                                                 </button>
                                               );
@@ -1192,8 +1213,8 @@ Return JSON:
               {newWords.length > 0 && (
                 <div className="pt-2 border-t border-white/10">
                   <p className="text-amber-400 text-sm mb-2">📝 New Words: {newWords.length}</p>
-                  <Button 
-                    onClick={() => { setSelectedWord(null); setActiveTab("new"); }}
+                  <Button
+                    onClick={() => { setSelectedWord(null); setActiveTab("level0"); }}
                     className="w-full bg-gradient-to-r from-amber-500 to-orange-500"
                   >
                     Rate New Words
@@ -1212,7 +1233,7 @@ Return JSON:
         <DialogContent className="bg-stone-50 border-stone-200 text-stone-800 max-w-md max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-center">
-              <span className="text-white/70 text-lg block" dir="rtl">{activeNewWord?.hebrew}</span>
+              <span className="text-white/70 text-lg block" dir={isRTLText(activeNewWord?.hebrew) ? "rtl" : "ltr"}>{activeNewWord?.hebrew}</span>
               <span className="text-cyan-400 text-2xl">{activeNewWord?.word}</span>
               <span className="text-white/60 text-lg block">= {activeNewWord?.meaning}</span>
             </DialogTitle>

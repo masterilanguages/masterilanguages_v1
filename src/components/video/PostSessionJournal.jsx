@@ -4,9 +4,12 @@ import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Eye, EyeOff, Check, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
+import { languageLabel, isRTLLanguage, usesNikud } from "@/lib/language";
 
 export default function PostSessionJournal({ words, onClose }) {
   const queryClient = useQueryClient();
+  // Target language comes from the words being practiced (each Word row carries .language).
+  const lang = words?.find(w => w.language)?.language || 'hebrew';
   const [sentences, setSentences] = useState({}); // wordId -> { hebrew, transliteration, english }
   const [loading, setLoading] = useState(true);
   const [revealed, setRevealed] = useState({});
@@ -22,13 +25,17 @@ export default function PostSessionJournal({ words, onClose }) {
     setLoading(true);
     try {
       const wordList = words.map(w => `"${w.phonetic}" = "${w.translation}"`).join(", ");
+      const label = languageLabel(lang);
+      const sentenceNote = usesNikud(lang)
+        ? `a short Hebrew sentence using the word (Hebrew script with nikud/vowels)`
+        : `a short ${label} sentence using the word (correct native spelling, including any accents or diacritics)`;
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Create one simple Hebrew sentence for each of these words that uses the word naturally. 
+        prompt: `Create one simple ${label} sentence for each of these words that uses the word naturally.
 Words: ${wordList}
 
 For each word return:
 - phonetic: the word's phonetic (exactly as given)
-- hebrew: a short Hebrew sentence using the word (with nikud/vowels)
+- hebrew: ${sentenceNote}
 - transliteration: the sentence in Latin letters
 - english: the English translation of the sentence
 
@@ -70,19 +77,24 @@ Keep sentences simple and beginner-friendly (5-8 words).`,
     const key = word.id || word.phonetic;
     const sentence = sentences[key];
     if (!sentence || !word.id) return;
-    const existing = await base44.entities.Word.filter({ id: word.id }).catch(() => []);
-    const wordData = existing[0];
-    const saved = wordData?.saved_sentences || [];
-    await base44.entities.Word.update(word.id, {
-      saved_sentences: [...saved, {
-        hebrew: sentence.hebrew,
-        transliteration: sentence.transliteration,
-        english: sentence.english
-      }]
-    }).catch(() => {});
-    setApproved(prev => ({ ...prev, [key]: true }));
-    queryClient.invalidateQueries({ queryKey: ['wordRatings'] });
-    toast.success("Sentence saved! ✅");
+    try {
+      const existing = await base44.entities.Word.filter({ id: word.id });
+      const wordData = existing[0];
+      const saved = wordData?.saved_sentences || [];
+      await base44.entities.Word.update(word.id, {
+        saved_sentences: [...saved, {
+          hebrew: sentence.hebrew,
+          transliteration: sentence.transliteration,
+          english: sentence.english
+        }]
+      });
+      setApproved(prev => ({ ...prev, [key]: true }));
+      queryClient.invalidateQueries({ queryKey: ['wordRatings'] });
+      toast.success("Sentence saved! ✅");
+    } catch (e) {
+      console.error("Failed to save sentence", e);
+      toast.error("Could not save sentence");
+    }
   };
 
   const currentWord = words[cardIdx];
@@ -139,7 +151,7 @@ Keep sentences simple and beginner-friendly (5-8 words).`,
               <div className="p-6 text-center bg-stone-50 border-b border-stone-100">
                 {currentSentence ? (
                   <>
-                    <p className="text-2xl font-bold text-stone-800 leading-relaxed" dir="rtl" style={{ fontFamily: 'serif' }}>
+                    <p className="text-2xl font-bold text-stone-800 leading-relaxed" dir={isRTLLanguage(lang) ? "rtl" : "ltr"} style={{ fontFamily: 'serif' }}>
                       {currentSentence.hebrew}
                     </p>
                     <p className="text-stone-400 text-sm mt-2 italic">{currentSentence.transliteration}</p>

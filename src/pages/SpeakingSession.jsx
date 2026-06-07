@@ -117,6 +117,12 @@ export default function SpeakingSession() {
 
   const { startRecording, stopRecording } = useMediaRecorder(handleTakeStop);
 
+  // Release countdown timer and in-flight mic stream on unmount
+  useEffect(() => () => {
+    clearInterval(countdownRef.current);
+    stopRecording();
+  }, [stopRecording]);
+
   // Sync currentTime from audio element
   useEffect(() => {
     const audio = audioRef.current;

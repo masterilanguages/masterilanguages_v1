@@ -5,6 +5,7 @@ import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2, Pause, RefreshCw, Check } from "lucide-react";
+import { languageLabel, isRTLText } from "@/lib/language";
 
 const RATINGS = [
   { value: 1, label: "1", color: "#ef4444" },
@@ -15,6 +16,9 @@ const RATINGS = [
 
 export default function PostVideoFlashcards({ words, onClose, onJournal, videoTitle, userProfile }) {
   const queryClient = useQueryClient();
+  const lang = userProfile?.language || "hebrew";
+  const isHebrew = lang === "hebrew";
+  const langLabel = languageLabel(lang);
   const [step, setStep] = useState("flashcards");
   const [cardIdx, setCardIdx] = useState(0);
   const [flipped, setFlipped] = useState(false);
@@ -71,10 +75,12 @@ export default function PostVideoFlashcards({ words, onClose, onJournal, videoTi
     setMnemonicData(prev => ({ ...prev, [key]: { ...(prev[key] || {}), loading: true } }));
     try {
       const isVerb = word.is_verb === true;
-      const soundPhonetic = isVerb && /^l/i.test(word.phonetic) ? word.phonetic.slice(1) : word.phonetic;
+      // The "l" infinitive prefix stripping only applies to Hebrew verbs (e.g. "lalechet").
+      const stripHebrewPrefix = isHebrew && isVerb && /^l/i.test(word.phonetic);
+      const soundPhonetic = stripHebrewPrefix ? word.phonetic.slice(1) : word.phonetic;
       const concept = await base44.integrations.Core.InvokeLLM({
         prompt: `Create a mnemonic to remember the word "${soundPhonetic}" meaning "${word.translation}".
-Find an English word/phrase that SOUNDS like "${soundPhonetic}"${isVerb ? ` (the "l" at the start of "${word.phonetic}" is just the Hebrew infinitive prefix — completely ignore it, base the sound only on "${soundPhonetic}")` : ''} and connect it visually to the meaning "${word.translation}".
+Find an English word/phrase that SOUNDS like "${soundPhonetic}"${stripHebrewPrefix ? ` (the "l" at the start of "${word.phonetic}" is just the Hebrew infinitive prefix — completely ignore it, base the sound only on "${soundPhonetic}")` : ''} and connect it visually to the meaning "${word.translation}".
 
 CRITICAL: Do NOT name any character, creature, animal, or person in the image with the sound-anchor word, the target word, or any variant. They are just generic characters/objects performing the action.
 
@@ -103,7 +109,7 @@ Return JSON with:
 
       // Persist to DB if word has an id
       if (word.id) {
-        base44.entities.Word.update(word.id, { image_url: imageResult.url, mnemonic_explanation: concept.explanation }).catch(() => {});
+        base44.entities.Word.update(word.id, { image_url: imageResult.url, mnemonic_explanation: concept.explanation }).catch(e => { console.error('save mnemonic failed', e); toast.error('Could not save mnemonic — it may be lost on reload'); });
       }
     } catch (e) {
       setMnemonicData(prev => ({ ...prev, [key]: { ...(prev[key] || {}), loading: false } }));
@@ -113,15 +119,14 @@ Return JSON with:
 
   // Detect if a word is a conjugated verb and return the infinitive form if so
   const normalizeToInfinitive = async (word) => {
-    const lang = userProfile?.language || "hebrew";
     try {
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Is "${word.phonetic}" (meaning: "${word.translation}") in ${lang} a conjugated verb form (not an infinitive/base form)? If yes, return the infinitive/dictionary form. If it's already an infinitive or not a verb, return it as-is.
+        prompt: `Is "${word.phonetic}" (meaning: "${word.translation}") in ${langLabel} a conjugated verb form (not an infinitive/base form)? If yes, return the infinitive/dictionary form. If it's already an infinitive or not a verb, return it as-is.
 
 Return JSON only:
 - is_conjugated: boolean
 - infinitive_phonetic: the infinitive in Latin transliteration
-- infinitive_word: the infinitive in native script (${lang})
+- infinitive_word: the infinitive in native script (${langLabel})
 - infinitive_translation: English meaning of the infinitive (e.g. "to run" not "ran")`,
         response_json_schema: {
           type: "object",
@@ -150,22 +155,31 @@ Return JSON only:
     setSaving(true);
     const key = getKey(word);
     const imageUrl = mnemonicData[key]?.image_url;
+    // Retry-backup the generated mnemonic explanation alongside the rating (same backup path as image_url)
+    const mnemonicExplanation = mnemonicData[key]?.customExplanation || mnemonicData[key]?.explanation;
     setResults(prev => [...prev, { word, rating }]);
 
     if (word.id) {
       await updateWordMutation.mutateAsync({
         id: word.id,
-        data: { times_practiced: rating, mastered: rating >= 5, ...(imageUrl ? { image_url: imageUrl } : {}) }
+        data: { times_practiced: rating, mastered: rating >= 5, ...(imageUrl ? { image_url: imageUrl } : {}), ...(mnemonicExplanation ? { mnemonic_explanation: mnemonicExplanation } : {}) }
       });
     } else {
       // Normalize conjugated verbs to their infinitive before saving
       const normalizedWord = await normalizeToInfinitive(word);
-      // Check if this infinitive already exists to avoid duplicates
-      const existing = await base44.entities.Word.filter({ phonetic: normalizedWord.phonetic });
+      // Fetch current user so the dedup check is scoped to this user's own words
+      let me = null;
+      try {
+        me = await base44.auth.me();
+      } catch (e) {
+        console.error("Could not load current user", e);
+      }
+      // Check if this infinitive already exists to avoid duplicates — scoped to this user (word_sel is world-readable)
+      const existing = await base44.entities.Word.filter({ phonetic: normalizedWord.phonetic, created_by: me?.email });
       if (existing.length > 0) {
         await updateWordMutation.mutateAsync({
           id: existing[0].id,
-          data: { times_practiced: rating, mastered: rating >= 5, ...(imageUrl ? { image_url: imageUrl } : {}) }
+          data: { times_practiced: rating, mastered: rating >= 5, ...(imageUrl ? { image_url: imageUrl } : {}), ...(mnemonicExplanation ? { mnemonic_explanation: mnemonicExplanation } : {}) }
         });
       } else {
         await createWordMutation.mutateAsync({
@@ -179,6 +193,7 @@ Return JSON only:
           vocab_level: 0,
           is_verb: normalizedWord.is_verb || false,
           ...(imageUrl ? { image_url: imageUrl } : {}),
+          ...(mnemonicExplanation ? { mnemonic_explanation: mnemonicExplanation } : {}),
         });
       }
     }
@@ -286,9 +301,9 @@ Return JSON only:
                     className={`px-2 py-1 rounded-lg text-xs font-bold transition-all border ${
                       showHebrew ? 'bg-cyan-50 border-cyan-200 text-cyan-600' : 'bg-stone-50 border-stone-200 text-stone-400'
                     }`}
-                    title={showHebrew ? "Switch to transliteration" : "Switch to Hebrew"}
+                    title={showHebrew ? "Switch to transliteration" : `Switch to ${langLabel}`}
                   >
-                    {showHebrew ? 'א' : 'abc'}
+                    {showHebrew ? (isHebrew ? 'א' : langLabel.charAt(0)) : 'abc'}
                   </button>
                   <button
                     onClick={() => setConfirmLeave(true)}
@@ -366,14 +381,14 @@ Return JSON only:
                           if (e.key === 'Enter' && customMnemonicText.trim()) {
                             const text = customMnemonicText.trim();
                             setMnemonicData(prev => ({ ...prev, [currentKey]: { ...prev[currentKey], customExplanation: text, loading: true } }));
-                            if (currentWord.id) base44.entities.Word.update(currentWord.id, { mnemonic_explanation: text }).catch(() => {});
+                            if (currentWord.id) base44.entities.Word.update(currentWord.id, { mnemonic_explanation: text }).catch(e => { console.error('save mnemonic failed', e); toast.error('Could not save mnemonic — it may be lost on reload'); });
                             setCustomMnemonicInput(null);
                             try {
                               const imageResult = await base44.integrations.Core.GenerateImage({
                                 prompt: `${text}. 3D Pixar-style render, high definition, glossy and vibrant, expressive cartoon character with big eyes, cinematic lighting, ultra-detailed textures, colorful and fun. Plain white background. ABSOLUTELY NO TEXT, NO LETTERS, NO WORDS anywhere in the image.`
                               });
                               setMnemonicData(prev => ({ ...prev, [currentKey]: { ...prev[currentKey], image_url: imageResult.url, loading: false } }));
-                              if (currentWord.id) base44.entities.Word.update(currentWord.id, { image_url: imageResult.url }).catch(() => {});
+                              if (currentWord.id) base44.entities.Word.update(currentWord.id, { image_url: imageResult.url }).catch(e => { console.error('save mnemonic failed', e); toast.error('Could not save mnemonic — it may be lost on reload'); });
                             } catch (e) {
                               setMnemonicData(prev => ({ ...prev, [currentKey]: { ...prev[currentKey], loading: false } }));
                               toast.error("Failed to generate image");
@@ -385,7 +400,7 @@ Return JSON only:
                         onClick={() => {
                           if (customMnemonicText.trim()) {
                             setMnemonicData(prev => ({ ...prev, [currentKey]: { ...prev[currentKey], customExplanation: customMnemonicText.trim() } }));
-                            if (currentWord.id) base44.entities.Word.update(currentWord.id, { mnemonic_explanation: customMnemonicText.trim() }).catch(() => {});
+                            if (currentWord.id) base44.entities.Word.update(currentWord.id, { mnemonic_explanation: customMnemonicText.trim() }).catch(e => { console.error('save mnemonic failed', e); toast.error('Could not save mnemonic — it may be lost on reload'); });
                           }
                           setCustomMnemonicInput(null);
                         }}
@@ -399,14 +414,14 @@ Return JSON only:
                         if (!customMnemonicText.trim()) return;
                         // Save text first
                         setMnemonicData(prev => ({ ...prev, [currentKey]: { ...prev[currentKey], customExplanation: customMnemonicText.trim(), loading: true } }));
-                        if (currentWord.id) base44.entities.Word.update(currentWord.id, { mnemonic_explanation: customMnemonicText.trim() }).catch(() => {});
+                        if (currentWord.id) base44.entities.Word.update(currentWord.id, { mnemonic_explanation: customMnemonicText.trim() }).catch(e => { console.error('save mnemonic failed', e); toast.error('Could not save mnemonic — it may be lost on reload'); });
                         setCustomMnemonicInput(null);
                         try {
                           const imageResult = await base44.integrations.Core.GenerateImage({
                             prompt: `${customMnemonicText.trim()}. 3D Pixar-style render, high definition, glossy and vibrant, expressive cartoon character with big eyes, cinematic lighting, ultra-detailed textures, colorful and fun. Plain white background. ABSOLUTELY NO TEXT, NO LETTERS, NO WORDS anywhere in the image.`
                           });
                           setMnemonicData(prev => ({ ...prev, [currentKey]: { ...prev[currentKey], image_url: imageResult.url, loading: false } }));
-                          if (currentWord.id) base44.entities.Word.update(currentWord.id, { image_url: imageResult.url }).catch(() => {});
+                          if (currentWord.id) base44.entities.Word.update(currentWord.id, { image_url: imageResult.url }).catch(e => { console.error('save mnemonic failed', e); toast.error('Could not save mnemonic — it may be lost on reload'); });
                         } catch (e) {
                           setMnemonicData(prev => ({ ...prev, [currentKey]: { ...prev[currentKey], loading: false } }));
                           toast.error("Failed to generate image");
@@ -439,7 +454,7 @@ Return JSON only:
                   <>
                     <p className="text-cyan-500 font-bold text-xl">{currentWord.phonetic}</p>
                     {currentWord.word && (
-                      <p className="text-cyan-700 font-bold text-lg" dir="rtl" style={{ fontFamily: 'serif' }}>
+                      <p className="text-cyan-700 font-bold text-lg" dir={isRTLText(currentWord.word) ? "rtl" : "ltr"} style={{ fontFamily: 'serif' }}>
                         {currentWord.word}
                       </p>
                     )}

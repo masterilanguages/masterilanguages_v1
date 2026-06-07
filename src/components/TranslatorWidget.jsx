@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { languageLabel, usesNikud, isRTLLanguage, isRTLText, nativeScriptInstruction } from "@/lib/language";
 
 export default function TranslatorWidget() {
   const queryClient = useQueryClient();
@@ -14,19 +15,26 @@ export default function TranslatorWidget() {
   const [translation, setTranslation] = useState(null);
   const [isTranslating, setIsTranslating] = useState(false);
   const [learningLanguage, setLearningLanguage] = useState("he");
+  const [targetLanguage, setTargetLanguage] = useState("hebrew");
   const [wordAdded, setWordAdded] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [details, setDetails] = useState(null);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
 
   useEffect(() => {
-    base44.entities.UserProfile.list().then(profiles => {
-      const lang = profiles[0]?.language;
-      if (lang) {
-        const langMap = { hebrew: "he", spanish: "es", french: "fr", portuguese: "pt", italian: "it" };
-        setLearningLanguage(langMap[lang] || "he");
-      }
-    });
+    (async () => {
+      try {
+        const me = await base44.auth.me();
+        if (!me?.email) return;
+        const profiles = await base44.entities.UserProfile.filter({ created_by: me.email });
+        const lang = profiles[0]?.language;
+        if (lang) {
+          const langMap = { hebrew: "he", spanish: "es", french: "fr", portuguese: "pt", italian: "it" };
+          setLearningLanguage(langMap[lang] || "he");
+          setTargetLanguage(lang);
+        }
+      } catch { /* not signed in / no profile yet */ }
+    })();
   }, []);
 
   const createWordMutation = useMutation({
@@ -48,16 +56,18 @@ export default function TranslatorWidget() {
 
     try {
       const text = inputText.trim();
+      const lang = targetLanguage || "hebrew";
+      const langLabel = languageLabel(lang);
       const result = await base44.integrations.Core.InvokeLLM({
         prompt: `The user typed: "${text}"
 
-This could be a Hebrew word (in Hebrew script), an English word, or a transliteration of a Hebrew word (e.g. "leishtapesh", "shalom", "todah").
+This could be a ${langLabel} word (in ${langLabel} script), an English word, or a transliteration of a ${langLabel} word (Latin letters that sound like the ${langLabel} word).
 
 Return JSON with:
-- hebrew: the word in Hebrew script
-- transliteration: phonetic Latin spelling of the Hebrew word
+- hebrew: ${nativeScriptInstruction(lang)}
+- transliteration: phonetic Latin spelling of the ${langLabel} word
 - english: English meaning
-- example_sentence_hebrew: one short example sentence in Hebrew script
+- example_sentence_hebrew: one short example sentence in ${langLabel}${usesNikud(lang) ? " (Hebrew script with nikud)" : " (native spelling with any accents/diacritics)"}
 - example_sentence_transliteration: transliteration of the example sentence
 - example_sentence_english: English translation of the example sentence`,
         response_json_schema: {
@@ -83,8 +93,10 @@ Return JSON with:
     if (!translation) return;
     setIsLoadingDetails(true);
     try {
+      const lang = targetLanguage || "hebrew";
+      const langLabel = languageLabel(lang);
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Translate and analyze the word/phrase: "${translation.original}". Return JSON with: hebrew, transliteration, english, part_of_speech, example_sentence_hebrew, example_sentence_english, notes, is_verb, infinitive.`,
+        prompt: `Translate and analyze the ${langLabel} word/phrase: "${translation.original}". Return JSON with: hebrew (${nativeScriptInstruction(lang)}), transliteration, english, part_of_speech, example_sentence_hebrew (the example sentence in ${langLabel}), example_sentence_english, notes, is_verb, infinitive.`,
         response_json_schema: {
           type: "object",
           properties: {
@@ -176,14 +188,14 @@ Return JSON with:
               {translation && translation.result && (
                 <div className="bg-white/10 border border-white/20 rounded-xl p-3 space-y-2">
                   <p className="text-white/50 text-[10px] uppercase mb-0.5">{translation.original}</p>
-                  <p className="text-cyan-300 text-xl font-bold" dir="rtl">{translation.result.hebrew}</p>
+                  <p className="text-cyan-300 text-xl font-bold" dir={(isRTLLanguage(targetLanguage) || isRTLText(translation.result.hebrew)) ? "rtl" : "ltr"}>{translation.result.hebrew}</p>
                   <p className="text-white/70 text-sm">{translation.original}</p>
                   <p className="text-white font-semibold text-base">{translation.result.english}</p>
 
                   {translation.result.example_sentence_hebrew && (
                     <div className="mt-2 pt-2 border-t border-white/10 space-y-1">
                       <p className="text-white/40 text-[10px] uppercase">Example</p>
-                      <p className="text-emerald-300 text-sm" dir="rtl">{translation.result.example_sentence_hebrew}</p>
+                      <p className="text-emerald-300 text-sm" dir={(isRTLLanguage(targetLanguage) || isRTLText(translation.result.example_sentence_hebrew)) ? "rtl" : "ltr"}>{translation.result.example_sentence_hebrew}</p>
                       <p className="text-white/60 text-xs">{translation.result.example_sentence_transliteration}</p>
                       <p className="text-white/50 text-xs italic">"{translation.result.example_sentence_english}"</p>
                     </div>

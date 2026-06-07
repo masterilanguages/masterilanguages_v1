@@ -51,24 +51,40 @@ export default function Level1World() {
   const queryClient = useQueryClient();
   const [selectedZone, setSelectedZone] = useState(null);
   const [sessionEnding, setSessionEnding] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  // Get current user for owner-scoped reads/writes
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const user = await base44.auth.me();
+        setCurrentUser(user);
+      } catch (e) {}
+    };
+    fetchUser();
+  }, []);
 
   const { data: userProfile } = useQuery({
-    queryKey: ['userProfile'],
+    queryKey: ['userProfile', currentUser?.email],
     queryFn: async () => {
-      const profiles = await base44.entities.UserProfile.list();
+      if (!currentUser?.email) return null;
+      const profiles = await base44.entities.UserProfile.filter({ created_by: currentUser.email });
       return profiles[0] || null;
     },
+    enabled: !!currentUser?.email,
   });
 
   const { data: userCoins } = useQuery({
-    queryKey: ['userCoins'],
+    queryKey: ['userCoins', currentUser?.email],
     queryFn: async () => {
-      const coins = await base44.entities.UserCoins.list();
+      if (!currentUser?.email) return { coins: 0 };
+      const coins = await base44.entities.UserCoins.filter({ created_by: currentUser.email });
       if (coins.length === 0) {
         return await base44.entities.UserCoins.create({ coins: 100000000 });
       }
       return coins[0];
     },
+    enabled: !!currentUser?.email,
   });
 
   const updateProfileMutation = useMutation({

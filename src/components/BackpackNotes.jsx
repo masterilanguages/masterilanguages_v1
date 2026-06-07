@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Plus, Trash2, Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
+import { languageLabel, nativeScriptInstruction } from "@/lib/language";
 
 export default function BackpackNotes() {
   const [isOpen, setIsOpen] = useState(false);
@@ -14,9 +15,14 @@ export default function BackpackNotes() {
   const [userLanguage, setUserLanguage] = useState("hebrew");
 
   useEffect(() => {
-    base44.entities.UserProfile.list().then(profiles => {
-      if (profiles[0]?.language) setUserLanguage(profiles[0].language);
-    }).catch(() => {});
+    (async () => {
+      try {
+        const me = await base44.auth.me();
+        if (!me?.email) return;
+        const profiles = await base44.entities.UserProfile.filter({ created_by: me.email });
+        if (profiles[0]?.language) setUserLanguage(profiles[0].language);
+      } catch { /* not signed in / no profile yet */ }
+    })();
   }, []);
 
   const savePending = (list) => {
@@ -39,18 +45,18 @@ export default function BackpackNotes() {
   const saveToBackpack = async (word, idx) => {
     setSaving(idx);
     const lang = userLanguage || "hebrew";
-    const langCap = lang.charAt(0).toUpperCase() + lang.slice(1);
+    const langLabel = languageLabel(lang);
     try {
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `The user is learning ${langCap}. They typed: "${word}"
+        prompt: `The user is learning ${langLabel}. They typed: "${word}"
 
 Detect which case this is:
-1. English word/phrase - translate TO ${langCap}
-2. ${langCap} word in native script - translate TO English
-3. Transliterated/phonetic form of a ${langCap} word (Latin letters but sounds like ${langCap}) - identify the ${langCap} word and translate to English
+1. English word/phrase - translate TO ${langLabel}
+2. ${langLabel} word in native script - translate TO English
+3. Transliterated/phonetic form of a ${langLabel} word (Latin letters but sounds like ${langLabel}) - identify the ${langLabel} word and translate to English
 
 Always return ALL three fields:
-- native: the word in ${langCap} WITH full native script (e.g. Hebrew with nikud vowel marks). REQUIRED.
+- native: ${nativeScriptInstruction(lang)}. REQUIRED.
 - transliteration: phonetic Latin-letter spelling. REQUIRED.
 - english: clear English meaning/translation. REQUIRED.`,
         response_json_schema: { type: "object", properties: { native: { type: "string" }, transliteration: { type: "string" }, english: { type: "string" } } }

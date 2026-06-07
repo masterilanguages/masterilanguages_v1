@@ -19,13 +19,20 @@ export default function StoryLearning() {
   const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const storyId = searchParams.get("story");
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    base44.auth.me().then(setCurrentUser).catch(() => {});
+  }, []);
 
   const { data: userProfile } = useQuery({
-    queryKey: ['userProfile'],
+    queryKey: ['userProfile', currentUser?.email],
     queryFn: async () => {
-      const profiles = await base44.entities.UserProfile.list();
+      if (!currentUser?.email) return null;
+      const profiles = await base44.entities.UserProfile.filter({ created_by: currentUser.email });
       return profiles[0] || null;
     },
+    enabled: !!currentUser?.email,
   });
 
   const { data: story, isLoading: storyLoading } = useQuery({

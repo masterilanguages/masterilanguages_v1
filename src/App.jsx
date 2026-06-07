@@ -1,14 +1,16 @@
 import './App.css'
 import { Toaster } from "@/components/ui/toaster"
+import { Toaster as SonnerToaster } from "sonner"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import VisualEditAgent from '@/lib/VisualEditAgent'
 import NavigationTracker from '@/lib/NavigationTracker'
 import { pagesConfig } from './pages.config'
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+import Login from '@/pages/Login';
 import Session1Journal from '@/pages/Session1Journal';
 import SingingHome from '@/pages/SingingHome';
 import SingingLesson from '@/pages/SingingLesson';
@@ -28,8 +30,13 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
   : <>{children}</>;
 
+// Top-level route segments that stay reachable WITHOUT a session
+// (marketing landing + lead-capture funnel + the login screen itself).
+const PUBLIC_TOP_PATHS = ['login', 'landing', 'FluentPath', 'SongListenPage', 'MasterFluencyLanding'];
+
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, isAuthenticated, navigateToLogin } = useAuth();
+  const location = useLocation();
 
   // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
@@ -51,9 +58,16 @@ const AuthenticatedApp = () => {
     }
   }
 
+  // Gate: unauthenticated users get the login screen, except on public paths.
+  const topPath = location.pathname.split('/')[1] || '';
+  if (!isAuthenticated && !PUBLIC_TOP_PATHS.includes(topPath)) {
+    return <Login />;
+  }
+
   // Render the main app
   return (
     <Routes>
+      <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace /> : <Login />} />
       <Route path="/" element={
         <LayoutWrapper currentPageName={mainPageKey}>
           <MainPage />
@@ -98,6 +112,7 @@ function App() {
           <AuthenticatedApp />
         </Router>
         <Toaster />
+        <SonnerToaster richColors position="top-center" closeButton />
         <VisualEditAgent />
       </QueryClientProvider>
     </AuthProvider>

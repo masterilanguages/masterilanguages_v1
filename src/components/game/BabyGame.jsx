@@ -162,10 +162,24 @@ const [imageApproved, setImageApproved] = useState(false);
   const [newWordCustomMnemonic, setNewWordCustomMnemonic] = useState("");
   const [lastNewWordImagePrompt, setLastNewWordImagePrompt] = useState("");
 
+  // Current user (for own-vocab scoping)
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const user = await base44.auth.me();
+        setCurrentUser(user);
+      } catch (e) {}
+    };
+    fetchUser();
+  }, []);
+
   // Fetch word ratings from database
   const { data: wordRatings = [] } = useQuery({
-    queryKey: ['wordRatings'],
-    queryFn: () => base44.entities.Word.filter({ category: "wordbank" }),
+    queryKey: ['wordRatings', currentUser?.email],
+    queryFn: () => base44.entities.Word.filter({ category: "wordbank", created_by: currentUser.email }),
+    enabled: !!currentUser?.email,
   });
 
   const createWordMutation = useMutation({

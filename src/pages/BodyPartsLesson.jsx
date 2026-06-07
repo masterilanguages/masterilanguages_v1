@@ -35,23 +35,39 @@ const bodyParts = [
 export default function BodyPartsLesson() {
   const [clickedParts, setClickedParts] = useState({});
   const [partRatings, setPartRatings] = useState({});
+  const [currentUser, setCurrentUser] = useState(null);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+  // Get current user for owner-scoped reads/writes
+  React.useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const user = await base44.auth.me();
+        setCurrentUser(user);
+      } catch (e) {}
+    };
+    fetchUser();
+  }, []);
+
   const { data: userProfile } = useQuery({
-    queryKey: ['userProfile'],
+    queryKey: ['userProfile', currentUser?.email],
     queryFn: async () => {
-      const profiles = await base44.entities.UserProfile.list();
+      if (!currentUser?.email) return null;
+      const profiles = await base44.entities.UserProfile.filter({ created_by: currentUser.email });
       return profiles[0] || null;
     },
+    enabled: !!currentUser?.email,
   });
 
   const { data: userCoins } = useQuery({
-    queryKey: ['userCoins'],
+    queryKey: ['userCoins', currentUser?.email],
     queryFn: async () => {
-      const coins = await base44.entities.UserCoins.list();
+      if (!currentUser?.email) return { coins: 0 };
+      const coins = await base44.entities.UserCoins.filter({ created_by: currentUser.email });
       return coins[0] || { coins: 0 };
     },
+    enabled: !!currentUser?.email,
   });
 
   const createWordMutation = useMutation({
@@ -61,7 +77,8 @@ export default function BodyPartsLesson() {
 
   const completeLessonMutation = useMutation({
     mutationFn: async () => {
-      const existing = await base44.entities.LessonProgress.filter({ lesson_name: "BodyPartsLesson" });
+      const me = currentUser || await base44.auth.me();
+      const existing = await base44.entities.LessonProgress.filter({ lesson_name: "BodyPartsLesson", created_by: me.email });
       if (existing.length > 0) {
         return base44.entities.LessonProgress.update(existing[0].id, { completed: true });
       }
@@ -70,7 +87,8 @@ export default function BodyPartsLesson() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['lessonProgress'] });
       toast.success("Body parts lesson completed! ✓");
-    }
+    },
+    onError: (e) => { console.error("BodyPartsLesson completeLessonMutation", e); toast.error("Couldn't save lesson progress"); }
   });
 
   const handlePartClick = (part) => {

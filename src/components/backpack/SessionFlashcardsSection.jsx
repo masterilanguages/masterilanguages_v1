@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Loader2, ChevronRight, BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { languageLabel, nativeScriptInstruction } from "@/lib/language";
 
 export default function SessionFlashcardsSection({ userProfile, onSessionSelect }) {
   const navigate = useNavigate();
@@ -43,6 +44,25 @@ export default function SessionFlashcardsSection({ userProfile, onSessionSelect 
     .filter((d, idx, arr) => arr.findIndex(x => x.day_number === d.day_number) === idx)
     .slice(0, 3);
 
+  // When the expanded session's words finish loading, push them up to the parent.
+  // This runs after render (not during) to avoid setState-during-render warnings/loops.
+  // Defined before any early return so hook order stays stable (Rules of Hooks).
+  useEffect(() => {
+    if (!onSessionSelect || !expandedSession) return;
+    const day = sessionsWithContent.find(d => d.id === expandedSession);
+    if (!day) return;
+    const words = sessionWords[day.id];
+    if (!words || words.length === 0) return;
+    const flashcardWords = words.map(w => ({
+      word: w.hebrew || w.phonetic,
+      phonetic: w.phonetic,
+      translation: w.translation,
+      // Carry language context so downstream cards don't force Latin words into RTL.
+      language: w.language || userLang,
+    }));
+    onSessionSelect(flashcardWords, `Session ${day.day_number}`);
+  }, [expandedSession, sessionWords]);
+
   if (sessionsWithContent.length === 0) return null;
 
   const extractWordsFromSession = async (day) => {
@@ -63,9 +83,9 @@ export default function SessionFlashcardsSection({ userProfile, onSessionSelect 
             const text = media.processed_transcript.map(t => t.hebrew || t.transliteration || t.text || '').join(' ');
             if (text.trim()) {
               const lang = media.language || userProfile?.language || 'hebrew';
-              const langCap = lang.charAt(0).toUpperCase() + lang.slice(1);
+              const langCap = languageLabel(lang);
               const result = await base44.integrations.Core.InvokeLLM({
-                prompt: `Extract 8-12 important vocabulary words from this ${langCap} transcript. Only meaningful content words. Transcript: "${text.slice(0, 3000)}". Return JSON with a "words" array, each: { phonetic: Latin transliteration, translation: English (1-4 words), hebrew: native script }.`,
+                prompt: `Extract 8-12 important vocabulary words from this ${langCap} transcript. Only meaningful content words. Transcript: "${text.slice(0, 3000)}". Return JSON with a "words" array, each: { phonetic: Latin transliteration, translation: English (1-4 words), hebrew: ${nativeScriptInstruction(lang)} }.`,
                 response_json_schema: {
                   type: 'object',
                   properties: {
@@ -116,20 +136,6 @@ export default function SessionFlashcardsSection({ userProfile, onSessionSelect 
     }
   };
 
-  const handleSessionWordLoaded = (day) => {
-    const words = sessionWords[day.id];
-    if (words && words.length > 0) {
-      const flashcardWords = words.map(w => ({
-        word: w.hebrew || w.phonetic,
-        phonetic: w.phonetic,
-        translation: w.translation,
-      }));
-      if (onSessionSelect) {
-        onSessionSelect(flashcardWords, `Session ${day.day_number}`);
-      }
-    }
-  };
-
   const handleStartFlashcards = (day) => {
     const words = sessionWords[day.id] || [];
     if (!words.length) return;
@@ -149,7 +155,6 @@ export default function SessionFlashcardsSection({ userProfile, onSessionSelect 
       <div className="grid grid-cols-4 gap-3">
         {sessionsWithContent.map((day) => {
           const isExpanded = expandedSession === day.id;
-          const words = sessionWords[day.id] || [];
           const isLoading = loadingSession[day.id];
 
           return (
@@ -171,10 +176,10 @@ export default function SessionFlashcardsSection({ userProfile, onSessionSelect 
                 />
               </button>
 
-              {/* Expanded content */}
-              {isExpanded && words.length > 0 && !isLoading && (
-                <div className="border-t border-stone-100 mt-2 pt-3">
-                  {handleSessionWordLoaded(day)}
+              {/* Expanded content — words are pushed to the parent via useEffect once loaded */}
+              {isExpanded && isLoading && (
+                <div className="border-t border-stone-100 mt-2 pt-3 flex items-center justify-center text-stone-400">
+                  <Loader2 className="w-4 h-4 animate-spin" />
                 </div>
               )}
             </div>

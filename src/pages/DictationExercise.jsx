@@ -7,6 +7,33 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
+// Shared, memoized loader for the YouTube IFrame API (bug #33). Replaces the
+// single "window.onYouTubeIframeAPIReady = initPlayer" assignment, which is
+// last-writer-wins across components and silently drops other players' onReady.
+let __ytApiPromise = null;
+function loadYouTubeApi() {
+  if (window.YT && window.YT.Player) return Promise.resolve(window.YT);
+  if (__ytApiPromise) return __ytApiPromise;
+  __ytApiPromise = new Promise((resolve) => {
+    const finish = () => { if (window.YT && window.YT.Player) resolve(window.YT); };
+    const prev = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => {
+      if (typeof prev === 'function') { try { prev(); } catch (e) {} }
+      finish();
+    };
+    if (!document.getElementById('youtube-iframe-api')) {
+      const tag = document.createElement('script');
+      tag.id = 'youtube-iframe-api';
+      tag.src = 'https://www.youtube.com/iframe_api';
+      document.head.appendChild(tag);
+    }
+    const poll = setInterval(() => {
+      if (window.YT && window.YT.Player) { clearInterval(poll); resolve(window.YT); }
+    }, 100);
+  });
+  return __ytApiPromise;
+}
+
 export default function DictationExercise() {
   const navigate = useNavigate();
   const playerRef = useRef(null);
@@ -60,7 +87,9 @@ export default function DictationExercise() {
   // Init YouTube player
   useEffect(() => {
     if (!videoId) return;
+    let cancelled = false;
     const initPlayer = () => {
+      if (cancelled) return;
       if (!window.YT?.Player) return;
       playerRef.current = new window.YT.Player("dictation-yt-player", {
         videoId,
@@ -70,15 +99,10 @@ export default function DictationExercise() {
         },
       });
     };
-    if (window.YT?.Player) {
-      setTimeout(initPlayer, 200);
-    } else {
-      window.onYouTubeIframeAPIReady = initPlayer;
-      const tag = document.createElement("script");
-      tag.src = "https://www.youtube.com/iframe_api";
-      document.head.appendChild(tag);
-    }
+    // Shared, memoized loader avoids stomping other components' onReady (bug #33).
+    loadYouTubeApi().then(() => initPlayer());
     return () => {
+      cancelled = true;
       try { playerRef.current?.destroy(); } catch {}
     };
   }, [videoId]);

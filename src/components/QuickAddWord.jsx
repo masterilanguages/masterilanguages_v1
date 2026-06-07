@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, X, ChevronDown, Loader2, Search, ArrowRightLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import { languageLabel, isRTLText, needsTransliteration } from "@/lib/language";
 
 export default function QuickAddWord() {
   const [isOpen, setIsOpen] = useState(false);
@@ -18,6 +19,22 @@ export default function QuickAddWord() {
   const [translateDirection, setTranslateDirection] = useState("en-to-he"); // "en-to-he" or "he-to-en"
   const queryClient = useQueryClient();
 
+  // Resolve the learner's target language so prompts/labels adapt to it.
+  // Reuses the same cached ['userProfile', email] query as Layout, so this is
+  // effectively free (no new heavy query) and shares the cache.
+  const { data: userProfile } = useQuery({
+    queryKey: ['userProfile', 'quickAddWord'],
+    queryFn: async () => {
+      const user = await base44.auth.me().catch(() => null);
+      if (!user?.email) return null;
+      const profiles = await base44.entities.UserProfile.filter({ created_by: user.email });
+      return profiles?.[0] || null;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+  const lang = userProfile?.language || 'hebrew';
+  const langLabel = languageLabel(lang);
+
   const addMutation = useMutation({
     mutationFn: (wordData) => base44.entities.Word.create(wordData),
     onSuccess: () => {
@@ -26,6 +43,10 @@ export default function QuickAddWord() {
       toast.success("Word added!");
       setWord("");
       setMeaning("");
+    },
+    onError: (e) => {
+      console.error("addMutation failed", e);
+      toast.error(e?.message ? `Could not add word: ${e.message}` : 'Could not add word');
     },
   });
 
@@ -40,7 +61,7 @@ export default function QuickAddWord() {
       setIsGenerating(true);
       try {
         const result = await base44.integrations.Core.InvokeLLM({
-          prompt: `What is the English translation of the Hebrew word "${word}"? Just provide the translation, nothing else.`,
+          prompt: `What is the English translation of the ${langLabel} word "${word}"? Just provide the translation, nothing else.`,
           response_json_schema: {
             type: "object",
             properties: {
@@ -115,7 +136,7 @@ export default function QuickAddWord() {
                                           <span className="text-gray-400 mx-1">•</span>
                                           <span className="text-gray-600">{w.translation}</span>
                                           {w.word !== w.phonetic && (
-                                            <span className="text-gray-400 text-xs ml-1" dir="rtl">({w.word})</span>
+                                            <span className="text-gray-400 text-xs ml-1" dir={isRTLText(w.word) ? "rtl" : "ltr"}>({w.word})</span>
                                           )}
                                         </div>
                                       ))}
@@ -134,18 +155,18 @@ export default function QuickAddWord() {
                                       className="flex items-center gap-1 text-xs text-violet-600 hover:text-violet-700 bg-violet-50 px-2 py-1 rounded-full"
                                     >
                                       <ArrowRightLeft className="w-3 h-3" />
-                                      {translateDirection === "en-to-he" ? "English → Hebrew" : "Hebrew → English"}
+                                      {translateDirection === "en-to-he" ? `English → ${langLabel}` : `${langLabel} → English`}
                                     </button>
                                   </div>
                                   <Input
-                                    placeholder={translateDirection === "en-to-he" ? "English word" : "Transliterated Hebrew"}
+                                    placeholder={translateDirection === "en-to-he" ? "English word" : `Transliterated ${langLabel}`}
                                     value={word}
                                     onChange={(e) => setWord(e.target.value)}
                                     className="text-sm"
                                   />
                                   <div className="relative">
                                     <Input
-                                      placeholder={translateDirection === "en-to-he" ? "Hebrew (auto)" : "English meaning (auto)"}
+                                      placeholder={translateDirection === "en-to-he" ? `${langLabel} (auto)` : "English meaning (auto)"}
                                       value={meaning}
                                       onChange={(e) => setMeaning(e.target.value)}
                                       className="text-sm pr-20"
@@ -160,8 +181,11 @@ export default function QuickAddWord() {
                                         setIsGenerating(true);
                                         try {
                                           if (translateDirection === "en-to-he") {
+                                            const transliterationInstruction = needsTransliteration(lang)
+                                              ? `Provide the transliteration (how to say it in English letters).`
+                                              : `Provide the word in ${langLabel} (correct native spelling).`;
                                             const result = await base44.integrations.Core.InvokeLLM({
-                                              prompt: `Translate the English word "${word}" to Hebrew. Provide the transliteration (how to say it in English letters).`,
+                                              prompt: `Translate the English word "${word}" to ${langLabel}. ${transliterationInstruction}`,
                                               response_json_schema: {
                                                 type: "object",
                                                 properties: {
@@ -174,7 +198,7 @@ export default function QuickAddWord() {
                                             setTranslateDirection("he-to-en");
                                           } else {
                                             const result = await base44.integrations.Core.InvokeLLM({
-                                              prompt: `What is the English translation of the Hebrew word "${word}"? Just provide the translation.`,
+                                              prompt: `What is the English translation of the ${langLabel} word "${word}"? Just provide the translation.`,
                                               response_json_schema: {
                                                 type: "object",
                                                 properties: {

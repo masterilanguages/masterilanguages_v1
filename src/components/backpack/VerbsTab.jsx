@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
+import { languageLabel, isRTLText, usesNikud, needsTransliteration } from "@/lib/language";
 
 // Detect if a word is likely a verb by phonetic pattern
 function looksLikeVerb(word) {
@@ -94,37 +95,69 @@ export default function VerbsTab({ words }) {
   const updateWordMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Word.update(id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['wordRatings'] }),
+    onError: (e) => {
+      console.error("updateWordMutation failed", e);
+      toast.error("Could not save verb update");
+    },
   });
 
   const verbWords = words.filter(looksLikeVerb);
 
-  // Auto-fetch Hebrew script for any verb missing it
+  // Auto-fetch native script for any verb missing it (only for languages whose
+  // native form differs from its Latin transliteration, e.g. Hebrew). For
+  // Latin-script languages the word already is its own native spelling.
   useEffect(() => {
+    // Persist a 'hebrew fetch attempted' marker outside component state so a
+    // permanently-failing write doesn't re-fire the (paid) LLM call on every remount.
+    let attempted;
+    try {
+      attempted = new Set(JSON.parse(localStorage.getItem('verbHebrewFetchAttempted') || '[]'));
+    } catch {
+      attempted = new Set();
+    }
+    const markAttempted = (id) => {
+      if (!id) return;
+      attempted.add(id);
+      try { localStorage.setItem('verbHebrewFetchAttempted', JSON.stringify([...attempted])); } catch (e) { console.error('Could not persist verbHebrewFetchAttempted', e); }
+    };
+
     verbWords.forEach(word => {
+      const lang = word.language || 'hebrew';
+      // Latin-script languages don't have a separate native script to fetch.
+      if (!needsTransliteration(lang)) return;
       if (localHebrew[word.id]) return;
-      if (isHebrew(word.word)) return; // already has Hebrew
-      // word.word is just transliteration, fetch Hebrew
+      if (isHebrew(word.word)) return; // already has native script
+      if (attempted.has(word.id)) return; // already tried — avoid repeated LLM cost
+      // word.word is just transliteration, fetch native script
+      markAttempted(word.id);
+      const label = languageLabel(lang);
+      const nikudHint = usesNikud(lang) ? ` (${label} script WITH full nikud / vowel points, e.g. לְהִשְׁתַּתֵּף)` : ` (correct native spelling in ${label})`;
       base44.integrations.Core.InvokeLLM({
-        prompt: `Convert the Hebrew transliteration "${word.phonetic || word.word}" to its Hebrew script characters. Return JSON with: hebrew (Hebrew script only, e.g. לְהִשְׁתַּתֵּף).`,
+        prompt: `Convert the ${label} transliteration "${word.phonetic || word.word}" to its native ${label} script characters. Return JSON with: hebrew${nikudHint}.`,
         response_json_schema: { type: 'object', properties: { hebrew: { type: 'string' } } }
       }).then(res => {
         if (res?.hebrew) {
           setLocalHebrew(prev => ({ ...prev, [word.id]: res.hebrew }));
-          if (word.id) updateWordMutation.mutateAsync({ id: word.id, data: { word: res.hebrew } }).catch(() => {});
+          if (word.id) updateWordMutation.mutateAsync({ id: word.id, data: { word: res.hebrew } }).catch(e => console.error('Failed to persist verb Hebrew script', e));
         }
-      }).catch(() => {});
+      }).catch(e => console.error('Failed to fetch verb Hebrew script', e));
     });
   }, [verbWords.length]); // eslint-disable-line
 
   const generateConjugations = async (word) => {
+    const lang = word.language || 'hebrew';
+    const label = languageLabel(lang);
+    const valueInstruction = needsTransliteration(lang)
+      ? 'Values should be the transliterated (Latin letters) conjugated form only.'
+      : `Values should be the conjugated form in ${label} (correct native spelling).`;
     setGenerating(prev => ({ ...prev, [word.id]: true }));
     try {
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Generate Hebrew verb conjugations for the verb "${word.phonetic || word.word}" (meaning: "${word.translation}").
+        prompt: `Generate ${label} verb conjugations for the verb "${word.phonetic || word.word}" (meaning: "${word.translation}").
 
 Return JSON with conjugations object containing past, present, future keys.
 Each tense is an object with keys: i, you_m, you_f, he, she, we, you_pl, they.
-Values should be the transliterated (Latin letters) conjugated form only.`,
+${valueInstruction}`,
         response_json_schema: {
           type: "object",
           properties: {
@@ -195,7 +228,12 @@ Values should be the transliterated (Latin letters) conjugated form only.`,
                 <span className="text-stone-400 text-xs">=</span>
                 <span className="text-stone-600 text-sm">{word.translation}</span>
                 {(localHebrew[word.id] || isHebrew(word.word) ? (localHebrew[word.id] || word.word) : null) && (
-                  <span className="text-cyan-700 text-sm font-medium" dir="rtl">{localHebrew[word.id] || word.word}</span>
+                  (() => {
+                    const nativeText = localHebrew[word.id] || word.word;
+                    return (
+                      <span className="text-cyan-700 text-sm font-medium" dir={isRTLText(nativeText) ? "rtl" : "ltr"}>{nativeText}</span>
+                    );
+                  })()
                 )}
               </div>
               <div className="flex items-center gap-1.5 shrink-0">

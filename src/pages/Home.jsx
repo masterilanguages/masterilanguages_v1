@@ -97,25 +97,27 @@ export default function Home() {
   }, []);
 
   const { data: userProfile, isLoading: profileLoading } = useQuery({
-    queryKey: ['userProfile'],
+    queryKey: ['userProfile', currentUser?.email],
     queryFn: async () => {
-      const profiles = await base44.entities.UserProfile.list();
+      const profiles = await base44.entities.UserProfile.filter({ created_by: currentUser.email });
       return profiles[0] || null;
     },
+    enabled: !!currentUser?.email,
     staleTime: 0,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
   });
 
   const { data: userCoins } = useQuery({
-    queryKey: ['userCoins'],
+    queryKey: ['userCoins', currentUser?.email],
     queryFn: async () => {
-      const coins = await base44.entities.UserCoins.list();
+      const coins = await base44.entities.UserCoins.filter({ created_by: currentUser.email });
       if (coins.length === 0) {
         return await base44.entities.UserCoins.create({ coins: 100000000, unlocked_items: [], equipped_item: null });
       }
       return coins[0];
     },
+    enabled: !!currentUser?.email,
     staleTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
@@ -124,9 +126,9 @@ export default function Home() {
   const profileLoaded = !!userProfile;
 
   const { data: lessonProgress = [] } = useQuery({
-    queryKey: ['lessonProgress'],
-    queryFn: () => base44.entities.LessonProgress.list(),
-    enabled: profileLoaded,
+    queryKey: ['lessonProgress', currentUser?.email],
+    queryFn: () => base44.entities.LessonProgress.filter({ created_by: currentUser.email }),
+    enabled: profileLoaded && !!currentUser?.email,
     staleTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
@@ -199,9 +201,9 @@ export default function Home() {
   });
 
   const { data: wordRatings = [] } = useQuery({
-    queryKey: ['wordRatings'],
-    queryFn: () => base44.entities.Word.filter({ category: "wordbank" }),
-    enabled: profileLoaded,
+    queryKey: ['wordRatings', currentUser?.email],
+    queryFn: () => base44.entities.Word.filter({ category: "wordbank", created_by: currentUser.email }),
+    enabled: profileLoaded && !!currentUser?.email,
     staleTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
@@ -489,6 +491,28 @@ export default function Home() {
     setAddingTaskToDayId(null);
   };
 
+  // Admin: create a new empty session (Day) for the current language. The next
+  // day_number is one above the highest existing session. After creating, open
+  // it so the admin can add content via "Add from content library".
+  const handleCreateSession = async () => {
+    const maxNum = uniqueDays.reduce((m, d) => Math.max(m, d.day_number || 0), 0);
+    const nextNum = maxNum + 1;
+    try {
+      await createDayMutation.mutateAsync({
+        day_number: nextNum,
+        language: currentLang,
+        title: `Session ${nextNum}`,
+        subsections: [],
+        order: nextNum,
+      });
+      toast.success(`Session ${nextNum} created!`);
+      setExpandedDay(nextNum);
+    } catch (e) {
+      console.error('Create session failed', e);
+      toast.error('Could not create session.');
+    }
+  };
+
   const handleDeleteTask = (dayId, taskId) => {
     const day = days.find(d => d.id === dayId);
     const updatedSubsections = day.subsections.filter(s => s.id !== taskId);
@@ -696,7 +720,16 @@ export default function Home() {
                   >
                     📅 Schedule <ChevronRight className="inline w-5 h-5 mb-1" />
                   </h2>
-
+                  {isMasterUser && (
+                    <button
+                      onClick={handleCreateSession}
+                      disabled={createDayMutation.isPending}
+                      className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all hover:opacity-90 disabled:opacity-50"
+                      style={{ background: '#5a6b5a', color: '#f5f0e8' }}
+                    >
+                      {createDayMutation.isPending ? '…' : '+ New Session'}
+                    </button>
+                  )}
                 </div>
                   <div className="space-y-2">
                     {uniqueDays.slice(0, 5).map((day, idx) => {
@@ -747,13 +780,19 @@ export default function Home() {
                                 {(day.subsections || []).filter(task => {
                                   const taskName = task.name?.toLowerCase() || '';
                                   const userLang = userProfile?.language || 'hebrew';
-                                  // "The Bride" is Hebrew-only
-                                  if (taskName.includes('the bride') && userLang !== 'hebrew') return false;
-                                  // Hide generic "Watch a video" if a specific video task exists
+                                  // A real content item (video/audio/song) — always show it,
+                                  // even if its TITLE mentions other languages
+                                  // (e.g. "David Danced | Hebrew - English - Arabic").
+                                  const hasContent = !!(task.video_id || task.youtube_url || task.mediaUrl || task.song_id);
+                                  // Hide generic "Watch a video" placeholder if a specific video task exists
                                   if (task.id === 'video' && (day.subsections || []).some(s => s.video_id)) return false;
-                                  // Hide tasks that reference a different language by name
-                                  const otherLanguages = ['hebrew', 'english', 'spanish', 'french', 'portuguese', 'italian'].filter(l => l !== userLang);
-                                  if (otherLanguages.some(l => taskName.includes(l))) return false;
+                                  // Language-by-name filtering applies ONLY to generic placeholder tasks,
+                                  // never to real content items.
+                                  if (!hasContent) {
+                                    if (taskName.includes('the bride') && userLang !== 'hebrew') return false;
+                                    const otherLanguages = ['hebrew', 'english', 'spanish', 'french', 'portuguese', 'italian'].filter(l => l !== userLang);
+                                    if (otherLanguages.some(l => taskName.includes(l))) return false;
+                                  }
                                   return true;
                                 }).map((task, idx) => {
                                   const isSong = task.song_id || (songs && songs.find(s => s.id === task.id));
@@ -897,7 +936,7 @@ export default function Home() {
                                              {isMasterUser && (
                                                 <button
                                                   onClick={(e) => { e.stopPropagation(); handleStartEditTask(day.id, task); }}
-                                                  className="opacity-0 group-hover:opacity-100 transition-opacity text-stone-400 hover:text-stone-700 text-xs px-1"
+                                                  className="opacity-70 hover:opacity-100 transition-opacity text-stone-400 hover:text-stone-700 text-sm px-1"
                                                   title="Edit task"
                                                   >
                                                   <span style={{ display: 'inline-block', transform: 'scaleX(-1)' }}>✏️</span>
@@ -906,7 +945,7 @@ export default function Home() {
                                             {isMasterUser && (
                                                <button
                                                  onClick={(e) => { e.stopPropagation(); handleDeleteTask(day.id, task.id); }}
-                                                 className="opacity-0 group-hover:opacity-100 transition-opacity text-red-400 hover:text-red-600 text-xs px-1"
+                                                 className="opacity-90 hover:opacity-100 transition-opacity text-red-400 hover:text-red-600 text-base px-1 font-bold"
                                                  title="Remove from schedule"
                                                >
                                                  ✕
@@ -1026,18 +1065,32 @@ export default function Home() {
         open={!!libraryPickerDayId}
         onOpenChange={(open) => { if (!open) setLibraryPickerDayId(null); }}
         language={userProfile?.language}
-        onSelect={(media) => {
-          const day = days.find(d => d.id === libraryPickerDayId);
-          if (!day) return;
+        onSelect={async (media) => {
+          const targetDayId = libraryPickerDayId;
+          // Find the session locally; fall back to fetching by id (robust if the
+          // days query is momentarily stale after creating a session).
+          let day = days.find(d => d.id === targetDayId);
+          if (!day && targetDayId) {
+            try { day = await base44.entities.Day.get(targetDayId); } catch (e) { /* handled below */ }
+          }
+          if (!day) {
+            console.error('[add-to-session] session not found', { targetDayId, dayIds: days.map(d => d.id) });
+            toast.error('No se encontró la sesión — recargá la página y reintentá.');
+            return;
+          }
           const isYouTube = !!media.video_id;
           const taskId = isYouTube ? `video_${media.video_id}` : `task_${Date.now()}`;
-          const existing = (day.subsections || []).find(s => s.id === taskId);
-          if (existing) { toast.info('Already in this session'); return; }
+          if ((day.subsections || []).some(s => s.id === taskId)) { toast.info('Ese video ya está en la sesión.'); return; }
           const sub = isYouTube
             ? { id: taskId, name: `▶ ${media.title}`, video_id: media.video_id, page: 'MediaLibrary' }
             : { id: taskId, name: media.title, page: '', mediaUrl: media.video_url || '' };
-          updateDayMutation.mutate({ id: libraryPickerDayId, data: { subsections: [...(day.subsections || []), sub] } });
-          toast.success(`"${media.title}" added to session!`);
+          try {
+            await updateDayMutation.mutateAsync({ id: targetDayId, data: { subsections: [...(day.subsections || []), sub] } });
+            toast.success(`"${media.title}" added to session!`);
+          } catch (e) {
+            console.error('[add-to-session] update failed', e);
+            toast.error(`No se pudo agregar el video: ${e?.message || e}`);
+          }
         }}
       />
 

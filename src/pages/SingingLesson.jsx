@@ -71,6 +71,10 @@ export default function SingingLesson() {
       });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["singingRecordings", songId] }),
+    onError: (e) => {
+      console.error("Failed to save singing recording", e);
+      toast.error("Could not save your recording. It will only be available until you leave this page.");
+    },
   });
 
   const activeSegment = segments[activeSegmentIdx];

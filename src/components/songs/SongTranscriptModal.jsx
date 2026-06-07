@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,6 +7,10 @@ import { toast } from "sonner";
 
 export default function SongTranscriptModal({ open, onOpenChange, song, onSave, isSaving }) {
   const [transcript, setTranscript] = useState(song?.lyrics_he || "");
+
+  useEffect(() => {
+    if (open) setTranscript(song?.lyrics_he || "");
+  }, [song, open]);
 
   const handleSave = async () => {
     if (!transcript.trim()) {

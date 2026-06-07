@@ -28,3 +28,12 @@ dist-ssr
 *.sw?
 
 .env
+.vercel
+
+# Supabase CLI local state
+supabase/.temp/
+
+# test/scratch artifacts
+_amortest.jpg
+build_out.txt
+RESUMEN.*

@@ -66,8 +66,9 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
   // Only saves if >= 60 seconds; only marks completed if >= 30 min
   const saveSession = async (seconds, reason) => {
     if (seconds < 60) return; // ignore tiny blips under 1 min
-    const minutes = Math.round(seconds / 60 * 10) / 10;
-    const completed = minutes >= 30;
+    const exactMinutes = seconds / 60;
+    const minutes = Math.round(exactMinutes); // duration_minutes is an INTEGER column — must be whole
+    const completed = exactMinutes >= 30;
     const date = new Date().toISOString().split('T')[0];
     try {
       await base44.entities.StudySession.create({ date, duration_minutes: minutes, stopped_reason: reason, completed });
@@ -78,6 +79,7 @@ const GameHeader = React.memo(function GameHeader({ profile, coins, onBuyCoins }
       }
     } catch (e) {
       console.error('Failed to save session', e);
+      toast.error('Could not save your study session.');
     }
   };
 

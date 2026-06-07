@@ -55,10 +55,10 @@ export default function Layout({ children, currentPageName }) {
     queryKey: ['userCoins', currentUser?.email],
     queryFn: async () => {
       if (!currentUser?.email) return { coins: 0 };
-      const coins = await base44.entities.UserCoins.list();
+      const coins = await base44.entities.UserCoins.filter({ created_by: currentUser.email });
       return coins[0] || { coins: 0 };
     },
-    enabled: isAuthChecked && !!currentUser,
+    enabled: isAuthChecked && !!currentUser?.email,
   });
 
   // Inactivity detection - reset session if no activity for 2 minutes

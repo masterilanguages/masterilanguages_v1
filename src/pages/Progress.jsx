@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { ArrowLeft } from "lucide-react";
@@ -66,20 +66,27 @@ function getGraphInsight(graph, chartData) {
 }
 
 export default function Progress() {
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    base44.auth.me().then(setCurrentUser).catch(() => {});
+  }, []);
+
   const { data: userProfile } = useQuery({
-    queryKey: ['userProfile'],
+    queryKey: ['userProfile', currentUser?.email],
     queryFn: async () => {
-      const profiles = await base44.entities.UserProfile.list();
+      const profiles = await base44.entities.UserProfile.filter({ created_by: currentUser.email });
       return profiles[0] || null;
     },
+    enabled: !!currentUser?.email,
     staleTime: 0,
     refetchOnWindowFocus: false,
   });
 
   const { data: wordRatings = [] } = useQuery({
-    queryKey: ['wordRatings', userProfile?.language],
-    queryFn: () => base44.entities.Word.filter({ category: "wordbank", language: userProfile?.language || 'hebrew' }),
-    enabled: !!userProfile,
+    queryKey: ['wordRatings', userProfile?.language, currentUser?.email],
+    queryFn: () => base44.entities.Word.filter({ category: "wordbank", language: userProfile?.language || 'hebrew', created_by: currentUser.email }),
+    enabled: !!userProfile && !!currentUser?.email,
   });
 
   const { data: dayProgress = [] } = useQuery({

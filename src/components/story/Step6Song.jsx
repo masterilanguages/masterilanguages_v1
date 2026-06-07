@@ -67,7 +67,8 @@ Return JSON:
 
       toast.success("Song ready! 🎵");
     } catch (e) {
-      toast.error("Failed to generate song");
+      console.error("Failed to generate song", e);
+      toast.error(`Failed to generate song: ${e.message || 'Unknown error'}`);
     }
     setGenerating(false);
   };

@@ -63,24 +63,32 @@ export default function ColorsLesson() {
   const isMasterUser = currentUser?.role === 'admin';
 
   const { data: userProfile } = useQuery({
-    queryKey: ['userProfile'],
+    queryKey: ['userProfile', currentUser?.email],
     queryFn: async () => {
-      const profiles = await base44.entities.UserProfile.list();
+      if (!currentUser?.email) return null;
+      const profiles = await base44.entities.UserProfile.filter({ created_by: currentUser.email });
       return profiles[0] || null;
     },
+    enabled: !!currentUser?.email,
   });
 
   const { data: userCoins } = useQuery({
-    queryKey: ['userCoins'],
+    queryKey: ['userCoins', currentUser?.email],
     queryFn: async () => {
-      const coins = await base44.entities.UserCoins.list();
+      if (!currentUser?.email) return { coins: 0 };
+      const coins = await base44.entities.UserCoins.filter({ created_by: currentUser.email });
       return coins[0] || { coins: 0 };
     },
+    enabled: !!currentUser?.email,
   });
 
   const { data: progress } = useQuery({
-    queryKey: ['lessonProgress', 'ColorsLesson'],
-    queryFn: () => base44.entities.LessonProgress.filter({ lesson_name: 'ColorsLesson' }),
+    queryKey: ['lessonProgress', 'ColorsLesson', currentUser?.email],
+    queryFn: async () => {
+      if (!currentUser?.email) return [];
+      return base44.entities.LessonProgress.filter({ lesson_name: 'ColorsLesson', created_by: currentUser.email });
+    },
+    enabled: !!currentUser?.email,
   });
 
   const createWordMutation = useMutation({
@@ -90,7 +98,9 @@ export default function ColorsLesson() {
 
   const completeLessonMutation = useMutation({
     mutationFn: async () => {
-      const existing = progress?.[0];
+      const me = currentUser || await base44.auth.me();
+      const rows = await base44.entities.LessonProgress.filter({ lesson_name: 'ColorsLesson', created_by: me.email });
+      const existing = rows?.[0];
       if (existing) {
         return base44.entities.LessonProgress.update(existing.id, { completed: true });
       }
@@ -100,6 +110,7 @@ export default function ColorsLesson() {
       queryClient.invalidateQueries({ queryKey: ['lessonProgress'] });
       toast.success("Colors lesson completed! ✓");
     },
+    onError: (e) => { console.error("ColorsLesson completeLessonMutation", e); toast.error("Couldn't save lesson progress"); },
   });
 
   const handleRating = async (color, rating) => {

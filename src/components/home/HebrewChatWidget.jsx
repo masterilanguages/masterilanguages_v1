@@ -4,10 +4,27 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Volume2, Loader2, Play, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
+import { languageLabel, isRTLLanguage } from "@/lib/language";
 
 const SESSION_DURATION = 3 * 60; // 3 minutes in seconds
 
-export default function HebrewChatWidget({ onComplete }) {
+// Map target language -> BCP-47 voice tag for SpeechSynthesis.
+const SPEECH_LANG = {
+  hebrew: 'he-IL',
+  english: 'en-US',
+  spanish: 'es-ES',
+  french: 'fr-FR',
+  portuguese: 'pt-PT',
+  italian: 'it-IT',
+};
+
+export default function HebrewChatWidget({ onComplete, language }) {
+  // Target language for prompts/TTS/display. Falls back to Hebrew so existing
+  // callers (which pass no `language`) behave exactly as before.
+  const lang = language || 'hebrew';
+  const langLabel = languageLabel(lang);
+  const rtl = isRTLLanguage(lang);
+  const speechLang = SPEECH_LANG[String(lang).toLowerCase()] || 'he-IL';
   const [state, setState] = useState("idle"); // idle, active, ended
   const [sessionId, setSessionId] = useState(null);
   const [timeRemaining, setTimeRemaining] = useState(SESSION_DURATION);
@@ -79,12 +96,12 @@ export default function HebrewChatWidget({ onComplete }) {
   };
 
   const generateTurn = async (previousChoice) => {
-    const prompt = previousChoice 
-      ? `The user chose: "${previousChoice}". 
-      
+    const prompt = previousChoice
+      ? `The user chose: "${previousChoice}".
+
       Analyze the emotional context of their choice and respond with appropriate subtle emotion.
-      Generate a brief Hebrew reply (1 short sentence) matching the emotion, then ask a new Hebrew question with 3 different Hebrew response options.
-      
+      Generate a brief ${langLabel} reply (1 short sentence) matching the emotion, then ask a new ${langLabel} question with 3 different ${langLabel} response options.
+
       Emotion guidelines:
       - warm: positive sharing, friendly topic
       - excited: interesting news, achievement
@@ -92,28 +109,28 @@ export default function HebrewChatWidget({ onComplete }) {
       - empathetic: difficulty, challenge mentioned
       - neutral: factual, straightforward
       - amused: lighthearted, funny
-      
+
       Keep it conversational and natural.`
-      : `Start a casual Hebrew conversation with warm, welcoming tone. Ask a simple Hebrew question with 3 different Hebrew response options.`;
+      : `Start a casual ${langLabel} conversation with warm, welcoming tone. Ask a simple ${langLabel} question with 3 different ${langLabel} response options.`;
 
     const result = await base44.integrations.Core.InvokeLLM({
       prompt: `${prompt}
-      
-      CRITICAL: Output ONLY Hebrew text. No English allowed.
+
+      CRITICAL: Output ONLY ${langLabel} text. No English allowed.
       Response must be valid JSON with this exact structure:
       {
-        "reply": "brief Hebrew response to user's choice (empty string if first turn)",
+        "reply": "brief ${langLabel} response to user's choice (empty string if first turn)",
         "reply_transliteration": "transliteration of reply (empty if first turn)",
         "emotion": "warm | excited | curious | empathetic | neutral | amused",
-        "prompt": "Hebrew question",
+        "prompt": "${langLabel} question",
         "prompt_transliteration": "transliteration of question",
         "options": [
-          {"text": "Hebrew option 1", "transliteration": "transliteration 1"},
-          {"text": "Hebrew option 2", "transliteration": "transliteration 2"},
-          {"text": "Hebrew option 3", "transliteration": "transliteration 3"}
+          {"text": "${langLabel} option 1", "transliteration": "transliteration 1"},
+          {"text": "${langLabel} option 2", "transliteration": "transliteration 2"},
+          {"text": "${langLabel} option 3", "transliteration": "transliteration 3"}
         ]
       }
-      
+
       Emotion must match the conversational context. Be subtle, adult, natural.`,
       response_json_schema: {
         type: "object",
@@ -174,7 +191,7 @@ export default function HebrewChatWidget({ onComplete }) {
       window.speechSynthesis.cancel();
       
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'he-IL';
+      utterance.lang = speechLang;
       
       // Apply emotion-based prosody adjustments
       const emotionStyles = {
@@ -249,8 +266,8 @@ export default function HebrewChatWidget({ onComplete }) {
             className="text-center"
           >
             <div className="text-4xl mb-3">💬</div>
-            <h3 className="text-white font-bold text-xl mb-2">3-Minute Hebrew Chat</h3>
-            <p className="text-white/60 text-sm mb-4">Tap to start. Hebrew only.</p>
+            <h3 className="text-white font-bold text-xl mb-2">3-Minute {langLabel} Chat</h3>
+            <p className="text-white/60 text-sm mb-4">Tap to start. {langLabel} only.</p>
             <Button
               onClick={startSession}
               disabled={loading}
@@ -273,7 +290,7 @@ export default function HebrewChatWidget({ onComplete }) {
             exit={{ opacity: 0 }}
           >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-white font-bold text-lg">Hebrew Chat</h3>
+              <h3 className="text-white font-bold text-lg">{langLabel} Chat</h3>
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setShowTransliteration(!showTransliteration)}
@@ -305,8 +322,8 @@ export default function HebrewChatWidget({ onComplete }) {
                   >
                     <Volume2 className={`w-4 h-4 text-blue-300 ${playingAudio === currentTurn.reply ? 'animate-pulse' : ''}`} />
                   </button>
-                  <div className="flex-1 text-right">
-                    <div className="flex flex-wrap gap-1 justify-end" dir="rtl">
+                  <div className={`flex-1 ${rtl ? 'text-right' : 'text-left'}`}>
+                    <div className={`flex flex-wrap gap-1 ${rtl ? 'justify-end' : 'justify-start'}`} dir={rtl ? 'rtl' : 'ltr'}>
                       {currentTurn.reply.split(' ').map((word, idx) => (
                         <button
                           key={idx}
@@ -344,8 +361,8 @@ export default function HebrewChatWidget({ onComplete }) {
                 >
                   <Volume2 className={`w-4 h-4 text-cyan-300 ${playingAudio === currentTurn.prompt ? 'animate-pulse' : ''}`} />
                 </button>
-                <div className="flex-1 text-right">
-                  <div className="flex flex-wrap gap-1 justify-end" dir="rtl">
+                <div className={`flex-1 ${rtl ? 'text-right' : 'text-left'}`}>
+                  <div className={`flex flex-wrap gap-1 ${rtl ? 'justify-end' : 'justify-start'}`} dir={rtl ? 'rtl' : 'ltr'}>
                     {currentTurn.prompt.split(' ').map((word, idx) => (
                       <button
                         key={idx}
@@ -391,14 +408,14 @@ export default function HebrewChatWidget({ onComplete }) {
                     disabled={loading}
                     className="w-full bg-white/5 hover:bg-white/10 border border-white/20 hover:border-cyan-400/50 rounded-xl p-3 transition-all"
                   >
-                    <div className="flex items-center gap-2" dir="rtl">
+                    <div className="flex items-center gap-2" dir={rtl ? 'rtl' : 'ltr'}>
                       <button
                         onClick={(e) => { e.stopPropagation(); playAudio(optionText); }}
                         className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 flex-shrink-0"
                       >
                         <Volume2 className={`w-4 h-4 text-white/60 ${playingAudio === optionText ? 'animate-pulse' : ''}`} />
                       </button>
-                      <div className="flex-1 text-right">
+                      <div className={`flex-1 ${rtl ? 'text-right' : 'text-left'}`}>
                         <span className="text-white text-lg">{simplifiedText}</span>
                       </div>
                     </div>

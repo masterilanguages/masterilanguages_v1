@@ -75,27 +75,38 @@ export default function ManageCoaches() {
     if (!words.length) return;
     setAssigningWords(prev => ({ ...prev, [studentEmail]: true }));
     const lang = profile?.language || 'hebrew';
-    for (const word of words) {
-      await base44.integrations.Core.InvokeLLM({
-        prompt: `Translate the word "${word}" to English and provide its transliteration. Return JSON with: translation (English meaning), phonetic (transliteration), word (the original Hebrew/target script if applicable).`,
-        response_json_schema: { type: 'object', properties: { translation: { type: 'string' }, phonetic: { type: 'string' }, word: { type: 'string' } } }
-      }).then(result => {
-        return base44.entities.Word.create({
-          word: result.word || word,
-          translation: result.translation || word,
-          phonetic: result.phonetic || word,
-          category: 'wordbank',
-          language: lang,
-          times_practiced: 0,
-          mastered: false,
-          assigned_by_coach: currentUser.email,
-          coach_folder: 'From Coach',
-          created_by: studentEmail,
-        });
-      }).catch(() => {});
+    let ok = 0;
+    let failed = 0;
+    try {
+      for (const word of words) {
+        try {
+          const result = await base44.integrations.Core.InvokeLLM({
+            prompt: `Translate the word "${word}" to English and provide its transliteration. Return JSON with: translation (English meaning), phonetic (transliteration), word (the original Hebrew/target script if applicable).`,
+            response_json_schema: { type: 'object', properties: { translation: { type: 'string' }, phonetic: { type: 'string' }, word: { type: 'string' } } }
+          });
+          await base44.entities.Word.create({
+            word: result.word || word,
+            translation: result.translation || word,
+            phonetic: result.phonetic || word,
+            category: 'wordbank',
+            language: lang,
+            times_practiced: 0,
+            mastered: false,
+            assigned_by_coach: currentUser.email,
+            coach_folder: 'From Coach',
+            created_by: studentEmail,
+          });
+          ok++;
+        } catch (e) {
+          console.error(`Failed to push word "${word}" to ${studentEmail}`, e);
+          failed++;
+        }
+      }
+      if (ok > 0) toast.success(`${ok} word(s) pushed to ${studentEmail}'s flashcards!`);
+      if (failed > 0) toast.error(`${failed} word(s) failed to push`);
+    } finally {
+      setAssigningWords(prev => ({ ...prev, [studentEmail]: false }));
     }
-    setAssigningWords(prev => ({ ...prev, [studentEmail]: false }));
-    toast.success(`${words.length} word(s) pushed to ${studentEmail}'s flashcards!`);
   };
 
   const deleteNoteMutation = useMutation({

@@ -34,9 +34,14 @@ export default function StickyNote() {
   const [mentionQuery, setMentionQuery] = useState(null); // string after @ currently being typed
   const textareaRef = useRef(null);
 
-  // Load all users for @mention autocomplete
+  // Load all users for @mention autocomplete (admin-only: list-users is admin-gated)
   useEffect(() => {
-    base44.entities.User.list().then(users => setAllUsers(users)).catch(() => {});
+    base44.auth.me()
+      .then(me => {
+        if (me?.role !== 'admin') return;
+        return base44.entities.User.list().then(users => setAllUsers(users));
+      })
+      .catch(() => {});
   }, []);
 
   const mentions = parseMentions(notes);

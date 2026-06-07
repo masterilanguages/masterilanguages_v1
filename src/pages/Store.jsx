@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
@@ -32,29 +32,39 @@ const storeItems = [
 export default function Store() {
   const queryClient = useQueryClient();
   const [buyCoinsDialog, setBuyCoinsDialog] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    base44.auth.me().then(setCurrentUser).catch(() => {});
+  }, []);
 
   const { data: userProfile } = useQuery({
-    queryKey: ['userProfile'],
+    queryKey: ['userProfile', currentUser?.email],
     queryFn: async () => {
-      const profiles = await base44.entities.UserProfile.list();
+      if (!currentUser?.email) return null;
+      const profiles = await base44.entities.UserProfile.filter({ created_by: currentUser.email });
       return profiles[0] || null;
     },
+    enabled: !!currentUser?.email,
   });
 
   const { data: userCoins } = useQuery({
-    queryKey: ['userCoins'],
+    queryKey: ['userCoins', currentUser?.email],
     queryFn: async () => {
-      const coins = await base44.entities.UserCoins.list();
+      if (!currentUser?.email) return null;
+      const coins = await base44.entities.UserCoins.filter({ created_by: currentUser.email });
       if (coins.length === 0) {
         return await base44.entities.UserCoins.create({ coins: 100000000, unlocked_items: [], equipped_item: null });
       }
       return coins[0];
     },
+    enabled: !!currentUser?.email,
   });
 
   const updateCoinsMutation = useMutation({
     mutationFn: (data) => base44.entities.UserCoins.update(userCoins.id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['userCoins'] }),
+    onError: (e) => { console.error("Store: failed to update coins", e); toast.error("Couldn't update your coins. Please try again."); },
   });
 
   const buyItem = (item) => {

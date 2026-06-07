@@ -52,12 +52,17 @@ export default function HomeTodoList({ isAdmin = false }) {
   const updateOrderMutation = useMutation({
     mutationFn: async (items) => {
       await Promise.all(
-        items.map((item, index) => 
+        items.map((item, index) =>
           base44.entities.TodoItem.update(item.id, { order: index })
         )
       );
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['todoItems'] }),
+    onError: (e) => {
+      console.error("Failed to reorder to-do items", e);
+      toast.error("Couldn't save the new order");
+      queryClient.invalidateQueries({ queryKey: ['todoItems'] });
+    },
   });
 
   const updateItemMutation = useMutation({
@@ -66,6 +71,10 @@ export default function HomeTodoList({ isAdmin = false }) {
       queryClient.invalidateQueries({ queryKey: ['todoItems'] });
       setEditingItem(null);
       toast.success("Updated!");
+    },
+    onError: (e) => {
+      console.error("Failed to update to-do item", e);
+      toast.error("Couldn't update item");
     },
   });
 
@@ -76,6 +85,10 @@ export default function HomeTodoList({ isAdmin = false }) {
       setShowAddDialog(false);
       toast.success("Added!");
     },
+    onError: (e) => {
+      console.error("Failed to create to-do item", e);
+      toast.error("Couldn't add item");
+    },
   });
 
   const deleteItemMutation = useMutation({
@@ -83,6 +96,10 @@ export default function HomeTodoList({ isAdmin = false }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['todoItems'] });
       toast.success("Deleted!");
+    },
+    onError: (e) => {
+      console.error("Failed to delete to-do item", e);
+      toast.error("Couldn't delete item");
     },
   });
 
@@ -103,6 +120,11 @@ export default function HomeTodoList({ isAdmin = false }) {
       }
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['todoProgress'] }),
+    onError: (e) => {
+      console.error("Failed to toggle to-do completion", e);
+      toast.error("Couldn't save your progress");
+      queryClient.invalidateQueries({ queryKey: ['todoProgress'] });
+    },
   });
 
   const isCompleted = (todoItemId) => {
