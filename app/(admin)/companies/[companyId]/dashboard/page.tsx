@@ -7,9 +7,11 @@ import StatCard from "@/components/StatCard";
 import StatusBadge from "@/components/StatusBadge";
 import CompanySpecificPanel from "@/components/CompanySpecificPanel";
 import { formatDate } from "@/lib/utils";
+import { useLocalStorage } from "@/lib/useLocalStorage";
 
 export default function CompanyDashboardPage() {
   const company = useCompany();
+  const [subscribers] = useLocalStorage<string[]>("masteri-newsletter-subscribers", []);
   const openTasks = company.data.tasks.filter((t) => t.status !== "Done").slice(0, 5);
   const upcoming = [...company.data.calendar]
     .sort((a, b) => a.date.localeCompare(b.date))
@@ -54,6 +56,35 @@ export default function CompanyDashboardPage() {
 
       <div className="mt-6">
         <CompanySpecificPanel company={company} />
+      </div>
+
+      {/* Newsletter widget */}
+      <div className="mt-6 rounded-xl border border-slate-200 bg-white shadow-card">
+        <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3.5">
+          <div>
+            <h2 className="text-sm font-semibold text-slate-900">Newsletter</h2>
+            <p className="text-xs text-slate-400">{subscribers.length} subscriber{subscribers.length !== 1 ? "s" : ""}</p>
+          </div>
+          <Link
+            href={`/companies/${company.id}/newsletter`}
+            className="rounded-lg bg-teal-600 px-4 py-2 text-xs font-semibold text-white hover:bg-teal-700 transition"
+          >
+            Manage →
+          </Link>
+        </div>
+        <div className="flex items-center gap-6 px-5 py-4">
+          <div className="text-center">
+            <p className="text-2xl font-bold text-slate-900">{subscribers.length}</p>
+            <p className="text-xs text-slate-400">Subscribers</p>
+          </div>
+          <div className="h-10 w-px bg-slate-100" />
+          <Link
+            href={`/companies/${company.id}/newsletter?tab=compose`}
+            className="text-sm font-medium text-teal-600 hover:text-teal-700"
+          >
+            ✏️ Draft &amp; send a newsletter
+          </Link>
+        </div>
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">

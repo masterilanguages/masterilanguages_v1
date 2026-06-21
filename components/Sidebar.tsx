@@ -69,6 +69,7 @@ export default function Sidebar({
         { href: `${base}/files`, label: "Files", icon: "files" },
         { href: `${base}/team`, label: company.labels.team, icon: "team" },
         { href: `${base}/finances`, label: "Finances", icon: "finances" },
+        { href: `${base}/newsletter`, label: "Newsletter", icon: "email" },
       ]
     : [];
 

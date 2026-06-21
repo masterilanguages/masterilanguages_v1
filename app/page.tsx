@@ -1,5 +1,6 @@
 import Link from "next/link";
 import PricingSection from "@/components/PricingSection";
+import NewsletterForm from "@/components/NewsletterForm";
 
 export const metadata = {
   title: "Masteri Languages — Master a New Language Through Music, Conversation & Memory",
@@ -189,6 +190,19 @@ export default function LandingPage() {
         <p className="mt-4 text-sm text-slate-500">
           Or email us directly at hello@masterilanguages.com
         </p>
+      </section>
+
+      {/* Newsletter */}
+      <section className="bg-slate-900 px-6 py-16">
+        <div className="mx-auto max-w-xl text-center">
+          <h2 className="text-2xl font-bold text-white">Stay in the Loop</h2>
+          <p className="mt-2 text-slate-400 text-sm">
+            Tips, resources, and updates from Masteri Languages — straight to your inbox.
+          </p>
+          <div className="mt-6 text-left">
+            <NewsletterForm />
+          </div>
+        </div>
       </section>
 
       {/* Footer */}
