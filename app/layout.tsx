@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Masteri Admin",
-  description: "Admin panel for Masteri Languages",
+  title: "Masteri Languages",
+  description: "1-on-1 language coaching — admin panel",
 };
 
 export default function RootLayout({

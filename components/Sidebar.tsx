@@ -52,7 +52,7 @@ export default function Sidebar({
 
   const globalNav: NavItem[] = [
     { href: "/", label: "Control Panel", icon: "dashboard" },
-    { href: "/dashboard", label: "Overview", icon: "building" },
+    { href: "/dashboard", label: "Overview", icon: "dashboard" },
     { href: "/companies", label: "Companies", icon: "building" },
   ];
 
