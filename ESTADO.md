@@ -1,6 +1,6 @@
 # Estado del proyecto — Language Masteri (migración fuera de Base44)
 
-_Resumen detallado · 2026-06-04_
+_Resumen detallado · 2026-06-21_
 
 ---
 
