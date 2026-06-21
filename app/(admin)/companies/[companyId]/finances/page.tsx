@@ -1,17 +1,25 @@
 "use client";
 
+import { useState } from "react";
 import { useCompany } from "@/lib/useCompany";
+import { useLocalStorage } from "@/lib/useLocalStorage";
 import PageHeader from "@/components/PageHeader";
 import StatCard from "@/components/StatCard";
 import DataTable from "@/components/DataTable";
 import StatusBadge from "@/components/StatusBadge";
+import ActionMenu from "@/components/ActionMenu";
+import CreateModal from "@/components/CreateModal";
 import { PlusIcon } from "@/components/Icons";
 import { cn, formatCurrency, formatDate } from "@/lib/utils";
 import type { ColumnDef, Transaction } from "@/lib/types";
 
 export default function FinancesPage() {
   const company = useCompany();
-  const transactions = company.data.transactions;
+  const [transactions, setTransactions] = useLocalStorage<Transaction[]>(
+    "masteri-transactions",
+    company.data.transactions
+  );
+  const [modalOpen, setModalOpen] = useState(false);
 
   const income = transactions
     .filter((t) => t.type === "Income" && t.status !== "Overdue")
@@ -49,6 +57,21 @@ export default function FinancesPage() {
       ),
     },
     { key: "status", header: "Status", render: (t) => <StatusBadge status={t.status} /> },
+    {
+      key: "id",
+      header: "",
+      render: (t) => (
+        <ActionMenu
+          items={[
+            {
+              label: "Delete",
+              destructive: true,
+              onClick: () => setTransactions((prev) => prev.filter((tx) => tx.id !== t.id)),
+            },
+          ]}
+        />
+      ),
+    },
   ];
 
   return (
@@ -59,6 +82,7 @@ export default function FinancesPage() {
         actions={
           <button
             type="button"
+            onClick={() => setModalOpen(true)}
             className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-700"
           >
             <PlusIcon /> Record transaction
@@ -111,6 +135,33 @@ export default function FinancesPage() {
           { key: "status", label: "Statuses", options: ["Paid", "Pending", "Overdue"] },
         ]}
       />
+
+      {modalOpen && (
+        <CreateModal
+          title="Record Transaction"
+          fields={[
+            { name: "description", label: "Description", required: true },
+            { name: "amount", label: "Amount", required: true },
+            { name: "type", label: "Type", type: "select", options: ["Income", "Expense"] },
+            { name: "category", label: "Category" },
+            { name: "status", label: "Status", type: "select", options: ["Paid", "Pending", "Overdue"] },
+            { name: "date", label: "Date", type: "date" },
+          ]}
+          onSubmit={(data) => {
+            const newTx: Transaction = {
+              id: Date.now().toString(),
+              description: data.description,
+              amount: parseFloat(data.amount) || 0,
+              type: (data.type as Transaction["type"]) ?? "Income",
+              category: data.category ?? "",
+              status: (data.status as Transaction["status"]) ?? "Pending",
+              date: data.date ?? new Date().toISOString().slice(0, 10),
+            };
+            setTransactions((prev) => [newTx, ...prev]);
+          }}
+          onClose={() => setModalOpen(false)}
+        />
+      )}
     </div>
   );
 }

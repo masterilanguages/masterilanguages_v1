@@ -2,14 +2,16 @@
 
 import { useMemo, useState } from "react";
 import { useCompany } from "@/lib/useCompany";
+import { useLocalStorage } from "@/lib/useLocalStorage";
 import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 import ActionMenu from "@/components/ActionMenu";
+import CreateModal from "@/components/CreateModal";
 import { PlusIcon, SearchIcon } from "@/components/Icons";
 import { cn, formatDate } from "@/lib/utils";
 import type { Note } from "@/lib/types";
 
-function NoteCard({ note }: { note: Note }) {
+function NoteCard({ note, onDelete }: { note: Note; onDelete: () => void }) {
   return (
     <div
       className={cn(
@@ -22,7 +24,11 @@ function NoteCard({ note }: { note: Note }) {
           {note.pinned && <span className="mr-1.5 text-amber-500">★</span>}
           {note.title}
         </h3>
-        <ActionMenu />
+        <ActionMenu
+          items={[
+            { label: "Delete", destructive: true, onClick: onDelete },
+          ]}
+        />
       </div>
       <p className="mt-2 flex-1 text-sm leading-relaxed text-slate-600">{note.body}</p>
       <p className="mt-3 text-xs text-slate-400">
@@ -34,18 +40,20 @@ function NoteCard({ note }: { note: Note }) {
 
 export default function NotesPage() {
   const company = useCompany();
+  const [notes, setNotes] = useLocalStorage<Note[]>("masteri-notes", company.data.notes);
   const [search, setSearch] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return company.data.notes;
-    return company.data.notes.filter(
+    if (!q) return notes;
+    return notes.filter(
       (n) =>
         n.title.toLowerCase().includes(q) ||
         n.body.toLowerCase().includes(q) ||
         n.author.toLowerCase().includes(q)
     );
-  }, [company.data.notes, search]);
+  }, [notes, search]);
 
   const pinned = filtered.filter((n) => n.pinned);
   const rest = filtered.filter((n) => !n.pinned);
@@ -58,6 +66,7 @@ export default function NotesPage() {
         actions={
           <button
             type="button"
+            onClick={() => setModalOpen(true)}
             className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-700"
           >
             <PlusIcon /> New note
@@ -90,7 +99,11 @@ export default function NotesPage() {
               </h2>
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {pinned.map((note) => (
-                  <NoteCard key={note.id} note={note} />
+                  <NoteCard
+                    key={note.id}
+                    note={note}
+                    onDelete={() => setNotes((prev) => prev.filter((n) => n.id !== note.id))}
+                  />
                 ))}
               </div>
             </div>
@@ -102,12 +115,38 @@ export default function NotesPage() {
               </h2>
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {rest.map((note) => (
-                  <NoteCard key={note.id} note={note} />
+                  <NoteCard
+                    key={note.id}
+                    note={note}
+                    onDelete={() => setNotes((prev) => prev.filter((n) => n.id !== note.id))}
+                  />
                 ))}
               </div>
             </div>
           )}
         </div>
+      )}
+
+      {modalOpen && (
+        <CreateModal
+          title="New Note"
+          fields={[
+            { name: "title", label: "Title", required: true },
+            { name: "body", label: "Body", type: "textarea", required: true },
+            { name: "author", label: "Author" },
+          ]}
+          onSubmit={(data) => {
+            const newNote: Note = {
+              id: Date.now().toString(),
+              title: data.title,
+              body: data.body,
+              author: data.author ?? "",
+              date: new Date().toISOString().slice(0, 10),
+            };
+            setNotes((prev) => [newNote, ...prev]);
+          }}
+          onClose={() => setModalOpen(false)}
+        />
       )}
     </div>
   );

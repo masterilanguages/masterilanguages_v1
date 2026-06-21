@@ -2,11 +2,14 @@
 
 import { useMemo, useState } from "react";
 import { useCompany } from "@/lib/useCompany";
+import { useLocalStorage } from "@/lib/useLocalStorage";
 import PageHeader from "@/components/PageHeader";
 import StatusBadge from "@/components/StatusBadge";
 import EmptyState from "@/components/EmptyState";
 import ActionMenu from "@/components/ActionMenu";
+import CreateModal from "@/components/CreateModal";
 import { PlusIcon, SearchIcon } from "@/components/Icons";
+import type { TeamMember } from "@/lib/types";
 
 function initials(name: string): string {
   return name
@@ -19,18 +22,20 @@ function initials(name: string): string {
 
 export default function TeamPage() {
   const company = useCompany();
+  const [team, setTeam] = useLocalStorage<TeamMember[]>("masteri-team", company.data.team);
   const [search, setSearch] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return company.data.team;
-    return company.data.team.filter(
+    if (!q) return team;
+    return team.filter(
       (m) =>
         m.name.toLowerCase().includes(q) ||
         m.role.toLowerCase().includes(q) ||
         (m.speciality ?? "").toLowerCase().includes(q)
     );
-  }, [company.data.team, search]);
+  }, [team, search]);
 
   return (
     <div>
@@ -40,6 +45,7 @@ export default function TeamPage() {
         actions={
           <button
             type="button"
+            onClick={() => setModalOpen(true)}
             className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-700"
           >
             <PlusIcon /> Add member
@@ -80,7 +86,15 @@ export default function TeamPage() {
                     <p className="text-xs text-slate-500">{member.role}</p>
                   </div>
                 </div>
-                <ActionMenu />
+                <ActionMenu
+                  items={[
+                    {
+                      label: "Delete",
+                      destructive: true,
+                      onClick: () => setTeam((prev) => prev.filter((m) => m.id !== member.id)),
+                    },
+                  ]}
+                />
               </div>
               {member.speciality && (
                 <p className="mt-3 text-sm text-slate-600">{member.speciality}</p>
@@ -95,6 +109,31 @@ export default function TeamPage() {
             </div>
           ))}
         </div>
+      )}
+
+      {modalOpen && (
+        <CreateModal
+          title="Add Team Member"
+          fields={[
+            { name: "name", label: "Name", required: true },
+            { name: "role", label: "Role" },
+            { name: "email", label: "Email" },
+            { name: "phone", label: "Phone" },
+            { name: "status", label: "Status", type: "select", options: ["Active", "Away"] },
+          ]}
+          onSubmit={(data) => {
+            const newMember: TeamMember = {
+              id: Date.now().toString(),
+              name: data.name,
+              role: data.role ?? "",
+              email: data.email ?? "",
+              phone: data.phone ?? "",
+              status: (data.status as TeamMember["status"]) ?? "Active",
+            };
+            setTeam((prev) => [newMember, ...prev]);
+          }}
+          onClose={() => setModalOpen(false)}
+        />
       )}
     </div>
   );

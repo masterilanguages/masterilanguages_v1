@@ -5,25 +5,6 @@ import { useCompany } from "@/lib/useCompany";
 import PageHeader from "@/components/PageHeader";
 import { cn } from "@/lib/utils";
 
-function Field({
-  label,
-  defaultValue,
-}: {
-  label: string;
-  defaultValue: string;
-}) {
-  return (
-    <label className="block">
-      <span className="mb-1.5 block text-sm font-medium text-slate-700">{label}</span>
-      <input
-        type="text"
-        defaultValue={defaultValue}
-        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-      />
-    </label>
-  );
-}
-
 function Section({
   title,
   description,
@@ -46,25 +27,73 @@ function Section({
 
 export default function SettingsPage() {
   const company = useCompany();
+
+  const [name, setName] = useState(company.name);
+  const [tagline, setTagline] = useState(company.tagline);
+  const [industry, setIndustry] = useState(company.industry);
+
   const [enabledModules, setEnabledModules] = useState<Record<string, boolean>>(
     Object.fromEntries(company.modules.map((m) => [m.id, true]))
   );
   const [saved, setSaved] = useState(false);
 
+  const handleSave = () => {
+    try {
+      localStorage.setItem(
+        "masteri-settings",
+        JSON.stringify({ name, tagline, industry, enabledModules })
+      );
+    } catch {}
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
   return (
     <div className="max-w-3xl">
       <PageHeader
         title="Settings"
-        description={`Workspace configuration for ${company.name}. Changes are local-only until a backend is connected.`}
+        description={`Workspace configuration for ${company.name}. Changes are saved to local storage.`}
       />
 
       <div className="space-y-6">
         <Section title="Company profile">
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Company name" defaultValue={company.name} />
-            <Field label="Tagline" defaultValue={company.tagline} />
-            <Field label="Industry" defaultValue={company.industry} />
-            <Field label="Currency" defaultValue={company.currency} />
+            <label className="block">
+              <span className="mb-1.5 block text-sm font-medium text-slate-700">Company name</span>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              />
+            </label>
+            <label className="block">
+              <span className="mb-1.5 block text-sm font-medium text-slate-700">Tagline</span>
+              <input
+                type="text"
+                value={tagline}
+                onChange={(e) => setTagline(e.target.value)}
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              />
+            </label>
+            <label className="block">
+              <span className="mb-1.5 block text-sm font-medium text-slate-700">Industry</span>
+              <input
+                type="text"
+                value={industry}
+                onChange={(e) => setIndustry(e.target.value)}
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              />
+            </label>
+            <label className="block">
+              <span className="mb-1.5 block text-sm font-medium text-slate-700">Currency</span>
+              <input
+                type="text"
+                defaultValue={company.currency}
+                readOnly
+                className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-500"
+              />
+            </label>
           </div>
         </Section>
 
@@ -80,8 +109,24 @@ export default function SettingsPage() {
               {company.initials}
             </span>
             <div className="grid flex-1 gap-4 sm:grid-cols-2">
-              <Field label="Initials" defaultValue={company.initials} />
-              <Field label="Accent color" defaultValue={company.color} />
+              <label className="block">
+                <span className="mb-1.5 block text-sm font-medium text-slate-700">Initials</span>
+                <input
+                  type="text"
+                  defaultValue={company.initials}
+                  readOnly
+                  className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-500"
+                />
+              </label>
+              <label className="block">
+                <span className="mb-1.5 block text-sm font-medium text-slate-700">Accent color</span>
+                <input
+                  type="text"
+                  defaultValue={company.color}
+                  readOnly
+                  className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-500"
+                />
+              </label>
             </div>
           </div>
         </Section>
@@ -124,15 +169,12 @@ export default function SettingsPage() {
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => {
-              setSaved(true);
-              setTimeout(() => setSaved(false), 2000);
-            }}
+            onClick={handleSave}
             className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700"
           >
             Save changes
           </button>
-          {saved && <span className="text-sm font-medium text-emerald-600">Saved (mock)</span>}
+          {saved && <span className="text-sm font-medium text-emerald-600">Saved</span>}
         </div>
       </div>
     </div>

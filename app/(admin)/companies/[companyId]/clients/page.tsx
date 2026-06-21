@@ -1,16 +1,21 @@
 "use client";
 
+import { useState } from "react";
 import { useCompany } from "@/lib/useCompany";
+import { useLocalStorage } from "@/lib/useLocalStorage";
 import PageHeader from "@/components/PageHeader";
 import DataTable from "@/components/DataTable";
 import StatusBadge from "@/components/StatusBadge";
+import ActionMenu from "@/components/ActionMenu";
+import CreateModal from "@/components/CreateModal";
 import { PlusIcon } from "@/components/Icons";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { Client, ColumnDef } from "@/lib/types";
 
 export default function ClientsPage() {
   const company = useCompany();
-  const clients = company.data.clients;
+  const [clients, setClients] = useLocalStorage<Client[]>("masteri-clients", company.data.clients);
+  const [modalOpen, setModalOpen] = useState(false);
   const singular = company.labels.clients.replace(/s$/, "").toLowerCase();
 
   const columns: ColumnDef<Client>[] = [
@@ -45,6 +50,21 @@ export default function ClientsPage() {
       header: "Status",
       render: (client) => <StatusBadge status={client.status} />,
     },
+    {
+      key: "id",
+      header: "",
+      render: (client) => (
+        <ActionMenu
+          items={[
+            {
+              label: "Delete",
+              destructive: true,
+              onClick: () => setClients((prev) => prev.filter((c) => c.id !== client.id)),
+            },
+          ]}
+        />
+      ),
+    },
   ];
 
   return (
@@ -55,6 +75,7 @@ export default function ClientsPage() {
         actions={
           <button
             type="button"
+            onClick={() => setModalOpen(true)}
             className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-700"
           >
             <PlusIcon /> Add {singular}
@@ -70,6 +91,31 @@ export default function ClientsPage() {
           { key: "status", label: "Statuses", options: ["Active", "Paused", "Churned"] },
         ]}
       />
+      {modalOpen && (
+        <CreateModal
+          title={`Add ${singular}`}
+          fields={[
+            { name: "name", label: "Name", required: true },
+            { name: "email", label: "Email" },
+            { name: "phone", label: "Phone" },
+            { name: "status", label: "Status", type: "select", options: ["Active", "Paused", "Inactive"] },
+          ]}
+          onSubmit={(data) => {
+            const newClient: Client = {
+              id: Date.now().toString(),
+              name: data.name,
+              contact: data.name,
+              email: data.email ?? "",
+              phone: data.phone ?? "",
+              since: new Date().toISOString().slice(0, 10),
+              totalValue: 0,
+              status: (data.status as Client["status"]) ?? "Active",
+            };
+            setClients((prev) => [newClient, ...prev]);
+          }}
+          onClose={() => setModalOpen(false)}
+        />
+      )}
     </div>
   );
 }
