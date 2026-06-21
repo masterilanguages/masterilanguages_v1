@@ -34,14 +34,9 @@ export default function StickyNote() {
   const [mentionQuery, setMentionQuery] = useState(null); // string after @ currently being typed
   const textareaRef = useRef(null);
 
-  // Load all users for @mention autocomplete (admin-only: list-users is admin-gated)
+  // Load all users for @mention autocomplete
   useEffect(() => {
-    base44.auth.me()
-      .then(me => {
-        if (me?.role !== 'admin') return;
-        return base44.entities.User.list().then(users => setAllUsers(users));
-      })
-      .catch(() => {});
+    base44.entities.User.list().then(users => setAllUsers(users)).catch(() => {});
   }, []);
 
   const mentions = parseMentions(notes);
@@ -167,7 +162,7 @@ export default function StickyNote() {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-4 left-40 z-50 px-4 py-2 rounded-xl bg-yellow-300 text-slate-900 shadow-lg font-bold flex items-center gap-1.5"
+          className="fixed bottom-4 left-28 z-50 px-4 py-2 rounded-xl bg-yellow-300 text-slate-900 shadow-lg font-bold flex items-center gap-1.5"
         >
           <StickyNoteIcon className="w-4 h-4" />
           Notes

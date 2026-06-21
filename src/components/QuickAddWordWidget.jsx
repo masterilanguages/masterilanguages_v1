@@ -6,14 +6,9 @@ import { Input } from "@/components/ui/input";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { languageLabel, isRTLText, nativeScriptInstruction, usesNikud } from "@/lib/language";
 
 export default function QuickAddWordWidget() {
   const queryClient = useQueryClient();
-  // TODO: no userProfile is loaded in this widget; default to Hebrew (unchanged
-  // behavior). Wire userProfile?.language here once it is threaded into the page
-  // shells that render <QuickAddWordWidget /> to make Quick Add fully multilingual.
-  const lang = 'hebrew';
   const [isOpen, setIsOpen] = useState(false);
   const [word, setWord] = useState("");
   const [translation, setTranslation] = useState(null);
@@ -26,10 +21,6 @@ export default function QuickAddWordWidget() {
       queryClient.invalidateQueries({ queryKey: ['wordRatings'] });
       toast.success("Word added to backpack! 🎒");
       resetForm();
-    },
-    onError: (e) => {
-      console.error("createWordMutation failed", e);
-      toast.error(e?.message ? `Could not add word: ${e.message}` : 'Could not add word');
     },
   });
 
@@ -44,19 +35,17 @@ export default function QuickAddWordWidget() {
     
     setIsTranslating(true);
     try {
-      const label = languageLabel(lang);
-      // Detect if the input is already in the target language's native script
-      // (RTL text for Hebrew) vs typed in English, and translate accordingly.
-      const isNative = usesNikud(lang) ? /[\u0590-\u05FF]/.test(word) : isRTLText(word);
-
+      // Detect if Hebrew or English and translate accordingly
+      const isHebrew = /[\u0590-\u05FF]/.test(word);
+      
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: isNative
-          ? `Translate this ${label} word to English and provide transliteration: "${word}"`
-          : `Translate this English word to ${label}. Provide ${nativeScriptInstruction(lang)} and a transliteration: "${word}"`,
+        prompt: isHebrew 
+          ? `Translate this Hebrew word to English and provide transliteration: "${word}"`
+          : `Translate this English word to Hebrew with vowels (nikkud), and provide transliteration: "${word}"`,
         response_json_schema: {
           type: "object",
           properties: {
-            hebrew: { type: "string", description: usesNikud(lang) ? "Hebrew word with vowels/nikkud" : `The word in ${label} (native spelling with any accents/diacritics)` },
+            hebrew: { type: "string", description: "Hebrew word with vowels/nikkud" },
             english: { type: "string", description: "English meaning" },
             transliteration: { type: "string", description: "How to pronounce it" }
           }
@@ -72,12 +61,7 @@ export default function QuickAddWordWidget() {
 
   const handleSave = () => {
     if (!translation || selectedRating === null) return;
-    // translation is a NOT NULL text column — guard against empty/undefined to avoid a NOT NULL 400
-    if (!translation.english?.trim() || !translation.hebrew?.trim()) {
-      toast.error("Translation incomplete — please translate the word first");
-      return;
-    }
-
+    
     createWordMutation.mutate({
       word: translation.hebrew,
       translation: translation.english,
@@ -140,7 +124,7 @@ export default function QuickAddWordWidget() {
                 animate={{ opacity: 1, y: 0 }}
                 className="bg-white/5 rounded-xl p-3 mb-3"
               >
-                <p className="text-cyan-400 text-xl font-bold text-center" dir={isRTLText(translation.hebrew) ? "rtl" : "ltr"}>
+                <p className="text-cyan-400 text-xl font-bold text-center" dir="rtl">
                   {translation.hebrew}
                 </p>
                 <p className="text-white/60 text-sm text-center">

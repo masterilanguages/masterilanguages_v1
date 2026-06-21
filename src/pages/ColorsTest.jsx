@@ -56,52 +56,33 @@ export default function ColorsTest() {
   const [score, setScore] = useState(0);
   const [testComplete, setTestComplete] = useState(false);
   const [trigger, setTrigger] = useState(0);
-  const [currentUser, setCurrentUser] = useState(null);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  // Get current user for owner-scoped progress reads/writes
-  React.useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const user = await base44.auth.me();
-        setCurrentUser(user);
-      } catch (e) {}
-    };
-    fetchUser();
-  }, []);
-
   const { data: progress } = useQuery({
-    queryKey: ['lessonProgress', 'ColorsLesson', currentUser?.email],
-    queryFn: async () => {
-      if (!currentUser?.email) return [];
-      return base44.entities.LessonProgress.filter({ lesson_name: 'ColorsLesson', created_by: currentUser.email });
-    },
-    enabled: !!currentUser?.email,
+    queryKey: ['lessonProgress', 'ColorsLesson'],
+    queryFn: () => base44.entities.LessonProgress.filter({ lesson_name: 'ColorsLesson' }),
   });
 
   const saveScoreMutation = useMutation({
     mutationFn: async (finalScore) => {
-      const me = currentUser || await base44.auth.me();
-      const rows = await base44.entities.LessonProgress.filter({ lesson_name: 'ColorsLesson', created_by: me.email });
-      const existing = rows?.[0];
+      const existing = progress?.[0];
       if (existing) {
-        return base44.entities.LessonProgress.update(existing.id, {
+        return base44.entities.LessonProgress.update(existing.id, { 
           test_completed: true,
-          test_score: finalScore
+          test_score: finalScore 
         });
       }
-      return base44.entities.LessonProgress.create({
-        lesson_name: 'ColorsLesson',
+      return base44.entities.LessonProgress.create({ 
+        lesson_name: 'ColorsLesson', 
         completed: true,
         test_completed: true,
-        test_score: finalScore
+        test_score: finalScore 
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['lessonProgress'] });
     },
-    onError: (e) => { console.error("ColorsTest saveScoreMutation", e); toast.error("Couldn't save test score"); },
   });
 
   const current = questions[currentQuestion];

@@ -402,10 +402,37 @@ export default function BabyVideos() {
   const [videoEdits, setVideoEdits] = useState({});
   const [recommendedExpanded, setRecommendedExpanded] = useState(false);
 
+  const { data: userProfile } = useQuery({
+    queryKey: ['userProfile'],
+    queryFn: async () => {
+      const profiles = await base44.entities.UserProfile.list();
+      return profiles[0] || null;
+    },
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+
+  const { data: userCoins } = useQuery({
+    queryKey: ['userCoins'],
+    queryFn: async () => {
+      const coins = await base44.entities.UserCoins.list();
+      return coins[0] || { coins: 0 };
+    },
+    staleTime: 2 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+
+  const { data: wordRatings = [] } = useQuery({
+    queryKey: ['wordRatings'],
+    queryFn: () => base44.entities.Word.filter({ category: "wordbank" }),
+    staleTime: 3 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+
   // Check if current user is admin and if managing another user
   const [currentUser, setCurrentUser] = useState(null);
   const [managingUserEmail, setManagingUserEmail] = useState(localStorage.getItem('admin_managing_user'));
-
+  
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -415,36 +442,6 @@ export default function BabyVideos() {
     };
     fetchUser();
   }, []);
-
-  const { data: userProfile } = useQuery({
-    queryKey: ['userProfile', currentUser?.email],
-    queryFn: async () => {
-      const profiles = await base44.entities.UserProfile.filter({ created_by: currentUser.email });
-      return profiles[0] || null;
-    },
-    staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: false,
-    enabled: !!currentUser?.email,
-  });
-
-  const { data: userCoins } = useQuery({
-    queryKey: ['userCoins', currentUser?.email],
-    queryFn: async () => {
-      const coins = await base44.entities.UserCoins.filter({ created_by: currentUser.email });
-      return coins[0] || { coins: 0 };
-    },
-    staleTime: 2 * 60 * 1000,
-    refetchOnWindowFocus: false,
-    enabled: !!currentUser?.email,
-  });
-
-  const { data: wordRatings = [] } = useQuery({
-    queryKey: ['wordRatings', currentUser?.email],
-    queryFn: () => base44.entities.Word.filter({ category: "wordbank", created_by: currentUser.email }),
-    staleTime: 3 * 60 * 1000,
-    refetchOnWindowFocus: false,
-    enabled: !!currentUser?.email,
-  });
 
   // Check if current user is a coach managing students
   const { data: coachAssignments = [] } = useQuery({
@@ -524,7 +521,7 @@ export default function BabyVideos() {
   const addWordToBackpack = async (word, songId, songTitle) => {
     const existingWord = wordRatings.find(w => w.word === word.hebrew);
     if (existingWord) { toast.info("Already in backpack!"); return; }
-    await createWordMutation.mutateAsync({ word: word.hebrew, translation: word.english, phonetic: word.transliteration, category: 'wordbank', example_sentence: `From song: ${songTitle}`, times_practiced: 1, mastered: false });
+    await createWordMutation.mutateAsync({ word: word.hebrew, translation: word.english, phonetic: word.transliteration, category: `vocab for song ${songTitle}`, times_practiced: 1, mastered: false });
     toast.success(`Added "${word.transliteration}" to backpack! 🎒`);
     const progress = songProgress.find(p => p.song_id === songId);
     const song = songs.find(s => s.id === songId);
@@ -636,7 +633,7 @@ export default function BabyVideos() {
   const reorderVideosMutation = useMutation({
     mutationFn: async (videos) => {
       await Promise.all(
-        videos.map((video, index) =>
+        videos.map((video, index) => 
           base44.entities.Video.update(video.id, { order: index })
         )
       );
@@ -645,10 +642,6 @@ export default function BabyVideos() {
       queryClient.invalidateQueries({ queryKey: ['customVideos'] });
       toast.success("Order saved!");
     },
-    onError: (e) => {
-      console.error("Failed to reorder videos", e);
-      toast.error(`Failed to save order: ${e.message || 'Unknown error'}`);
-    }
   });
 
   const updateVideoMutation = useMutation({
@@ -657,10 +650,6 @@ export default function BabyVideos() {
       queryClient.invalidateQueries({ queryKey: ['customVideos'] });
       toast.success("Updated!");
     },
-    onError: (e) => {
-      console.error("Failed to update video", e);
-      toast.error(`Failed to update video: ${e.message || 'Unknown error'}`);
-    }
   });
 
   useEffect(() => {
@@ -686,10 +675,6 @@ export default function BabyVideos() {
       queryClient.invalidateQueries({ queryKey: ['customVideos'] });
       toast.success("Added to My Videos! 🎬");
     },
-    onError: (e) => {
-      console.error("Failed to copy video to My Videos", e);
-      toast.error(`Failed to add to My Videos: ${e.message || 'Unknown error'}`);
-    }
   });
 
   // Check if single video mode (from day task)

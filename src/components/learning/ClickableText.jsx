@@ -4,11 +4,10 @@ import ClickableWord from "./ClickableWord";
 // Helper to wrap any text and make Hebrew/transliterated words clickable
 // Pass a dictionary of words with their translations
 
-export default function ClickableText({
-  text,
+export default function ClickableText({ 
+  text, 
   words = [], // Array of { word, transliteration, translation }
-  className = "",
-  language // optional target language, passed through to each ClickableWord (defaults to Hebrew)
+  className = "" 
 }) {
   if (!text || words.length === 0) {
     return <span className={className}>{text}</span>;
@@ -38,7 +37,6 @@ export default function ClickableText({
               word={matchedWord.word}
               transliteration={matchedWord.transliteration}
               translation={matchedWord.translation}
-              language={matchedWord.language || language}
               variant={part === matchedWord.word ? "hebrew" : "transliteration"}
             />
           );

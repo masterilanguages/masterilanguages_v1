@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
@@ -21,38 +21,6 @@ import TranslatorWidget from "../components/TranslatorWidget";
 import ContinuousTranscript from "../components/video/ContinuousTranscript";
 import AddVideoDialog from "../components/media/AddVideoDialog";
 import PostVideoFlashcards from "../components/video/PostVideoFlashcards";
-import { languageLabel, isRTLText } from "@/lib/language";
-
-// Shared, memoized loader for the YouTube IFrame API. The YT API calls the single
-// global window.onYouTubeIframeAPIReady ONCE at script load — a single
-// "window.onYouTubeIframeAPIReady = initPlayer" per component means last-writer-wins
-// and other players' onReady never fire. This helper appends the script at most once,
-// chains any previously-registered callback, and polls window.YT.Player as a fallback,
-// so every caller's .then() runs. (See bug #33.)
-let __ytApiPromise = null;
-function loadYouTubeApi() {
-  if (window.YT && window.YT.Player) return Promise.resolve(window.YT);
-  if (__ytApiPromise) return __ytApiPromise;
-  __ytApiPromise = new Promise((resolve) => {
-    const finish = () => { if (window.YT && window.YT.Player) resolve(window.YT); };
-    const prev = window.onYouTubeIframeAPIReady;
-    window.onYouTubeIframeAPIReady = () => {
-      if (typeof prev === 'function') { try { prev(); } catch (e) {} }
-      finish();
-    };
-    if (!document.getElementById('youtube-iframe-api')) {
-      const tag = document.createElement('script');
-      tag.id = 'youtube-iframe-api';
-      tag.src = 'https://www.youtube.com/iframe_api';
-      document.head.appendChild(tag);
-    }
-    // Fallback poll in case onYouTubeIframeAPIReady was already consumed.
-    const poll = setInterval(() => {
-      if (window.YT && window.YT.Player) { clearInterval(poll); resolve(window.YT); }
-    }, 100);
-  });
-  return __ytApiPromise;
-}
 
 const DEFAULT_TOPICS = [
   "Religion / Spirituality",
@@ -87,9 +55,7 @@ export default function MediaLibrary() {
   const [showTranscript, setShowTranscript] = useState(false);
   const [transcript, setTranscript] = useState([]);
   const [loadingTranscript, setLoadingTranscript] = useState(false);
-  const [translationInProgress, setTranslationInProgress] = useState(false);
   const [videoPlayer, setVideoPlayer] = useState(null);
-  const videoPlayerRef = useRef(null);
   const [showRecommended, setShowRecommended] = useState(false);
   const [showLibrary, setShowLibrary] = useState(true);
   const [editingSegment, setEditingSegment] = useState(null);
@@ -114,8 +80,6 @@ export default function MediaLibrary() {
   const [loadingRecommendations, setLoadingRecommendations] = useState(false);
   const [showPostVideoFlashcards, setShowPostVideoFlashcards] = useState(false);
   const [sessionVocabWords, setSessionVocabWords] = useState([]);
-  const [videoEnded, setVideoEnded] = useState(false);
-  const [loadingFlashcards, setLoadingFlashcards] = useState(false);
   const [topics, setTopics] = useState(() => {
     const saved = localStorage.getItem("mediaLibraryTopics");
     return saved ? JSON.parse(saved) : DEFAULT_TOPICS;
@@ -124,51 +88,12 @@ export default function MediaLibrary() {
   const [newTopicInput, setNewTopicInput] = useState("");
 
   const sessionDay = new URLSearchParams(window.location.search).get('sessionDay');
-  const urlDayId = new URLSearchParams(window.location.search).get('dayId');
-  const urlTaskId = new URLSearchParams(window.location.search).get('taskId');
-
-  const markTaskComplete = async () => {
-    if (!urlDayId || !urlTaskId) return;
-    try {
-      const progList = await base44.entities.DayProgress.filter({ day_id: urlDayId });
-      const prog = progList[0];
-      if (prog) {
-        const already = (prog.subsections_completed || []).includes(urlTaskId);
-        if (!already) {
-          await base44.entities.DayProgress.update(prog.id, {
-            subsections_completed: [...(prog.subsections_completed || []), urlTaskId]
-          });
-        }
-      } else {
-        // day_number is NOT NULL with no default — resolve it from the Day row.
-        const day = await base44.entities.Day.get(urlDayId);
-        await base44.entities.DayProgress.create({
-          day_id: urlDayId,
-          day_number: day?.day_number ?? 0,
-          subsections_completed: [urlTaskId]
-        });
-      }
-    } catch (e) { console.error('Failed to mark task complete', e); toast.error('No se pudo guardar el progreso.'); }
-  };
-
-  const handleStartFlashcards = async () => {
-    setLoadingFlashcards(true);
-    await markTaskComplete();
-    setLoadingFlashcards(false);
-    // Pass video + transcript to dictation page
-    const videoId = selectedVideo?.video_id || selectedVideo?.youtube_video_id || extractYouTubeId(selectedVideo?.video_url || "");
-    sessionStorage.setItem("dictationData", JSON.stringify({
-      videoId,
-      title: selectedVideo?.title || "",
-      transcript: transcript.filter(s => s.transliteration || s.text),
-    }));
-    navigate("/DictationExercise");
-  };
 
   const handleRankWords = async () => {
     if (!sessionDay) return;
-    await markTaskComplete();
-    navigate(createPageUrl('Home'));
+    const words = await base44.entities.Word.filter({ example_sentence: `Session ${sessionDay}` });
+    setSessionVocabWords(words.length > 0 ? words : []);
+    setShowPostVideoFlashcards(true);
   };
 
   const [formData, setFormData] = useState({
@@ -221,13 +146,11 @@ export default function MediaLibrary() {
   });
 
   const { data: userProfile } = useQuery({
-    queryKey: ['userProfile', currentUser?.email],
+    queryKey: ['userProfile'],
     queryFn: async () => {
-      if (!currentUser?.email) return null;
-      const profiles = await base44.entities.UserProfile.filter({ created_by: currentUser.email });
+      const profiles = await base44.entities.UserProfile.list();
       return profiles[0] || null;
     },
-    enabled: !!currentUser?.email,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
     onSuccess: (profile) => {
@@ -245,13 +168,11 @@ export default function MediaLibrary() {
   }, [userProfile?.language]);
 
   const { data: userCoins } = useQuery({
-    queryKey: ['userCoins', currentUser?.email],
+    queryKey: ['userCoins'],
     queryFn: async () => {
-      if (!currentUser?.email) return null;
-      const coins = await base44.entities.UserCoins.filter({ created_by: currentUser.email });
+      const coins = await base44.entities.UserCoins.list();
       return coins[0] || null;
     },
-    enabled: !!currentUser?.email,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
@@ -291,11 +212,11 @@ export default function MediaLibrary() {
   });
 
   const { data: wordRatings = [] } = useQuery({
-    queryKey: ['wordRatings', currentUser?.email],
-    queryFn: () => base44.entities.Word.filter({ category: "wordbank", created_by: currentUser.email }),
+    queryKey: ['wordRatings'],
+    queryFn: () => base44.entities.Word.filter({ category: "wordbank" }),
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
-    enabled: activeMediaTab === 'verbs' && !!currentUser?.email,
+    enabled: activeMediaTab === 'verbs',
   });
 
   const createWordMutation = useMutation({
@@ -345,47 +266,7 @@ export default function MediaLibrary() {
       resetForm();
       toast.success("Video updated!");
     },
-    onError: (e) => {
-      console.error("updateVideoMutation failed", e);
-      toast.error("Failed to save video changes");
-    },
   });
-
-  // Helper: extract vocab words from processed transcript and store on the MediaLibrary record
-  const extractAndStoreVocabWords = async (videoId, processedTranscript, language) => {
-    try {
-      const fullText = processedTranscript.map(s => s.transliteration || s.hebrew || s.text || '').join(' ');
-      if (!fullText.trim()) return;
-      const lang = language || userProfile?.language || 'hebrew';
-      const langCap = lang.charAt(0).toUpperCase() + lang.slice(1);
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Extract 8-12 important vocabulary words from this ${langCap} learning transcript. Only meaningful content words (nouns, verbs, adjectives). Transcript: "${fullText.slice(0, 3000)}". Return JSON with a "words" array, each item: { phonetic: Latin transliteration, translation: English meaning (1-4 words), hebrew: native script }.`,
-        response_json_schema: {
-          type: 'object',
-          properties: {
-            words: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  phonetic: { type: 'string' },
-                  translation: { type: 'string' },
-                  hebrew: { type: 'string' }
-                }
-              }
-            }
-          }
-        }
-      });
-      const words = result?.words || [];
-      if (words.length > 0) {
-        await base44.entities.MediaLibrary.update(videoId, { session_vocab_words: words });
-        queryClient.invalidateQueries({ queryKey: ['mediaLibrary'] });
-      }
-    } catch (e) {
-      console.error('Failed to extract vocab words:', e);
-    }
-  };
 
   const saveTranscriptEdit = async (segmentIdx, field, value) => {
     if (!selectedVideo) return;
@@ -567,7 +448,7 @@ export default function MediaLibrary() {
       toast.error("Title is required");
       return;
     }
-    if (!editingVideo && !formData.video_url && !formData.video_id) {
+    if (!formData.video_url && !formData.video_id) {
       toast.error("Please add a video URL or upload an audio file first");
       return;
     }
@@ -653,7 +534,7 @@ Keep natural sentence breaks. Return a JSON object with a "transcript" array.`,
     if (formData.default_day) {
       const dayNum = parseInt(formData.default_day);
       try {
-        const matchingDays = await base44.entities.Day.filter({ day_number: dayNum, language: data.language || formData.language });
+        const matchingDays = await base44.entities.Day.filter({ day_number: dayNum });
         for (const day of matchingDays) {
           const subsections = day.subsections || [];
           const videoTaskId = `video_${data.video_id || formData.video_id}`;
@@ -692,7 +573,7 @@ Keep natural sentence breaks. Return a JSON object with a "transcript" array.`,
             for (const w of (vocabResult.words || [])) {
               if (!w.word || !w.translation) continue;
               const phonetic = w.phonetic || w.word;
-              const existing = await base44.entities.Word.filter({ phonetic, created_by: currentUser?.email });
+              const existing = await base44.entities.Word.filter({ phonetic });
               if (existing.length === 0) {
                 await base44.entities.Word.create({
                   word: w.word,
@@ -717,27 +598,9 @@ Keep natural sentence breaks. Return a JSON object with a "transcript" array.`,
     }
 
     if (editingVideo) {
-      try {
-        await updateVideoMutation.mutateAsync({ id: editingVideo.id, data });
-      } catch (e) {
-        // onError already logged + toasted; bail so we don't run vocab extraction
-        // on a save that never persisted (user must not think the edit succeeded).
-        return;
-      }
-      // If a transcript was just processed, extract vocab words
-      if (processedTranscript?.length) {
-        extractAndStoreVocabWords(editingVideo.id, processedTranscript, data.language);
-      }
+      updateVideoMutation.mutate({ id: editingVideo.id, data });
     } else {
-      let created;
-      try {
-        created = await base44.entities.MediaLibrary.create(data);
-      } catch (e) {
-        const detail = [e?.message, e?.details, e?.hint, e?.code].filter(Boolean).join(' | ');
-        console.error('MediaLibrary.create FAILED →', detail || e, '| payload:', JSON.stringify(data));
-        toast.error(`No se pudo guardar: ${detail || 'ver consola'}`);
-        return;
-      }
+      const created = await base44.entities.MediaLibrary.create(data);
       queryClient.invalidateQueries({ queryKey: ['mediaLibrary'] });
       toast.success("Added to library!");
       // Assign to multiple users with their individual session numbers
@@ -754,7 +617,7 @@ Keep natural sentence breaks. Return a JSON object with a "transcript" array.`,
         // Also inject into the user's specific session day if session # provided
         if (au.session) {
           const sessionNum = parseInt(au.session);
-          const matchingDays = await base44.entities.Day.filter({ day_number: sessionNum, language: data.language || formData.language });
+          const matchingDays = await base44.entities.Day.filter({ day_number: sessionNum });
           for (const day of matchingDays) {
             const subsections = day.subsections || [];
             const videoTaskId = `video_${data.video_id}`;
@@ -982,8 +845,6 @@ For each segment:
       setTranscript(processedSegments);
       setPastedTranscript("");
       toast.success("Transcript processed!");
-      // Auto-extract vocab words for session flashcards
-      extractAndStoreVocabWords(video.id, processedSegments, video.language);
     } catch (e) {
       console.error('Error:', e);
       toast.error(e.message || "Failed to process");
@@ -1054,31 +915,6 @@ For each segment:
 
         toast.dismiss(statusToast);
         const rawTranscript = result.data.transcript;
-
-        // Show the synced (karaoke) transcript IMMEDIATELY from the raw
-        // timestamped lines, so it syncs with the video right away instead of
-        // waiting ~2 min for translations. The enrichment loop below overwrites
-        // these lines with transliteration + English when ready.
-        const rawSegments = rawTranscript.map(s => ({
-          text: s.text,
-          transliteration: s.text,
-          english: '',
-          start: s.start,
-        }));
-        setTranscript(rawSegments);
-        setLoadingTranscript(false);
-        // Mark background translation as running so ContinuousTranscript holds off
-        // its auto-generate-Hebrew pass until the transcript settles (bug #31).
-        setTranslationInProgress(true);
-        try {
-          await updateVideoMutation.mutateAsync({
-            id: video.id,
-            data: { processed_transcript: rawSegments },
-            entity: getVideoEntity(video),
-          });
-        } catch (e) { console.error('Failed to save raw transcript', e); }
-        toast.success(`Transcript loaded (${rawTranscript.length} lines)! Translating in background…`);
-
         toast.info(`Processing ${rawTranscript.length} segments...`);
 
         // Detect language
@@ -1087,20 +923,15 @@ For each segment:
         const userLang = userProfile?.language || video.language || 'spanish';
         toast.info(`Detected: ${detectedLang} → translating...`);
 
-      // Translate in PARALLEL batches (transliteration + English). Running the
-      // batches concurrently with a larger batch size turns ~2 min of sequential
-      // calls into a few seconds. `enriched` starts as the raw karaoke lines, so
-      // any failed batch simply keeps the original text.
-      const enriched = rawSegments.map(s => ({ ...s }));
-      const batchSize = 20;
-      let doneCount = 0;
+      // Process in batches
+      const processedSegments = [];
+      const batchSize = 5;
 
-      const batchPromises = [];
       for (let i = 0; i < rawTranscript.length; i += batchSize) {
-        const startIdx = i;
         const batch = rawTranscript.slice(i, i + batchSize);
-        batchPromises.push(
-          base44.integrations.Core.InvokeLLM({
+
+        try {
+          const llmResult = await base44.integrations.Core.InvokeLLM({
             prompt: buildTranscriptPrompt(batch, detectedLang, userLang),
             response_json_schema: {
               type: "object",
@@ -1117,41 +948,34 @@ For each segment:
                 }
               }
             }
-          })
-            .then((llmResult) => {
-              batch.forEach((segment, idx) => {
-                const processed = llmResult.segments?.[idx] || {};
-                enriched[startIdx + idx] = {
-                  text: segment.text,
-                  transliteration: processed.transliteration || segment.text,
-                  english: processed.english || '',
-                  start: segment.start
-                };
-              });
-            })
-            .catch((e) => { console.error('Batch translate error:', e); })
-            .finally(() => {
-              doneCount += batch.length;
-              setTranscript([...enriched]); // progressive update as batches finish
-              toast.info(`${Math.min(doneCount, rawTranscript.length)} / ${rawTranscript.length} translated`);
-            })
-        );
+          });
+
+          batch.forEach((segment, idx) => {
+            const processed = llmResult.segments?.[idx] || {};
+            processedSegments.push({
+              text: segment.text,
+              transliteration: processed.transliteration || segment.text,
+              english: processed.english || '',
+              start: segment.start
+            });
+          });
+
+          toast.info(`${Math.min(i + batchSize, rawTranscript.length)} / ${rawTranscript.length} done`);
+        } catch (e) {
+          console.error('Batch error:', e);
+          batch.forEach(segment => processedSegments.push({ ...segment, transliteration: segment.text, english: '' }));
+        }
       }
 
-      await Promise.all(batchPromises);
-
-      // Save the enriched transcript.
+      // Save to correct entity
       await updateVideoMutation.mutateAsync({
         id: video.id,
-        data: { processed_transcript: enriched },
+        data: { processed_transcript: processedSegments },
         entity: getVideoEntity(video)
       });
 
-      setTranscript(enriched);
-      setTranslationInProgress(false);
-      toast.success("Translations ready! ✅");
-      // Auto-extract vocab words for session flashcards
-      extractAndStoreVocabWords(video.id, enriched, video.language);
+      setTranscript(processedSegments);
+      toast.success("Transcript generated!");
       } catch (timeoutError) {
         toast.dismiss(statusToast);
         console.error('Timeout or fetch error:', timeoutError);
@@ -1170,7 +994,6 @@ For each segment:
       console.error("Error details:", e);
       } finally {
       setLoadingTranscript(false);
-      setTranslationInProgress(false);
       }
       };
 
@@ -1179,11 +1002,7 @@ For each segment:
     setShowTranscript(true);
     setTranscript([]);
     setLoadingTranscript(true);
-    // Destroy any previously-created player before swapping videos (bug #32).
-    try { videoPlayerRef.current?.destroy?.(); } catch (e) {}
-    videoPlayerRef.current = null;
     setVideoPlayer(null);
-    setVideoEnded(false);
 
     const videoId = video.video_id || video.youtube_video_id || extractYouTubeId(video.video_url);
 
@@ -1193,30 +1012,55 @@ For each segment:
       return;
     }
 
+    // Load YouTube IFrame API
+    if (!window.YT) {
+      const tag = document.createElement('script');
+      tag.src = 'https://www.youtube.com/iframe_api';
+      document.head.appendChild(tag);
+    }
+
     const initPlayer = () => {
       const container = document.getElementById('youtube-player');
-      // The transcript view may have been closed before the API loaded.
-      if (!container) return;
-      // Tear down any prior player before re-creating (bug #32).
-      try { videoPlayerRef.current?.destroy?.(); } catch (e) {}
-      container.innerHTML = '';
-      videoPlayerRef.current = new window.YT.Player('youtube-player', {
+      if (container) container.innerHTML = '';
+      new window.YT.Player('youtube-player', {
         videoId,
         playerVars: { enablejsapi: 1, autoplay: 0, controls: 1 },
         events: {
-          onReady: (event) => { videoPlayerRef.current = event.target; setVideoPlayer(event.target); },
-          onStateChange: (event) => {
+          onReady: (event) => setVideoPlayer(event.target),
+          onStateChange: async (event) => {
             if (event.data === 0) {
-              setVideoEnded(true);
+              try {
+                const vid = selectedVideo;
+                const sessionLabel = vid?.default_day ? `Session ${vid.default_day}` : vid?.title;
+                const words = await base44.entities.Word.filter({ example_sentence: sessionLabel });
+                if (words.length > 0) {
+                  setSessionVocabWords(words);
+                  setShowPostVideoFlashcards(true);
+                } else if (transcript.length > 0) {
+                  const fullText = transcript.map(s => s.transliteration || s.text).join(' ');
+                  const lang = vid?.language || userProfile?.language || 'hebrew';
+                  const langCap = lang.charAt(0).toUpperCase() + lang.slice(1);
+                  const result = await base44.integrations.Core.InvokeLLM({
+                    prompt: `Extract 8-12 key vocabulary words from this ${langCap} transcript for a language learner. Only meaningful content words. Transcript: "${fullText.slice(0, 2000)}". Return JSON with words array, each having: word (native script), phonetic (Latin), translation (English).`,
+                    response_json_schema: { type: 'object', properties: { words: { type: 'array', items: { type: 'object', properties: { word: { type: 'string' }, phonetic: { type: 'string' }, translation: { type: 'string' } } } } } }
+                  });
+                  if (result.words?.length) {
+                    setSessionVocabWords(result.words);
+                    setShowPostVideoFlashcards(true);
+                  }
+                }
+              } catch (e) { console.error('Failed to load session vocab', e); }
             }
           }
         }
       });
     };
 
-    // Use the shared, memoized API loader so concurrent components don't stomp
-    // each other's onYouTubeIframeAPIReady (bug #33).
-    loadYouTubeApi().then(() => initPlayer());
+    if (window.YT && window.YT.Player) {
+      setTimeout(initPlayer, 100);
+    } else {
+      window.onYouTubeIframeAPIReady = initPlayer;
+    }
 
     // Always fetch fresh from DB (to get latest transcript after updates)
     try {
@@ -1240,8 +1084,8 @@ For each segment:
       return;
     }
 
-    // No saved transcript found — auto-generate from YouTube
-    generateTranscriptFromYouTube(video);
+    // No saved transcript found
+    setLoadingTranscript(false);
   };
 
   const extractVocabFromTranscript = async (video, transcriptSegments) => {
@@ -1275,8 +1119,8 @@ For each segment:
       for (const w of (result.words || [])) {
         if (!w.word || !w.translation) continue;
         const phonetic = w.phonetic || w.word;
-        const existing = await base44.entities.Word.filter({ phonetic, created_by: currentUser?.email });
-
+        const existing = await base44.entities.Word.filter({ phonetic });
+        
         // Find a sentence from the video that contains this word
         const wordKey = w.word.toLowerCase().replace(/[.,!?;:]/g, '');
         const exampleSentence = wordToSentences[wordKey]?.[0] || sessionLabel;
@@ -1301,17 +1145,16 @@ For each segment:
   };
 
   const handleAddWordFromTranscript = async (word) => {
-    const lang = selectedVideo?.language || userProfile?.language || 'hebrew';
     try {
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Translate this ${languageLabel(lang)} word to English: "${word}". Return only the English translation, nothing else.`
+        prompt: `Translate this ${userProfile?.language || 'Hebrew'} word to English: "${word}". Return only the English translation, nothing else.`
       });
-
+      
       createWordMutation.mutate({
         word: word,
         translation: result,
         category: "wordbank",
-        language: lang,
+        language: userProfile?.language || 'hebrew',
         times_practiced: 0,
         mastered: false,
         vocab_level: 0,
@@ -1351,22 +1194,6 @@ For each segment:
 
     return () => clearInterval(interval);
   }, [videoPlayer, showTranscript]);
-
-  // Destroy the YouTube player when the transcript view closes or the page
-  // unmounts, so its internal timers/postMessage listeners don't leak (bug #32).
-  useEffect(() => {
-    if (showTranscript) return;
-    try { videoPlayerRef.current?.destroy?.(); } catch (e) {}
-    videoPlayerRef.current = null;
-    setVideoPlayer(null);
-  }, [showTranscript]);
-
-  useEffect(() => {
-    return () => {
-      try { videoPlayerRef.current?.destroy?.(); } catch (e) {}
-      videoPlayerRef.current = null;
-    };
-  }, []);
 
   // Space bar to play/pause video
   useEffect(() => {
@@ -1526,14 +1353,14 @@ Return a JSON with a "videos" array. Each video must have:
 
   return (
     <>
-    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #0f0c29, #302b63, #24243e)' }}>
+    <div className="min-h-screen" style={{ background: 'linear-gradient(160deg, #f0ece4 0%, #e8e4d8 50%, #eae6da 100%)' }}>
       <div className="max-w-7xl mx-auto p-6">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white" style={{ fontFamily: 'Cormorant Garamond, Georgia, serif' }}>📚 Content Library</h1>
+          <h1 className="text-4xl font-bold" style={{ color: '#3d4a2e', fontFamily: 'Cormorant Garamond, Georgia, serif' }}>📚 Content Library</h1>
         </div>
 
         {/* Unified filter bar */}
-        <div className="bg-white/10 rounded-2xl border border-white/20 p-4 mb-6">
+        <div className="bg-white/60 rounded-2xl border border-stone-200 p-4 mb-6">
           <div className="flex flex-wrap items-center gap-3">
 
             {/* + Add New Content */}
@@ -1549,7 +1376,7 @@ Return a JSON with a "videos" array. Each video must have:
 
             {/* Language */}
             <Select value={filterLanguage} onValueChange={setFilterLanguage}>
-              <SelectTrigger className="bg-white/10 border-white/20 text-white w-36">
+              <SelectTrigger className="bg-white border-stone-300 text-stone-700 w-36">
                 <SelectValue placeholder="Language" />
               </SelectTrigger>
               <SelectContent>
@@ -1566,7 +1393,7 @@ Return a JSON with a "videos" array. Each video must have:
             {/* Difficulty - multiselect */}
             <div className="relative group">
               <button
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium bg-white/10 border border-white/20 text-white hover:border-white/40 transition-all"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium bg-white border border-stone-300 text-stone-700 hover:border-stone-400 transition-all"
               >
                 {filterDifficulty.length === 0 ? 'All Levels' : `${filterDifficulty.length} Level${filterDifficulty.length > 1 ? 's' : ''}`}
                 <ChevronDown className="w-3 h-3" />
@@ -1598,7 +1425,7 @@ Return a JSON with a "videos" array. Each video must have:
             {/* Topics multi-select */}
             <div className="relative group">
               <button
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium bg-white/10 border border-white/20 text-white hover:border-white/40 transition-all"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium bg-white border border-stone-300 text-stone-700 hover:border-stone-400 transition-all"
               >
                 {filterTopics.length === 0 ? 'All Topics' : `${filterTopics.length} Topic${filterTopics.length > 1 ? 's' : ''}`}
                 <ChevronDown className="w-3 h-3" />
@@ -1775,7 +1602,7 @@ Return a JSON with a "videos" array. Each video must have:
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   onClick={() => handleVideoClick(video)}
-                  className="bg-white/10 rounded-2xl border border-white/20 overflow-hidden hover:border-white/40 transition-all cursor-pointer"
+                  className="bg-white/70 rounded-2xl border border-stone-200 overflow-hidden hover:border-stone-400 transition-all cursor-pointer"
                 >
                   <div className="w-full aspect-video bg-black">
                     <img
@@ -1787,7 +1614,7 @@ Return a JSON with a "videos" array. Each video must have:
                   </div>
                   <div className="p-3">
                     <div className="flex items-start justify-between gap-2 mb-2">
-                      <h3 className="font-bold text-base flex-1 text-white">{video.title}</h3>
+                      <h3 className="font-bold text-base flex-1" style={{ color: '#3d4a2e' }}>{video.title}</h3>
                       <div className="flex gap-1 flex-shrink-0">
                         {canEdit && (
                           <button onClick={(e) => { e.stopPropagation(); handleEdit(video); }} className="text-stone-400 hover:text-stone-700 transition-colors p-1">
@@ -1936,7 +1763,7 @@ Return a JSON with a "videos" array. Each video must have:
                     {selectedVerb.verb_conjugations[tense] && Object.entries(selectedVerb.verb_conjugations[tense]).map(([person, conj]) => (
                       <div key={person} className="border-l-2 border-cyan-500/50 pl-3">
                         <p className="text-white/60 text-xs capitalize">{person.replace('_', ' ')}</p>
-                        <p className="text-cyan-300 font-semibold" dir={isRTLText(conj.native) ? 'rtl' : 'ltr'}>{conj.native}</p>
+                        <p className="text-cyan-300 font-semibold" dir="rtl">{conj.native}</p>
                         <p className="text-white/70 text-sm">{conj.transliteration}</p>
                       </div>
                     ))}
@@ -2001,11 +1828,9 @@ Return a JSON with a "videos" array. Each video must have:
                     onDeleteSegment={deleteTranscriptSegment}
                     canEdit={canEdit}
                     isPlaying={isPlaying}
-                    language={selectedVideo?.language || userProfile?.language || 'hebrew'}
-                    translationInProgress={translationInProgress}
                   />
-                  <div className="mt-6 pb-8 flex justify-center">
-                    {sessionDay ? (
+                  {sessionDay && (
+                    <div className="mt-6 pb-8 flex justify-center">
                       <button
                         onClick={handleRankWords}
                         className="px-8 py-4 rounded-2xl text-white font-bold text-lg transition-all hover:scale-105"
@@ -2013,18 +1838,8 @@ Return a JSON with a "videos" array. Each video must have:
                       >
                         ✅ I'm Done — Rank Words
                       </button>
-                    ) : (
-                      <button
-                        onClick={handleStartFlashcards}
-                        disabled={loadingFlashcards}
-                        className={`px-8 py-4 rounded-2xl text-white font-bold text-lg transition-all hover:scale-105 flex items-center gap-2 ${videoEnded ? 'animate-pulse' : ''}`}
-                        style={{ background: 'linear-gradient(135deg, #5a6b5a, #3d4a2e)' }}
-                      >
-                        {loadingFlashcards ? <span className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : '✅'}
-                        {loadingFlashcards ? 'Loading...' : "I'm Done Hearing — Write It"}
-                      </button>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </>
               ) : (
                 <div className="max-w-3xl mx-auto bg-white/5 rounded-xl p-8 space-y-6">
@@ -2067,7 +1882,14 @@ Return a JSON with a "videos" array. Each video must have:
       )}
     </div>
 
-
+    {showPostVideoFlashcards && sessionVocabWords.length > 0 && (
+      <PostVideoFlashcards
+        words={sessionVocabWords}
+        videoTitle={selectedVideo?.title}
+        userProfile={userProfile}
+        onClose={() => { setShowPostVideoFlashcards(false); setSessionVocabWords([]); }}
+      />
+    )}
     <TranslatorWidget />
     </>
     );

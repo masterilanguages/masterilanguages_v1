@@ -33,26 +33,24 @@ export default function Songs() {
   }, []);
 
   const isAdmin = currentUser?.role === 'admin';
-  const canEdit = isAdmin;
+  const canEdit = !!currentUser;
   const canDeleteSong = (song) => isAdmin || song.created_by === currentUser?.email;
 
   const { data: userProfile } = useQuery({
-    queryKey: ['userProfile', currentUser?.email],
+    queryKey: ['userProfile'],
     queryFn: async () => {
-      const profiles = await base44.entities.UserProfile.filter({ created_by: currentUser.email });
+      const profiles = await base44.entities.UserProfile.list();
       return profiles[0] || null;
     },
-    enabled: !!currentUser?.email,
     staleTime: 5 * 60 * 1000,
   });
 
   const { data: userCoins } = useQuery({
-    queryKey: ['userCoins', currentUser?.email],
+    queryKey: ['userCoins'],
     queryFn: async () => {
-      const coins = await base44.entities.UserCoins.filter({ created_by: currentUser.email });
+      const coins = await base44.entities.UserCoins.list();
       return coins[0] || { coins: 0 };
     },
-    enabled: !!currentUser?.email,
     staleTime: 2 * 60 * 1000,
   });
 
@@ -70,9 +68,8 @@ export default function Songs() {
   });
 
   const { data: wordRatings = [] } = useQuery({
-    queryKey: ['wordRatings', currentUser?.email],
-    queryFn: () => base44.entities.Word.filter({ category: "wordbank", created_by: currentUser.email }),
-    enabled: !!currentUser?.email,
+    queryKey: ['wordRatings'],
+    queryFn: () => base44.entities.Word.filter({ category: "wordbank" }),
   });
 
   const createWordMutation = useMutation({
@@ -98,7 +95,6 @@ export default function Songs() {
       setNewSongUrl("");
       toast.success("Song added! 🎵");
     },
-    onError: (e) => { console.error("Song.create failed", e); toast.error("Couldn't save song — you don't have permission."); },
   });
 
   const updateSongMutation = useMutation({
@@ -107,7 +103,6 @@ export default function Songs() {
       queryClient.invalidateQueries({ queryKey: ['songs'] });
       toast.success("Updated!");
     },
-    onError: (e) => { console.error("Song.update failed", e); toast.error("Couldn't save changes — you don't have permission."); },
   });
 
   const deleteSongMutation = useMutation({
@@ -116,7 +111,6 @@ export default function Songs() {
       queryClient.invalidateQueries({ queryKey: ['songs'] });
       toast.success("Song deleted");
     },
-    onError: (e) => { console.error("Song.delete failed", e); toast.error("Couldn't delete song — you don't have permission."); },
   });
 
   const reorderSongsMutation = useMutation({
@@ -144,8 +138,7 @@ export default function Songs() {
       word: word.hebrew,
       translation: word.english,
       phonetic: word.transliteration,
-      category: 'wordbank',
-      example_sentence: `From song: ${songTitle}`,
+      category: `vocab for song ${songTitle}`,
       times_practiced: 1,
       mastered: false,
     });

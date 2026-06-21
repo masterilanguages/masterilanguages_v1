@@ -1,4 +1,4 @@
-import React, { useRef, useState, useImperativeHandle, forwardRef, useEffect } from "react";
+import React, { useRef, useState, useImperativeHandle, forwardRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mic, MicOff } from "lucide-react";
 
@@ -10,12 +10,6 @@ const MicRecorder = forwardRef(({ onRecordingComplete }, ref) => {
   const chunksRef = useRef([]);
   const streamRef = useRef(null);
   const countdownRef = useRef(null);
-
-  useEffect(() => () => {
-    clearInterval(countdownRef.current);
-    streamRef.current?.getTracks().forEach(t => t.stop());
-    streamRef.current = null;
-  }, []);
 
   useImperativeHandle(ref, () => ({
     async startRecording(durationSeconds) {

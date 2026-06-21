@@ -21,23 +21,19 @@ export default function Sentences() {
   }, []);
 
   const { data: userProfile } = useQuery({
-    queryKey: ['userProfile', currentUser?.email],
+    queryKey: ['userProfile'],
     queryFn: async () => {
-      if (!currentUser?.email) return null;
-      const profiles = await base44.entities.UserProfile.filter({ created_by: currentUser.email });
+      const profiles = await base44.entities.UserProfile.list();
       return profiles[0] || null;
     },
-    enabled: !!currentUser?.email,
   });
 
   const { data: userCoins } = useQuery({
-    queryKey: ['userCoins', currentUser?.email],
+    queryKey: ['userCoins'],
     queryFn: async () => {
-      if (!currentUser?.email) return { coins: 0 };
-      const coins = await base44.entities.UserCoins.filter({ created_by: currentUser.email });
+      const coins = await base44.entities.UserCoins.list();
       return coins[0] || { coins: 0 };
     },
-    enabled: !!currentUser?.email,
   });
 
   const { data: sentences = [], isLoading } = useQuery({

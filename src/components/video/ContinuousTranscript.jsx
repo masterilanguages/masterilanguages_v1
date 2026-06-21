@@ -1,62 +1,27 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Play, Pause, Loader2, Check, X, Plus, Sparkles } from "lucide-react";
+import { Play, Pause, Loader2, Check, X, Plus } from "lucide-react";
 import { toast } from "sonner";
-import { languageLabel, isRTLLanguage } from "@/lib/language";
 
-export default function ContinuousTranscript({
-  transcript: transcriptProp,
-  currentTime,
-  onSeekTo,
+export default function ContinuousTranscript({ 
+  transcript: transcriptProp, 
+  currentTime, 
+  onSeekTo, 
   onAddWord,
   onEditWord,
   onDeleteSegment,
   canEdit,
   isPlaying: isPlayingProp = false,
-  language = 'hebrew',
-  translationInProgress = false,
 }) {
-  const lang = language || 'hebrew';
-  const isHebrew = lang === 'hebrew';
-  const langLabel = languageLabel(lang);
-  const isRTL = isRTLLanguage(lang);
+  const [showPhonetics, setShowPhonetics] = React.useState(true);
+  const [hideEnglish, setHideEnglish] = React.useState(true);
   const [hideTranslit, setHideTranslit] = React.useState(false);
-  const [hideHebrew, setHideHebrew] = React.useState(false);
-  const [hideEnglish, setHideEnglish] = React.useState(false);
   const [localTranscript, setLocalTranscript] = React.useState(transcriptProp);
-  // Re-entrancy guards for auto Hebrew generation (bug #31):
-  // generatingRef = a generateMissingHebrew() pass is currently in flight;
-  // generatedKeyRef = the content key we have already generated for, so the
-  // effect runs at most once per settled transcript even as its array identity
-  // changes (the background translation replaces it on every batch).
-  const generatingRef = React.useRef(false);
-  const generatedKeyRef = React.useRef(null);
 
-  // Sync when prop changes (e.g. loaded from DB). Don't clobber locally-generated
-  // Hebrew while a generation pass is in flight (bug #31).
+  // Sync when prop changes (e.g. loaded from DB)
   React.useEffect(() => {
-    if (generatingRef.current) return;
     setLocalTranscript(transcriptProp);
   }, [transcriptProp]);
-
-  // Auto-generate Hebrew if missing when transcript loads (Hebrew only).
-  // Skip while the parent's background translation is still running, while a
-  // pass is already in flight, or if we've already handled this exact content —
-  // otherwise the effect re-fires on every translation batch and races itself.
-  React.useEffect(() => {
-    if (language !== 'hebrew') return;
-    if (translationInProgress) return;
-    if (generatingRef.current) return;
-    if (!(transcriptProp?.length > 0)) return;
-    if (!transcriptProp.some(s => s.transliteration && !s.hebrew)) return;
-
-    const contentKey = transcriptProp
-      .map(s => `${s.start || 0}:${s.transliteration || ''}`)
-      .join('|');
-    if (generatedKeyRef.current === contentKey) return;
-    generatedKeyRef.current = contentKey;
-    generateMissingHebrew();
-  }, [transcriptProp, translationInProgress, language]);
 
   const transcript = localTranscript;
 
@@ -77,57 +42,6 @@ export default function ContinuousTranscript({
   const [wordTranslations, setWordTranslations] = React.useState({}); // key -> translation string
   const [translatingKey, setTranslatingKey] = React.useState(null);
   const [revealedSentences, setRevealedSentences] = React.useState(new Set());
-  const [generatingHebrew, setGeneratingHebrew] = React.useState(false);
-
-  const missingHebrew = transcript.some(s => s.transliteration && !s.hebrew);
-
-  const generateMissingHebrew = async () => {
-    const missing = transcript
-      .map((s, i) => ({ ...s, _idx: i }))
-      .filter(s => s.transliteration && !s.hebrew);
-    if (!missing.length) return;
-    // Re-entrancy guard: never run two passes at once (bug #31).
-    if (generatingRef.current) return;
-    generatingRef.current = true;
-
-    setGeneratingHebrew(true);
-    try {
-      const result = await base44.integrations.Core.InvokeLLM({
-        model: "claude_sonnet_4_6",
-        prompt: `You are an expert ${langLabel} linguist. Convert each of these ${langLabel} transliterations into precise, correct ${langLabel} ${isHebrew ? 'script (without nikud/vowel marks)' : 'native spelling (including any accents or diacritics)'}.
-
-Rules:
-- Be extremely accurate — match every word exactly to its correct ${langLabel} spelling
-- Use standard ${isHebrew ? 'modern Israeli Hebrew' : langLabel} spelling
-${isHebrew ? '- Do NOT add vowel marks (nikud)\n' : ''}- Each transliteration maps to exactly one ${langLabel} sentence
-- Return JSON with a "segments" array in the same order, each object: { hebrew: string } (the "hebrew" field must contain the ${langLabel} text)
-
-Transliterations:
-${missing.map((s, i) => `${i + 1}. Transliteration: "${s.transliteration}" | English meaning: "${s.english || ''}"`).join('\n')}`,
-        response_json_schema: {
-          type: 'object',
-          properties: {
-            segments: {
-              type: 'array',
-              items: { type: 'object', properties: { hebrew: { type: 'string' } } }
-            }
-          }
-        }
-      });
-      missing.forEach((seg, i) => {
-        const hebrew = result?.segments?.[i]?.hebrew;
-        if (hebrew) {
-          applyLocalEdit(seg._idx, 'hebrew', hebrew);
-          if (onEditWord) onEditWord(seg._idx, 'hebrew', hebrew);
-        }
-      });
-    } catch (e) {
-      console.error('Failed to generate Hebrew', e);
-    } finally {
-      generatingRef.current = false;
-      setGeneratingHebrew(false);
-    }
-  };
 
   const toggleSentenceReveal = (segIdx) => {
     setRevealedSentences(prev => {
@@ -142,7 +56,7 @@ ${missing.map((s, i) => `${i + 1}. Transliteration: "${s.transliteration}" | Eng
     setTranslatingKey(wordKey);
     try {
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Translate this single ${langLabel} word to English: "${word}". Return JSON with: english (string, short 1-3 word translation).`,
+        prompt: `Translate this single Hebrew word to English: "${word}". Return JSON with: english (string, short 1-3 word translation).`,
         response_json_schema: { type: 'object', properties: { english: { type: 'string' } } }
       });
       setWordTranslations(prev => ({ ...prev, [wordKey]: result.english }));
@@ -221,7 +135,7 @@ ${missing.map((s, i) => `${i + 1}. Transliteration: "${s.transliteration}" | Eng
       } else if (field === 'hebrew') {
         await new Promise(r => setTimeout(r, 1000)); // rate limit buffer
         const result = await base44.integrations.Core.InvokeLLM({
-          prompt: `For this ${langLabel} text: "${newFieldText}", provide: transliteration (Latin phonetic) and english (English translation). Return JSON.`,
+          prompt: `For this Hebrew text: "${newFieldText}", provide: transliteration (Latin phonetic) and english (English translation). Return JSON.`,
           response_json_schema: { type: "object", properties: { transliteration: { type: "string" }, english: { type: "string" } } }
         });
         if (result.transliteration) { applyLocalEdit(segIdx, 'transliteration', result.transliteration); onEditWord(segIdx, 'transliteration', result.transliteration); }
@@ -353,11 +267,6 @@ ${missing.map((s, i) => `${i + 1}. Transliteration: "${s.transliteration}" | Eng
           <p className="text-white/30 text-xs">Hover a word and click 🎒 to add to backpack</p>
         )}
         <div className="ml-auto flex items-center gap-1.5 flex-wrap">
-          {generatingHebrew && (
-            <span className="flex items-center gap-1 px-2 py-1 text-xs text-purple-300">
-              <Loader2 className="w-3 h-3 animate-spin" /> Generating {langLabel}...
-            </span>
-          )}
           <button
             onClick={() => setHideTranslit(prev => !prev)}
             className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold transition-all border ${
@@ -366,17 +275,7 @@ ${missing.map((s, i) => `${i + 1}. Transliteration: "${s.transliteration}" | Eng
                 : 'bg-white/10 border-white/20 text-white/60 hover:bg-white/20'
             }`}
           >
-            {hideTranslit ? '👁 Show transliteration' : '🙈 Hide transliteration'}
-          </button>
-          <button
-            onClick={() => setHideHebrew(prev => !prev)}
-            className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold transition-all border ${
-              hideHebrew
-                ? 'bg-orange-500/20 border-orange-500/50 text-orange-300'
-                : 'bg-white/10 border-white/20 text-white/60 hover:bg-white/20'
-            }`}
-          >
-            {hideHebrew ? `👁 Show ${langLabel}` : `🙈 Hide ${langLabel}`}
+            {hideTranslit ? '👁 Translit' : '🚫 Translit'}
           </button>
           <button
             onClick={() => setHideEnglish(prev => !prev)}
@@ -386,13 +285,23 @@ ${missing.map((s, i) => `${i + 1}. Transliteration: "${s.transliteration}" | Eng
                 : 'bg-white/10 border-white/20 text-white/60 hover:bg-white/20'
             }`}
           >
-            {hideEnglish ? '👁 Show English' : '🙈 Hide English'}
+            {hideEnglish ? '👁 English' : '🚫 English'}
+          </button>
+          <button
+            onClick={() => setShowPhonetics(prev => !prev)}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all border ${
+              showPhonetics
+                ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-300'
+                : 'bg-white/10 border-white/20 text-white/60 hover:bg-white/20'
+            }`}
+          >
+            {showPhonetics ? '🔤 Show Transliteration' : 'אָ Show Phonetics'}
           </button>
         </div>
       </div>
       <div className="space-y-1 flex flex-col items-center" onClick={() => setActiveWordKey(null)}>
         {transcript.map((segment, segIdx) => {
-          if (!segment.transliteration && !segment.hebrew) return null;
+          if (!segment.transliteration) return null;
           const isActive = getIsActive(segIdx);
 
           return (
@@ -423,6 +332,30 @@ ${missing.map((s, i) => `${i + 1}. Transliteration: "${s.transliteration}" | Eng
                       }}
                       className="w-14 px-1 py-0.5 rounded text-xs font-mono bg-yellow-400/20 border border-yellow-400 text-yellow-300 outline-none"
                     />
+                    <button
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        const parts = editingTimeValue.split(':');
+                        if (parts.length === 2) {
+                          const secs = parseInt(parts[0]) * 60 + parseInt(parts[1]);
+                          if (!isNaN(secs)) {
+                            applyLocalEdit(segIdx, 'start', secs);
+                            if (onEditWord) onEditWord(segIdx, 'start', secs);
+                            onSeekTo(secs, wasPlayingBeforeEdit);
+                          }
+                        }
+                        setEditingSegmentTime(null);
+                      }}
+                      className="text-green-400 hover:text-green-300"
+                    >
+                      <Check className="w-3 h-3" />
+                    </button>
+                    <button
+                      onMouseDown={(e) => { e.preventDefault(); setEditingSegmentTime(null); }}
+                      className="text-red-400 hover:text-red-300"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
                     {canEdit && (
                       <button
                         onMouseDown={(e) => { e.preventDefault(); deleteSegment(segIdx); }}
@@ -469,7 +402,6 @@ ${missing.map((s, i) => `${i + 1}. Transliteration: "${s.transliteration}" | Eng
                     <textarea
                       value={editSegmentData.transliteration}
                       onChange={e => setEditSegmentData(prev => ({ ...prev, transliteration: e.target.value }))}
-                      onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEditSegment(segIdx); } if (e.key === 'Escape') setEditingSegment(null); }}
                       placeholder="Transliteration..."
                       rows={2}
                       className="w-full bg-white/10 border border-yellow-400/50 text-white text-sm rounded-lg px-2 py-1 outline-none resize-none"
@@ -477,7 +409,6 @@ ${missing.map((s, i) => `${i + 1}. Transliteration: "${s.transliteration}" | Eng
                     <textarea
                       value={editSegmentData.english}
                       onChange={e => setEditSegmentData(prev => ({ ...prev, english: e.target.value }))}
-                      onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEditSegment(segIdx); } if (e.key === 'Escape') setEditingSegment(null); }}
                       placeholder="English..."
                       rows={1}
                       className="w-full bg-white/10 border border-yellow-400/30 text-white/70 text-sm rounded-lg px-2 py-1 outline-none resize-none"
@@ -485,40 +416,59 @@ ${missing.map((s, i) => `${i + 1}. Transliteration: "${s.transliteration}" | Eng
                     <textarea
                       value={editSegmentData.hebrew}
                       onChange={e => setEditSegmentData(prev => ({ ...prev, hebrew: e.target.value }))}
-                      onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEditSegment(segIdx); } if (e.key === 'Escape') setEditingSegment(null); }}
-                      placeholder={`${langLabel}...`}
+                      placeholder="Hebrew..."
                       rows={1}
-                      dir={isRTL ? "rtl" : "ltr"}
+                      dir="rtl"
                       className="w-full bg-white/10 border border-cyan-400/30 text-cyan-300 text-sm rounded-lg px-2 py-1 outline-none resize-none"
                     />
-                    <p className="text-white/30 text-xs">Enter to save · Esc to cancel</p>
+                    <div className="flex gap-2">
+                      <button onClick={() => saveEditSegment(segIdx)} className="flex items-center gap-1 px-2 py-1 bg-green-500/20 border border-green-500/40 text-green-400 rounded text-xs hover:bg-green-500/30">
+                        <Check className="w-3 h-3" /> Save
+                      </button>
+                      <button onClick={() => setEditingSegment(null)} className="flex items-center gap-1 px-2 py-1 bg-white/10 border border-white/20 text-white/60 rounded text-xs hover:bg-white/20">
+                        <X className="w-3 h-3" /> Cancel
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   <>
-                   {!hideTranslit && segment.transliteration && (
-                     <p className="text-white text-base font-medium leading-tight text-center break-words">
-                       {renderWords(segIdx, 'transliteration', segment.transliteration, 'text-white text-base font-medium')}
-                       {canEdit && (
-                         <button
-                           onClick={(e) => { e.stopPropagation(); startEditSegment(segIdx); }}
-                           className="ml-2 text-sm text-yellow-300 hover:text-yellow-200 transition-colors inline"
-                           title="Edit sentence"
-                         >
-                           ✏️
-                         </button>
-                       )}
-                     </p>
-                   )}
-                   {!hideHebrew && segment.hebrew && (
-                     <p className="text-cyan-300 text-base font-medium leading-tight text-center break-words" dir={isRTL ? "rtl" : "ltr"}>
-                       {renderWords(segIdx, 'hebrew', segment.hebrew, 'text-cyan-300 text-base font-medium')}
-                     </p>
-                   )}
-                   {!hideEnglish && segment.english && (
-                     <p className="text-white/60 text-sm leading-tight text-center break-words">
-                       {renderWords(segIdx, 'english', segment.english, 'text-white/60 text-sm')}
-                     </p>
-                   )}
+                   {showPhonetics ? (
+                      segment.hebrew && (
+                        <p className="text-cyan-300 text-base font-medium leading-tight text-center break-words" dir="rtl">
+                          {renderWords(segIdx, 'hebrew', segment.hebrew, 'text-cyan-300 text-base font-medium')}
+                        </p>
+                      )
+                    ) : (
+                      !hideTranslit && (
+                        <p className="text-white text-base font-medium leading-tight text-center break-words">
+                          {renderWords(segIdx, 'transliteration', segment.transliteration, 'text-white text-base font-medium')}
+                          {canEdit && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); startEditSegment(segIdx); }}
+                              className="ml-2 text-sm text-yellow-300 hover:text-yellow-200 transition-colors inline"
+                              title="Edit sentence"
+                            >
+                              ✏️
+                            </button>
+                          )}
+                        </p>
+                      )
+                    )}
+                    {(!hideEnglish || revealedSentences.has(segIdx)) && segment.english && (
+                      <p className="text-white/60 text-sm leading-tight text-center break-words">
+                        {renderWords(segIdx, 'english', segment.english, 'text-white/60 text-sm')}
+                      </p>
+                    )}
+                   <div className="flex items-center justify-center gap-2 mt-1">
+                     {segment.english && !canEdit && (
+                       <button
+                         onClick={(e) => { e.stopPropagation(); toggleSentenceReveal(segIdx); }}
+                         className="text-[10px] text-white/30 hover:text-green-300 transition-colors"
+                       >
+                         {revealedSentences.has(segIdx) ? '🙈 hide' : '👁 see'}
+                       </button>
+                     )}
+                   </div>
                   </>
                   )}
               </div>
@@ -548,9 +498,9 @@ ${missing.map((s, i) => `${i + 1}. Transliteration: "${s.transliteration}" | Eng
               <textarea
                 value={editSegmentData.hebrew}
                 onChange={e => setEditSegmentData(prev => ({ ...prev, hebrew: e.target.value }))}
-                placeholder={`${langLabel}...`}
+                placeholder="Hebrew..."
                 rows={1}
-                dir={isRTL ? "rtl" : "ltr"}
+                dir="rtl"
                 className="w-full bg-white/10 border border-white/20 text-cyan-300 text-sm rounded-lg px-2 py-1 outline-none resize-none"
               />
               <button 

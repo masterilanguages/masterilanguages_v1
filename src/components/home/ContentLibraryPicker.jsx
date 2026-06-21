@@ -118,7 +118,6 @@ export default function ContentLibraryPicker({ open, onOpenChange, onSelect, lan
           {filtered.map(m => (
             <button
               key={m.id}
-              type="button"
               onClick={() => { onSelect(m); onOpenChange(false); }}
               className="w-full flex items-center gap-3 bg-white rounded-xl border border-stone-200 p-2.5 hover:border-stone-400 transition-all text-left"
             >

@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import SongTranscriptJournal from "../components/journal/SongTranscriptJournal";
-import { isRTLLanguage } from "@/lib/language";
 
 const TranslatorWidget = lazy(() => import("../components/TranslatorWidget"));
 const SignaturePad = lazy(() => import("../components/journal/SignaturePad"));
@@ -38,23 +37,16 @@ export default function Journal() {
   const [showTranslated, setShowTranslated] = useState(false);
   const [exercises, setExercises] = useState([]); // [{english, answer, userInput, revealed}]
   const [generatingExercises, setGeneratingExercises] = useState(false);
-  const [showPhonetics, setShowPhonetics] = useState(false);
   const [journalMode, setJournalMode] = useState("free"); // "free" | "song"
   const [songJournalDone, setSongJournalDone] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
   const today = new Date().toISOString().split('T')[0];
 
-  useEffect(() => {
-    base44.auth.me().then(setCurrentUser).catch(() => {});
-  }, []);
-
   const { data: userProfile } = useQuery({
-    queryKey: ['userProfile', currentUser?.email],
+    queryKey: ['userProfile'],
     queryFn: async () => {
-      const profiles = await base44.entities.UserProfile.filter({ created_by: currentUser.email });
+      const profiles = await base44.entities.UserProfile.list();
       return profiles[0] || null;
-    },
-    enabled: !!currentUser?.email,
+    }
   });
 
   const { data: entries = [] } = useQuery({
@@ -64,14 +56,14 @@ export default function Journal() {
 
   // Fetch latest 10 words from flashcards (wordbank), sorted by newest first
   const { data: backpackWords = [] } = useQuery({
-    queryKey: ['backpackWords', userProfile?.language, currentUser?.email],
+    queryKey: ['backpackWords', userProfile?.language],
     queryFn: async () => {
-      const allWords = await base44.entities.Word.filter({ category: "wordbank", created_by: currentUser.email });
+      const allWords = await base44.entities.Word.filter({ category: "wordbank" });
       const userLang = userProfile?.language || 'hebrew';
       // Only show words matching current language
       return allWords.filter(w => !w.language || w.language === userLang);
     },
-    enabled: !!userProfile && !!currentUser?.email,
+    enabled: !!userProfile,
   });
 
   const { data: publicEntries = [] } = useQuery({
@@ -107,10 +99,6 @@ export default function Journal() {
       queryClient.invalidateQueries({ queryKey: ['publicJournalEntries'] });
       setShowFeedback(true);
       toast.success("Journal entry saved! 📖");
-    },
-    onError: (e) => {
-      console.error("Journal save failed", e);
-      toast.error("Could not save your journal entry — please try again.");
     }
   });
 
@@ -120,10 +108,6 @@ export default function Journal() {
       queryClient.invalidateQueries({ queryKey: ['journalEntries'] });
       queryClient.invalidateQueries({ queryKey: ['publicJournalEntries'] });
       toast.success("Entry updated! ✓");
-    },
-    onError: (e) => {
-      console.error("Journal update failed", e);
-      toast.error("Could not save your journal entry — please try again.");
     }
   });
 
@@ -181,13 +165,6 @@ export default function Journal() {
       return () => clearTimeout(timer);
     }
   }, [text]);
-
-  // Auto-generate exercises when vocab words are ready
-  useEffect(() => {
-    if (suggestedVocab.length > 0 && exercises.length === 0 && !generatingExercises) {
-      generateExercises();
-    }
-  }, [suggestedVocab.length]);
 
   // Translate the full entry to learning language
   const handleTranslateEntry = async () => {
@@ -343,7 +320,31 @@ Return JSON with an array "exercises" where each item has: word (the vocab word 
           </div>
         </div>
 
-
+        {/* Mode toggle */}
+        {latestMedia && (
+          <div className="flex gap-2 mb-5">
+            <button
+              onClick={() => setJournalMode("free")}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all`}
+              style={journalMode === "free"
+                ? { background: "#5a6b5a", color: "white", fontFamily: "Jost, sans-serif" }
+                : { background: "rgba(255,254,245,0.8)", color: "#6b7c5a", border: "1px solid rgba(200,180,140,0.5)", fontFamily: "Jost, sans-serif" }
+              }
+            >
+              <BookOpen className="w-4 h-4" /> Free Journal
+            </button>
+            <button
+              onClick={() => setJournalMode("song")}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all`}
+              style={journalMode === "song"
+                ? { background: "#9b7e5a", color: "white", fontFamily: "Jost, sans-serif" }
+                : { background: "rgba(255,254,245,0.8)", color: "#6b7c5a", border: "1px solid rgba(200,180,140,0.5)", fontFamily: "Jost, sans-serif" }
+              }
+            >
+              <Music className="w-4 h-4" /> Song Questions
+            </button>
+          </div>
+        )}
 
         {/* Song Transcript Journal Mode */}
         <AnimatePresence mode="wait">
@@ -456,14 +457,33 @@ Return JSON with an array "exercises" where each item has: word (the vocab word 
                   <span className="text-xs font-semibold tracking-wider uppercase" style={{ color: '#6b7c5a', fontFamily: 'Jost, sans-serif' }}>{langName} Translation</span>
                   <button onClick={() => setShowTranslated(false)} style={{ color: '#9b7e5a' }}><X className="w-3.5 h-3.5" /></button>
                 </div>
-                <p dir={isRTLLanguage(userProfile?.language) ? 'rtl' : 'ltr'}>{translatedText}</p>
+                <p dir={userProfile?.language === 'hebrew' ? 'rtl' : 'ltr'}>{translatedText}</p>
               </motion.div>
             )}
           </AnimatePresence>
 
-          {/* Vocab word bubbles — above the writing area */}
+          {/* Writing area */}
+          <div className="relative z-10 pl-16 pr-6 pt-4">
+            <Textarea
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              onClick={handleTextClick}
+              placeholder="Write about your day in English..."
+              className="w-full bg-transparent border-none shadow-none focus:outline-none focus:ring-0 resize-none"
+              style={{
+                fontFamily: 'Georgia, serif',
+                lineHeight: '32px',
+                fontSize: '15px',
+                color: '#2d3a1e',
+                minHeight: '480px',
+                padding: '4px 0',
+              }}
+            />
+          </div>
+
+          {/* Vocab word bubbles */}
           {suggestedVocab.length > 0 && (
-            <div className="relative z-10 px-6 pb-4 pt-4" style={{ borderBottom: '1px dashed rgba(200,180,140,0.5)' }}>
+            <div className="relative z-10 px-6 pb-4 pt-2" style={{ borderTop: '1px dashed rgba(200,180,140,0.5)' }}>
               <p className="text-xs mb-3 text-center font-semibold tracking-wide uppercase" style={{ color: '#9b7e5a', fontFamily: 'Jost, sans-serif' }}>
                 Your latest words — use them in your entry ({usedWords.length}/{suggestedVocab.length})
               </p>
@@ -475,6 +495,7 @@ Return JSON with an array "exercises" where each item has: word (the vocab word 
                       key={word.id}
                       whileHover={{ scale: 1.05 }}
                       onClick={() => {
+                        // Insert word into text at cursor
                         const textarea = document.querySelector('textarea');
                         if (textarea) {
                           const start = textarea.selectionStart;
@@ -505,42 +526,24 @@ Return JSON with an array "exercises" where each item has: word (the vocab word 
             </div>
           )}
 
-          {/* Writing area */}
-          <div className="relative z-10 pl-16 pr-6 pt-4">
-            <Textarea
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              onClick={handleTextClick}
-              placeholder={`Write about your day using your new words above. Try to include: what you did today, how you felt, something you learned, and a goal for tomorrow. Click a word above to insert it!`}
-              className="w-full bg-transparent border-none shadow-none focus:outline-none focus:ring-0 resize-none"
-              style={{
-                fontFamily: 'Georgia, serif',
-                lineHeight: '32px',
-                fontSize: '15px',
-                color: '#2d3a1e',
-                minHeight: '480px',
-                padding: '4px 0',
-              }}
-            />
-          </div>
-
-
-
           {/* Translation Exercises */}
           {suggestedVocab.length > 0 && (
             <div className="relative z-10 px-6 pb-4 pt-2" style={{ borderTop: '1px dashed rgba(200,180,140,0.5)' }}>
               <div className="flex items-center justify-between mb-3">
                 <p className="text-xs font-semibold tracking-wide uppercase" style={{ color: '#9b7e5a', fontFamily: 'Jost, sans-serif' }}>
-                  📝 Rewrite in {langName}
+                  📝 Translate these sentences ({langName})
                 </p>
-                {exercises.length > 0 && (
+                {exercises.length === 0 ? (
                   <button
-                    onClick={() => setShowPhonetics(p => !p)}
-                    className="text-xs px-3 py-1 rounded-full transition-all flex items-center gap-1"
-                    style={{ background: showPhonetics ? 'rgba(90,107,90,0.15)' : 'rgba(200,180,140,0.2)', color: '#5a6b5a', border: '1px solid rgba(90,107,90,0.2)', fontFamily: 'Jost, sans-serif' }}
+                    onClick={generateExercises}
+                    disabled={generatingExercises}
+                    className="text-xs px-3 py-1 rounded-full font-semibold transition-all disabled:opacity-50 flex items-center gap-1"
+                    style={{ background: 'rgba(90,107,90,0.15)', color: '#5a6b5a', border: '1px solid rgba(90,107,90,0.3)', fontFamily: 'Jost, sans-serif' }}
                   >
-                    {showPhonetics ? '🔤 Hide phonetics' : '🔤 Show phonetics'}
+                    {generatingExercises ? <><Loader2 className="w-3 h-3 animate-spin" /> Generating...</> : '✨ Generate exercises'}
                   </button>
+                ) : (
+                  <button onClick={() => setExercises([])} className="text-xs" style={{ color: '#9b7e5a' }}>✕ Clear</button>
                 )}
               </div>
               {exercises.length > 0 && (
@@ -548,14 +551,7 @@ Return JSON with an array "exercises" where each item has: word (the vocab word 
                   {exercises.map((ex, i) => (
                     <div key={i} className="rounded-xl p-3 space-y-2" style={{ background: 'rgba(255,252,240,0.8)', border: '1px solid rgba(200,180,140,0.4)' }}>
                       <div className="flex items-start gap-2">
-                        <div className="flex flex-col items-start gap-0.5 flex-shrink-0">
-                          <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(90,107,90,0.12)', color: '#5a6b5a', fontFamily: 'Jost, sans-serif' }}>{ex.word}</span>
-                          {showPhonetics && suggestedVocab.find(w => (w.phonetic || w.word) === ex.word)?.translation && (
-                            <span className="text-[10px] px-2" style={{ color: '#9b7e5a', fontFamily: 'Jost, sans-serif' }}>
-                              {suggestedVocab.find(w => (w.phonetic || w.word) === ex.word)?.translation}
-                            </span>
-                          )}
-                        </div>
+                        <span className="text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0" style={{ background: 'rgba(90,107,90,0.12)', color: '#5a6b5a', fontFamily: 'Jost, sans-serif' }}>{ex.word}</span>
                         <p className="text-sm" style={{ color: '#3d4a2e', fontFamily: 'Georgia, serif' }}>{ex.english}</p>
                       </div>
                       <input
@@ -565,7 +561,7 @@ Return JSON with an array "exercises" where each item has: word (the vocab word 
                         placeholder={`Translate to ${langName}...`}
                         className="w-full px-3 py-1.5 rounded-lg text-sm outline-none"
                         style={{ background: 'rgba(255,255,255,0.7)', border: '1px solid rgba(200,180,140,0.5)', fontFamily: 'Georgia, serif', color: '#2d3a1e' }}
-                        dir={isRTLLanguage(userProfile?.language) ? 'rtl' : 'ltr'}
+                        dir={userProfile?.language === 'hebrew' ? 'rtl' : 'ltr'}
                       />
                       {ex.revealed ? (
                         <p className="text-xs px-2 py-1 rounded-lg" style={{ background: 'rgba(90,160,90,0.1)', color: '#3a7a3a', fontFamily: 'Georgia, serif' }}>

@@ -3,7 +3,6 @@ import { base44 } from "@/api/base44Client";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, ChevronRight, Eye, CheckCircle, RefreshCw, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
-import { languageLabel, isRTLLanguage, usesNikud } from "@/lib/language";
 
 /**
  * SongTranscriptJournal
@@ -37,12 +36,8 @@ export default function SongTranscriptJournal({ transcript = [], songTitle = "",
         .map(s => `- "${s.transliteration || s.english}" (${s.english || ""})`)
         .join("\n");
 
-      const label = languageLabel(lang);
-      const scriptNote = usesNikud(lang)
-        ? "in Hebrew script with full nikud / vowel points"
-        : `in ${label} (correct native spelling, including any accents or diacritics)`;
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are a warm ${label} language teacher helping a student reflect on a song they just heard.
+        prompt: `You are a warm Hebrew language teacher helping a student reflect on a song they just heard.
 
 Song: "${songTitle}"
 Transcript lines:
@@ -50,14 +45,14 @@ ${lines}
 
 Create 4 personalized conversational questions about this song's content. Each question should:
 - Be asked in ENGLISH (friendly, personal tone e.g. "What do you think the singer feels when they say...?")
-- Have a ${label} answer sentence (${scriptNote}) that directly relates to the song lyrics
-- Include the transliteration of that ${label} answer
+- Have a HEBREW answer sentence (in Hebrew script) that directly relates to the song lyrics
+- Include the transliteration of that Hebrew answer
 - Include the English meaning of that answer
 - Be grounded in specific lines from the transcript
 
 Return JSON with a "questions" array. Each item has:
   - question: string (English question)
-  - hebrew_answer: string (the answer sentence ${scriptNote})
+  - hebrew_answer: string (Hebrew script answer sentence)
   - transliteration: string (phonetic of the answer)
   - english_meaning: string (English meaning of the answer)`,
         response_json_schema: {
@@ -193,13 +188,13 @@ Return JSON with a "questions" array. Each item has:
             {/* User input */}
             <div>
               <p className="text-xs mb-1.5 font-semibold tracking-wide uppercase" style={{ color: "#9b7e5a", fontFamily: "Jost, sans-serif" }}>
-                Your answer in {languageLabel(lang)}
+                Your answer in Hebrew
               </p>
               <textarea
                 value={currentQ.userInput}
                 onChange={e => updateInput(e.target.value)}
-                placeholder={isRTLLanguage(lang) ? "כתוב כאן..." : "Write here..."}
-                dir={isRTLLanguage(lang) ? "rtl" : "ltr"}
+                placeholder="כתוב כאן..."
+                dir="rtl"
                 rows={2}
                 className="w-full px-3 py-2 rounded-xl text-sm outline-none resize-none"
                 style={{
@@ -216,7 +211,7 @@ Return JSON with a "questions" array. Each item has:
             <div>
               <div className="flex items-center justify-between mb-2">
                 <p className="text-xs font-semibold tracking-wide uppercase" style={{ color: "#9b7e5a", fontFamily: "Jost, sans-serif" }}>
-                  💡 {languageLabel(lang)} answer — reveal word by word
+                  💡 Hebrew answer — reveal word by word
                 </p>
                 <button
                   onClick={revealAll}
@@ -228,7 +223,7 @@ Return JSON with a "questions" array. Each item has:
               </div>
 
               {/* Word reveal tiles */}
-              <div className="flex flex-wrap gap-2 justify-center" dir={isRTLLanguage(lang) ? "rtl" : "ltr"}>
+              <div className="flex flex-wrap gap-2 justify-center" dir="rtl">
                 {currentQ.words.map((word, wi) => {
                   const shown = wi < revealedCount;
                   return (

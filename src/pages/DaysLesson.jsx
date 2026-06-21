@@ -23,39 +23,23 @@ const days = [
 export default function DaysLesson() {
   const [selectedDay, setSelectedDay] = useState(null);
   const [dayRatings, setDayRatings] = useState({});
-  const [currentUser, setCurrentUser] = useState(null);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  // Get current user for owner-scoped reads/writes
-  React.useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const user = await base44.auth.me();
-        setCurrentUser(user);
-      } catch (e) {}
-    };
-    fetchUser();
-  }, []);
-
   const { data: userProfile } = useQuery({
-    queryKey: ['userProfile', currentUser?.email],
+    queryKey: ['userProfile'],
     queryFn: async () => {
-      if (!currentUser?.email) return null;
-      const profiles = await base44.entities.UserProfile.filter({ created_by: currentUser.email });
+      const profiles = await base44.entities.UserProfile.list();
       return profiles[0] || null;
     },
-    enabled: !!currentUser?.email,
   });
 
   const { data: userCoins } = useQuery({
-    queryKey: ['userCoins', currentUser?.email],
+    queryKey: ['userCoins'],
     queryFn: async () => {
-      if (!currentUser?.email) return { coins: 0 };
-      const coins = await base44.entities.UserCoins.filter({ created_by: currentUser.email });
+      const coins = await base44.entities.UserCoins.list();
       return coins[0] || { coins: 0 };
     },
-    enabled: !!currentUser?.email,
   });
 
   const createWordMutation = useMutation({
@@ -65,8 +49,7 @@ export default function DaysLesson() {
 
   const completeLessonMutation = useMutation({
     mutationFn: async () => {
-      const me = currentUser || await base44.auth.me();
-      const existing = await base44.entities.LessonProgress.filter({ lesson_name: "DaysLesson", created_by: me.email });
+      const existing = await base44.entities.LessonProgress.filter({ lesson_name: "DaysLesson" });
       if (existing.length > 0) {
         return base44.entities.LessonProgress.update(existing[0].id, { completed: true });
       }
@@ -75,8 +58,7 @@ export default function DaysLesson() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['lessonProgress'] });
       toast.success("Days lesson completed! ✓");
-    },
-    onError: (e) => { console.error("DaysLesson completeLessonMutation", e); toast.error("Couldn't save lesson progress"); }
+    }
   });
 
   const handleRating = async (day, rating) => {

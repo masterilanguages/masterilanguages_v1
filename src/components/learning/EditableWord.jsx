@@ -59,7 +59,6 @@ export default function EditableWord({
         onChange={(e) => setValue(e.target.value)}
         onBlur={handleSave}
         onKeyDown={handleKeyDown}
-        onClick={(e) => e.stopPropagation()}
         className={`inline-block bg-white/20 border border-cyan-400 rounded px-1 outline-none ${className}`}
         style={{ 
           width: `${Math.max(value.length * 8 + 10, 40)}px`,

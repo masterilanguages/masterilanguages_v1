@@ -26,16 +26,17 @@ export default function KaraokeTranscript({
       const currentMs = mediaElement.currentTime * 1000;
       
       // Find active line
-      const activeLine = lines.find(line =>
+      const activeLine = lines.find(line => 
         line.start_ms <= currentMs && currentMs < line.end_ms
       );
-
-      const newId = activeLine?.id || null;
-      setActiveLineId(prev => prev !== newId ? newId : prev);
+      
+      if (activeLine?.id !== activeLineId) {
+        setActiveLineId(activeLine?.id || null);
+      }
     }, 150);
 
     return () => clearInterval(interval);
-  }, [lines, audioRef, videoRef]);
+  }, [lines, audioRef, videoRef, activeLineId]);
 
   // Auto-scroll to active line
   useEffect(() => {

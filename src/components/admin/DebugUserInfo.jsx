@@ -16,13 +16,11 @@ export default function DebugUserInfo() {
   }, []);
 
   const { data: userProfile } = useQuery({
-    queryKey: ['userProfile', currentUser?.email],
+    queryKey: ['userProfile'],
     queryFn: async () => {
-      if (!currentUser?.email) return null;
-      const profiles = await base44.entities.UserProfile.filter({ created_by: currentUser.email });
+      const profiles = await base44.entities.UserProfile.list();
       return profiles[0] || null;
     },
-    enabled: !!currentUser?.email,
   });
 
   // Only show for admin users

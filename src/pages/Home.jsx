@@ -93,31 +93,29 @@ export default function Home() {
       } catch (e) {}
     };
     fetchUser();
-    document.title = "Masteri Languages";
+    document.title = "Home - Lashon Languages";
   }, []);
 
   const { data: userProfile, isLoading: profileLoading } = useQuery({
-    queryKey: ['userProfile', currentUser?.email],
+    queryKey: ['userProfile'],
     queryFn: async () => {
-      const profiles = await base44.entities.UserProfile.filter({ created_by: currentUser.email });
+      const profiles = await base44.entities.UserProfile.list();
       return profiles[0] || null;
     },
-    enabled: !!currentUser?.email,
     staleTime: 0,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
   });
 
   const { data: userCoins } = useQuery({
-    queryKey: ['userCoins', currentUser?.email],
+    queryKey: ['userCoins'],
     queryFn: async () => {
-      const coins = await base44.entities.UserCoins.filter({ created_by: currentUser.email });
+      const coins = await base44.entities.UserCoins.list();
       if (coins.length === 0) {
         return await base44.entities.UserCoins.create({ coins: 100000000, unlocked_items: [], equipped_item: null });
       }
       return coins[0];
     },
-    enabled: !!currentUser?.email,
     staleTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
@@ -126,9 +124,9 @@ export default function Home() {
   const profileLoaded = !!userProfile;
 
   const { data: lessonProgress = [] } = useQuery({
-    queryKey: ['lessonProgress', currentUser?.email],
-    queryFn: () => base44.entities.LessonProgress.filter({ created_by: currentUser.email }),
-    enabled: profileLoaded && !!currentUser?.email,
+    queryKey: ['lessonProgress'],
+    queryFn: () => base44.entities.LessonProgress.list(),
+    enabled: profileLoaded,
     staleTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
@@ -201,9 +199,9 @@ export default function Home() {
   });
 
   const { data: wordRatings = [] } = useQuery({
-    queryKey: ['wordRatings', currentUser?.email],
-    queryFn: () => base44.entities.Word.filter({ category: "wordbank", created_by: currentUser.email }),
-    enabled: profileLoaded && !!currentUser?.email,
+    queryKey: ['wordRatings'],
+    queryFn: () => base44.entities.Word.filter({ category: "wordbank" }),
+    enabled: profileLoaded,
     staleTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
@@ -462,11 +460,7 @@ export default function Home() {
 
 
   const currentDay = userProfile?.current_day || 1;
-  // Filter by current language client-side (guards against stale cache after language switch)
-  const currentLang = userProfile?.language || 'hebrew';
-  const sortedDays = [...days]
-    .filter(d => d.language === currentLang)
-    .sort((a, b) => a.day_number - b.day_number);
+  const sortedDays = [...days].sort((a, b) => a.day_number - b.day_number);
   
   // Deduplicate by day_number (keep first occurrence)
   const uniqueDays = Array.from(new Map(sortedDays.map(d => [d.day_number, d])).values());
@@ -489,28 +483,6 @@ export default function Home() {
     updateDayMutation.mutate({ id: dayId, data: { subsections: updatedSubsections } });
     setNewTask({ name: "", youtube_url: "", page: "" });
     setAddingTaskToDayId(null);
-  };
-
-  // Admin: create a new empty session (Day) for the current language. The next
-  // day_number is one above the highest existing session. After creating, open
-  // it so the admin can add content via "Add from content library".
-  const handleCreateSession = async () => {
-    const maxNum = uniqueDays.reduce((m, d) => Math.max(m, d.day_number || 0), 0);
-    const nextNum = maxNum + 1;
-    try {
-      await createDayMutation.mutateAsync({
-        day_number: nextNum,
-        language: currentLang,
-        title: `Session ${nextNum}`,
-        subsections: [],
-        order: nextNum,
-      });
-      toast.success(`Session ${nextNum} created!`);
-      setExpandedDay(nextNum);
-    } catch (e) {
-      console.error('Create session failed', e);
-      toast.error('Could not create session.');
-    }
   };
 
   const handleDeleteTask = (dayId, taskId) => {
@@ -629,12 +601,12 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #0f0c29, #302b63, #24243e)' }}>
+    <div className="min-h-screen" style={{ background: 'linear-gradient(160deg, #f0ece4 0%, #e8e4d8 40%, #eae6da 100%)' }}>
       {/* Animated background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-20 -left-20 w-[500px] h-[500px] rounded-full blur-3xl" style={{ background: 'radial-gradient(circle, rgba(37,99,235,0.08) 0%, transparent 70%)' }} />
-        <div className="absolute top-1/3 right-0 w-96 h-96 rounded-full blur-3xl" style={{ background: 'radial-gradient(circle, rgba(96,165,250,0.06) 0%, transparent 70%)' }} />
-        <div className="absolute bottom-0 left-1/4 w-80 h-80 rounded-full blur-3xl" style={{ background: 'radial-gradient(circle, rgba(29,78,216,0.05) 0%, transparent 70%)' }} />
+        <div className="absolute -top-20 -left-20 w-[500px] h-[500px] rounded-full blur-3xl" style={{ background: 'radial-gradient(circle, #b8a88018 0%, transparent 70%)' }} />
+        <div className="absolute top-1/3 right-0 w-96 h-96 rounded-full blur-3xl" style={{ background: 'radial-gradient(circle, #8a9a7815 0%, transparent 70%)' }} />
+        <div className="absolute bottom-0 left-1/4 w-80 h-80 rounded-full blur-3xl" style={{ background: 'radial-gradient(circle, #c8b89010 0%, transparent 70%)' }} />
       </div>
 
 
@@ -643,8 +615,8 @@ export default function Home() {
 
         {/* Managing user banner */}
         {managingUserEmail && currentUser?.role === 'admin' && (
-          <div className="mt-4 bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 text-center">
-            <p className="text-blue-300 font-medium text-sm">👤 Managing: {managingUserEmail}</p>
+          <div className="mt-4 bg-amber-500/20 border border-amber-500/50 rounded-lg p-3 text-center">
+            <p className="text-amber-400 font-medium text-sm">👤 Managing: {managingUserEmail}</p>
             <Button
               onClick={() => {
                 localStorage.removeItem('admin_managing_user');
@@ -714,25 +686,35 @@ export default function Home() {
               <div className="w-full max-w-md">
                 <div className="flex items-center justify-between mb-4">
                   <h2
-                    className="text-2xl font-bold cursor-pointer hover:opacity-80 transition-opacity"
-                    style={{ color: '#BFDBFE', fontFamily: 'Inter, sans-serif' }}
+                    className="text-3xl font-bold cursor-pointer hover:opacity-80 transition-opacity"
+                    style={{ color: '#3d4a2e', fontFamily: 'Cormorant Garamond, Georgia, serif' }}
                     onClick={() => navigate(createPageUrl("Days"))}
                   >
                     📅 Schedule <ChevronRight className="inline w-5 h-5 mb-1" />
                   </h2>
-                  {isMasterUser && (
-                    <button
-                      onClick={handleCreateSession}
-                      disabled={createDayMutation.isPending}
-                      className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all hover:opacity-90 disabled:opacity-50"
-                      style={{ background: '#5a6b5a', color: '#f5f0e8' }}
-                    >
-                      {createDayMutation.isPending ? '…' : '+ New Session'}
-                    </button>
-                  )}
+                  <Link to={createPageUrl('Backpack')} className="no-underline">
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all" style={{ background: '#ffffff', color: '#3d4a2e', boxShadow: '0 1px 4px rgba(0,0,0,0.08)', border: '1px solid #e0dcd4' }}>
+                      <span>🎒</span><span>Backpack</span>
+                    </div>
+                  </Link>
                 </div>
                   <div className="space-y-2">
-                    {uniqueDays.slice(0, 5).map((day, idx) => {
+                    {uniqueDays.filter(day => {
+                      const userLang = userProfile?.language || 'hebrew';
+                      // For non-Hebrew users, hide sessions 2 and 3
+                      if (userLang !== 'hebrew' && (day.day_number === 2 || day.day_number === 3)) {
+                        return false;
+                      }
+                      // For non-Hebrew users, hide days with Hebrew-only content
+                      if (userLang !== 'hebrew') {
+                        const hasHebrewOnly = (day.subsections || []).some(s => {
+                          const taskName = s.name?.toLowerCase() || '';
+                          return taskName.includes('the bride');
+                        });
+                        if (hasHebrewOnly) return false;
+                      }
+                      return true;
+                    }).slice(0, 5).map((day, idx) => {
                     const dayColors = [
                       { bg: '#5a6b5a', text: '#f5f0e8' },
                       { bg: '#6b7c63', text: '#f5f0e8' },
@@ -747,15 +729,15 @@ export default function Home() {
                     return (
                       <div key={day.id}>
                         <div
-                          className="backdrop-blur-xl rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all"
-                          style={{ background: 'rgba(15,40,100,0.4)', border: '1px solid rgba(96,165,250,0.15)' }}
+                          className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 p-3 flex items-center justify-between cursor-pointer hover:border-white/20 transition-all"
+                          style={{ backgroundColor: dayColor.bg + '40' }}
                           onClick={() => {
                             if (isMasterUser) { setExpandedDay(expandedDay === day.day_number ? null : day.day_number); return; }
                             setSessionModal(day);
                           }}
                         >
-                          <h3 className="font-bold text-sm" style={{ color: '#BFDBFE' }}>Session {day.day_number}</h3>
-                          <ChevronDown className={`w-4 h-4 transition-transform ml-auto ${isExpanded ? 'rotate-180' : ''}`} style={{ color: '#60A5FA' }} />
+                          <h3 className="font-bold text-sm" style={{ color: '#3d4a2e' }}>Session {day.day_number}</h3>
+                          <ChevronDown className={`w-4 h-4 transition-transform ml-auto ${isExpanded ? 'rotate-180' : ''}`} style={{ color: '#6b7c5a' }} />
                         </div>
                         <AnimatePresence>
                           {isExpanded && (
@@ -767,32 +749,23 @@ export default function Home() {
                               className="overflow-hidden"
                             >
                               <div className="mt-1 space-y-1 pl-3">
-                                {/* Add from content library — always show for admin */}
-                                {isMasterUser && (
+                                {/* Add from content library — only show if no content yet */}
+                                {isMasterUser && (day.subsections || []).length === 0 && (
                                   <button
                                     onClick={() => setLibraryPickerDayId(day.id)}
                                     className="w-full text-left px-3 py-1.5 text-xs rounded-lg transition-all flex items-center gap-1 mb-1"
-                                    style={{ color: '#93C5FD', background: 'rgba(96,165,250,0.06)', border: '1px dashed rgba(96,165,250,0.3)' }}
+                                    style={{ color: '#6b7c5a', background: '#5a6b5a10', border: '1px dashed #5a6b5a40' }}
                                   >
-                                    <Plus className="w-3 h-3" /> + Add item
+                                    <Plus className="w-3 h-3" /> + Add from content library
                                   </button>
                                 )}
                                 {(day.subsections || []).filter(task => {
                                   const taskName = task.name?.toLowerCase() || '';
                                   const userLang = userProfile?.language || 'hebrew';
-                                  // A real content item (video/audio/song) — always show it,
-                                  // even if its TITLE mentions other languages
-                                  // (e.g. "David Danced | Hebrew - English - Arabic").
-                                  const hasContent = !!(task.video_id || task.youtube_url || task.mediaUrl || task.song_id);
-                                  // Hide generic "Watch a video" placeholder if a specific video task exists
+                                  // "The Bride" is Hebrew-only
+                                  if (taskName.includes('the bride') && userLang !== 'hebrew') return false;
+                                  // Hide generic "Watch a video" if a specific video task exists
                                   if (task.id === 'video' && (day.subsections || []).some(s => s.video_id)) return false;
-                                  // Language-by-name filtering applies ONLY to generic placeholder tasks,
-                                  // never to real content items.
-                                  if (!hasContent) {
-                                    if (taskName.includes('the bride') && userLang !== 'hebrew') return false;
-                                    const otherLanguages = ['hebrew', 'english', 'spanish', 'french', 'portuguese', 'italian'].filter(l => l !== userLang);
-                                    if (otherLanguages.some(l => taskName.includes(l))) return false;
-                                  }
                                   return true;
                                 }).map((task, idx) => {
                                   const isSong = task.song_id || (songs && songs.find(s => s.id === task.id));
@@ -864,7 +837,7 @@ export default function Home() {
                                               setDragOverTask(null);
                                             }}
                                             className={`flex items-center justify-between px-3 py-2 rounded-lg hover:opacity-80 transition-all group ${isDragging ? 'cursor-grabbing opacity-50' : 'cursor-pointer'} ${isDragOver ? 'border-t-2 border-b-2 border-cyan-400 my-2' : ''}`}
-                                            style={{ background: isTaskDone ? 'rgba(96,165,250,0.12)' : 'rgba(96,165,250,0.05)', border: isDragOver ? undefined : '1px solid rgba(96,165,250,0.12)' }}
+                                            style={{ background: isTaskDone ? '#5a6b5a30' : '#ffffff50', border: isDragOver ? undefined : '1px solid #5a6b5a20' }}
                                             onClick={async () => {
                                               if (isDragging) return;
                                               // If generic "Watch a video" placeholder with no video, go to library to select one
@@ -883,7 +856,7 @@ export default function Home() {
                                               }
                                               const ytId = task.video_id || extractYouTubeId(task.youtube_url);
                                              if (ytId) {
-                                               navigate(createPageUrl('MediaLibrary') + `?videoId=${ytId}&dayId=${day.id}&taskId=${task.id}`);
+                                               navigate(createPageUrl('MediaLibrary') + `?videoId=${ytId}`);
                                              } else if (task.mediaUrl) {
                                                // Look up saved transcript from MediaLibrary
                                                let transcript = task.transcript || '';
@@ -928,15 +901,15 @@ export default function Home() {
                                               <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${isTaskDone ? 'bg-green-500 border-green-500' : 'border-stone-400'}`}>
                                                 {isTaskDone && <Check className="w-2.5 h-2.5 text-white" />}
                                               </div>
-                                              <span className="text-sm font-medium" style={{ color: '#BFDBFE' }}>{task.name}</span>
+                                              <span className="text-sm font-medium" style={{ color: '#3d4a2e' }}>{task.name}</span>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                             {(task.video_id || extractYouTubeId(task.youtube_url)) && <span className="text-xs" style={{ color: '#60A5FA' }}>▶ video</span>}
-                                             {task.mediaUrl && <span className="text-xs" style={{ color: '#60A5FA' }}>🎵 audio</span>}
+                                             {(task.video_id || extractYouTubeId(task.youtube_url)) && <span className="text-xs" style={{ color: '#6b7c5a' }}>▶ video</span>}
+                                             {task.mediaUrl && <span className="text-xs" style={{ color: '#6b7c5a' }}>🎵 audio</span>}
                                              {isMasterUser && (
                                                 <button
                                                   onClick={(e) => { e.stopPropagation(); handleStartEditTask(day.id, task); }}
-                                                  className="opacity-70 hover:opacity-100 transition-opacity text-stone-400 hover:text-stone-700 text-sm px-1"
+                                                  className="opacity-0 group-hover:opacity-100 transition-opacity text-stone-400 hover:text-stone-700 text-xs px-1"
                                                   title="Edit task"
                                                   >
                                                   <span style={{ display: 'inline-block', transform: 'scaleX(-1)' }}>✏️</span>
@@ -945,7 +918,7 @@ export default function Home() {
                                             {isMasterUser && (
                                                <button
                                                  onClick={(e) => { e.stopPropagation(); handleDeleteTask(day.id, task.id); }}
-                                                 className="opacity-90 hover:opacity-100 transition-opacity text-red-400 hover:text-red-600 text-base px-1 font-bold"
+                                                 className="opacity-0 group-hover:opacity-100 transition-opacity text-red-400 hover:text-red-600 text-xs px-1"
                                                  title="Remove from schedule"
                                                >
                                                  ✕
@@ -1007,7 +980,7 @@ export default function Home() {
                     key={task.id}
                     onClick={() => {
                       setSessionModal(null);
-                      navigate(createPageUrl('MediaLibrary') + `?videoId=${ytId}&sessionDay=${sessionModal.day_number}&dayId=${sessionModal.id}&taskId=${task.id}`);
+                      navigate(createPageUrl('MediaLibrary') + `?videoId=${ytId}&sessionDay=${sessionModal.day_number}`);
                     }}
                     className="flex items-center gap-3 bg-stone-100 rounded-xl p-3 border border-stone-200 hover:border-stone-400 transition-all w-full text-left"
                   >
@@ -1065,32 +1038,18 @@ export default function Home() {
         open={!!libraryPickerDayId}
         onOpenChange={(open) => { if (!open) setLibraryPickerDayId(null); }}
         language={userProfile?.language}
-        onSelect={async (media) => {
-          const targetDayId = libraryPickerDayId;
-          // Find the session locally; fall back to fetching by id (robust if the
-          // days query is momentarily stale after creating a session).
-          let day = days.find(d => d.id === targetDayId);
-          if (!day && targetDayId) {
-            try { day = await base44.entities.Day.get(targetDayId); } catch (e) { /* handled below */ }
-          }
-          if (!day) {
-            console.error('[add-to-session] session not found', { targetDayId, dayIds: days.map(d => d.id) });
-            toast.error('No se encontró la sesión — recargá la página y reintentá.');
-            return;
-          }
+        onSelect={(media) => {
+          const day = days.find(d => d.id === libraryPickerDayId);
+          if (!day) return;
           const isYouTube = !!media.video_id;
           const taskId = isYouTube ? `video_${media.video_id}` : `task_${Date.now()}`;
-          if ((day.subsections || []).some(s => s.id === taskId)) { toast.info('Ese video ya está en la sesión.'); return; }
+          const existing = (day.subsections || []).find(s => s.id === taskId);
+          if (existing) { toast.info('Already in this session'); return; }
           const sub = isYouTube
             ? { id: taskId, name: `▶ ${media.title}`, video_id: media.video_id, page: 'MediaLibrary' }
             : { id: taskId, name: media.title, page: '', mediaUrl: media.video_url || '' };
-          try {
-            await updateDayMutation.mutateAsync({ id: targetDayId, data: { subsections: [...(day.subsections || []), sub] } });
-            toast.success(`"${media.title}" added to session!`);
-          } catch (e) {
-            console.error('[add-to-session] update failed', e);
-            toast.error(`No se pudo agregar el video: ${e?.message || e}`);
-          }
+          updateDayMutation.mutate({ id: libraryPickerDayId, data: { subsections: [...(day.subsections || []), sub] } });
+          toast.success(`"${media.title}" added to session!`);
         }}
       />
 

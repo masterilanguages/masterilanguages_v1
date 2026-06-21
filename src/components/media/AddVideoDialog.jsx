@@ -5,9 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Loader2, X, ChevronDown, Wand2 } from "lucide-react";
-import { base44 } from "@/api/base44Client";
-import { toast } from "sonner";
+import { Loader2, X, ChevronDown } from "lucide-react";
 
 const topics = [
   "Religion / Spirituality", "Sports / Fitness", "Cooking / Food", "Nutrition",
@@ -19,26 +17,7 @@ const tagOptions = ['Learning', 'Hebrew', 'Beginner', 'Intermediate', 'Advanced'
 
 export default function AddVideoDialog({ open, onOpenChange, editingVideo, formData, setFormData, mediaType, setMediaType, uploadingAudio, onSubmit, onCancel, onAudioUpload, onLoadYoutube, isPending, allUsers = [] }) {
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
-  const [generatingTranscript, setGeneratingTranscript] = useState(false);
   const dropdownRef = useRef(null);
-
-  const handleGenerateTranscript = async () => {
-    const videoId = formData.video_id || (formData.video_url?.match(/(?:v=|youtu\.be\/)([^&\n?#]+)/)?.[1]);
-    if (!videoId) { toast.error("Please load a video URL first"); return; }
-    setGeneratingTranscript(true);
-    toast.info("Fetching transcript from YouTube...");
-    try {
-      const result = await base44.functions.invoke('youtubeTranscript', { videoId });
-      if (!result?.data?.transcript?.length) { toast.error(result?.data?.error || "No transcript found"); return; }
-      const rawText = result.data.transcript.map(s => s.text).join('\n');
-      setFormData(p => ({ ...p, transcript_phonetics: rawText }));
-      toast.success(`Transcript loaded (${result.data.transcript.length} segments)!`);
-    } catch (e) {
-      toast.error("Failed to fetch transcript");
-    } finally {
-      setGeneratingTranscript(false);
-    }
-  };
 
   // assigned_users: [{ email, session }]
   const assignedUsers = formData.assigned_users || [];
@@ -226,15 +205,7 @@ export default function AddVideoDialog({ open, onOpenChange, editingVideo, formD
           </label>
 
           <div>
-            <div className="flex items-center justify-between mb-1">
-              <Label>Transcript</Label>
-              {mediaType === "video" && (
-                <Button type="button" size="sm" onClick={handleGenerateTranscript} disabled={generatingTranscript || !formData.video_id} className="bg-purple-500/30 hover:bg-purple-500/50 text-purple-300 border border-purple-500/40 text-xs h-7 px-2">
-                  {generatingTranscript ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Wand2 className="w-3 h-3 mr-1" />}
-                  Auto-fetch from YouTube
-                </Button>
-              )}
-            </div>
+            <Label>Transcript</Label>
             <p className="text-xs text-white/60 mb-2">Paste transcript in any language (target language, English, or phonetics). System will generate the target language text + English translation for each sentence.</p>
             <Textarea value={formData.transcript_phonetics} onChange={(e) => setFormData(p => ({ ...p, transcript_phonetics: e.target.value }))} placeholder="Paste transcript here (Spanish, English, Hebrew, etc.)..." className="bg-white/5 border-white/20 text-white" rows={6} />
           </div>

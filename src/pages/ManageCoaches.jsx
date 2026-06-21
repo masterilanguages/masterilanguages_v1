@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Plus, Trash2, Users, UserCheck, ClipboardList, StickyNote, BookOpen, LogIn, ChevronDown, ChevronUp, Shield, GraduationCap, User, FileText, CheckCircle, Globe } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Users, UserCheck, ClipboardList, StickyNote, BookOpen, LogIn, ChevronDown, ChevronUp, Shield, GraduationCap, User, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
@@ -20,11 +20,7 @@ export default function ManageCoaches() {
   const [selectedCoach, setSelectedCoach] = useState("");
   const [selectedStudent, setSelectedStudent] = useState("");
   const [studentEmailInput, setStudentEmailInput] = useState("");
-  const [showAddUserDialog, setShowAddUserDialog] = useState(false);
-  const [newUserEmail, setNewUserEmail] = useState("");
-  const [newUserRole, setNewUserRole] = useState("user");
   const [expandedPerson, setExpandedPerson] = useState(null);
-  const [expandedSection, setExpandedSection] = useState({}); // { [userId]: 'questionnaire'|'onboarding'|'agreement'|null }
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -75,38 +71,27 @@ export default function ManageCoaches() {
     if (!words.length) return;
     setAssigningWords(prev => ({ ...prev, [studentEmail]: true }));
     const lang = profile?.language || 'hebrew';
-    let ok = 0;
-    let failed = 0;
-    try {
-      for (const word of words) {
-        try {
-          const result = await base44.integrations.Core.InvokeLLM({
-            prompt: `Translate the word "${word}" to English and provide its transliteration. Return JSON with: translation (English meaning), phonetic (transliteration), word (the original Hebrew/target script if applicable).`,
-            response_json_schema: { type: 'object', properties: { translation: { type: 'string' }, phonetic: { type: 'string' }, word: { type: 'string' } } }
-          });
-          await base44.entities.Word.create({
-            word: result.word || word,
-            translation: result.translation || word,
-            phonetic: result.phonetic || word,
-            category: 'wordbank',
-            language: lang,
-            times_practiced: 0,
-            mastered: false,
-            assigned_by_coach: currentUser.email,
-            coach_folder: 'From Coach',
-            created_by: studentEmail,
-          });
-          ok++;
-        } catch (e) {
-          console.error(`Failed to push word "${word}" to ${studentEmail}`, e);
-          failed++;
-        }
-      }
-      if (ok > 0) toast.success(`${ok} word(s) pushed to ${studentEmail}'s flashcards!`);
-      if (failed > 0) toast.error(`${failed} word(s) failed to push`);
-    } finally {
-      setAssigningWords(prev => ({ ...prev, [studentEmail]: false }));
+    for (const word of words) {
+      await base44.integrations.Core.InvokeLLM({
+        prompt: `Translate the word "${word}" to English and provide its transliteration. Return JSON with: translation (English meaning), phonetic (transliteration), word (the original Hebrew/target script if applicable).`,
+        response_json_schema: { type: 'object', properties: { translation: { type: 'string' }, phonetic: { type: 'string' }, word: { type: 'string' } } }
+      }).then(result => {
+        return base44.entities.Word.create({
+          word: result.word || word,
+          translation: result.translation || word,
+          phonetic: result.phonetic || word,
+          category: 'wordbank',
+          language: lang,
+          times_practiced: 0,
+          mastered: false,
+          assigned_by_coach: currentUser.email,
+          coach_folder: 'From Coach',
+          created_by: studentEmail,
+        });
+      }).catch(() => {});
     }
+    setAssigningWords(prev => ({ ...prev, [studentEmail]: false }));
+    toast.success(`${words.length} word(s) pushed to ${studentEmail}'s flashcards!`);
   };
 
   const deleteNoteMutation = useMutation({
@@ -155,7 +140,7 @@ export default function ManageCoaches() {
   });
 
   const [deletedUserIds, setDeletedUserIds] = useState(new Set());
-  const [agreementText, setAgreementText] = useState("");
+  const [viewingQuestionnaire, setViewingQuestionnaire] = useState(null); // FluentLead object
 
   const deleteUserMutation = useMutation({
     mutationFn: async (user) => {
@@ -281,11 +266,11 @@ export default function ManageCoaches() {
               Questionnaire
             </Button>
             <Button
-              onClick={() => setShowAddUserDialog(true)}
+              onClick={() => setShowAssignDialog(true)}
               className="bg-gradient-to-r from-green-500 to-emerald-500"
             >
-              <Users className="w-5 h-5 mr-2" />
-              Add User
+              <Plus className="w-5 h-5 mr-2" />
+              Assign Coach
             </Button>
           </div>
         </div>
@@ -298,12 +283,6 @@ export default function ManageCoaches() {
             const isExpanded = expandedPerson === user.id;
             const allNoteWords = [...new Set(userNotes.flatMap(n => n.words || []))];
 
-            const activeSection = expandedSection[user.id] || null;
-            const toggleSection = (e, section) => {
-              e.stopPropagation();
-              setExpandedSection(prev => ({ ...prev, [user.id]: prev[user.id] === section ? null : section }));
-            };
-
             return (
               <div key={user.id} className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden">
                 {/* Row */}
@@ -311,8 +290,8 @@ export default function ManageCoaches() {
                   className="flex items-center justify-between p-4 cursor-pointer hover:bg-white/5 transition-all"
                   onClick={() => setExpandedPerson(isExpanded ? null : user.id)}
                 >
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-lg font-bold text-white flex-shrink-0">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-lg font-bold text-white">
                       {(user.full_name || user.email || "?")[0].toUpperCase()}
                     </div>
                     <div>
@@ -325,35 +304,40 @@ export default function ManageCoaches() {
                     {profile?.language && (
                       <span className="text-xs text-white/40 bg-white/5 px-2 py-0.5 rounded-full">{profile.language}</span>
                     )}
+                    {userNotes.length > 0 && (
+                      <span className="text-xs text-yellow-300/70 flex items-center gap-0.5">
+                        <StickyNote className="w-3 h-3" />{userNotes.length}
+                      </span>
+                    )}
+                    {lead ? (
+                      <span className="text-xs text-green-400/80 flex items-center gap-0.5 bg-green-500/10 px-2 py-0.5 rounded-full">
+                        <FileText className="w-3 h-3" /> Questionnaire ✓
+                      </span>
+                    ) : (
+                      <span className="text-xs text-white/30 flex items-center gap-0.5">
+                        <FileText className="w-3 h-3" /> No questionnaire
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
-                    {/* Questionnaire dropdown toggle */}
-                    <button
-                      onClick={(e) => toggleSection(e, 'questionnaire')}
-                      className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border transition-all ${lead ? 'border-green-500/40 bg-green-500/10 text-green-300' : 'border-white/10 bg-white/5 text-white/40'} ${activeSection === 'questionnaire' ? 'ring-1 ring-green-400/40' : ''}`}
+                    {lead && (
+                      <Button
+                        size="sm"
+                        onClick={(e) => { e.stopPropagation(); setViewingQuestionnaire(lead); }}
+                        className="bg-green-500/20 hover:bg-green-500/30 text-green-300 border border-green-500/30 text-xs"
+                        variant="ghost"
+                      >
+                        <FileText className="w-3.5 h-3.5 mr-1" /> Questionnaire
+                      </Button>
+                    )}
+                    <Button
+                      size="sm"
+                      onClick={(e) => { e.stopPropagation(); toast.info("Agreement feature coming soon"); }}
+                      className="bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/30 text-xs"
+                      variant="ghost"
                     >
-                      {lead ? <CheckCircle className="w-3.5 h-3.5" /> : <FileText className="w-3.5 h-3.5" />}
-                      <span>Questionnaire</span>
-                      <ChevronDown className={`w-3 h-3 transition-transform ${activeSection === 'questionnaire' ? 'rotate-180' : ''}`} />
-                    </button>
-                    {/* Onboarding dropdown toggle */}
-                    <button
-                      onClick={(e) => toggleSection(e, 'onboarding')}
-                      className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border transition-all ${profile?.onboarding_completed ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300' : 'border-orange-500/30 bg-orange-500/5 text-orange-300/70'} ${activeSection === 'onboarding' ? 'ring-1 ring-emerald-400/40' : ''}`}
-                    >
-                      {profile?.onboarding_completed ? <CheckCircle className="w-3.5 h-3.5" /> : <Globe className="w-3.5 h-3.5" />}
-                      <span>Onboarding</span>
-                      <ChevronDown className={`w-3 h-3 transition-transform ${activeSection === 'onboarding' ? 'rotate-180' : ''}`} />
-                    </button>
-                    {/* Agreement dropdown toggle */}
-                    <button
-                      onClick={(e) => toggleSection(e, 'agreement')}
-                      className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border transition-all ${profile?.agreement_notes ? 'border-purple-500/40 bg-purple-500/10 text-purple-300' : 'border-white/10 bg-white/5 text-white/40'} ${activeSection === 'agreement' ? 'ring-1 ring-purple-400/40' : ''}`}
-                    >
-                      {profile?.agreement_notes ? <CheckCircle className="w-3.5 h-3.5" /> : <ClipboardList className="w-3.5 h-3.5" />}
-                      <span>Agreement</span>
-                      <ChevronDown className={`w-3 h-3 transition-transform ${activeSection === 'agreement' ? 'rotate-180' : ''}`} />
-                    </button>
+                      <ClipboardList className="w-3.5 h-3.5 mr-1" /> Agreement
+                    </Button>
                     {user.role !== 'admin' && (
                       <Button
                         size="sm"
@@ -368,95 +352,42 @@ export default function ManageCoaches() {
                   </div>
                 </div>
 
-                {/* Inline section dropdowns */}
-                {activeSection === 'questionnaire' && (
-                  <div className="border-t border-green-500/20 bg-green-500/5 px-4 py-3" onClick={e => e.stopPropagation()}>
-                    {lead ? (
-                      <div className="space-y-2">
-                        {[
-                          { label: 'Language', value: lead.language },
-                          { label: 'Current Level', value: lead.current_level },
-                          { label: 'Goal Level', value: lead.goal_level },
-                          { label: 'Motivation', value: lead.motivation },
-                          { label: 'Why Important', value: lead.why_important },
-                          { label: 'Frustration', value: lead.frustration },
-                          { label: 'Tried Before', value: lead.tried_before },
-                          { label: "Why Didn't Work", value: lead.why_didnt_work },
-                          { label: 'Daily Time', value: lead.daily_time },
-                          { label: 'Ready to Commit', value: lead.ready_to_commit },
-                          { label: 'Phone', value: lead.phone },
-                          { label: 'Email', value: lead.email },
-                        ].filter(r => r.value).map(r => (
-                          <div key={r.label} className="flex gap-2">
-                            <span className="text-white/40 text-xs w-32 flex-shrink-0">{r.label}:</span>
-                            <span className="text-white text-xs">{r.value}</span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-white/40 text-xs">No questionnaire submitted yet.</p>
-                    )}
-                  </div>
-                )}
-
-                {activeSection === 'onboarding' && (
-                  <div className="border-t border-emerald-500/20 bg-emerald-500/5 px-4 py-3 flex items-center justify-between" onClick={e => e.stopPropagation()}>
-                    <div>
-                      {profile?.onboarding_completed ? (
-                        <p className="text-emerald-400 text-sm flex items-center gap-1">
-                          <CheckCircle className="w-4 h-4" /> Completed{profile.onboarding_completed_at ? ` on ${new Date(profile.onboarding_completed_at).toLocaleDateString()}` : ''}
-                        </p>
-                      ) : (
-                        <p className="text-orange-400/80 text-sm">Not yet completed</p>
-                      )}
-  
-                    </div>
-                    {user.role !== 'admin' && (
-                      <Button
-                        size="sm"
-                        onClick={() => { localStorage.setItem('admin_managing_user', user.email); window.location.href = createPageUrl("LanguageSelect"); }}
-                        className="bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/30 text-xs"
-                        variant="ghost"
-                      >
-                        <Globe className="w-3.5 h-3.5 mr-1" /> Start Onboarding
-                      </Button>
-                    )}
-                  </div>
-                )}
-
-                {activeSection === 'agreement' && (
-                  <div className="border-t border-purple-500/20 bg-purple-500/5 px-4 py-3 space-y-2" onClick={e => e.stopPropagation()}>
-                    <textarea
-                      defaultValue={profile?.agreement_notes || ""}
-                      onChange={(e) => setAgreementText(e.target.value)}
-                      onFocus={() => setAgreementText(profile?.agreement_notes || "")}
-                      placeholder="Write the coaching agreement here..."
-                      className="w-full h-28 p-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder:text-white/30 text-xs resize-none outline-none focus:border-purple-400/50"
-                    />
-                    <div className="flex justify-end">
-                      <Button
-                        size="sm"
-                        onClick={async () => {
-                          if (profile) {
-                            await base44.entities.UserProfile.update(profile.id, { agreement_notes: agreementText });
-                            queryClient.invalidateQueries({ queryKey: ['allProfiles'] });
-                            toast.success("Agreement saved!");
-                            setExpandedSection(prev => ({ ...prev, [user.id]: null }));
-                          } else {
-                            toast.error("No profile found for this user");
-                          }
-                        }}
-                        className="bg-purple-600 hover:bg-purple-700 text-xs h-7"
-                      >
-                        Save
-                      </Button>
-                    </div>
-                  </div>
-                )}
-
                 {/* Expanded panel */}
                 {isExpanded && (
                   <div className="border-t border-white/10 px-4 py-4 space-y-4">
+
+                    {/* Profile info */}
+                    {profile && (
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        {[
+                          { label: 'Day', value: profile.current_day || 1 },
+                          { label: 'Streak', value: `${profile.daily_streak || 0} 🔥` },
+                          { label: 'XP', value: profile.xp || 0 },
+                          { label: 'Difficulty', value: profile.difficulty_level || '—' },
+                        ].map(stat => (
+                          <div key={stat.label} className="bg-white/5 rounded-lg p-2 text-center">
+                            <p className="text-white/40 text-xs">{stat.label}</p>
+                            <p className="text-white font-bold">{stat.value}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Questionnaire */}
+                    <div className="flex items-center gap-3">
+                      {lead ? (
+                        <Button
+                          size="sm"
+                          onClick={() => setViewingQuestionnaire(lead)}
+                          className="bg-green-500/20 hover:bg-green-500/30 text-green-300 border border-green-500/30 text-xs"
+                          variant="ghost"
+                        >
+                          <FileText className="w-3.5 h-3.5 mr-1" /> View Questionnaire
+                        </Button>
+                      ) : (
+                        <span className="text-white/30 text-xs flex items-center gap-1"><FileText className="w-3.5 h-3.5" /> No questionnaire filled out yet</span>
+                      )}
+                    </div>
 
                     {/* Coach / Students relationships */}
                     {myCoach && (
@@ -600,59 +531,42 @@ export default function ManageCoaches() {
         )}
       </div>
 
-      {/* Add User Dialog */}
-      <Dialog open={showAddUserDialog} onOpenChange={setShowAddUserDialog}>
-        <DialogContent className="bg-slate-900 border-white/20 text-white max-w-sm">
+      {/* Questionnaire Modal */}
+      <Dialog open={!!viewingQuestionnaire} onOpenChange={() => setViewingQuestionnaire(null)}>
+        <DialogContent className="bg-slate-900 border-white/20 text-white max-w-lg max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Users className="w-5 h-5 text-green-400" />
-              Add New User
+              <FileText className="w-5 h-5 text-green-400" />
+              Questionnaire — {viewingQuestionnaire?.first_name || viewingQuestionnaire?.email}
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 mt-2">
-            <div>
-              <label className="text-white/60 text-sm mb-1 block">Email</label>
-              <input
-                type="email"
-                value={newUserEmail}
-                onChange={(e) => setNewUserEmail(e.target.value)}
-                placeholder="user@example.com"
-                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder:text-white/30 outline-none focus:border-green-400/50"
-              />
+          {viewingQuestionnaire && (
+            <div className="space-y-3 mt-2">
+              {[
+                { label: 'Language', value: viewingQuestionnaire.language },
+                { label: 'Current Level', value: viewingQuestionnaire.current_level },
+                { label: 'Goal Level', value: viewingQuestionnaire.goal_level },
+                { label: 'Motivation', value: viewingQuestionnaire.motivation },
+                { label: 'Why Important', value: viewingQuestionnaire.why_important },
+                { label: 'Frustration', value: viewingQuestionnaire.frustration },
+                { label: 'Tried Before', value: viewingQuestionnaire.tried_before },
+                { label: "Why Didn't Work", value: viewingQuestionnaire.why_didnt_work },
+                { label: 'Learning Duration', value: viewingQuestionnaire.learning_duration },
+                { label: 'Fluency Impact', value: viewingQuestionnaire.fluency_impact },
+                { label: 'Why Now', value: viewingQuestionnaire.why_now },
+                { label: 'Ready to Commit', value: viewingQuestionnaire.ready_to_commit },
+                { label: 'Daily Time', value: viewingQuestionnaire.daily_time },
+                { label: 'Ready to Move', value: viewingQuestionnaire.ready_to_move },
+                { label: 'Phone', value: viewingQuestionnaire.phone },
+                { label: 'Email', value: viewingQuestionnaire.email },
+              ].filter(row => row.value).map(row => (
+                <div key={row.label} className="bg-white/5 rounded-lg px-3 py-2">
+                  <p className="text-white/40 text-xs mb-0.5">{row.label}</p>
+                  <p className="text-white text-sm">{row.value}</p>
+                </div>
+              ))}
             </div>
-            <div>
-              <label className="text-white/60 text-sm mb-1 block">Role</label>
-              <select
-                value={newUserRole}
-                onChange={(e) => setNewUserRole(e.target.value)}
-                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
-              >
-                <option value="user">User</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
-            <div className="flex gap-2">
-              <Button onClick={() => { setShowAddUserDialog(false); setNewUserEmail(""); setNewUserRole("user"); }} variant="outline" className="flex-1 border-white/20 text-white">Cancel</Button>
-              <Button
-                disabled={!newUserEmail}
-                onClick={async () => {
-                  try {
-                    await base44.users.inviteUser(newUserEmail.trim(), newUserRole);
-                    toast.success(`Invite sent to ${newUserEmail}`);
-                    queryClient.invalidateQueries({ queryKey: ['allUsers'] });
-                    setShowAddUserDialog(false);
-                    setNewUserEmail("");
-                    setNewUserRole("user");
-                  } catch (e) {
-                    toast.error(e.message || "Failed to invite user");
-                  }
-                }}
-                className="flex-1 bg-gradient-to-r from-green-500 to-emerald-500"
-              >
-                Send Invite
-              </Button>
-            </div>
-          </div>
+          )}
         </DialogContent>
       </Dialog>
 

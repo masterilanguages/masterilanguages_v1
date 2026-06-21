@@ -11,55 +11,6 @@ import ClickableWord from "../learning/ClickableWord";
 import UniversalEditableWord from "../learning/UniversalEditableWord";
 import EditableSentence from "../learning/EditableSentence";
 import VideoTranscriptWord from "./VideoTranscriptWord";
-import { languageLabel, isRTLLanguage, usesNikud } from "@/lib/language";
-
-// Normalize the various language codes this Video entity stores ("he"/"iw" for
-// Hebrew) into the full language names the @/lib/language helpers expect.
-function normalizeVideoLang(raw) {
-  const key = String(raw || '').toLowerCase();
-  if (key === 'he' || key === 'iw') return 'hebrew';
-  if (key === 'es') return 'spanish';
-  if (key === 'fr') return 'french';
-  if (key === 'pt') return 'portuguese';
-  if (key === 'it') return 'italian';
-  if (key === 'en') return 'english';
-  return key || 'hebrew';
-}
-
-// Shared, memoized loader for the YouTube IFrame API (bug #33). A single
-// "window.onYouTubeIframeAPIReady = initPlayer" per component is last-writer-wins —
-// and VideoTranscript renders inside .map() loops, so multiple instances stomp the
-// global in one tick and only the last player's onReady fires. This loader appends
-// the script at most once, chains any prior callback, and polls window.YT.Player as
-// a fallback, so every caller's .then() resolves.
-let __ytApiPromise = null;
-function loadYouTubeApi() {
-  if (window.YT && window.YT.Player) return Promise.resolve(window.YT);
-  if (__ytApiPromise) return __ytApiPromise;
-  __ytApiPromise = new Promise((resolve) => {
-    const finish = () => { if (window.YT && window.YT.Player) resolve(window.YT); };
-    const prev = window.onYouTubeIframeAPIReady;
-    window.onYouTubeIframeAPIReady = () => {
-      if (typeof prev === 'function') { try { prev(); } catch (e) {} }
-      finish();
-    };
-    if (!document.getElementById('youtube-iframe-api')) {
-      const tag = document.createElement('script');
-      tag.id = 'youtube-iframe-api';
-      tag.src = 'https://www.youtube.com/iframe_api';
-      const firstScriptTag = document.getElementsByTagName('script')[0];
-      if (firstScriptTag && firstScriptTag.parentNode) {
-        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-      } else {
-        document.head.appendChild(tag);
-      }
-    }
-    const poll = setInterval(() => {
-      if (window.YT && window.YT.Player) { clearInterval(poll); resolve(window.YT); }
-    }, 100);
-  });
-  return __ytApiPromise;
-}
 
 export default function VideoTranscript({ videoId, videoUrl, iframeId, onPauseVideo, onSeekVideo }) {
   const [expanded, setExpanded] = useState(false);
@@ -81,13 +32,6 @@ export default function VideoTranscript({ videoId, videoUrl, iframeId, onPauseVi
   const queryClient = useQueryClient();
   const playerRef = useRef(null);
   const timeTrackerRef = useRef(null);
-  // Mirror of activeSegmentIdx so the time-tracking interval can compare without
-  // needing activeSegmentIdx in its dep array (avoids interval churn — bug #34).
-  const activeSegmentIdxRef = useRef(null);
-
-  useEffect(() => {
-    activeSegmentIdxRef.current = activeSegmentIdx;
-  }, [activeSegmentIdx]);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -102,13 +46,10 @@ export default function VideoTranscript({ videoId, videoUrl, iframeId, onPauseVi
   // Initialize YouTube Player API
   useEffect(() => {
     if (!iframeId) return;
-
-    let cancelled = false;
-
+    
     const initPlayer = () => {
-      if (cancelled) return;
       if (!window.YT || !window.YT.Player) return;
-
+      
       try {
         playerRef.current = new window.YT.Player(iframeId, {
           events: {
@@ -125,10 +66,15 @@ export default function VideoTranscript({ videoId, videoUrl, iframeId, onPauseVi
       }
     };
 
-    // Shared, memoized loader avoids stomping other components' onReady (bug #33).
-    loadYouTubeApi().then(() => initPlayer());
-
-    return () => { cancelled = true; };
+    if (!window.YT) {
+      const tag = document.createElement('script');
+      tag.src = 'https://www.youtube.com/iframe_api';
+      window.onYouTubeIframeAPIReady = initPlayer;
+      const firstScriptTag = document.getElementsByTagName('script')[0];
+      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    } else {
+      initPlayer();
+    }
   }, [iframeId]);
 
   const addToBackpackMutation = useMutation({
@@ -196,14 +142,20 @@ export default function VideoTranscript({ videoId, videoUrl, iframeId, onPauseVi
         throw new Error("Invalid YouTube URL");
       }
 
-      // OAuth-free transcript path (bug #23). The old youtubeCaptionsList/Download
-      // flow required a YouTube OAuth token that the UI never obtains, so it always
-      // 401'd. youtubeTranscript needs no auth and is what MediaLibrary already uses.
-      const result = await base44.functions.invoke('youtubeTranscript', { videoId: ytId });
-      const segments = result?.data?.transcript;
+      // Call backend function to list available captions
+      const listResult = await base44.functions.invoke('youtubeCaptionsList', {
+        youtube_url: videoUrl,
+        preferred_langs: ['he', 'iw', 'en']
+      });
 
-      if (!segments || segments.length === 0) {
-        // No transcript available - update status and allow manual input
+      if (!listResult || listResult.error) {
+        throw new Error(listResult?.error || 'Failed to fetch caption tracks');
+      }
+
+      const { video_id, tracks } = listResult;
+
+      if (!tracks || tracks.length === 0) {
+        // No captions available - update status and allow manual input
         await base44.entities.Video.update(id, {
           transcript_status: "failed",
           transcript_source: "unavailable",
@@ -220,18 +172,29 @@ export default function VideoTranscript({ videoId, videoUrl, iframeId, onPauseVi
         return;
       }
 
-      // Map [{ text, start, duration }] into this component's tab-separated storage
-      // format: transliteration \t english \t hebrew \t start (raw text → 1st column).
-      const transcript_text = segments
-        .map(s => `${s.text}\t\t\t${s.start}`)
-        .join('\n');
+      // Use the first available track (already sorted by preference)
+      const selectedTrack = tracks[0];
+
+      // Download the caption track
+      const downloadResult = await base44.functions.invoke('youtubeCaptionsDownload', {
+        video_id: ytId,
+        track_id: selectedTrack.track_id
+      });
+
+      if (!downloadResult || downloadResult.error) {
+        throw new Error(downloadResult?.error || 'Failed to download captions');
+      }
+
+      const { transcript_text, format } = downloadResult;
 
       // Save to database
       await base44.entities.Video.update(id, {
         transcript_text,
         transcript_status: "complete",
         transcript_source: "youtube_captions",
+        language: selectedTrack.language,
         youtube_video_id: ytId,
+        caption_track_id: selectedTrack.track_id,
         transcript_generated_at: new Date().toISOString()
       });
 
@@ -240,9 +203,9 @@ export default function VideoTranscript({ videoId, videoUrl, iframeId, onPauseVi
         transcript_text,
         transcript_status: "complete",
         transcript_source: "youtube_captions",
-        youtube_video_id: ytId
+        language: selectedTrack.language
       }));
-
+      
       toast.success("Transcript loaded from YouTube captions!");
 
     } catch (e) {
@@ -328,15 +291,10 @@ export default function VideoTranscript({ videoId, videoUrl, iframeId, onPauseVi
 
     setGeneratingTranslations(true);
     toast.info("Processing transcript...");
-
-    // Target language of this video (Hebrew if unknown → unchanged behavior).
-    const lang = normalizeVideoLang(video?.language);
-    const langLabel = languageLabel(lang);
-    const nikudHint = usesNikud(lang) ? 'add nikud, ' : '';
-
+    
     try {
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Process these ${blocksWithEnd.length} ${langLabel} segments. For each: ${nikudHint}transliteration, English translation.
+        prompt: `Process these ${blocksWithEnd.length} Hebrew segments. For each: add nikud, transliteration, English translation.
 
 ${blocksWithEnd.map((b, i) => `${i + 1}|${b.hebrew}`).join('\n')}
 
@@ -398,24 +356,18 @@ Return JSON with segments array, each: hebrew_nikud, transliteration, translatio
 
   const generateTranscript = async () => {
     if (!hebrewText.trim()) {
-      toast.error(`Please paste ${languageLabel(normalizeVideoLang(video?.language))} text`);
+      toast.error("Please paste Hebrew text");
       return;
     }
-
-    // Target language of this video (Hebrew if unknown → unchanged behavior).
-    const lang = normalizeVideoLang(video?.language);
-    const langLabel = languageLabel(lang);
-    const nikudHint = usesNikud(lang) ? ', add nikud,' : ',';
-    const nativeKeyHint = usesNikud(lang) ? 'hebrew (with nikud)' : `hebrew (${langLabel} native script)`;
 
     setGeneratingTranslations(true);
     try {
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Split this ${langLabel} text into sentences${nikudHint} transliteration and English translation for each.
+        prompt: `Split this Hebrew text into sentences, add nikud, transliteration and English translation for each.
 
 ${hebrewText}
 
-Return JSON sentences array, each: transliteration, english, ${nativeKeyHint}.`,
+Return JSON sentences array, each: transliteration, english, hebrew (with nikud).`,
         response_json_schema: {
           type: "object",
           properties: {
@@ -439,14 +391,11 @@ Return JSON sentences array, each: transliteration, english, ${nativeKeyHint}.`,
         `${s.transliteration}\t${s.english}\t${s.hebrew}`
       ).join('\n');
 
-      // Preserve the video's existing language if known; default to "he" so the
-      // legacy "paste Hebrew text" flow is unchanged when no language is set.
-      const savedLang = video?.language || "he";
       await base44.entities.Video.update(video.id, {
         transcript_text: formatted,
         transcript_status: "complete",
         transcript_source: "manual",
-        language: savedLang,
+        language: "he",
         transcript_generated_at: new Date().toISOString()
       });
 
@@ -455,7 +404,7 @@ Return JSON sentences array, each: transliteration, english, ${nativeKeyHint}.`,
         transcript_text: formatted,
         transcript_status: "complete",
         transcript_source: "manual",
-        language: savedLang
+        language: "he"
       }));
 
       setShowHebrewInput(false);
@@ -504,21 +453,17 @@ Return JSON sentences array, each: transliteration, english, ${nativeKeyHint}.`,
     const lines = video.transcript_text.split('\n').filter(l => l && l.trim());
     const parts = lines[blockIdx].split('\t');
     
-    // Target language of this video (Hebrew if unknown → unchanged behavior).
-    const lang = normalizeVideoLang(video?.language);
-    const langLabel = languageLabel(lang);
-
     try {
       toast.info("Updating translations...");
-
+      
       // Use AI to regenerate all fields based on what was edited
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Given this ${langLabel} sentence, provide the transliteration and English translation:
+        prompt: `Given this Hebrew sentence, provide the transliteration and English translation:
 
-${langLabel}: ${editValues.hebrew}
+Hebrew: ${editValues.hebrew}
 
 Provide:
-1. transliteration: Phonetic ${langLabel} using Latin characters
+1. transliteration: Phonetic Hebrew using Latin characters
 2. translation: English translation`,
         response_json_schema: {
           type: "object",
@@ -642,8 +587,7 @@ Provide:
           }
         }
         
-        if (newActiveIdx !== -1 && newActiveIdx !== activeSegmentIdxRef.current) {
-          activeSegmentIdxRef.current = newActiveIdx;
+        if (newActiveIdx !== -1 && newActiveIdx !== activeSegmentIdx) {
           setActiveSegmentIdx(newActiveIdx);
         }
       } catch (e) {
@@ -658,7 +602,7 @@ Provide:
         clearInterval(timeTrackerRef.current);
       }
     };
-  }, [expanded, video?.transcript_text]);
+  }, [expanded, video?.transcript_text, activeSegmentIdx]);
 
   const deleteTranscript = async () => {
     if (!confirm('Delete transcript?\n\nThis will remove the current transcript from this video.')) return;
@@ -687,11 +631,6 @@ Provide:
   };
 
   if (!video) return null;
-
-  // Target language of this video for display gating (RTL, native-script input).
-  // Hebrew (incl. "he"/"iw") keeps its current RTL behavior; Latin languages go LTR.
-  const lang = normalizeVideoLang(video.language);
-  const isRtl = isRTLLanguage(lang);
 
   const isProcessing = video.transcript_status === "processing" || transcribing;
   const hasTranscript = video.transcript_status === "complete" && video.transcript_text;
@@ -845,8 +784,8 @@ Provide:
                               value={editValues.hebrew}
                               onChange={(e) => setEditValues({...editValues, hebrew: e.target.value})}
                               className="w-full px-2 py-1 bg-white/10 border border-white/20 rounded text-cyan-400 text-xl font-bold"
-                              placeholder={languageLabel(lang)}
-                              dir={isRtl ? 'rtl' : 'ltr'}
+                              placeholder="Hebrew"
+                              dir="rtl"
                             />
                             <div className="flex gap-2">
                               <button
@@ -1003,14 +942,14 @@ Provide:
             className="mt-3 bg-green-500/10 border border-green-500/30 rounded-xl p-4"
           >
             <p className="text-white/60 text-sm mb-2">
-              ✨ Paste {languageLabel(lang)} text - I'll auto-generate transliteration & translation:
+              ✨ Paste Hebrew text - I'll auto-generate transliteration & translation:
             </p>
             <Textarea
               value={hebrewText}
               onChange={(e) => setHebrewText(e.target.value)}
-              placeholder={isRtl ? "שָׁלוֹם לְכֻלָּם!&#10;הַיּוֹם נִלְמַד עִבְרִית.&#10;אֲנִי אוֹהֵב לִלְמוֹד שְׂפוֹת." : `Paste ${languageLabel(lang)} text here, one sentence per line...`}
+              placeholder="שָׁלוֹם לְכֻלָּם!&#10;הַיּוֹם נִלְמַד עִבְרִית.&#10;אֲנִי אוֹהֵב לִלְמוֹד שְׂפוֹת."
               className="bg-white/5 border-white/20 text-white min-h-[200px] mb-3"
-              dir={isRtl ? 'rtl' : 'ltr'}
+              dir="rtl"
             />
             <div className="flex gap-2">
               <Button 
@@ -1049,14 +988,14 @@ Provide:
             className="mt-3 bg-white/5 border border-white/10 rounded-xl p-4"
           >
             <p className="text-white/60 text-sm mb-2">
-              Paste {languageLabel(lang)} transcript with timestamps (format: [MM:SS] {languageLabel(lang)} text on same line):
+              Paste Hebrew transcript with timestamps (format: [MM:SS] Hebrew text on same line):
             </p>
             <Textarea
               value={manualTranscript}
               onChange={(e) => setManualTranscript(e.target.value)}
-              placeholder={isRtl ? "[00:00] בוקר טוב מה שלומכם היום נעשה סרטון&#10;[00:06] למתחילים&#10;[00:08] לנשים שלא יודעים עברית" : `[00:00] ${languageLabel(lang)} text on this line&#10;[00:06] next line&#10;[00:08] and so on`}
+              placeholder="[00:00] בוקר טוב מה שלומכם היום נעשה סרטון&#10;[00:06] למתחילים&#10;[00:08] לנשים שלא יודעים עברית"
               className="bg-white/5 border-white/20 text-white min-h-[200px] mb-3"
-              dir={isRtl ? 'rtl' : 'ltr'}
+              dir="rtl"
             />
             <div className="flex gap-2">
               <Button 

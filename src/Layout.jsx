@@ -55,10 +55,10 @@ export default function Layout({ children, currentPageName }) {
     queryKey: ['userCoins', currentUser?.email],
     queryFn: async () => {
       if (!currentUser?.email) return { coins: 0 };
-      const coins = await base44.entities.UserCoins.filter({ created_by: currentUser.email });
+      const coins = await base44.entities.UserCoins.list();
       return coins[0] || { coins: 0 };
     },
-    enabled: isAuthChecked && !!currentUser?.email,
+    enabled: isAuthChecked && !!currentUser,
   });
 
   // Inactivity detection - reset session if no activity for 2 minutes
@@ -160,7 +160,7 @@ export default function Layout({ children, currentPageName }) {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: '#3b1f6e' }}>
+    <div className="min-h-screen" style={{ background: "#0B0F1A" }}>
       {isDev && isAuthChecked && (
         <div className="fixed top-0 left-0 z-[9999] bg-black/90 text-white text-xs px-3 py-1 font-mono">
           user: {currentUser?.id?.slice(0, 8) || 'none'} | 

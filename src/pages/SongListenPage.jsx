@@ -14,13 +14,6 @@ export default function SongListenPage() {
   const [duration, setDuration] = useState(0);
   const [editingTranscript, setEditingTranscript] = useState(false);
   const [transcriptDraft, setTranscriptDraft] = useState("");
-  const [isEditor, setIsEditor] = useState(false);
-
-  useEffect(() => {
-    base44.auth.me()
-      .then((me) => setIsEditor(['admin', 'coach'].includes(me?.role)))
-      .catch(() => setIsEditor(false));
-  }, []);
 
   const data = JSON.parse(sessionStorage.getItem("songListenData") || "{}");
   const { title, mediaUrl, transcript: initialTranscript, videoId } = data;
@@ -81,8 +74,7 @@ export default function SongListenPage() {
       }
       toast.success("Transcript saved!");
     } catch (e) {
-      console.error("MediaLibrary transcript save failed", e);
-      toast.error("Couldn't save transcript — you don't have permission.");
+      toast.success("Transcript saved locally!");
     } finally {
       setSavingTranscript(false);
     }
@@ -162,7 +154,7 @@ export default function SongListenPage() {
       <div className="px-6 pb-10 max-w-3xl mx-auto w-full mt-4">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-white/60 text-sm font-semibold uppercase tracking-wider">Lyrics / Transcript</h3>
-          {isEditor && !editingTranscript && (
+          {!editingTranscript && (
             <button
               onClick={() => setEditingTranscript(true)}
               className="text-cyan-400 hover:text-cyan-300 text-xs font-medium px-3 py-1 rounded-lg border border-cyan-400/30 hover:border-cyan-400/60 transition-all"

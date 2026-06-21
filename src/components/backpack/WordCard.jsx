@@ -1,33 +1,26 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Loader2, RefreshCw, Plus, Check, X, Pencil } from "lucide-react";
+import { Loader2, RefreshCw, Plus, Pencil, Check, X } from "lucide-react";
 import EditableWord from "../learning/EditableWord";
-import { toast } from "sonner";
-import { isRTLLanguage, isRTLText, languageLabel, needsTransliteration } from "@/lib/language";
-import { mnemonicImagePrompt } from "@/lib/imageStyle";
 
-function SentenceWords({ words, onAddToBackpack, showHebrew = true, showTransliteration = true, lang = 'hebrew' }) {
-  // Native-script line direction follows the actual generated text (RTL for Hebrew/Arabic, LTR for Latin).
-  const nativeIsRTL = isRTLText((words || []).map(w => w.hebrew || '').join(' '));
+function SentenceWords({ words, onAddToBackpack, showHebrew = true, showTransliteration = true }) {
   const [activeIndex, setActiveIndex] = useState(null);
-  const [editingWord, setEditingWord] = useState('');
+  const [editingIndex, setEditingIndex] = useState(null);
   const [editingMeaning, setEditingMeaning] = useState('');
 
   if (!words?.length) return null;
 
   const handleWordClick = (e, i) => {
     e.stopPropagation();
-    if (activeIndex === i) { setActiveIndex(null); return; }
-    setActiveIndex(i);
-    setEditingWord(words[i].word || '');
-    setEditingMeaning(words[i].meaning || '');
+    setActiveIndex(activeIndex === i ? null : i);
+    setEditingIndex(null);
   };
 
   return (
     <div className="space-y-0.5 w-full">
-      {/* Native-script line — RTL for Hebrew/Arabic, LTR for Latin scripts, centered */}
+      {/* Hebrew line — RTL, centered */}
       {showHebrew && (
-        <p className="text-[11px] text-cyan-700 font-semibold text-center leading-snug" dir={nativeIsRTL ? "rtl" : "ltr"}>
+        <p className="text-[11px] text-cyan-700 font-semibold text-center leading-snug" dir="rtl">
           {words.map((w, i) => (
             <span
               key={i}
@@ -41,14 +34,14 @@ function SentenceWords({ words, onAddToBackpack, showHebrew = true, showTranslit
         </p>
       )}
 
-      {/* Transliteration line — only for languages that need it (Hebrew/Arabic); Latin words are already their own transliteration */}
-      {showTransliteration && needsTransliteration(lang) && (
-        <p className="text-[10px] text-stone-500 text-center leading-snug flex flex-nowrap justify-center gap-x-0.5 overflow-hidden">
+      {/* Transliteration line — centered */}
+      {showTransliteration && (
+        <p className="text-[10px] text-stone-500 text-center leading-snug flex flex-wrap justify-center gap-x-1">
           {words.map((w, i) => (
             <span
               key={i}
               onClick={(e) => handleWordClick(e, i)}
-              className={`cursor-pointer rounded px-0.5 transition-all whitespace-nowrap ${activeIndex === i ? 'bg-cyan-100 text-cyan-700' : 'hover:bg-stone-100'}`}
+              className={`cursor-pointer rounded px-0.5 transition-all ${activeIndex === i ? 'bg-cyan-100 text-cyan-700' : 'hover:bg-stone-100'}`}
             >
               {w.word || ''}
             </span>
@@ -56,18 +49,46 @@ function SentenceWords({ words, onAddToBackpack, showHebrew = true, showTranslit
         </p>
       )}
 
-      {/* Active word action popup — one tap to add */}
+      {/* Active word action popup */}
       {activeIndex !== null && (
         <div className="flex items-center justify-center gap-1 py-1">
-          <span className="flex items-center gap-2 bg-cyan-50 border border-cyan-200 rounded-lg px-2 py-1">
-            <span className="text-[11px] font-semibold text-cyan-700">{words[activeIndex].word}</span>
-            {words[activeIndex].meaning && <span className="text-[10px] text-stone-500">= {words[activeIndex].meaning}</span>}
-            <button
-              onClick={() => { onAddToBackpack(words[activeIndex].word, words[activeIndex].meaning, words[activeIndex].hebrew); setActiveIndex(null); }}
-              className="flex items-center gap-0.5 bg-green-500 text-white rounded px-1.5 py-0.5 text-[10px] font-bold hover:bg-green-600"
-            ><Plus className="w-3 h-3" /> Add</button>
-            <button onClick={() => setActiveIndex(null)} className="text-stone-300 hover:text-stone-500"><X className="w-3 h-3" /></button>
-          </span>
+          {editingIndex === activeIndex ? (
+            <span className="flex items-center gap-1 bg-cyan-50 border border-cyan-200 rounded px-1.5 py-0.5">
+              <span className="text-[10px] font-semibold text-cyan-700 border-r border-cyan-200 pr-1">{words[activeIndex].word}</span>
+              <input
+                autoFocus
+                value={editingMeaning}
+                onChange={e => setEditingMeaning(e.target.value)}
+                placeholder="meaning..."
+                className="text-[10px] text-stone-600 w-20 outline-none bg-transparent"
+              />
+              <button
+                onClick={() => { onAddToBackpack(words[activeIndex].word, editingMeaning); setActiveIndex(null); setEditingIndex(null); }}
+                className="text-green-500 hover:text-green-700"
+              ><Plus className="w-3 h-3" /></button>
+              <button onClick={() => setEditingIndex(null)} className="text-stone-300 hover:text-stone-500"><X className="w-3 h-3" /></button>
+            </span>
+          ) : (
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] font-semibold text-cyan-700 bg-cyan-50 border border-cyan-200 rounded px-1.5 py-0.5">
+                {words[activeIndex].word}
+              </span>
+              <button
+                onClick={(e) => { e.stopPropagation(); setEditingIndex(activeIndex); setEditingMeaning(words[activeIndex].meaning || ''); }}
+                className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-stone-100 hover:bg-stone-200 text-stone-500 transition-all"
+                title="Edit meaning"
+              >
+                <Pencil className="w-3 h-3" />
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); onAddToBackpack(words[activeIndex].word, words[activeIndex].meaning || ''); setActiveIndex(null); }}
+                className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-cyan-100 hover:bg-cyan-200 text-cyan-700 transition-all"
+                title="Add to backpack"
+              >
+                🎒
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -76,14 +97,9 @@ function SentenceWords({ words, onAddToBackpack, showHebrew = true, showTranslit
 
 export default function WordCard({
   word,
-  language,
   showAllEnglish,
-  showHebrew: showHebrewProp = true,
-  showTransliteration: showTransliterationProp = true,
-  onScriptToggle,
-  onEnglishToggle,
-  onHebrewToggle,
-  onTranslitToggle,
+  showHebrew = true,
+  showTransliteration = true,
   isContentEditable,
   mnemonicExplanations,
   setMnemonicExplanations,
@@ -91,7 +107,6 @@ export default function WordCard({
   generatingSentence,
   fetchingTranslation,
   suggestingMnemonic,
-  mnemonicQueue = new Set(),
   isAdmin,
   updateWordMutation,
   handleRateWord,
@@ -101,36 +116,16 @@ export default function WordCard({
   deleteWordMutation,
   handleAddWordFromSentence,
   generateCardSentence,
-  sessionTitleMap = {},
 }) {
   const [revealed, setRevealed] = useState(false);
   const [regeneratingImage, setRegeneratingImage] = useState(false);
-  const [imgFailed, setImgFailed] = useState(false);
-  const [showCustomMnemonic, setShowCustomMnemonic] = useState(false);
-  const [customDesc, setCustomDesc] = useState("");
-  const inputRef = useRef(null);
-
-  const isGeneratingImage = suggestingMnemonic === word.id || mnemonicQueue.has(word.id);
-
-  const showHebrew = showHebrewProp ?? true;
-  const showTransliteration = showTransliterationProp ?? true;
-
-  // Target language for this card (drives native-script direction + transliteration/script toggles).
-  // Prefer an explicit language prop (e.g. passed from a session view), then the word's own language, then Hebrew.
-  const lang = language || word.language || 'hebrew';
-  // Render the native word RTL only for RTL languages / actual RTL text — Latin renders LTR.
-  const nativeWordRTL = isRTLLanguage(lang) || isRTLText(word.word);
-
-  // Synthetic/session cards (e.g. id "session_0") are not persisted rows — guard
-  // against attempting a real delete on them.
-  const isRealWordId = word.id != null && !String(word.id).startsWith('session_');
 
   const regenerateImageFromDescription = async (description) => {
     setRegeneratingImage(true);
     try {
       const { base44 } = await import("@/api/base44Client");
       const result = await base44.integrations.Core.GenerateImage({
-        prompt: mnemonicImagePrompt(description)
+        prompt: `A colorful cartoon illustration of: ${description}. Vibrant colors, fun and memorable, educational style. ABSOLUTELY NO TEXT, NO LETTERS, NO WORDS anywhere in the image.`
       });
       updateWordMutation.mutate({ id: word.id, data: { image_url: result.url } });
     } catch (e) {
@@ -139,50 +134,12 @@ export default function WordCard({
     setRegeneratingImage(false);
   };
 
-  const generateCustomMnemonic = async () => {
-    const description = customDesc.trim();
-    if (!description) return;
-    setRegeneratingImage(true);
-    setShowCustomMnemonic(false);
-    try {
-      const { base44 } = await import("@/api/base44Client");
-      const result = await base44.integrations.Core.GenerateImage({
-        prompt: mnemonicImagePrompt(description)
-      });
-      // For approved or shared cards, create a personal copy instead of editing the
-      // original (a non-owner edit would otherwise silently no-op).
-      if (word.approved || word._shared) {
-        await base44.entities.Word.create({
-          word: word.word,
-          translation: word.translation,
-          phonetic: word.phonetic,
-          category: 'wordbank',
-          language: word.language || lang,
-          times_practiced: word.times_practiced || 0,
-          mastered: word.mastered || false,
-          image_url: result.url,
-          mnemonic_explanation: description,
-        });
-        toast.success("Saved to your personal cards");
-      } else {
-        await updateWordMutation.mutateAsync({ id: word.id, data: { image_url: result.url, mnemonic_explanation: description } });
-        toast.success("Mnemonic saved!");
-      }
-      // Refresh the caption immediately so it doesn't stay stale.
-      if (setMnemonicExplanations) {
-        setMnemonicExplanations(prev => ({ ...prev, [word.id]: description }));
-      }
-      setCustomDesc("");
-      setImgFailed(false);
-    } catch (e) {
-      console.error("Failed to generate custom mnemonic", e);
-      toast.error("Failed to generate mnemonic");
-    }
-    setRegeneratingImage(false);
-  };
+  useEffect(() => { setRevealed(false); }, [showAllEnglish]);
 
-  // click on card toggles English reveal
-  const showingEnglish = showAllEnglish || revealed;
+  // showAllEnglish=false → show Hebrew, click reveals English
+  // showAllEnglish=true  → show English, click reveals Hebrew
+  const showingHebrew = showAllEnglish ? revealed : !revealed;
+  const showingEnglish = showAllEnglish ? !revealed : revealed;
 
   return (
     <motion.div
@@ -191,15 +148,6 @@ export default function WordCard({
       animate={{ opacity: 1, scale: 1 }}
       className="bg-white/70 border border-stone-200 rounded-lg overflow-hidden w-48 flex flex-col"
     >
-      {/* Source content label — top of card */}
-      {word.example_sentence && (
-        <div className="px-2 py-1 flex items-center justify-center border-b border-stone-100 bg-stone-50">
-          <span className="text-[10px] text-stone-400 italic truncate">
-            📺 {sessionTitleMap[word.example_sentence] || word.example_sentence}
-          </span>
-        </div>
-      )}
-
       {word.approved && (
         <div className="flex items-center gap-1 px-2 py-0.5 bg-green-100 border-b border-green-200">
           <span className="text-green-600 text-[10px] font-semibold">✅ Approved card</span>
@@ -211,90 +159,43 @@ export default function WordCard({
         </div>
       )}
 
-      {/* Large mnemonic image — always visible */}
+      {/* Large mnemonic image — click to reveal */}
       <div
-        className="relative cursor-pointer select-none bg-stone-100 overflow-hidden"
-        style={{ height: '160px', minHeight: '160px' }}
+        className="h-40 bg-stone-100 flex items-center justify-center overflow-hidden relative cursor-pointer select-none"
         onClick={() => setRevealed(r => !r)}
       >
-        {/* Top-right controls: EN, Translit, Hebrew toggles */}
-        <div className="absolute top-1.5 right-1.5 z-10 flex gap-1">
-          <button
-            onClick={(e) => { e.stopPropagation(); if (onEnglishToggle) onEnglishToggle(); }}
-            className={`px-1.5 py-0.5 rounded text-[9px] font-bold transition-all leading-none border ${
-              showAllEnglish ? 'bg-stone-700 text-white border-stone-600' : 'bg-white/80 border-stone-200 text-stone-500 hover:bg-white hover:text-stone-700'
-            }`}
-            title="Toggle English"
-          >
-            EN
-          </button>
-          {/* Native-script toggle — only for languages with a distinct native script (Hebrew/Arabic).
-              Latin-script languages have no separate native script, so the toggle is hidden. */}
-          {needsTransliteration(lang) && (
-            <button
-              onClick={(e) => { e.stopPropagation(); if (onHebrewToggle) onHebrewToggle(); }}
-              className={`px-1.5 py-0.5 rounded text-[9px] font-bold transition-all leading-none border ${
-                showHebrew ? 'bg-stone-700 text-white border-stone-600' : 'bg-white/80 border-stone-200 text-stone-500 hover:bg-white hover:text-stone-700'
-              }`}
-              title={`Toggle ${languageLabel(lang)}`}
-            >
-              {String(lang).toLowerCase() === 'arabic' ? 'ع' : 'א'}
-            </button>
-          )}
-        </div>
-        {word.image_url && !imgFailed ? (
-          <img
-            src={word.image_url}
-            alt={word.phonetic}
-            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', position: 'absolute', top: 0, left: 0 }}
-            onError={() => setImgFailed(true)}
-          />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-cyan-400/10 via-purple-400/10 to-pink-400/10 flex flex-col items-center justify-center text-center px-4 gap-2">
-            {(isGeneratingImage || regeneratingImage) ? (
-              <>
-                <Loader2 className="w-6 h-6 animate-spin text-purple-400" />
-                <span className="text-[10px] text-stone-400">Generating image...</span>
-              </>
-            ) : (
-              <>
-                <p className="text-cyan-600 font-bold text-xl" dir={nativeWordRTL ? "rtl" : "ltr"}>{word.word}</p>
-                <p className="text-stone-500 text-sm">{word.phonetic}</p>
-                <button
-                  onClick={(e) => { e.stopPropagation(); setImgFailed(false); suggestMnemonicForWord(word); }}
-                  className="text-[9px] text-purple-400 underline mt-1"
-                >
-                  🎨 Regenerate
-                </button>
-              </>
-            )}
+        {regeneratingImage && (
+          <div className="absolute inset-0 z-10 bg-white/70 flex flex-col items-center justify-center gap-1">
+            <Loader2 className="w-5 h-5 animate-spin text-purple-400" />
+            <span className="text-[10px] text-stone-400">Generating...</span>
           </div>
         )}
-
+        {word.image_url ? (
+          <img src={word.image_url} alt={word.phonetic} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-cyan-400/20 via-purple-400/20 to-pink-400/20 flex flex-col items-center justify-center text-center px-4">
+            <p className="text-cyan-600 font-bold text-xl mb-2" dir="rtl">{word.word}</p>
+            <p className="text-stone-500 text-sm">{word.phonetic}</p>
+          </div>
+        )}
+        {/* Reveal overlay */}
+        {!revealed && (
+          <div className="absolute inset-0 flex items-end justify-center pb-2 pointer-events-none">
+            <span className="bg-black/40 text-white text-[10px] px-2 py-0.5 rounded-full">tap to reveal</span>
+          </div>
+        )}
       </div>
 
-      {/* Word info — click to toggle English reveal */}
-      <div className="p-3 flex-1 flex flex-col gap-0.5 cursor-pointer select-none" onClick={() => setRevealed(r => !r)}>
-        {showHebrew && (
-          <p className="text-cyan-600 font-bold text-base text-center" dir={nativeWordRTL ? "rtl" : "ltr"}>
+      {/* Word info — also clickable to reveal */}
+      <div className="p-3 flex-1 flex flex-col cursor-pointer select-none" onClick={() => setRevealed(r => !r)}>
+        {showingHebrew && showHebrew && (
+          <p className="text-cyan-600 font-bold text-base text-center" dir="rtl">
             <EditableWord
               text={word.word}
-              language={nativeWordRTL ? "he" : "en"}
+              language="he"
               editable={isContentEditable(word)}
               onSave={(v) => updateWordMutation.mutate({ id: word.id, data: { word: v } })}
               className="text-cyan-600 font-bold text-base"
-              onClick={(e) => e.stopPropagation()}
-            />
-          </p>
-        )}
-
-        {showTransliteration && (
-          <p className="text-stone-500 text-sm text-center">
-            <EditableWord
-              text={word.phonetic || word.word}
-              editable={isContentEditable(word)}
-              onSave={(v) => updateWordMutation.mutate({ id: word.id, data: { phonetic: v } })}
-              className="text-stone-500 text-sm"
               onClick={(e) => e.stopPropagation()}
             />
           </p>
@@ -304,7 +205,7 @@ export default function WordCard({
           <p className="text-stone-700 font-semibold text-base text-center">
             <EditableWord
               text={word.translation || "(no translation)"}
-              editable={isContentEditable(word)}
+              editable={true}
               onSave={(v) => updateWordMutation.mutate({ id: word.id, data: { translation: v } })}
               className="text-stone-700 font-semibold text-base"
               onClick={(e) => e.stopPropagation()}
@@ -312,38 +213,6 @@ export default function WordCard({
           </p>
         )}
       </div>
-
-      {/* Mnemonic explanation below image */}
-      {(mnemonicExplanations[word.id] || word.mnemonic_explanation) && (
-        <div className="px-3 py-1.5 bg-purple-50 border-t border-purple-100">
-          <p className="text-[10px] text-purple-600 italic text-center leading-snug">
-            💡 {mnemonicExplanations[word.id] || word.mnemonic_explanation}
-          </p>
-        </div>
-      )}
-
-      {/* Custom mnemonic designer */}
-      {showCustomMnemonic ? (
-        <div className="px-2 pb-1 flex gap-1 items-center" onClick={e => e.stopPropagation()}>
-          <input
-            ref={inputRef}
-            autoFocus
-            value={customDesc}
-            onChange={e => setCustomDesc(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') generateCustomMnemonic(); if (e.key === 'Escape') setShowCustomMnemonic(false); }}
-            placeholder="Describe a scene..."
-            className="flex-1 text-[10px] px-2 py-1 rounded border border-purple-200 bg-purple-50 text-stone-700 outline-none min-w-0"
-          />
-          <button
-            onClick={generateCustomMnemonic}
-            disabled={!customDesc.trim()}
-            className="px-1.5 py-1 bg-purple-500 text-white rounded text-[9px] font-bold hover:bg-purple-600 disabled:opacity-40 flex-shrink-0"
-          >✓</button>
-          <button onClick={() => setShowCustomMnemonic(false)} className="text-stone-300 hover:text-stone-500 flex-shrink-0"><X className="w-3 h-3" /></button>
-        </div>
-      ) : null}
-
-
 
       {/* Verb infinitive badge */}
       {(word.is_verb || /^l/i.test(word.phonetic || '')) && (
@@ -354,7 +223,21 @@ export default function WordCard({
         </div>
       )}
 
-
+      {/* Mnemonic explanation */}
+      {(mnemonicExplanations[word.id] || word.mnemonic_explanation) && (
+        <p className="text-[10px] text-center px-2 pb-1 italic leading-tight truncate" style={{ color: '#6b7c5a' }}>
+          💡 <EditableWord
+            text={mnemonicExplanations[word.id] || word.mnemonic_explanation}
+            editable={true}
+            className="text-[10px] italic"
+            onSave={(val) => {
+              setMnemonicExplanations(prev => ({ ...prev, [word.id]: val }));
+              updateWordMutation.mutate({ id: word.id, data: { mnemonic_explanation: val } });
+              regenerateImageFromDescription(val);
+            }}
+          />
+        </p>
+      )}
 
       {/* Example sentence */}
       <div className="px-2 pb-2" onClick={e => e.stopPropagation()}>
@@ -366,14 +249,21 @@ export default function WordCard({
             </div>
           ) : cardSentences[word.id] ? (
             <>
-              {/* Clickable words — shows Hebrew + transliteration */}
-              <SentenceWords
-                words={cardSentences[word.id].words}
-                onAddToBackpack={(w, meaning, hebrew) => handleAddWordFromSentence(w, meaning, hebrew)}
-                showHebrew={showHebrew}
-                showTransliteration={showTransliteration}
-                lang={lang}
-              />
+              {/* Hebrew sentence */}
+              {showHebrew && cardSentences[word.id].hebrew_sentence && (
+                <p className="text-[11px] text-cyan-700 font-semibold text-center leading-snug" dir="rtl">
+                  {cardSentences[word.id].hebrew_sentence}
+                </p>
+              )}
+              {/* Transliteration — clickable words */}
+              {showTransliteration && (
+                <SentenceWords
+                  words={cardSentences[word.id].words}
+                  onAddToBackpack={handleAddWordFromSentence}
+                  showHebrew={false}
+                  showTransliteration={true}
+                />
+              )}
               {/* English + refresh */}
               <div className="flex items-center justify-between gap-1 mt-0.5">
                 <p className="text-[10px] text-stone-400 italic flex-1 text-center">{cardSentences[word.id].english}</p>
@@ -396,13 +286,7 @@ export default function WordCard({
           {[{ value: 1, label: "1" }, { value: 2, label: "2" }, { value: 3, label: "3" }, { value: 5, label: "M" }].map(({ value, label }) => (
             <button
               key={value}
-              onClick={(e) => handleRateWord(
-                word.id,
-                // Legacy preservation: a word already at level 4 should not be demoted to 3
-                // when the "3" button is tapped — keep the existing level-4 value.
-                (value === 3 && word.times_practiced === 4) ? 4 : value,
-                e
-              )}
+              onClick={(e) => handleRateWord(word.id, value, e)}
               className={`flex-1 h-6 rounded text-xs font-bold transition-all ${
                 word.times_practiced === value || (value === 3 && word.times_practiced === 4)
                   ? value === 5 ? 'bg-green-600 text-white' : 'bg-stone-600 text-white'
@@ -421,13 +305,6 @@ export default function WordCard({
         >
           {suggestingMnemonic === word.id ? <Loader2 className="w-3 h-3 animate-spin text-purple-500" /> : '🎨'}
         </button>
-        <button
-          onClick={(e) => { e.stopPropagation(); setShowCustomMnemonic(v => !v); setCustomDesc(""); }}
-          className={`w-6 h-6 rounded flex items-center justify-center transition-all ${showCustomMnemonic ? 'bg-purple-200 text-purple-700' : 'hover:bg-purple-500/20 text-stone-400'}`}
-          title="Design your own mnemonic"
-        >
-          <Pencil className="w-3 h-3" />
-        </button>
         {isAdmin && (
           <button
             onClick={() => approveWordMutation.mutate({ id: word.id, approved: !word.approved })}
@@ -441,12 +318,7 @@ export default function WordCard({
           </button>
         )}
         <button
-          onClick={() => {
-            // Don't try to delete a synthetic/session card — it isn't a real persisted row.
-            if (!isRealWordId) { toast.info("This card isn't saved yet"); return; }
-            if (word.approved && !isAdmin) { handleDismissWord(word.id); return; }
-            deleteWordMutation.mutate({ id: word.id, phonetic: word.phonetic || word.word });
-          }}
+          onClick={() => word.approved && !isAdmin ? handleDismissWord(word.id) : deleteWordMutation.mutate({ id: word.id, phonetic: word.phonetic || word.word })}
           className="w-6 h-6 rounded flex items-center justify-center text-sm hover:bg-red-500/20 transition-all"
           title={word.approved && !isAdmin ? "Remove from my view" : "Delete word"}
         >
