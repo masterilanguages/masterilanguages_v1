@@ -47,12 +47,7 @@ export const masteriMnemonics: Mnemonic[] = [
 ];
 
 export const masteriProgress: StudentProgress[] = [
-  { id: "P-01", student: "Sarah Klein", language: "Hebrew", level: "B1", lessonsDone: 34, lessonsTotal: 48, vocabMastered: 612, homeworkRate: 95, subscription: "Active" },
-  { id: "P-02", student: "James Carter", language: "Hebrew", level: "A2", lessonsDone: 18, lessonsTotal: 36, vocabMastered: 340, homeworkRate: 72, subscription: "Active" },
-  { id: "P-03", student: "Lucia Romano", language: "Spanish", level: "B2", lessonsDone: 41, lessonsTotal: 50, vocabMastered: 890, homeworkRate: 88, subscription: "Active" },
-  { id: "P-04", student: "Tom Becker", language: "German", level: "A1", lessonsDone: 9, lessonsTotal: 30, vocabMastered: 120, homeworkRate: 60, subscription: "Trial" },
-  { id: "P-05", student: "Emily Zhao", language: "Spanish", level: "A2", lessonsDone: 22, lessonsTotal: 36, vocabMastered: 410, homeworkRate: 45, subscription: "Past Due" },
-  { id: "P-06", student: "Rachel Adams", language: "Hebrew", level: "A1", lessonsDone: 6, lessonsTotal: 24, vocabMastered: 85, homeworkRate: 100, subscription: "Active" },
+  { id: "P-01", student: "Louis Berlin", language: "Hebrew", level: "B1", lessonsDone: 34, lessonsTotal: 48, vocabMastered: 612, homeworkRate: 95, subscription: "Active" },
 ];
 
 export const masteriData: CompanyData = {
