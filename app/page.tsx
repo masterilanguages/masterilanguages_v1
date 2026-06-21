@@ -42,7 +42,7 @@ export default function LandingPage() {
         </p>
         <div className="mt-10 flex flex-wrap justify-center gap-4">
           <a
-            href="#cta"
+            href="/book"
             className="rounded-xl bg-teal-500 px-8 py-4 text-base font-bold text-white transition hover:bg-teal-400"
           >
             Book Your Strategy Call
@@ -182,7 +182,7 @@ export default function LandingPage() {
                 ))}
               </ul>
               <a
-                href="#cta"
+                href="/book"
                 className="mt-8 block rounded-xl border border-teal-600 px-6 py-3 text-center text-sm font-semibold text-teal-700 transition hover:bg-teal-50"
               >
                 Apply Now
@@ -216,7 +216,7 @@ export default function LandingPage() {
                 ))}
               </ul>
               <a
-                href="#cta"
+                href="/book"
                 className="mt-8 block rounded-xl bg-teal-600 px-6 py-3 text-center text-sm font-semibold text-white transition hover:bg-teal-700"
               >
                 Apply Now
@@ -247,7 +247,7 @@ export default function LandingPage() {
                 ))}
               </ul>
               <a
-                href="#cta"
+                href="/book"
                 className="mt-8 block rounded-xl border border-teal-600 px-6 py-3 text-center text-sm font-semibold text-teal-700 transition hover:bg-teal-50"
               >
                 Apply Now
@@ -282,7 +282,7 @@ export default function LandingPage() {
           Apply now and we&apos;ll see if Masteri is the right fit for you.
         </p>
         <a
-          href="mailto:hello@masterilanguages.com"
+          href="/book"
           className="mt-10 inline-block rounded-2xl bg-teal-500 px-10 py-5 text-lg font-bold text-white transition hover:bg-teal-400"
         >
           Book Your Strategy Call
