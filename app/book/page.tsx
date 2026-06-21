@@ -49,7 +49,7 @@ export default function BookPage() {
           <span className="text-xs font-semibold uppercase tracking-widest text-teal-400">Free · 30 Minutes</span>
           <h1 className="mt-2 text-3xl font-extrabold tracking-tight">Book Your Strategy Call</h1>
           <p className="mt-2 text-slate-400">
-            Tell us a bit about yourself and pick a time. We&apos;ll confirm within a few hours.
+            Tell us a bit about yourself and pick a time.
           </p>
         </div>
 
