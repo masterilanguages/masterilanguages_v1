@@ -37,3 +37,4 @@ supabase/.temp/
 _amortest.jpg
 build_out.txt
 RESUMEN.*
+.env*
