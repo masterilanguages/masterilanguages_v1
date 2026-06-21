@@ -1,4 +1,5 @@
 import Link from "next/link";
+import PricingSection from "@/components/PricingSection";
 
 export const metadata = {
   title: "Masteri Languages — Master a New Language Through Music, Conversation & Memory",
@@ -153,109 +154,7 @@ export default function LandingPage() {
       </section>
 
       {/* Pricing */}
-      <section id="programs" className="bg-slate-50 px-6 py-20">
-        <div className="mx-auto max-w-5xl">
-          <h2 className="text-center text-3xl font-bold tracking-tight sm:text-4xl">
-            Choose Your Program
-          </h2>
-          <div className="mt-10 grid gap-6 lg:grid-cols-3">
-            {/* Kickstart */}
-            <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-widest text-teal-600">
-                Kickstart
-              </p>
-              <h3 className="mt-1 text-xl font-bold">4 Weeks</h3>
-              <p className="mt-1 text-sm text-slate-500">
-                For students who need momentum and structure.
-              </p>
-              <p className="mt-6 text-4xl font-extrabold text-slate-900">$1,995</p>
-              <ul className="mt-6 space-y-3 text-sm text-slate-700">
-                {[
-                  "Daily sessions per week",
-                  "Daily practice plan",
-                  "Vocabulary and speaking drills",
-                  "Accountability and tools",
-                ].map((f) => (
-                  <li key={f} className="flex items-start gap-2">
-                    <span className="mt-0.5 text-teal-500">✓</span> {f}
-                  </li>
-                ))}
-              </ul>
-              <a
-                href="/book"
-                className="mt-8 block rounded-xl border border-teal-600 px-6 py-3 text-center text-sm font-semibold text-teal-700 transition hover:bg-teal-50"
-              >
-                Apply Now
-              </a>
-            </div>
-
-            {/* Fluency Accelerator — featured */}
-            <div className="relative rounded-2xl border-2 border-teal-600 bg-white p-8 shadow-lg">
-              <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-teal-600 px-4 py-1 text-xs font-bold text-white">
-                Most Popular
-              </span>
-              <p className="text-xs font-semibold uppercase tracking-widest text-teal-600">
-                Fluency Accelerator
-              </p>
-              <h3 className="mt-1 text-xl font-bold">8 Weeks</h3>
-              <p className="mt-1 text-sm text-slate-500">
-                For students who want real progress in conversation.
-              </p>
-              <p className="mt-6 text-4xl font-extrabold text-slate-900">$3,495</p>
-              <ul className="mt-6 space-y-3 text-sm text-slate-700">
-                {[
-                  "3 private sessions per week",
-                  "Custom curriculum",
-                  "Daily speaking and listening reps",
-                  "Corrections and progress tracking",
-                  "Songs, videos, and conversation practice",
-                ].map((f) => (
-                  <li key={f} className="flex items-start gap-2">
-                    <span className="mt-0.5 text-teal-500">✓</span> {f}
-                  </li>
-                ))}
-              </ul>
-              <a
-                href="/book"
-                className="mt-8 block rounded-xl bg-teal-600 px-6 py-3 text-center text-sm font-semibold text-white transition hover:bg-teal-700"
-              >
-                Apply Now
-              </a>
-            </div>
-
-            {/* Intensive */}
-            <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-widest text-teal-600">
-                Intensive
-              </p>
-              <h3 className="mt-1 text-xl font-bold">8 Weeks</h3>
-              <p className="mt-1 text-sm text-slate-500">
-                For serious students who want the fastest transformation.
-              </p>
-              <p className="mt-6 text-4xl font-extrabold text-slate-900">$7,000</p>
-              <ul className="mt-6 space-y-3 text-sm text-slate-700">
-                {[
-                  "4 private sessions per week",
-                  "Daily check-ins",
-                  "Personalized curriculum",
-                  "High accountability",
-                  "Advanced speaking, listening, and memory training",
-                ].map((f) => (
-                  <li key={f} className="flex items-start gap-2">
-                    <span className="mt-0.5 text-teal-500">✓</span> {f}
-                  </li>
-                ))}
-              </ul>
-              <a
-                href="/book"
-                className="mt-8 block rounded-xl border border-teal-600 px-6 py-3 text-center text-sm font-semibold text-teal-700 transition hover:bg-teal-50"
-              >
-                Apply Now
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
+      <PricingSection />
 
       {/* Not an app */}
       <section className="border-b border-slate-100 px-6 py-20 text-center">
