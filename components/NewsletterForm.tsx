@@ -36,7 +36,7 @@ export default function NewsletterForm() {
         required
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        placeholder="Your email address"
+        placeholder="Enter your email"
         className="flex-1 rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white placeholder-slate-500 focus:border-teal-500 focus:outline-none"
       />
       <button
@@ -44,7 +44,7 @@ export default function NewsletterForm() {
         disabled={state === "loading"}
         className="rounded-xl bg-teal-600 px-6 py-3 text-sm font-bold text-white transition hover:bg-teal-500 disabled:opacity-60"
       >
-        {state === "loading" ? "Subscribing…" : "Subscribe"}
+        {state === "loading" ? "Sending…" : "Get Instant Access"}
       </button>
       {state === "error" && (
         <p className="text-xs text-red-400 sm:col-span-2">Something went wrong. Try again.</p>

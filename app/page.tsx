@@ -211,13 +211,14 @@ export default function LandingPage() {
       {/* Newsletter */}
       <section className="bg-slate-900 px-6 py-16">
         <div className="mx-auto max-w-xl text-center">
-          <h2 className="text-2xl font-bold text-white">Stay in the Loop</h2>
-          <p className="mt-2 text-slate-400 text-sm">
-            Tips, resources, and updates from Masteri Languages — straight to your inbox.
+          <h2 className="text-2xl font-bold text-white">Get the Free Fluency Toolkit</h2>
+          <p className="mt-3 text-slate-400 text-base leading-relaxed">
+            Learn the vocabulary, memory, and speaking techniques our students use to accelerate fluency.
           </p>
-          <div className="mt-6 text-left">
+          <div className="mt-6">
             <NewsletterForm />
           </div>
+          <p className="mt-4 text-xs text-slate-500">Free. No spam. Unsubscribe anytime.</p>
         </div>
       </section>
 
