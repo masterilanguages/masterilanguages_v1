@@ -113,39 +113,49 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* How it works */}
-      <section id="how" className="border-b border-slate-100 px-6 py-20">
+      {/* The Masteri Method */}
+      <section id="how" className="border-b border-slate-100 px-6 py-24">
         <div className="mx-auto max-w-5xl">
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">How It Works</h2>
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mb-12">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-teal-600">The Masteri Method</p>
+            <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+              A proven system that combines coaching,<br className="hidden sm:block" /> accountability, and memory science to help<br className="hidden sm:block" /> you speak confidently faster.
+            </h2>
+          </div>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {[
               {
                 step: "1",
-                title: "We Find Your Level",
-                body: "We start with your current level, goals, schedule, and interests.",
+                title: "Assess",
+                hook: "Discover your level, goals, and learning style.",
+                body: "We evaluate where you are today and identify the fastest path to fluency.",
               },
               {
                 step: "2",
-                title: "You Get a Custom Plan",
-                body: "Your lessons are built around real language: phrases, songs, conversations, and videos.",
+                title: "Structure",
+                hook: "Build your personalized fluency system.",
+                body: "Receive a clear roadmap with lessons, speaking drills, vocabulary, and daily accountability.",
               },
               {
                 step: "3",
-                title: "You Practice With a Coach",
-                body: "You speak, repeat, make mistakes, get corrected, and improve.",
+                title: "Practice",
+                hook: "Speak consistently with expert coaching.",
+                body: "Build confidence through real conversations, immediate feedback, and guided repetition.",
               },
               {
                 step: "4",
-                title: "You Remember More",
-                body: "We use memory techniques, music, images, and repetition so words actually stay in your head.",
+                title: "Retain",
+                hook: "Remember more and progress faster.",
+                body: "Masteri's mnemonic system helps vocabulary stick through stories, visual associations, and active recall.",
               },
-            ].map(({ step, title, body }) => (
-              <div key={step} className="rounded-2xl border border-slate-200 p-6 shadow-sm">
-                <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-full bg-teal-600 text-sm font-bold text-white">
+            ].map(({ step, title, hook, body }) => (
+              <div key={step} className="flex flex-col rounded-2xl border border-slate-200 p-7 shadow-sm">
+                <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-teal-600 text-sm font-bold text-white">
                   {step}
                 </div>
-                <h3 className="text-base font-semibold text-slate-900">{title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600">{body}</p>
+                <h3 className="text-lg font-extrabold text-slate-900">{title}</h3>
+                <p className="mt-2 text-sm font-semibold text-teal-700">{hook}</p>
+                <p className="mt-3 flex-1 text-sm leading-relaxed text-slate-500">{body}</p>
               </div>
             ))}
           </div>
