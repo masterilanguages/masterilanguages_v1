@@ -114,30 +114,43 @@ const PLAN_KEYS: Record<ProgramKey, string> = {
 
 function EnrollButton({ recommendedProgram }: { recommendedProgram: ProgramKey }) {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
 
   const handleEnroll = async () => {
     setLoading(true);
+    setError(false);
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ plan: PLAN_KEYS[recommendedProgram] }),
       });
-      const { url } = await res.json();
-      if (url) window.location.href = url;
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        setError(true);
+        setLoading(false);
+      }
     } catch {
+      setError(true);
       setLoading(false);
     }
   };
 
   return (
-    <button
-      onClick={handleEnroll}
-      disabled={loading}
-      className="inline-block rounded-xl bg-teal-500 px-8 py-4 text-sm font-bold text-white transition hover:bg-teal-400 disabled:opacity-60"
-    >
-      {loading ? "Loading…" : `Enroll in ${recommendedProgram}`}
-    </button>
+    <div className="flex flex-col items-center gap-2">
+      <button
+        onClick={handleEnroll}
+        disabled={loading}
+        className="inline-block rounded-xl bg-teal-500 px-8 py-4 text-sm font-bold text-white transition hover:bg-teal-400 disabled:opacity-60"
+      >
+        {loading ? "Redirecting…" : `Enroll in ${recommendedProgram}`}
+      </button>
+      {error && (
+        <p className="text-xs text-red-400">Something went wrong. Try again or book a consultation.</p>
+      )}
+    </div>
   );
 }
 
