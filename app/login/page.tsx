@@ -56,18 +56,47 @@ function LoginForm() {
   );
 }
 
+function BackpackLogo() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="44" height="44" rx="10" fill="#1B2B4B"/>
+      <path d="M17 16.5C17 14.567 18.567 13 20.5 13h3C25.433 13 27 14.567 27 16.5V17h1.5A2.5 2.5 0 0 1 31 19.5v13A2.5 2.5 0 0 1 28.5 35h-13A2.5 2.5 0 0 1 13 32.5v-13A2.5 2.5 0 0 1 15.5 17H17v-.5Z" stroke="white" strokeWidth="1.8" fill="none"/>
+      <path d="M19 17h6" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
+      <rect x="18" y="23" width="8" height="1.8" rx="0.9" fill="white"/>
+    </svg>
+  );
+}
+
 export default function LoginPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4">
-      <div className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-xl">
-        <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-xl bg-teal-600 text-lg font-bold text-white">
-          ML
+    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-950 px-4">
+      <div className="w-full max-w-sm">
+
+        {/* School brand */}
+        <div className="mb-6 text-center">
+          <h1 className="text-2xl font-bold text-white tracking-tight">Masteri Languages</h1>
+
+          {/* Powered by Backpack */}
+          <div className="mt-2 flex items-center justify-center gap-1.5">
+            <span className="text-xs text-slate-500">Powered by</span>
+            <BackpackLogo />
+            <span className="text-xs font-semibold text-slate-400">Backpack</span>
+          </div>
         </div>
-        <h1 className="text-xl font-bold text-slate-900">Admin Access</h1>
-        <p className="mt-1 text-sm text-slate-500">Enter your password to continue.</p>
-        <Suspense fallback={null}>
-          <LoginForm />
-        </Suspense>
+
+        {/* Login card */}
+        <div className="rounded-2xl bg-white p-8 shadow-xl">
+          <p className="text-sm font-medium text-slate-500 mb-1">Your language learning system.</p>
+          <h2 className="text-xl font-bold text-slate-900">Sign in to continue</h2>
+          <Suspense fallback={null}>
+            <LoginForm />
+          </Suspense>
+        </div>
+
+        {/* Footer */}
+        <p className="mt-6 text-center text-xs text-slate-600">
+          &copy; {new Date().getFullYear()} Backpack. All rights reserved.
+        </p>
       </div>
     </div>
   );
