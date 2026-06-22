@@ -5,6 +5,7 @@ const PRICES: Record<string, string> = {
   foundation: "price_1TkynnDAjnrt4pYcWf4Qqyte",
   kickstart: "price_1TkynoDAjnrt4pYcq2VbWsO5",
   fluency: "price_1TkynoDAjnrt4pYc9jNulKqJ",
+  accelerator: "price_1Tkys9DAjnrt4pYc4kDit0sj",
 };
 
 export async function POST(request: Request) {
