@@ -23,9 +23,21 @@ export default function NewsletterForm() {
 
   if (state === "done") {
     return (
-      <p className="text-sm font-medium text-teal-400">
-        ✓ You&apos;re in! We&apos;ll be in touch.
-      </p>
+      <div className="text-center">
+        <p className="text-xl font-bold text-white">✅ Welcome to Masteri</p>
+        <p className="mt-3 text-base font-semibold text-slate-200">
+          Get your personalized fluency plan in under 2 minutes.
+        </p>
+        <p className="mt-2 text-sm text-slate-400">
+          Answer a few questions and we&apos;ll recommend the fastest path to your language goals.
+        </p>
+        <a
+          href="/book"
+          className="mt-5 inline-block rounded-xl bg-teal-500 px-7 py-3.5 text-sm font-bold text-white transition hover:bg-teal-400"
+        >
+          Get My Personalized Plan
+        </a>
+      </div>
     );
   }
 
