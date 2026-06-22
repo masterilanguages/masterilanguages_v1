@@ -41,12 +41,8 @@ export default function LandingPage() {
           This Is Not Another<br />
           <span className="text-teal-400">Language App</span>
         </h1>
-        <p className="mx-auto mt-8 max-w-xl text-xl font-medium text-slate-300">
-          Apps give you words. Masteri gives you a system.
-        </p>
-        <p className="mx-auto mt-4 max-w-2xl text-lg text-slate-400 leading-relaxed">
-          You&apos;ll know what to practice, when to practice, how to remember it, and how to
-          actually use it in conversation.
+        <p className="mx-auto mt-8 max-w-2xl text-xl font-medium text-slate-300">
+          Know what to practice, when to practice, how to remember it, and when to use it.
         </p>
         <div className="mt-10 flex flex-wrap justify-center gap-4">
           <a
