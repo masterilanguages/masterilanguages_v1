@@ -103,6 +103,44 @@ function getRecommendation(a: Answers): ProgramKey {
   return "Kickstart";
 }
 
+// ─── Plan → Stripe price key map ─────────────────────────────────────────────
+
+const PLAN_KEYS: Record<ProgramKey, string> = {
+  Foundation: "foundation",
+  Kickstart: "kickstart",
+  "Fluency Accelerator": "fluency",
+  "Masteri Accelerator": "accelerator",
+};
+
+function EnrollButton({ recommendedProgram }: { recommendedProgram: ProgramKey }) {
+  const [loading, setLoading] = useState(false);
+
+  const handleEnroll = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: PLAN_KEYS[recommendedProgram] }),
+      });
+      const { url } = await res.json();
+      if (url) window.location.href = url;
+    } catch {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleEnroll}
+      disabled={loading}
+      className="inline-block rounded-xl bg-teal-500 px-8 py-4 text-sm font-bold text-white transition hover:bg-teal-400 disabled:opacity-60"
+    >
+      {loading ? "Loading…" : `Enroll in ${recommendedProgram}`}
+    </button>
+  );
+}
+
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function AssessmentPage() {
@@ -244,16 +282,19 @@ export default function AssessmentPage() {
 
           {/* Final CTA */}
           <div className="mt-10 rounded-2xl bg-teal-600/10 border border-teal-600/30 p-8 text-center">
-            <h3 className="text-xl font-extrabold text-white">Ready to Accelerate Your Fluency?</h3>
+            <h3 className="text-xl font-extrabold text-white">Ready to Start?</h3>
             <p className="mt-2 text-slate-400 text-sm">
-              Schedule a complimentary consultation to review your assessment and build your personalized fluency roadmap.
+              Enroll now and begin your fluency journey, or book a free consultation first to ask questions.
             </p>
-            <a
-              href="/book"
-              className="mt-6 inline-block rounded-xl bg-teal-500 px-8 py-4 text-sm font-bold text-white transition hover:bg-teal-400"
-            >
-              Book Free Consultation
-            </a>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
+              <EnrollButton recommendedProgram={recommendation} />
+              <a
+                href="/book"
+                className="inline-block rounded-xl border border-slate-600 px-8 py-4 text-sm font-bold text-slate-200 transition hover:border-slate-400 hover:text-white"
+              >
+                Book Free Consultation
+              </a>
+            </div>
           </div>
         </div>
       </div>
