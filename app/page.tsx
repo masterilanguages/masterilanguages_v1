@@ -25,22 +25,20 @@ export default function LandingPage() {
       </header>
 
       {/* Hero */}
-      <section className="bg-slate-950 px-6 py-28 text-center text-white">
-        <p className="mb-4 text-sm font-semibold uppercase tracking-widest text-teal-400">
+      <section className="bg-slate-950 px-6 py-32 text-center text-white">
+        <p className="mb-6 text-xs font-semibold uppercase tracking-widest text-teal-400">
           1-on-1 Language Coaching
         </p>
-        <h1 className="mx-auto max-w-4xl text-4xl font-extrabold leading-tight tracking-tight sm:text-6xl">
-          Master a New Language Through Music,{" "}
-          <span className="text-teal-400">Conversation,</span> and Memory
+        <h1 className="mx-auto max-w-4xl text-5xl font-extrabold leading-tight tracking-tight sm:text-7xl">
+          This Is Not Another<br />
+          <span className="text-teal-400">Language App</span>
         </h1>
-        <p className="mx-auto mt-6 max-w-2xl text-lg text-slate-400">
-          Most people don&apos;t fail at learning a language because they&apos;re not smart.
-          <br />
-          <strong className="text-white">They fail because they forget.</strong>
+        <p className="mx-auto mt-8 max-w-xl text-xl font-medium text-slate-300">
+          Apps give you words. Masteri gives you a system.
         </p>
-        <p className="mx-auto mt-4 max-w-2xl text-lg text-slate-400">
-          Masteri Languages is high-level content, music, real conversation, emotional memory, and
-          repetition — all with 1-on-1 results.
+        <p className="mx-auto mt-4 max-w-2xl text-lg text-slate-400 leading-relaxed">
+          You&apos;ll know what to practice, when to practice, how to remember it, and how to
+          actually use it in conversation.
         </p>
         <div className="mt-10 flex flex-wrap justify-center gap-4">
           <a
