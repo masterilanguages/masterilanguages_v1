@@ -70,11 +70,8 @@ function LoginForm() {
 function BackpackIcon() {
   return (
     <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-      {/* Handle/strap on top */}
       <path d="M10 9C10 6.79 11.79 5 14 5C16.21 5 18 6.79 18 9" stroke="#1B2B4B" strokeWidth="1.8" strokeLinecap="round" fill="none"/>
-      {/* Bag body */}
       <rect x="5" y="9" width="18" height="15" rx="3" stroke="#1B2B4B" strokeWidth="1.8" fill="none"/>
-      {/* Dash in center */}
       <path d="M10.5 16.5h7" stroke="#1B2B4B" strokeWidth="1.8" strokeLinecap="round"/>
     </svg>
   );
