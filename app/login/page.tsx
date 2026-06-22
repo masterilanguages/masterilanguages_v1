@@ -92,6 +92,23 @@ export default function LoginPage() {
         <Suspense fallback={null}>
           <LoginForm />
         </Suspense>
+
+        {/* Divider */}
+        <div className="my-8 border-t border-slate-100" />
+
+        {/* New student CTA */}
+        <div className="text-center">
+          <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">New Student?</p>
+          <a
+            href="/assessment"
+            className="block w-full rounded-2xl border border-slate-200 px-5 py-4 text-base font-bold text-[#1B2B4B] transition hover:border-[#1B2B4B] hover:bg-slate-50"
+          >
+            Take the Free Language Assessment →
+          </a>
+          <p className="mt-3 text-xs text-slate-400">
+            Complete the assessment · Get your fluency roadmap · Enroll · Receive your login credentials
+          </p>
+        </div>
       </div>
     </div>
   );

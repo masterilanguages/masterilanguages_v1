@@ -19,7 +19,7 @@ const STEPS = [
   {
     id: "goal",
     title: "What is your primary goal?",
-    options: ["Travel", "Work & Career", "Business", "Relationships", "Religious / Cultural", "Fluency", "Other"],
+    options: ["Travel", "Work & Career", "Business", "Relationships", "Religious / Cultural", "Fluency", "All of the Above"],
   },
   {
     id: "timeline",
@@ -157,7 +157,9 @@ function EnrollButton({ recommendedProgram }: { recommendedProgram: ProgramKey }
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function AssessmentPage() {
-  const [step, setStep] = useState(0); // 0 = email gate, 1-6 = questions, 7 = results
+  const [step, setStep] = useState(0); // 0 = contact gate, 1-6 = questions, 7 = results
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [answers, setAnswers] = useState<Partial<Answers>>({});
   const [selected, setSelected] = useState<string | null>(null);
@@ -175,7 +177,7 @@ export default function AssessmentPage() {
   const recommendation = getRecommendation(answers as Answers);
   const program = PROGRAMS[recommendation];
 
-  const handleEmailSubmit = (e: React.FormEvent) => {
+  const handleContactSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.includes("@")) return;
     sessionStorage.setItem("masteri_email", email);
@@ -198,7 +200,7 @@ export default function AssessmentPage() {
       fetch("/api/assessment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, ...newAnswers, recommendedProgram: rec }),
+        body: JSON.stringify({ name, phone, email, ...newAnswers, recommendedProgram: rec }),
       }).catch(console.error);
       setStep(totalSteps + 1);
     } else {
@@ -211,29 +213,42 @@ export default function AssessmentPage() {
     setStep((s) => Math.max(0, s - 1));
   };
 
-  // ── Email gate ──────────────────────────────────────────────────────────────
+  // ── Contact gate ────────────────────────────────────────────────────────────
   if (step === 0) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4 py-16">
         <div className="w-full max-w-md">
-          <Link href="/" className="mb-8 inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-300">
-            ← Back
+          <Link href="/login" className="mb-8 inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-300">
+            ← Back to Login
           </Link>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-teal-400">Fluency Assessment</p>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-teal-400">Free Language Assessment</p>
           <h1 className="text-3xl font-extrabold text-white">Get your personalized fluency roadmap.</h1>
           <p className="mt-3 text-slate-400">Answer 6 quick questions and we'll recommend the right program for you.</p>
-          <form onSubmit={handleEmailSubmit} className="mt-8 space-y-4">
-            <div>
-              <label className="mb-1.5 block text-xs font-semibold text-slate-400">Your email address</label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@email.com"
-                className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-white placeholder-slate-600 focus:border-teal-500 focus:outline-none"
-              />
-            </div>
+          <form onSubmit={handleContactSubmit} className="mt-8 space-y-4">
+            <input
+              type="text"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Your full name"
+              className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-white placeholder-slate-600 focus:border-teal-500 focus:outline-none"
+            />
+            <input
+              type="tel"
+              required
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="Phone number"
+              className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-white placeholder-slate-600 focus:border-teal-500 focus:outline-none"
+            />
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email address"
+              className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-white placeholder-slate-600 focus:border-teal-500 focus:outline-none"
+            />
             <button
               type="submit"
               className="w-full rounded-xl bg-teal-500 py-4 text-sm font-bold text-white transition hover:bg-teal-400"
@@ -297,10 +312,15 @@ export default function AssessmentPage() {
           <div className="mt-10 rounded-2xl bg-teal-600/10 border border-teal-600/30 p-8 text-center">
             <h3 className="text-xl font-extrabold text-white">Ready to Start?</h3>
             <p className="mt-2 text-slate-400 text-sm">
-              Enroll now and begin your fluency journey, or book a free consultation first to ask questions.
+              Choose your program and enroll — your login credentials will be sent once your spot is confirmed.
             </p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
-              <EnrollButton recommendedProgram={recommendation} />
+              <a
+                href={`/#programs`}
+                className="inline-block rounded-xl bg-teal-500 px-8 py-4 text-sm font-bold text-white transition hover:bg-teal-400"
+              >
+                Choose Your Program →
+              </a>
               <a
                 href="/book"
                 className="inline-block rounded-xl border border-slate-600 px-8 py-4 text-sm font-bold text-slate-200 transition hover:border-slate-400 hover:text-white"
@@ -342,18 +362,18 @@ export default function AssessmentPage() {
         <h2 className="text-2xl font-extrabold tracking-tight">{currentStep.title}</h2>
 
         {/* Options */}
-        <div className="mt-6 space-y-3">
+        <div className="mt-6 grid grid-cols-2 gap-2">
           {currentStep.options.map((option) => (
             <button
               key={option}
               onClick={() => handleSelect(option)}
-              className={`w-full rounded-xl border px-5 py-4 text-left text-sm font-semibold transition ${
+              className={`rounded-xl border px-4 py-3 text-left text-sm font-semibold transition ${
                 selected === option
                   ? "border-teal-500 bg-teal-500/10 text-teal-400"
                   : "border-slate-700 bg-slate-900 text-slate-200 hover:border-slate-500"
               }`}
             >
-              <span className={`mr-3 inline-flex h-5 w-5 items-center justify-center rounded-full border text-xs ${
+              <span className={`mr-2 inline-flex h-4 w-4 items-center justify-center rounded-full border text-xs ${
                 selected === option ? "border-teal-500 bg-teal-500 text-white" : "border-slate-600"
               }`}>
                 {selected === option ? "✓" : ""}
