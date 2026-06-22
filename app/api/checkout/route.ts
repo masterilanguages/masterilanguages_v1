@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
 const PRICES: Record<string, string> = {
-  kickstart: "price_1TkyQeDAjnrt4pYc4LyyF9kD",
-  fluency: "price_1TkyQeDAjnrt4pYcOKW9a16y",
-  intensive: "price_1TkyQfDAjnrt4pYcctsdG8td",
+  foundation: "price_1TkynnDAjnrt4pYcWf4Qqyte",
+  kickstart: "price_1TkynoDAjnrt4pYcq2VbWsO5",
+  fluency: "price_1TkynoDAjnrt4pYc9jNulKqJ",
 };
 
 export async function POST(request: Request) {
