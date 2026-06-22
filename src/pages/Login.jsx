@@ -1,10 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, Loader2 } from 'lucide-react';
 import { supabase } from '@/api/supabaseClient';
+import { useAuth } from '@/lib/AuthContext';
+import { createPageUrl } from '@/utils';
 
 // Recreates Base44's former hosted login screen, now backed by Supabase Auth.
 // Modes: 'signin' | 'signup' | 'forgot'.
 export default function Login() {
+  const navigate = useNavigate();
+  const { isAuthenticated, isLoadingAuth } = useAuth();
   const [mode, setMode] = useState('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -16,6 +21,12 @@ export default function Login() {
     setError(null);
     setInfo(null);
   };
+
+  useEffect(() => {
+    if (!isLoadingAuth && isAuthenticated) {
+      navigate(createPageUrl('Home'), { replace: true });
+    }
+  }, [isAuthenticated, isLoadingAuth, navigate]);
 
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
@@ -55,7 +66,7 @@ export default function Login() {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: `${window.location.origin}/` },
+        options: { redirectTo: `${window.location.origin}/Home` },
       });
       if (error) throw error;
       // Browser redirects to Google.

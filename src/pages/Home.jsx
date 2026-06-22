@@ -695,8 +695,30 @@ export default function Home() {
 
             {/* PRIMARY CTA */}
             <div className="text-center py-4">
-  
-
+              {!isMasterUser && (
+                <div className="grid grid-cols-2 gap-3 max-w-md mx-auto">
+                  <button
+                    type="button"
+                    onClick={() => navigate(createPageUrl('Backpack'))}
+                    className="rounded-xl p-4 text-left transition hover:opacity-90"
+                    style={{ background: 'rgba(15,40,100,0.5)', border: '1px solid rgba(96,165,250,0.2)' }}
+                  >
+                    <span className="text-2xl">🎒</span>
+                    <p className="mt-2 font-bold text-sm" style={{ color: '#BFDBFE' }}>Backpack</p>
+                    <p className="text-xs mt-1" style={{ color: '#93C5FD' }}>Your words & mnemonics</p>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate(createPageUrl('Days'))}
+                    className="rounded-xl p-4 text-left transition hover:opacity-90"
+                    style={{ background: 'rgba(15,40,100,0.5)', border: '1px solid rgba(96,165,250,0.2)' }}
+                  >
+                    <span className="text-2xl">📅</span>
+                    <p className="mt-2 font-bold text-sm" style={{ color: '#BFDBFE' }}>Schedule</p>
+                    <p className="text-xs mt-1" style={{ color: '#93C5FD' }}>Sessions & lessons</p>
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* RECOMMENDED FOR YOU */}
@@ -706,9 +728,7 @@ export default function Home() {
 
             {/* SCHEDULE SECTION */}
             {(() => {
-              // For non-admin users, only show schedule if at least one session has tasks
               const hasContent = uniqueDays.some(d => (d.subsections || []).length > 0);
-              if (!isMasterUser && !hasContent) return null;
               return (
               <div className="flex justify-center">
               <div className="w-full max-w-md">
@@ -732,6 +752,24 @@ export default function Home() {
                   )}
                 </div>
                   <div className="space-y-2">
+                    {!hasContent && !isMasterUser && (
+                      <div
+                        className="rounded-xl p-5 text-center backdrop-blur-xl"
+                        style={{ background: 'rgba(15,40,100,0.4)', border: '1px solid rgba(96,165,250,0.15)' }}
+                      >
+                        <p className="text-sm" style={{ color: '#BFDBFE' }}>
+                          No sessions assigned yet. Your coach will add lessons here — check back soon.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => navigate(createPageUrl('Backpack'))}
+                          className="mt-3 text-sm font-semibold underline"
+                          style={{ color: '#93C5FD' }}
+                        >
+                          Open your Backpack →
+                        </button>
+                      </div>
+                    )}
                     {uniqueDays.slice(0, 5).map((day, idx) => {
                     const dayColors = [
                       { bg: '#5a6b5a', text: '#f5f0e8' },
