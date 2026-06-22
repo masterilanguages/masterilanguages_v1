@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '@/api/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
-import { createPageUrl } from '@/utils';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -17,7 +16,7 @@ export default function Login() {
 
   useEffect(() => {
     if (!isLoadingAuth && isAuthenticated) {
-      navigate(createPageUrl('Home'), { replace: true });
+      navigate('/', { replace: true });
     }
   }, [isAuthenticated, isLoadingAuth, navigate]);
 
@@ -51,7 +50,7 @@ export default function Login() {
         {/* Brand */}
         <div className="mb-10 text-center">
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Masteri Languages</h1>
-          <p className="mt-1 text-xs text-slate-400">Powered by Backpack &nbsp;·&nbsp; Your language learning system.</p>
+          <p className="mt-1 text-xs text-slate-400">Powered by Backpack · Your language learning system.</p>
         </div>
 
         {/* Form */}
@@ -104,8 +103,8 @@ export default function Login() {
           </button>
         </form>
 
-        {/* Footer link */}
-        <div className="mt-5 text-center">
+        {/* Forgot password */}
+        <div className="mt-4 text-center">
           {mode === 'forgot' ? (
             <button
               onClick={() => { setError(null); setInfo(null); setMode('signin'); }}
@@ -121,6 +120,23 @@ export default function Login() {
               Forgot Password?
             </button>
           )}
+        </div>
+
+        {/* Divider */}
+        <div className="my-8 border-t border-slate-100" />
+
+        {/* New student CTA */}
+        <div className="text-center">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-3">New Student?</p>
+          <a
+            href="https://masterilanguages.com/assessment"
+            className="inline-block w-full rounded-lg border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-colors"
+          >
+            Take the Free Language Assessment →
+          </a>
+          <p className="mt-3 text-xs text-slate-400 leading-relaxed">
+            Complete the assessment · Get your fluency roadmap · Enroll · Receive your login credentials
+          </p>
         </div>
 
       </div>
