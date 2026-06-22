@@ -17,7 +17,7 @@ export default function LandingPage() {
           <span className="text-lg font-bold tracking-tight text-teal-700">Masteri Languages</span>
           <div className="flex items-center gap-3">
             <a
-              href="https://language-masteri.vercel.app/login"
+              href="https://masteri-student.vercel.app/login"
               className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-teal-600 hover:text-teal-700"
             >
               Student Login
