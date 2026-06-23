@@ -58,26 +58,34 @@ function EditableValue({
   );
 }
 
-function LoginAsButton() {
-  const [loading, setLoading] = useState(false);
+function LoginAsButton({ email }: { email: string }) {
+  const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
 
   const handle = async () => {
-    setLoading(true);
-    const res = await fetch("/api/admin/impersonate", { method: "POST" });
+    setStatus("loading");
+    const res = await fetch("/api/admin/impersonate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
     if (res.ok) {
-      window.open("/portal/dashboard", "_blank");
+      const { url } = await res.json();
+      window.open(url, "_blank");
+      setStatus("idle");
+    } else {
+      setStatus("error");
+      setTimeout(() => setStatus("idle"), 3000);
     }
-    setLoading(false);
   };
 
   return (
     <button
       type="button"
       onClick={handle}
-      disabled={loading}
+      disabled={status === "loading"}
       className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
     >
-      {loading ? "…" : "Login as →"}
+      {status === "loading" ? "…" : status === "error" ? "Failed" : "Login as →"}
     </button>
   );
 }
@@ -163,7 +171,7 @@ export default function ClientsPage() {
       render: (client) => (
         <div className="flex items-center gap-2">
           <ActivateButton name={client.name} email={client.email} />
-          <LoginAsButton />
+          <LoginAsButton email={client.email} />
         </div>
       ),
     },
