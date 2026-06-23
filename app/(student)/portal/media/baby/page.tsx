@@ -382,7 +382,7 @@ const level1Videos: any[] = [
 export default function BabyVideos() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [searchParams] = useSearchParams();
+  const searchParams = useSearchParams(); // next/navigation devuelve el objeto directo (no array como react-router)
   const [activeTab, setActiveTab] = useState(
     typeof window !== "undefined" && new URLSearchParams(window.location.search).get('tab') === 'songs' ? 'songs' : 'videos'
   );
