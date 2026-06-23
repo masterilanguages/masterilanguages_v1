@@ -12,7 +12,7 @@ export function middleware(request: NextRequest) {
   if (!isAdminPath) return NextResponse.next();
 
   const session = request.cookies.get(SESSION_COOKIE);
-  if (session?.value === "authenticated") return NextResponse.next();
+  if (session?.value === "authenticated" || session?.value === "admin") return NextResponse.next();
 
   // Redirect to login, preserving the intended destination
   const loginUrl = new URL("/login", request.url);
