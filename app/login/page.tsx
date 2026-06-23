@@ -26,7 +26,7 @@ function LoginForm() {
     if (res.ok) {
       router.push(from);
     } else {
-      setError("Incorrect password.");
+      setError("Invalid email or password.");
       setLoading(false);
     }
   };
@@ -34,8 +34,7 @@ function LoginForm() {
   return (
     <form onSubmit={handleSubmit} className="mt-8 space-y-4">
       <input
-        type="email"
-        required
+        type="text"
         autoFocus
         value={email}
         onChange={(e) => setEmail(e.target.value)}
