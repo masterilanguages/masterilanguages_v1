@@ -122,9 +122,9 @@ function LoginForm() {
           ) : (
             <div className="space-y-4 text-center">
               <div className="rounded-2xl bg-slate-50 px-5 py-6">
-                <p className="text-sm font-semibold text-slate-700">Check your inbox</p>
+                <p className="text-sm font-semibold text-slate-700">✓ Password Reset Sent</p>
                 <p className="mt-1 text-xs text-slate-400">
-                  If we have your email on file, you'll hear from us shortly with next steps.
+                  If an account exists for this email address, you'll receive instructions shortly.
                 </p>
               </div>
               <button
