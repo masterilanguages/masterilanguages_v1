@@ -58,6 +58,30 @@ function EditableValue({
   );
 }
 
+function LoginAsButton() {
+  const [loading, setLoading] = useState(false);
+
+  const handle = async () => {
+    setLoading(true);
+    const res = await fetch("/api/admin/impersonate", { method: "POST" });
+    if (res.ok) {
+      window.open("/portal/dashboard", "_blank");
+    }
+    setLoading(false);
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handle}
+      disabled={loading}
+      className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+    >
+      {loading ? "…" : "Login as →"}
+    </button>
+  );
+}
+
 function ActivateButton({ name, email }: { name: string; email: string }) {
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
 
@@ -137,7 +161,10 @@ export default function ClientsPage() {
       key: "email",
       header: "",
       render: (client) => (
-        <ActivateButton name={client.name} email={client.email} />
+        <div className="flex items-center gap-2">
+          <ActivateButton name={client.name} email={client.email} />
+          <LoginAsButton />
+        </div>
       ),
     },
     {
