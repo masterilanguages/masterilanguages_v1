@@ -46,10 +46,10 @@ export default function LandingPage() {
         </p>
         <div className="mt-10 flex flex-wrap justify-center gap-4">
           <a
-            href="/book"
+            href="/assessment"
             className="rounded-xl bg-teal-500 px-8 py-4 text-base font-bold text-white transition hover:bg-teal-400"
           >
-            Book Your Strategy Call
+            Start Learning →
           </a>
           <a
             href="#how"

@@ -169,14 +169,13 @@ export default function LoginPage() {
         {/* Divider */}
         <div className="my-8 border-t border-slate-100" />
 
-        {/* New student CTA */}
-        <div className="text-center">
-          <p className="text-xs text-slate-400 mb-3">New student?</p>
+        {/* Enrolled but not activated */}
+        <div className="text-center space-y-3">
           <a
-            href="/assessment"
-            className="block w-full rounded-2xl border border-slate-200 px-5 py-4 text-base font-bold text-[#1B2B4B] transition hover:border-[#1B2B4B] hover:bg-slate-50"
+            href="/activate"
+            className="block w-full rounded-2xl border border-slate-200 px-5 py-4 text-sm font-semibold text-slate-600 transition hover:border-slate-400 hover:text-slate-800"
           >
-            Activate your account →
+            Already enrolled but haven't activated your account? →
           </a>
         </div>
       </div>

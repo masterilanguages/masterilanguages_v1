@@ -22,9 +22,14 @@ const STEPS = [
     options: ["Travel", "Work & Career", "Business", "Relationships", "Religious / Cultural", "Fluency", "All of the Above"],
   },
   {
-    id: "timeline",
-    title: "When would you like to see results?",
-    options: ["Within 30 Days", "Within 3 Months", "Within 6 Months", "Within 12 Months"],
+    id: "interests",
+    title: "What topics interest you most?",
+    options: ["Music & Culture", "Food & Travel", "Business & Networking", "Sports", "Movies & TV", "Daily Conversation", "Other"],
+  },
+  {
+    id: "availability",
+    title: "When are you available to study?",
+    options: ["Mornings", "Afternoons", "Evenings", "Weekends Only", "Flexible"],
   },
   {
     id: "commitment",
@@ -47,7 +52,7 @@ const STEPS = [
 
 // ─── Recommendation engine ────────────────────────────────────────────────────
 
-type Answers = { language: string; level: string; goal: string; timeline: string; commitment: string; challenge: string };
+type Answers = { language: string; level: string; goal: string; interests: string; availability: string; commitment: string; challenge: string };
 
 type ProgramKey = "Foundation" | "Kickstart" | "Fluency Accelerator" | "Masteri Accelerator";
 
