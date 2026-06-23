@@ -263,7 +263,7 @@ export default function AssessmentPage() {
               type="submit"
               className="w-full rounded-xl bg-teal-500 py-4 text-sm font-bold text-white transition hover:bg-teal-400"
             >
-              Start My Assessment →
+              Continue →
             </button>
             <p className="text-center text-sm text-slate-500">
               Already enrolled to a program?{" "}
