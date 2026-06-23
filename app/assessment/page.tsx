@@ -265,6 +265,12 @@ export default function AssessmentPage() {
             >
               Start My Assessment →
             </button>
+            <p className="text-center text-sm text-slate-500">
+              Already enrolled to a program?{" "}
+              <Link href="/login" className="text-teal-400 hover:text-teal-300 font-medium">
+                Sign in to your student portal →
+              </Link>
+            </p>
           </form>
         </div>
       </div>
