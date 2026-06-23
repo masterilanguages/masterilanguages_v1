@@ -18,8 +18,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const role = isStudent ? "student" : "authenticated";
-  const redirectTo = isStudent ? "/portal/dashboard" : "/dashboard";
+  const role = isAdmin ? "admin" : "student";
+  const redirectTo = isAdmin ? "/dashboard" : "/portal/dashboard";
 
   const response = NextResponse.json({ ok: true, redirectTo });
   response.cookies.set(SESSION_COOKIE, role, {
