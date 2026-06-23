@@ -169,22 +169,6 @@ export default function LandingPage() {
       {/* Pricing */}
       <PricingSection />
 
-      {/* Not an app */}
-      <section className="border-b border-slate-100 px-6 py-20 text-center">
-        <div className="mx-auto max-w-3xl">
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-            This Is Not Another Language App
-          </h2>
-          <p className="mx-auto mt-4 max-w-xl text-lg text-slate-600">
-            Apps give you words. Masteri gives you a system.
-          </p>
-          <p className="mx-auto mt-4 max-w-xl text-lg text-slate-600">
-            You&apos;ll know what to practice, when to practice, how to remember it, and how to
-            actually use it in conversation.
-          </p>
-        </div>
-      </section>
-
       {/* CTA */}
       <section id="cta" className="bg-slate-950 px-6 py-28 text-center text-white">
         <h2 className="text-3xl font-bold tracking-tight sm:text-5xl">
