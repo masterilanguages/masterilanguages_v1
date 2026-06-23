@@ -44,7 +44,7 @@ const PLANS: Plan[] = [
     header: "4 WEEKS • FOUNDATION",
     title: "Foundation",
     subtitle: "Build the habit and learn the Masteri system.",
-    details: "Group Coaching • 1 Session Per Week + Daily Independent Sessions",
+    details: "Group Coaching\n1 Session/Week + Daily Practice",
     features: CORE_FEATURES,
     outcome: "Build a consistent language habit and master the learning process.",
     price: "$995",
@@ -59,7 +59,7 @@ const PLANS: Plan[] = [
     header: "4 WEEKS • MOST POPULAR",
     title: "Kickstart",
     subtitle: "The fastest way to start speaking with confidence.",
-    details: "Private 1:1 Coaching • 3 Sessions Per Week + Daily Independent Sessions",
+    details: "Private 1:1 Coaching\n3 Sessions/Week + Daily Practice",
     features: CORE_FEATURES,
     outcome: "Start speaking with confidence in everyday situations.",
     price: "$1,995",
@@ -74,7 +74,7 @@ const PLANS: Plan[] = [
     header: "8 WEEKS • PREMIUM",
     title: "Fluency Accelerator",
     subtitle: "Maximum support for accelerated fluency.",
-    details: "Private 1:1 Coaching • 4 Sessions Per Week + Daily Independent Sessions",
+    details: "Private 1:1 Coaching\n4 Sessions/Week + Daily Practice",
     features: CORE_FEATURES,
     outcome:
       "Hold real conversations comfortably and think more naturally in your target language.",
@@ -91,7 +91,7 @@ const PLANS: Plan[] = [
     title: "Masteri Accelerator",
     subtitle:
       "From beginner to confident speaker with a year of structured coaching and accountability.",
-    details: "Immersive Coaching • 5 Sessions Per Week + Daily Independent Sessions",
+    details: "Immersive Coaching\n5 Sessions/Week + Daily Practice",
     features: ELITE_FEATURES,
     outcome:
       "Develop advanced speaking ability, long-term retention, and real-world fluency through a full year of guided coaching and accountability.",
@@ -196,7 +196,7 @@ function PlanCard({
       </p>
 
       {/* Program details */}
-      <p className={`mt-4 text-xs font-semibold uppercase tracking-wide ${detailColor}`}>
+      <p className={`mt-4 whitespace-pre-line text-xs font-semibold uppercase tracking-wide ${detailColor}`}>
         {plan.details}
       </p>
 
