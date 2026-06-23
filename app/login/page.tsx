@@ -178,9 +178,6 @@ export default function LoginPage() {
           >
             Take the Free Language Assessment →
           </a>
-          <p className="mt-3 text-xs text-slate-400">
-            Complete the assessment · Get your fluency roadmap · Enroll · Receive your login credentials
-          </p>
         </div>
       </div>
     </div>
