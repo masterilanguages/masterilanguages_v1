@@ -171,12 +171,12 @@ export default function LoginPage() {
 
         {/* New student CTA */}
         <div className="text-center">
-          <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">New Student?</p>
+          <p className="text-xs text-slate-400 mb-3">New student?</p>
           <a
             href="/assessment"
             className="block w-full rounded-2xl border border-slate-200 px-5 py-4 text-base font-bold text-[#1B2B4B] transition hover:border-[#1B2B4B] hover:bg-slate-50"
           >
-            Take the Free Language Assessment →
+            Activate your account →
           </a>
         </div>
       </div>

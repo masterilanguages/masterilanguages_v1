@@ -158,7 +158,8 @@ function EnrollButton({ recommendedProgram }: { recommendedProgram: ProgramKey }
 
 export default function AssessmentPage() {
   const [step, setStep] = useState(0); // 0 = contact gate, 1-6 = questions, 7 = results
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [answers, setAnswers] = useState<Partial<Answers>>({});
@@ -200,7 +201,7 @@ export default function AssessmentPage() {
       fetch("/api/assessment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, phone, email, ...newAnswers, recommendedProgram: rec }),
+        body: JSON.stringify({ name: `${firstName} ${lastName}`, firstName, lastName, phone, email, ...newAnswers, recommendedProgram: rec }),
       }).catch(console.error);
       setStep(totalSteps + 1);
     } else {
@@ -221,18 +222,28 @@ export default function AssessmentPage() {
           <Link href="/login" className="mb-8 inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-300">
             ← Back to Login
           </Link>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-teal-400">Free Language Assessment</p>
-          <h1 className="text-3xl font-extrabold text-white">Get your personalized fluency roadmap.</h1>
-          <p className="mt-3 text-slate-400">Answer 6 quick questions and we'll recommend the right program for you.</p>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-teal-400">Account Activation</p>
+          <h1 className="text-3xl font-extrabold text-white">Activate your account.</h1>
+          <p className="mt-3 text-slate-400">Complete your free language assessment to discover the program that's right for you.</p>
           <form onSubmit={handleContactSubmit} className="mt-8 space-y-4">
-            <input
-              type="text"
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Your full name"
-              className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-white placeholder-slate-600 focus:border-teal-500 focus:outline-none"
-            />
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                type="text"
+                required
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                placeholder="First name"
+                className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-white placeholder-slate-600 focus:border-teal-500 focus:outline-none"
+              />
+              <input
+                type="text"
+                required
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                placeholder="Last name"
+                className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-white placeholder-slate-600 focus:border-teal-500 focus:outline-none"
+              />
+            </div>
             <input
               type="tel"
               required
