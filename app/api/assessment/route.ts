@@ -7,13 +7,12 @@ export async function POST(request: Request) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
   const body = await request.json();
-  const { email, language, level, goal, timeline, commitment, challenge, recommendedProgram } = body;
+  const { name, phone, email, language, level, goal, timeline, commitment, challenge, recommendedProgram } = body;
 
   // Save to Supabase
   const { error } = await supabase.from("assessment_leads").insert([{
-    email, language, level, goal, timeline, commitment, challenge,
+    name, phone, email, language, level, goal, timeline, commitment, challenge,
     recommended_program: recommendedProgram,
-    created_at: new Date().toISOString(),
   }]);
 
   if (error) console.error("Supabase error:", error);

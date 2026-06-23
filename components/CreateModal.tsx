@@ -12,15 +12,17 @@ export type FieldDef = {
 export default function CreateModal({
   title,
   fields,
+  initialValues = {},
   onSubmit,
   onClose,
 }: {
   title: string;
   fields: FieldDef[];
+  initialValues?: Record<string, string>;
   onSubmit: (data: Record<string, string>) => void;
   onClose: () => void;
 }) {
-  const [form, setForm] = useState<Record<string, string>>({});
+  const [form, setForm] = useState<Record<string, string>>(initialValues);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

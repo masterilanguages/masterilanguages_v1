@@ -69,7 +69,7 @@ const PROGRAMS: Record<ProgramKey, { description: string; reasons: (a: Answers) 
     description: "Private 1:1 coaching 3x per week to start speaking with confidence in 4 weeks.",
     reasons: (a) => [
       `Your goal to learn ${a.language} for ${a.goal.toLowerCase()} needs real conversation practice.`,
-      `With results wanted ${a.timeline.toLowerCase()}, Kickstart's pace matches your urgency.`,
+      `Your interest in ${a.interests.toLowerCase()} gives us great material to build real conversations around.`,
       `Private coaching eliminates your challenge with ${a.challenge.toLowerCase()}.`,
     ],
   },
@@ -93,18 +93,16 @@ const PROGRAMS: Record<ProgramKey, { description: string; reasons: (a: Answers) 
 
 function getRecommendation(a: Answers): ProgramKey {
   const isHighCommitment = a.commitment === "1 Hour" || a.commitment === "2+ Hours";
-  const isLongTerm = a.timeline === "Within 12 Months" || a.timeline === "Within 6 Months";
   const isProfessional = ["Work & Career", "Business", "Relationships", "Religious / Cultural"].includes(a.goal);
   const isAdvanced = a.level === "Intermediate" || a.level === "Advanced";
-  const isUrgent = a.timeline === "Within 30 Days" || a.timeline === "Within 3 Months";
   const isBeginner = a.level === "Complete Beginner" || a.level === "Beginner";
   const isLowCommitment = a.commitment === "15 Minutes" || a.commitment === "30 Minutes";
+  const isFlexible = a.availability === "Flexible" || a.availability === "Mornings" || a.availability === "Evenings";
 
-  if (isHighCommitment && isLongTerm && (isProfessional || a.level === "Advanced")) return "Masteri Accelerator";
+  if (isHighCommitment && isFlexible && (isProfessional || isAdvanced)) return "Masteri Accelerator";
   if (isAdvanced && isHighCommitment) return "Fluency Accelerator";
-  if (isUrgent || (isHighCommitment && !isLongTerm)) return "Kickstart";
+  if (isHighCommitment && !isBeginner) return "Kickstart";
   if (isBeginner && isLowCommitment) return "Foundation";
-  if (isBeginner && isUrgent) return "Kickstart";
   return "Kickstart";
 }
 

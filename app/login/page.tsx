@@ -14,7 +14,7 @@ function LoginForm() {
   const [forgotLoading, setForgotLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const from = searchParams.get("from") ?? "/dashboard";
+  const from = searchParams.get("from") ?? "/portal/dashboard";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,7 +28,8 @@ function LoginForm() {
     });
 
     if (res.ok) {
-      router.push(from);
+      const data = await res.json();
+      router.push(data.redirectTo ?? from);
     } else {
       setError("Invalid email or password.");
       setLoading(false);
