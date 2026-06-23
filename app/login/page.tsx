@@ -156,12 +156,10 @@ export default function LoginPage() {
         </div>
 
         {/* Powered by Backpack */}
-        <div className="flex items-center justify-center gap-1.5 text-slate-400 text-sm mt-2">
+        <div className="flex items-center justify-center gap-1 text-slate-300 text-xs mt-2">
           <span>Powered by</span>
-          <img src="/backpack-icon.svg" alt="Backpack" width={28} height={28} />
-          <span className="text-base font-extrabold text-[#1B2B4B] tracking-tight leading-none">Backpack</span>
-          <span className="mx-0.5">·</span>
-          <span className="italic">Your language learning system.</span>
+          <img src="/backpack-icon.svg" alt="Backpack" width={22} height={22} style={{ opacity: 0.6 }} />
+          <span className="text-xs font-bold text-slate-400 tracking-tight">Backpack</span>
         </div>
 
         <Suspense fallback={null}>
