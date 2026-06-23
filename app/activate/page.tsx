@@ -78,16 +78,21 @@ export default function ActivatePage() {
         ) : (
           <div className="mt-8 space-y-4">
             <div className="rounded-2xl border border-slate-700 bg-slate-900 px-6 py-6">
-              <p className="font-bold text-white">No enrollment found</p>
-              <p className="mt-2 text-sm text-slate-400">
-                We couldn't find an active enrollment for <span className="font-medium text-white">{email}</span>. You'll need to enroll in a program before you can activate your account.
+              <p className="text-sm text-slate-300">
+                We could not find an active enrollment associated with this email address. Enrollment in a Masteri program is required before portal access can be activated.
               </p>
             </div>
             <a
               href="/#programs"
               className="block w-full rounded-xl bg-teal-500 py-4 text-center text-sm font-bold text-white transition hover:bg-teal-400"
             >
-              View Programs →
+              View Programs
+            </a>
+            <a
+              href="/book"
+              className="block w-full rounded-xl border border-slate-600 py-4 text-center text-sm font-semibold text-slate-300 transition hover:border-slate-400 hover:text-white"
+            >
+              Schedule a Consultation
             </a>
             <div className="text-center">
               <button

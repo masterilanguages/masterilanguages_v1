@@ -76,7 +76,7 @@ function LoginForm() {
           >
             {loading ? "Signing in…" : "Sign In"}
           </button>
-          <div className="text-center">
+          <div className="flex items-center justify-center gap-4">
             <button
               type="button"
               onClick={() => setForgotOpen(true)}
@@ -84,6 +84,10 @@ function LoginForm() {
             >
               Forgot Password?
             </button>
+            <span className="text-slate-300">·</span>
+            <a href="/activate" className="text-sm text-slate-500 hover:text-slate-700">
+              Activate Account
+            </a>
           </div>
         </form>
       ) : (
@@ -167,24 +171,6 @@ export default function LoginPage() {
           <LoginForm />
         </Suspense>
 
-        {/* Divider */}
-        <div className="my-8 border-t border-slate-100" />
-
-        {/* New & returning student CTAs */}
-        <div className="space-y-3">
-          <a
-            href="/get-started"
-            className="block w-full rounded-2xl bg-[#1B2B4B] px-5 py-4 text-center text-sm font-semibold text-white transition hover:bg-[#162240]"
-          >
-            Create an Account →
-          </a>
-          <a
-            href="/activate"
-            className="block w-full rounded-2xl border border-slate-200 px-5 py-4 text-center text-sm font-semibold text-slate-600 transition hover:border-slate-400 hover:text-slate-800"
-          >
-            Activate Account →
-          </a>
-        </div>
       </div>
     </div>
   );
