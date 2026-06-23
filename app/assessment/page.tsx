@@ -223,8 +223,7 @@ export default function AssessmentPage() {
             ← Back to Login
           </Link>
           <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-teal-400">Account Activation</p>
-          <h1 className="text-3xl font-extrabold text-white">Activate your account.</h1>
-          <p className="mt-3 text-slate-400">Complete your free language assessment to discover the program that's right for you.</p>
+          <h1 className="text-3xl font-extrabold text-white">Activate your account to discover the program that's best for you.</h1>
           <form onSubmit={handleContactSubmit} className="mt-8 space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <input
