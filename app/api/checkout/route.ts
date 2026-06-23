@@ -24,6 +24,8 @@ export async function POST(request: Request) {
     line_items: [{ price: priceId, quantity: 1 }],
     success_url: `${origin}/success?plan=${plan}`,
     cancel_url: `${origin}/#programs`,
+    metadata: { plan },
+    customer_creation: "always",
   });
 
   return NextResponse.json({ url: session.url });
