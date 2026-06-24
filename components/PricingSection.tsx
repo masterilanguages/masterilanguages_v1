@@ -109,25 +109,6 @@ const PLANS: Plan[] = [
     elite: false,
     badge: null,
   },
-  {
-    key: "accelerator",
-    header: "12 MONTHS • ELITE",
-    title: "Masteri Accelerator",
-    subtitle:
-      "From beginner to confident speaker with a year of structured coaching and accountability.",
-    details: "Immersive Coaching\n5 Sessions/Week + Daily Practice",
-    features: ELITE_FEATURES,
-    outcome:
-      "Develop advanced speaking ability, long-term retention, and real-world fluency through a full year of guided coaching and accountability.",
-    price: "$4,500",
-    priceLabel: "/ Quarter",
-    priceNote: "4 Quarterly Payments · 12 Months",
-    note: "Designed for learners committed to achieving real fluency.",
-    button: "Apply for Mastery",
-    featured: false,
-    elite: true,
-    badge: "ELITE PROGRAM",
-  },
 ];
 
 function PlanCard({
