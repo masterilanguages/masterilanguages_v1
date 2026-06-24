@@ -38,7 +38,31 @@ type Plan = {
   badge: string | null;
 };
 
+const STARTER_FEATURES = [
+  "14 days of access to the Masteri learning platform",
+  "1 private 60-minute coaching session",
+  "Personalized language assessment",
+  "Custom vocabulary and speaking recommendations",
+  "AI-powered study tools and practice activities",
+  "Progress tracking inside the platform",
+];
+
 const PLANS: Plan[] = [
+  {
+    key: "starter",
+    header: "14 DAYS • STARTER",
+    title: "Starter Package",
+    subtitle: "Experience the Masteri method before committing to a longer program.",
+    details: "1 Private Coaching Session\n+ Platform Access",
+    features: STARTER_FEATURES,
+    outcome: "A personalized roadmap, clear next steps, and a proven system to continue building fluency.",
+    price: "$297",
+    priceNote: "One-time payment",
+    button: "Get Started",
+    featured: false,
+    elite: false,
+    badge: null,
+  },
   {
     key: "foundation",
     header: "4 WEEKS • FOUNDATION",
