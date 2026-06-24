@@ -4,12 +4,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const NAV = [
-  { href: "/portal/dashboard", label: "Dashboard", emoji: "🏠" },
-  { href: "/portal/learn",     label: "Learn",     emoji: "🎒" },
-  { href: "/portal/practice",  label: "Practice",  emoji: "🗣️" },
-  { href: "/portal/library",   label: "Library",   emoji: "📚" },
-  { href: "/portal/sessions",  label: "Sessions",  emoji: "📅" },
-  { href: "/portal/progress",  label: "Progress",  emoji: "📈" },
+  { href: "/portal/dashboard",      label: "Dashboard", emoji: "🏠" },
+  { href: "/portal/learn",          label: "Learn",     emoji: "🎬" },
+  { href: "/portal/learn/lessons",  label: "Lessons",   emoji: "📖" },
+  { href: "/portal/learn/songs",    label: "Songs",     emoji: "🎵" },
+  { href: "/portal/practice",       label: "Practice",  emoji: "🗣️" },
+  { href: "/portal/library",        label: "Backpack",  emoji: "🎒" },
+  { href: "/portal/journal",        label: "Journal",   emoji: "📓" },
+  { href: "/portal/media",          label: "Media",     emoji: "📺" },
+  { href: "/portal/progress",       label: "Progress",  emoji: "📈" },
 ];
 
 export default function StudentSidebar({
