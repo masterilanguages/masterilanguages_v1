@@ -64,19 +64,19 @@ export default function LandingPage() {
       <section className="border-b border-slate-100 px-6 py-20">
         <div className="mx-auto max-w-5xl">
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-            Learn a Language in a Way That Finally Sticks
+            Learn the Language You Need for Your Career
           </h2>
           <p className="mt-4 text-lg text-slate-600">
-            No boring textbook lessons. No random apps. No memorizing words you never use.
+            No boring textbook lessons. No random apps. No memorizing words you&apos;ll never use.
           </p>
-          <p className="mt-2 text-lg text-slate-600">You&apos;ll learn through:</p>
+          <p className="mt-2 text-lg text-slate-600">Choose to learn from:</p>
           <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {[
-              "Personal coaching",
-              "Real conversations",
-              "Music",
-              "Speaking practice",
-              "Visual memory anchors",
+              "Real Estate scenarios",
+              "Life Insurance scenarios",
+              "Sales conversations",
+              "Business vocabulary",
+              "Personalized coaching",
               "Repetition that builds confidence",
             ].map((item) => (
               <li
