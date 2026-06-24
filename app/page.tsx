@@ -77,7 +77,7 @@ export default function LandingPage() {
               "Sales conversations",
               "Business vocabulary",
               "Personalized coaching",
-              "Repetition that builds confidence",
+              "English for Event Specialists",
             ].map((item) => (
               <li
                 key={item}
