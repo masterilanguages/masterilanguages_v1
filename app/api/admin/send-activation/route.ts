@@ -14,7 +14,7 @@ export async function POST(request: Request) {
     const resend = new Resend(process.env.RESEND_API_KEY);
 
     await resend.emails.send({
-      from: "Masteri Languages <onboarding@resend.dev>",
+      from: "Masteri Languages <hello@masterilanguages.com>",
       to: email,
       subject: "Activate your Masteri Languages account",
       html: `

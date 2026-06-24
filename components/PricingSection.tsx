@@ -206,11 +206,6 @@ function PlanCard({
         </div>
       )}
 
-      {/* Header */}
-      <p className={`mb-5 text-[11px] font-bold uppercase tracking-widest ${headerColor}`}>
-        {plan.header}
-      </p>
-
       {/* Title + subtitle */}
       <h3 className={`text-xl font-extrabold tracking-tight ${priceColor}`}>
         {plan.title}
@@ -219,8 +214,13 @@ function PlanCard({
         {plan.subtitle}
       </p>
 
+      {/* Header */}
+      <p className={`mt-5 text-[11px] font-bold uppercase tracking-widest ${headerColor}`}>
+        {plan.header}
+      </p>
+
       {/* Program details */}
-      <p className={`mt-4 whitespace-pre-line text-xs font-semibold uppercase tracking-wide ${detailColor}`}>
+      <p className={`mt-1 whitespace-pre-line text-xs font-semibold uppercase tracking-wide ${detailColor}`}>
         {plan.details}
       </p>
 

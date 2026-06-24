@@ -1,17 +1,19 @@
 "use client";
-import { useState } from "react";
-
-function readStorage<T>(key: string, initial: T): T {
-  if (typeof window === "undefined") return initial;
-  try {
-    const stored = localStorage.getItem(key);
-    if (stored !== null) return JSON.parse(stored) as T;
-  } catch {}
-  return initial;
-}
+import { useState, useEffect, useRef } from "react";
 
 export function useLocalStorage<T>(key: string, initial: T) {
-  const [value, setValue] = useState<T>(() => readStorage(key, initial));
+  const [value, setValue] = useState<T>(initial);
+  const hydrated = useRef(false);
+
+  // After hydration, load from localStorage once
+  useEffect(() => {
+    if (hydrated.current) return;
+    hydrated.current = true;
+    try {
+      const stored = localStorage.getItem(key);
+      if (stored !== null) setValue(JSON.parse(stored) as T);
+    } catch {}
+  }, [key]);
 
   const set = (v: T | ((prev: T) => T)) => {
     setValue((prev) => {
