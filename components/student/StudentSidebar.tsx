@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/lib/AuthContext";
 
 const NAV = [
   { href: "/portal/dashboard",      label: "Dashboard", emoji: "🏠" },
@@ -23,6 +24,7 @@ export default function StudentSidebar({
   onClose: () => void;
 }) {
   const pathname = usePathname();
+  const { logout } = useAuth();
 
   return (
     <>
@@ -73,8 +75,8 @@ export default function StudentSidebar({
           })}
         </nav>
 
-        {/* Settings footer */}
-        <div className="shrink-0 border-t border-slate-800 px-3 py-3">
+        {/* Settings + sign out footer */}
+        <div className="shrink-0 space-y-0.5 border-t border-slate-800 px-3 py-3">
           <Link
             href="/portal/settings"
             onClick={onClose}
@@ -87,6 +89,14 @@ export default function StudentSidebar({
             <span className="text-base">⚙️</span>
             <span>Settings</span>
           </Link>
+          <button
+            type="button"
+            onClick={() => { onClose(); logout(); }}
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-400 transition hover:bg-white/5 hover:text-slate-100"
+          >
+            <span className="text-base">🚪</span>
+            <span>Sign out</span>
+          </button>
         </div>
       </aside>
     </>

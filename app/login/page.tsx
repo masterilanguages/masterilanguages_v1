@@ -2,6 +2,7 @@
 
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { supabase } from "@/api/supabaseClient";
 
 function LoginForm() {
   const [email, setEmail] = useState("");
@@ -21,19 +22,31 @@ function LoginForm() {
     setLoading(true);
     setError("");
 
+    // 1) Real Supabase auth (students). Creating the JWT session here is what
+    //    lets RLS-protected data load in the portal — without it every query
+    //    runs anonymously and comes back empty.
+    const { error: sbError } = await supabase.auth.signInWithPassword({ email, password });
+    if (!sbError) {
+      // AuthContext's onAuthStateChange picks up SIGNED_IN; go to the portal.
+      router.push(from);
+      return;
+    }
+
+    // 2) Fallback: legacy hardcoded admin/demo login (no Supabase account).
+    //    Keeps the existing admin flow working untouched.
     const res = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     });
-
     if (res.ok) {
       const data = await res.json();
       router.push(data.redirectTo ?? from);
-    } else {
-      setError("Invalid email or password.");
-      setLoading(false);
+      return;
     }
+
+    setError("Invalid email or password.");
+    setLoading(false);
   };
 
   const handleForgot = async (e: React.FormEvent) => {
