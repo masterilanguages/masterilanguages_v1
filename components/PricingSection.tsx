@@ -52,7 +52,7 @@ const PLANS: Plan[] = [
     key: "starter",
     header: "14 DAYS • STARTER",
     title: "Starter Package",
-    subtitle: "Experience the Masteri method before committing to a longer program.",
+    subtitle: "Try the Masteri method risk-free.",
     details: "1 Private Coaching Session\n+ Platform Access",
     features: STARTER_FEATURES,
     outcome: "Your roadmap to fluency starts here.",
