@@ -24,7 +24,7 @@ function MasteriLessonsTable({
     {
       key: "student",
       header: "Student",
-      render: (l) => <span className="font-medium text-slate-900">{l.student}</span>,
+      render: (l) => <span className="font-medium text-white">{l.student}</span>,
     },
     { key: "coach", header: "Coach" },
     { key: "language", header: "Language" },

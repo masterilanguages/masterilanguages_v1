@@ -90,3 +90,56 @@
     -webkit-font-smoothing: antialiased;
   }
 }
+
+@layer utilities {
+  /* Shiny navy-blue futuristic backdrop used across the whole product. */
+  .bg-navy-mesh {
+    position: relative;
+    background-color: #050a1a;
+    background-image:
+      radial-gradient(ellipse 80% 60% at 15% -10%, rgba(56, 189, 248, 0.18), transparent 60%),
+      radial-gradient(ellipse 70% 60% at 110% 10%, rgba(99, 102, 241, 0.18), transparent 60%),
+      radial-gradient(ellipse 60% 50% at 50% 120%, rgba(20, 184, 166, 0.12), transparent 60%),
+      linear-gradient(180deg, #050a1a 0%, #0a1330 45%, #0d1838 100%);
+  }
+
+  /* Subtle moving grid + shine overlay for futuristic depth. Apply alongside bg-navy-mesh. */
+  .bg-navy-mesh::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(rgba(148, 163, 255, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(148, 163, 255, 0.05) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black, transparent 70%);
+  }
+
+  .glass-panel {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .glow-border {
+    box-shadow:
+      0 0 0 1px rgba(56, 189, 248, 0.15),
+      0 8px 30px -12px rgba(56, 189, 248, 0.35);
+  }
+
+  .text-shine {
+    background: linear-gradient(110deg, #e2e8f0 20%, #7dd3fc 40%, #93c5fd 55%, #e2e8f0 80%);
+    background-size: 220% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: shine 6s linear infinite;
+  }
+
+  @keyframes shine {
+    to {
+      background-position: -220% 0;
+    }
+  }
+}

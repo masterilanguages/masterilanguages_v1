@@ -15,10 +15,10 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white shadow-card">
-      <div className="border-b border-slate-100 px-5 py-4">
-        <h2 className="text-sm font-semibold text-slate-900">{title}</h2>
-        {description && <p className="mt-0.5 text-xs text-slate-500">{description}</p>}
+    <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_8px_30px_-12px_rgba(56,189,248,0.3)]">
+      <div className="border-b border-white/10 px-5 py-4">
+        <h2 className="text-sm font-semibold text-white">{title}</h2>
+        {description && <p className="mt-0.5 text-xs text-slate-400">{description}</p>}
       </div>
       <div className="p-5">{children}</div>
     </div>
@@ -59,39 +59,39 @@ export default function SettingsPage() {
         <Section title="Company profile">
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block">
-              <span className="mb-1.5 block text-sm font-medium text-slate-700">Company name</span>
+              <span className="mb-1.5 block text-sm font-medium text-slate-200">Company name</span>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full rounded-lg border border-white/15 bg-white/[0.04] backdrop-blur-xl px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
             </label>
             <label className="block">
-              <span className="mb-1.5 block text-sm font-medium text-slate-700">Tagline</span>
+              <span className="mb-1.5 block text-sm font-medium text-slate-200">Tagline</span>
               <input
                 type="text"
                 value={tagline}
                 onChange={(e) => setTagline(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full rounded-lg border border-white/15 bg-white/[0.04] backdrop-blur-xl px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
             </label>
             <label className="block">
-              <span className="mb-1.5 block text-sm font-medium text-slate-700">Industry</span>
+              <span className="mb-1.5 block text-sm font-medium text-slate-200">Industry</span>
               <input
                 type="text"
                 value={industry}
                 onChange={(e) => setIndustry(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full rounded-lg border border-white/15 bg-white/[0.04] backdrop-blur-xl px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
             </label>
             <label className="block">
-              <span className="mb-1.5 block text-sm font-medium text-slate-700">Currency</span>
+              <span className="mb-1.5 block text-sm font-medium text-slate-200">Currency</span>
               <input
                 type="text"
                 defaultValue={company.currency}
                 readOnly
-                className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-500"
+                className="w-full rounded-lg border border-white/15 bg-white/[0.06] px-3 py-2 text-sm text-slate-400"
               />
             </label>
           </div>
@@ -110,21 +110,21 @@ export default function SettingsPage() {
             </span>
             <div className="grid flex-1 gap-4 sm:grid-cols-2">
               <label className="block">
-                <span className="mb-1.5 block text-sm font-medium text-slate-700">Initials</span>
+                <span className="mb-1.5 block text-sm font-medium text-slate-200">Initials</span>
                 <input
                   type="text"
                   defaultValue={company.initials}
                   readOnly
-                  className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-500"
+                  className="w-full rounded-lg border border-white/15 bg-white/[0.06] px-3 py-2 text-sm text-slate-400"
                 />
               </label>
               <label className="block">
-                <span className="mb-1.5 block text-sm font-medium text-slate-700">Accent color</span>
+                <span className="mb-1.5 block text-sm font-medium text-slate-200">Accent color</span>
                 <input
                   type="text"
                   defaultValue={company.color}
                   readOnly
-                  className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-500"
+                  className="w-full rounded-lg border border-white/15 bg-white/[0.06] px-3 py-2 text-sm text-slate-400"
                 />
               </label>
             </div>
@@ -135,10 +135,10 @@ export default function SettingsPage() {
           title="Modules"
           description="Company-specific modules shown in the sidebar."
         >
-          <ul className="divide-y divide-slate-100">
+          <ul className="divide-y divide-white/10">
             {company.modules.map((module) => (
               <li key={module.id} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
-                <p className="text-sm font-medium text-slate-800">{module.label}</p>
+                <p className="text-sm font-medium text-slate-100">{module.label}</p>
                 <button
                   type="button"
                   role="switch"
@@ -156,7 +156,7 @@ export default function SettingsPage() {
                 >
                   <span
                     className={cn(
-                      "absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all",
+                      "absolute top-0.5 h-5 w-5 rounded-full bg-white/[0.04] backdrop-blur-xl shadow transition-all",
                       enabledModules[module.id] ? "left-[22px]" : "left-0.5"
                     )}
                   />

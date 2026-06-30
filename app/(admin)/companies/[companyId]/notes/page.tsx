@@ -15,12 +15,12 @@ function NoteCard({ note, onDelete }: { note: Note; onDelete: () => void }) {
   return (
     <div
       className={cn(
-        "flex flex-col rounded-xl border bg-white p-4 shadow-card",
-        note.pinned ? "border-amber-300 bg-amber-50/40" : "border-slate-200"
+        "flex flex-col rounded-xl border bg-white/[0.04] backdrop-blur-xl p-4 shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_8px_30px_-12px_rgba(56,189,248,0.3)]",
+        note.pinned ? "border-amber-300 bg-amber-50/40" : "border-white/10"
       )}
     >
       <div className="flex items-start justify-between gap-2">
-        <h3 className="text-sm font-semibold text-slate-900">
+        <h3 className="text-sm font-semibold text-white">
           {note.pinned && <span className="mr-1.5 text-amber-500">★</span>}
           {note.title}
         </h3>
@@ -30,8 +30,8 @@ function NoteCard({ note, onDelete }: { note: Note; onDelete: () => void }) {
           ]}
         />
       </div>
-      <p className="mt-2 flex-1 text-sm leading-relaxed text-slate-600">{note.body}</p>
-      <p className="mt-3 text-xs text-slate-400">
+      <p className="mt-2 flex-1 text-sm leading-relaxed text-slate-300">{note.body}</p>
+      <p className="mt-3 text-xs text-slate-500">
         {note.author} · {formatDate(note.date)}
       </p>
     </div>
@@ -75,13 +75,13 @@ export default function NotesPage() {
       />
 
       <div className="relative mb-5 max-w-xs">
-        <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
         <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search notes..."
-          className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          className="w-full rounded-lg border border-white/15 bg-white/[0.04] backdrop-blur-xl py-2 pl-9 pr-3 text-sm placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
         />
       </div>
 
@@ -94,7 +94,7 @@ export default function NotesPage() {
         <div className="space-y-6">
           {pinned.length > 0 && (
             <div>
-              <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
+              <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Pinned
               </h2>
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -110,7 +110,7 @@ export default function NotesPage() {
           )}
           {rest.length > 0 && (
             <div>
-              <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
+              <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
                 All notes
               </h2>
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

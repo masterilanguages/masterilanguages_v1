@@ -14,7 +14,7 @@ export default function CompaniesPage() {
         {COMPANY_LIST.map((company) => (
           <div
             key={company.id}
-            className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-card"
+            className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_8px_30px_-12px_rgba(56,189,248,0.3)]"
           >
             <div className="h-2" style={{ backgroundColor: company.color }} />
             <div className="p-5">
@@ -26,34 +26,34 @@ export default function CompaniesPage() {
                   {company.initials}
                 </span>
                 <div>
-                  <h2 className="text-base font-semibold text-slate-900">{company.name}</h2>
-                  <p className="text-xs text-slate-500">
+                  <h2 className="text-base font-semibold text-white">{company.name}</h2>
+                  <p className="text-xs text-slate-400">
                     {company.industry} · {company.currency}
                   </p>
                 </div>
               </div>
-              <p className="mt-3 text-sm text-slate-600">{company.tagline}</p>
+              <p className="mt-3 text-sm text-slate-300">{company.tagline}</p>
 
-              <dl className="mt-4 grid grid-cols-3 gap-3 rounded-lg bg-slate-50 p-3 text-center">
+              <dl className="mt-4 grid grid-cols-3 gap-3 rounded-lg bg-white/[0.06] p-3 text-center">
                 <div>
-                  <dt className="text-[11px] uppercase tracking-wide text-slate-400">
+                  <dt className="text-[11px] uppercase tracking-wide text-slate-500">
                     {company.labels.clients}
                   </dt>
-                  <dd className="text-sm font-semibold text-slate-900">
+                  <dd className="text-sm font-semibold text-white">
                     {company.data.clients.length}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-[11px] uppercase tracking-wide text-slate-400">Leads</dt>
-                  <dd className="text-sm font-semibold text-slate-900">
+                  <dt className="text-[11px] uppercase tracking-wide text-slate-500">Leads</dt>
+                  <dd className="text-sm font-semibold text-white">
                     {company.data.leads.length}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-[11px] uppercase tracking-wide text-slate-400">
+                  <dt className="text-[11px] uppercase tracking-wide text-slate-500">
                     {company.labels.team}
                   </dt>
-                  <dd className="text-sm font-semibold text-slate-900">
+                  <dd className="text-sm font-semibold text-white">
                     {company.data.team.length}
                   </dd>
                 </div>
@@ -68,7 +68,7 @@ export default function CompaniesPage() {
                 </Link>
                 <Link
                   href={`/companies/${company.id}/settings`}
-                  className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                  className="rounded-lg border border-white/15 px-3 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/[0.06]"
                 >
                   Settings
                 </Link>

@@ -34,13 +34,13 @@ export default function CompanyDashboardPage() {
             <Link
               href="/website"
               target="_blank"
-              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+              className="rounded-lg border border-white/15 bg-white/[0.04] backdrop-blur-xl px-3 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/[0.06]"
             >
               View live ↗
             </Link>
             <Link
               href={`/companies/${company.id}/settings`}
-              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+              className="rounded-lg border border-white/15 bg-white/[0.04] backdrop-blur-xl px-3 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/[0.06]"
             >
               Company settings
             </Link>
@@ -59,28 +59,28 @@ export default function CompanyDashboardPage() {
       </div>
 
       {/* Newsletter widget */}
-      <div className="mt-6 rounded-xl border border-slate-200 bg-white shadow-card">
-        <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3.5">
+      <div className="mt-6 rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_8px_30px_-12px_rgba(56,189,248,0.3)]">
+        <div className="flex items-center justify-between border-b border-white/10 px-5 py-3.5">
           <div>
-            <h2 className="text-sm font-semibold text-slate-900">Newsletter</h2>
-            <p className="text-xs text-slate-400">{subscribers.length} subscriber{subscribers.length !== 1 ? "s" : ""}</p>
+            <h2 className="text-sm font-semibold text-white">Newsletter</h2>
+            <p className="text-xs text-slate-500">{subscribers.length} subscriber{subscribers.length !== 1 ? "s" : ""}</p>
           </div>
           <Link
             href={`/companies/${company.id}/newsletter`}
-            className="rounded-lg bg-teal-600 px-4 py-2 text-xs font-semibold text-white hover:bg-teal-700 transition"
+            className="rounded-lg bg-teal-600 px-4 py-2 text-xs font-semibold text-white hover:bg-teal-600 transition"
           >
             Manage →
           </Link>
         </div>
         <div className="flex items-center gap-6 px-5 py-4">
           <div className="text-center">
-            <p className="text-2xl font-bold text-slate-900">{subscribers.length}</p>
-            <p className="text-xs text-slate-400">Subscribers</p>
+            <p className="text-2xl font-bold text-white">{subscribers.length}</p>
+            <p className="text-xs text-slate-500">Subscribers</p>
           </div>
           <div className="h-10 w-px bg-slate-100" />
           <Link
             href={`/companies/${company.id}/newsletter?tab=compose`}
-            className="text-sm font-medium text-teal-600 hover:text-teal-700"
+            className="text-sm font-medium text-teal-400 hover:text-teal-300"
           >
             ✏️ Draft &amp; send a newsletter
           </Link>
@@ -88,22 +88,22 @@ export default function CompanyDashboardPage() {
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <div className="rounded-xl border border-slate-200 bg-white shadow-card">
-          <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3.5">
-            <h2 className="text-sm font-semibold text-slate-900">Open tasks</h2>
+        <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_8px_30px_-12px_rgba(56,189,248,0.3)]">
+          <div className="flex items-center justify-between border-b border-white/10 px-5 py-3.5">
+            <h2 className="text-sm font-semibold text-white">Open tasks</h2>
             <Link
               href={`/companies/${company.id}/tasks`}
-              className="text-xs font-medium text-indigo-600 hover:text-indigo-700"
+              className="text-xs font-medium text-indigo-400 hover:text-indigo-300"
             >
               View all
             </Link>
           </div>
-          <ul className="divide-y divide-slate-100 px-5">
+          <ul className="divide-y divide-white/10 px-5">
             {openTasks.map((task) => (
               <li key={task.id} className="flex items-center justify-between gap-3 py-3">
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-slate-800">{task.title}</p>
-                  <p className="text-xs text-slate-500">
+                  <p className="truncate text-sm font-medium text-slate-100">{task.title}</p>
+                  <p className="text-xs text-slate-400">
                     {task.assignee} · due {formatDate(task.dueDate)}
                   </p>
                 </div>
@@ -113,22 +113,22 @@ export default function CompanyDashboardPage() {
           </ul>
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white shadow-card">
-          <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3.5">
-            <h2 className="text-sm font-semibold text-slate-900">Upcoming</h2>
+        <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_8px_30px_-12px_rgba(56,189,248,0.3)]">
+          <div className="flex items-center justify-between border-b border-white/10 px-5 py-3.5">
+            <h2 className="text-sm font-semibold text-white">Upcoming</h2>
             <Link
               href={`/companies/${company.id}/calendar`}
-              className="text-xs font-medium text-indigo-600 hover:text-indigo-700"
+              className="text-xs font-medium text-indigo-400 hover:text-indigo-300"
             >
               Calendar
             </Link>
           </div>
-          <ul className="divide-y divide-slate-100 px-5">
+          <ul className="divide-y divide-white/10 px-5">
             {upcoming.map((event) => (
               <li key={event.id} className="flex items-center justify-between gap-3 py-3">
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-slate-800">{event.title}</p>
-                  <p className="text-xs text-slate-500">
+                  <p className="truncate text-sm font-medium text-slate-100">{event.title}</p>
+                  <p className="text-xs text-slate-400">
                     {formatDate(event.date)}
                     {event.time ? ` · ${event.time}` : ""}
                   </p>

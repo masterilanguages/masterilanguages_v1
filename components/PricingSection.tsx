@@ -122,47 +122,40 @@ function PlanCard({
   const base = plan.elite
     ? "border-0 bg-slate-950 text-white shadow-2xl"
     : plan.featured
-    ? "border-teal-600 bg-slate-950 text-white shadow-2xl"
-    : "border-slate-200 bg-white text-slate-900 shadow-sm";
+    ? "border-cyan-400/40 bg-gradient-to-b from-[#0c1638] to-[#070b1f] text-white shadow-[0_0_40px_-8px_rgba(34,211,238,0.4)]"
+    : "glass-panel text-white shadow-[0_0_20px_-10px_rgba(56,189,248,0.25)]";
 
   const headerColor = plan.elite
     ? "text-amber-400"
     : plan.featured
-    ? "text-teal-400"
-    : "text-teal-600";
+    ? "text-cyan-400"
+    : "text-teal-400";
 
   const detailColor = plan.elite
     ? "text-amber-400"
     : plan.featured
-    ? "text-teal-400"
-    : "text-teal-700";
+    ? "text-cyan-400"
+    : "text-teal-300";
 
-  const dividerColor =
-    plan.featured || plan.elite ? "bg-slate-800" : "bg-slate-100";
+  const dividerColor = "bg-white/10";
 
-  const metaColor =
-    plan.featured || plan.elite ? "text-slate-500" : "text-slate-400";
+  const metaColor = "text-slate-500";
 
-  const bodyColor =
-    plan.featured || plan.elite ? "text-slate-300" : "text-slate-700";
+  const bodyColor = "text-slate-300";
 
-  const outcomeColor =
-    plan.featured || plan.elite ? "text-slate-300" : "text-slate-600";
+  const outcomeColor = "text-slate-300";
 
-  const outcomeBg =
-    plan.featured || plan.elite ? "bg-slate-900" : "bg-slate-50";
+  const outcomeBg = plan.featured || plan.elite ? "bg-white/5" : "bg-white/[0.04]";
 
-  const priceColor =
-    plan.featured || plan.elite ? "text-white" : "text-slate-900";
+  const priceColor = "text-white";
 
-  const priceNoteColor =
-    plan.featured || plan.elite ? "text-slate-500" : "text-slate-400";
+  const priceNoteColor = "text-slate-500";
 
   const checkBg = plan.elite
     ? "bg-amber-400 text-slate-900"
     : plan.featured
-    ? "bg-teal-500 text-white"
-    : "bg-teal-100 text-teal-700";
+    ? "bg-gradient-to-br from-teal-400 to-cyan-400 text-slate-950"
+    : "bg-teal-400/15 text-teal-300";
 
   return (
     <div className={`relative flex flex-col rounded-2xl border p-7 ${base}`}>
@@ -262,7 +255,7 @@ function PlanCard({
             ? "bg-gradient-to-r from-amber-400 to-yellow-300 text-slate-900 hover:from-amber-300 hover:to-yellow-200"
             : plan.featured
             ? "bg-teal-500 text-white hover:bg-teal-400"
-            : "border border-slate-300 bg-white text-slate-900 hover:border-teal-600 hover:text-teal-700"
+            : "border border-white/15 bg-white/5 text-white hover:border-cyan-400/50 hover:text-cyan-300"
         }`}
       >
         {loading === plan.key ? "Redirecting…" : plan.button}
@@ -290,13 +283,13 @@ export default function PricingSection() {
   };
 
   return (
-    <section id="programs" className="bg-white px-6 py-24">
+    <section id="programs" className="border-t border-white/10 px-6 py-24">
       <div className="mx-auto max-w-7xl">
         <div className="mb-14 text-center">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-teal-600">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-teal-400">
             Programs
           </p>
-          <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+          <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
             Choose Your Program
           </h2>
         </div>

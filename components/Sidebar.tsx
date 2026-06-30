@@ -29,7 +29,7 @@ function NavLink({
       className={cn(
         "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition",
         active
-          ? "bg-white/10 text-white"
+          ? "bg-gradient-to-r from-cyan-500/15 to-indigo-500/10 text-white shadow-[inset_0_0_0_1px_rgba(56,189,248,0.25)]"
           : "text-slate-400 hover:bg-white/5 hover:text-slate-100"
       )}
     >
@@ -96,13 +96,13 @@ export default function Sidebar({
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 flex w-64 flex-col bg-sidebar transition-transform duration-200 lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-white/10 bg-gradient-to-b from-[#0a1130] via-[#070c22] to-[#040714] transition-transform duration-200 lg:translate-x-0",
           open ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <div className="flex h-16 shrink-0 items-center justify-between border-b border-white/10 px-5">
           <Link href="/" className="flex items-center gap-2.5" onClick={onClose}>
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500 text-sm font-bold text-white">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-cyan-400 text-sm font-bold text-white shadow-[0_0_16px_-2px_rgba(56,189,248,0.6)]">
               L
             </span>
             <span className="text-sm font-semibold tracking-tight text-white">

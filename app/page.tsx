@@ -10,21 +10,21 @@ export const metadata = {
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-white text-slate-900">
+    <div className="min-h-screen bg-navy-mesh text-white">
       {/* Nav */}
-      <header className="sticky top-0 z-50 border-b border-slate-100 bg-white/90 backdrop-blur">
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#050a1a]/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <span className="text-lg font-bold tracking-tight text-teal-700">Masteri Languages</span>
+          <span className="text-lg font-bold tracking-tight text-shine">Masteri Languages</span>
           <div className="flex items-center gap-3">
             <a
               href="https://masteri.backpacksystems.com/login?from=%2F"
-              className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-teal-600 hover:text-teal-700"
+              className="rounded-xl border border-white/15 px-5 py-2.5 text-sm font-semibold text-slate-200 transition hover:border-cyan-400/60 hover:text-cyan-300"
             >
               Student Login
             </a>
             <a
               href="#programs"
-              className="rounded-xl bg-teal-700 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-800"
+              className="rounded-xl bg-gradient-to-r from-teal-500 to-cyan-400 px-5 py-2.5 text-sm font-semibold text-slate-950 shadow-[0_0_20px_-4px_rgba(45,212,191,0.6)] transition hover:brightness-110"
             >
               See Programs
             </a>
@@ -33,13 +33,13 @@ export default function LandingPage() {
       </header>
 
       {/* Hero */}
-      <section className="bg-slate-950 px-6 py-32 text-center text-white">
+      <section className="relative px-6 py-32 text-center">
         <p className="mb-6 text-xs font-semibold uppercase tracking-widest text-teal-400">
           1-on-1 Language Coaching
         </p>
         <h1 className="mx-auto max-w-4xl text-5xl font-extrabold leading-tight tracking-tight sm:text-7xl">
           This Is Not Another<br />
-          <span className="text-teal-400">Language App</span>
+          <span className="text-shine">Language App</span>
         </h1>
         <p className="mx-auto mt-8 max-w-2xl text-xl font-medium text-slate-300">
           Know what to practice, when to practice, how to remember it, and when to use it.
@@ -47,13 +47,13 @@ export default function LandingPage() {
         <div className="mt-10 flex flex-wrap justify-center gap-4">
           <a
             href="/assessment"
-            className="rounded-xl bg-teal-500 px-8 py-4 text-base font-bold text-white transition hover:bg-teal-400"
+            className="rounded-xl bg-gradient-to-r from-teal-500 to-cyan-400 px-8 py-4 text-base font-bold text-slate-950 shadow-[0_0_30px_-6px_rgba(45,212,191,0.6)] transition hover:brightness-110"
           >
             Start Learning →
           </a>
           <a
             href="#how"
-            className="rounded-xl border border-white/20 px-8 py-4 text-base font-semibold text-white transition hover:bg-white/10"
+            className="rounded-xl border border-white/20 px-8 py-4 text-base font-semibold text-white transition hover:border-cyan-400/50 hover:bg-white/5"
           >
             See How It Works
           </a>
@@ -61,15 +61,15 @@ export default function LandingPage() {
       </section>
 
       {/* Learn in a way that sticks */}
-      <section className="border-b border-slate-100 px-6 py-20">
+      <section className="border-t border-white/10 px-6 py-20">
         <div className="mx-auto max-w-5xl">
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
             Learn the Language You Need for Your Career
           </h2>
-          <p className="mt-4 text-lg text-slate-600">
+          <p className="mt-4 text-lg text-slate-400">
             No boring textbook lessons. No random apps. No memorizing words you&apos;ll never use.
           </p>
-          <p className="mt-2 text-lg text-slate-600">Choose to learn from:</p>
+          <p className="mt-2 text-lg text-slate-400">Choose to learn from:</p>
           <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {[
               "Real Estate scenarios",
@@ -81,9 +81,9 @@ export default function LandingPage() {
             ].map((item) => (
               <li
                 key={item}
-                className="flex items-center gap-3 rounded-xl border border-teal-100 bg-teal-50 px-5 py-4 text-sm font-medium text-teal-900"
+                className="glass-panel flex items-center gap-3 rounded-xl px-5 py-4 text-sm font-medium text-slate-100"
               >
-                <span className="h-2 w-2 shrink-0 rounded-full bg-teal-500" />
+                <span className="h-2 w-2 shrink-0 rounded-full bg-cyan-400 shadow-[0_0_8px_2px_rgba(34,211,238,0.6)]" />
                 {item}
               </li>
             ))}
@@ -92,7 +92,7 @@ export default function LandingPage() {
       </section>
 
       {/* Who it's for */}
-      <section className="bg-slate-950 px-6 py-20 text-white">
+      <section className="border-t border-white/10 px-6 py-20">
         <div className="mx-auto max-w-5xl">
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
             Built for People Who Want to Speak
@@ -107,7 +107,7 @@ export default function LandingPage() {
               "You need structure, accountability, and someone guiding you.",
             ].map((item) => (
               <li key={item} className="flex items-start gap-4">
-                <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-teal-500 text-xs font-bold text-white">
+                <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-teal-400 to-cyan-400 text-xs font-bold text-slate-950 shadow-[0_0_10px_-1px_rgba(45,212,191,0.7)]">
                   ✓
                 </span>
                 <span className="text-slate-300">{item}</span>
@@ -118,11 +118,11 @@ export default function LandingPage() {
       </section>
 
       {/* The Masteri Method */}
-      <section id="how" className="border-b border-slate-100 px-6 py-24">
+      <section id="how" className="border-t border-white/10 px-6 py-24">
         <div className="mx-auto max-w-5xl">
           <div className="mb-12">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-teal-600">The Masteri Method</p>
-            <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-teal-400">The Masteri Method</p>
+            <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
               A proven system that combines coaching,<br className="hidden sm:block" /> accountability, and memory science to help<br className="hidden sm:block" /> you speak confidently faster.
             </h2>
           </div>
@@ -153,13 +153,13 @@ export default function LandingPage() {
                 body: "Masteri's mnemonic system helps vocabulary stick through stories, visual associations, and active recall.",
               },
             ].map(({ step, title, hook, body }) => (
-              <div key={step} className="flex flex-col rounded-2xl border border-slate-200 p-7 shadow-sm">
-                <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-teal-600 text-sm font-bold text-white">
+              <div key={step} className="glass-panel glow-border flex flex-col rounded-2xl p-7 transition hover:border-cyan-400/30">
+                <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-teal-400 to-cyan-400 text-sm font-bold text-slate-950 shadow-[0_0_14px_-2px_rgba(45,212,191,0.7)]">
                   {step}
                 </div>
-                <h3 className="text-lg font-extrabold text-slate-900">{title}</h3>
-                <p className="mt-2 text-sm font-semibold text-teal-700">{hook}</p>
-                <p className="mt-3 flex-1 text-sm leading-relaxed text-slate-500">{body}</p>
+                <h3 className="text-lg font-extrabold text-white">{title}</h3>
+                <p className="mt-2 text-sm font-semibold text-teal-300">{hook}</p>
+                <p className="mt-3 flex-1 text-sm leading-relaxed text-slate-400">{body}</p>
               </div>
             ))}
           </div>
@@ -170,7 +170,7 @@ export default function LandingPage() {
       <PricingSection />
 
       {/* CTA */}
-      <section id="cta" className="bg-slate-950 px-6 py-28 text-center text-white">
+      <section id="cta" className="border-t border-white/10 px-6 py-28 text-center">
         <h2 className="text-3xl font-bold tracking-tight sm:text-5xl">
           Start Speaking With Confidence
         </h2>
@@ -179,7 +179,7 @@ export default function LandingPage() {
         </p>
         <a
           href="/book"
-          className="mt-10 inline-block rounded-2xl bg-teal-500 px-10 py-5 text-lg font-bold text-white transition hover:bg-teal-400"
+          className="mt-10 inline-block rounded-2xl bg-gradient-to-r from-teal-500 to-cyan-400 px-10 py-5 text-lg font-bold text-slate-950 shadow-[0_0_40px_-8px_rgba(45,212,191,0.7)] transition hover:brightness-110"
         >
           Book Your Strategy Call
         </a>
@@ -189,7 +189,7 @@ export default function LandingPage() {
       </section>
 
       {/* Newsletter */}
-      <section className="bg-slate-900 px-6 py-16">
+      <section className="border-t border-white/10 px-6 py-16">
         <div className="mx-auto max-w-xl text-center">
           <h2 className="text-2xl font-bold text-white">Get the Free Fluency Toolkit</h2>
           <p className="mt-3 text-slate-400 text-base leading-relaxed">
@@ -203,9 +203,9 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-slate-100 py-8 text-center text-xs text-slate-400">
+      <footer className="border-t border-white/10 py-8 text-center text-xs text-slate-500">
         © {new Date().getFullYear()} Masteri Languages · All rights reserved ·{" "}
-        <Link href="/dashboard" className="hover:text-slate-600">
+        <Link href="/dashboard" className="hover:text-slate-300">
           Admin
         </Link>
       </footer>

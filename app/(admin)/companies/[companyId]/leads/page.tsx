@@ -21,8 +21,8 @@ export default function LeadsPage() {
       header: "Lead",
       render: (lead) => (
         <div>
-          <p className="font-medium text-slate-900">{lead.name}</p>
-          <p className="text-xs text-slate-500">{lead.email}</p>
+          <p className="font-medium text-white">{lead.name}</p>
+          <p className="text-xs text-slate-400">{lead.email}</p>
         </div>
       ),
     },
@@ -32,7 +32,7 @@ export default function LeadsPage() {
       key: "value",
       header: "Est. Value",
       render: (lead) => (
-        <span className="font-medium text-slate-900">
+        <span className="font-medium text-white">
           {formatCurrency(lead.value, company.currency)}
         </span>
       ),

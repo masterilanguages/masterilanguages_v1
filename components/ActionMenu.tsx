@@ -40,13 +40,13 @@ export default function ActionMenu({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="rounded-md p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+        className="rounded-md p-1.5 text-slate-500 transition hover:bg-slate-100 hover:text-slate-300"
         aria-label="Row actions"
       >
         <DotsIcon />
       </button>
       {open && (
-        <div className="absolute right-0 z-20 mt-1 w-40 origin-top-right rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
+        <div className="absolute right-0 z-20 mt-1 w-40 origin-top-right rounded-lg border border-white/10 bg-white/[0.04] backdrop-blur-xl py-1 shadow-lg">
           {items.map((item) => (
             <button
               key={item.label}
@@ -56,8 +56,8 @@ export default function ActionMenu({
                 setOpen(false);
               }}
               className={cn(
-                "block w-full px-3 py-1.5 text-left text-sm transition hover:bg-slate-50",
-                item.destructive ? "text-red-600" : "text-slate-700"
+                "block w-full px-3 py-1.5 text-left text-sm transition hover:bg-white/[0.06]",
+                item.destructive ? "text-red-600" : "text-slate-200"
               )}
             >
               {item.label}

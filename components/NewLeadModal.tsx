@@ -54,7 +54,7 @@ export default function NewLeadModal({
   }
 
   const fieldClass =
-    "mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500";
+    "mt-1.5 w-full rounded-lg border border-white/15 px-3 py-2.5 text-sm text-white shadow-[0_0_20px_-10px_rgba(56,189,248,0.25)] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -68,19 +68,19 @@ export default function NewLeadModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="new-lead-title"
-        className="relative w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-xl"
+        className="relative w-full max-w-lg rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-6 shadow-xl"
       >
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 id="new-lead-title" className="text-lg font-semibold text-slate-900">
+            <h2 id="new-lead-title" className="text-lg font-semibold text-white">
               New lead
             </h2>
-            <p className="mt-1 text-sm text-slate-500">Add contact details for a new lead.</p>
+            <p className="mt-1 text-sm text-slate-400">Add contact details for a new lead.</p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+            className="rounded-md p-1 text-slate-500 transition hover:bg-slate-100 hover:text-slate-300"
             aria-label="Close"
           >
             <CloseIcon />
@@ -89,7 +89,7 @@ export default function NewLeadModal({
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
-            <label className="block text-sm font-medium text-slate-700">
+            <label className="block text-sm font-medium text-slate-200">
               First name
               <input
                 type="text"
@@ -101,7 +101,7 @@ export default function NewLeadModal({
                 placeholder="First name"
               />
             </label>
-            <label className="block text-sm font-medium text-slate-700">
+            <label className="block text-sm font-medium text-slate-200">
               Last name
               <input
                 type="text"
@@ -114,7 +114,7 @@ export default function NewLeadModal({
               />
             </label>
           </div>
-          <label className="block text-sm font-medium text-slate-700">
+          <label className="block text-sm font-medium text-slate-200">
             Phone number
             <input
               type="tel"
@@ -126,7 +126,7 @@ export default function NewLeadModal({
               placeholder="Phone number"
             />
           </label>
-          <label className="block text-sm font-medium text-slate-700">
+          <label className="block text-sm font-medium text-slate-200">
             Email
             <input
               type="email"
@@ -142,7 +142,7 @@ export default function NewLeadModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+              className="rounded-lg border border-white/15 bg-white/[0.04] backdrop-blur-xl px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/[0.06]"
             >
               Cancel
             </button>

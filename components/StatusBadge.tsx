@@ -8,7 +8,7 @@ const TONE_CLASSES: Record<Tone, string> = {
   blue: "bg-blue-50 text-blue-700 ring-blue-600/20",
   purple: "bg-violet-50 text-violet-700 ring-violet-600/20",
   orange: "bg-orange-50 text-orange-700 ring-orange-600/20",
-  gray: "bg-slate-100 text-slate-600 ring-slate-500/20",
+  gray: "bg-slate-100 text-slate-300 ring-slate-500/20",
 };
 
 export default function StatusBadge({

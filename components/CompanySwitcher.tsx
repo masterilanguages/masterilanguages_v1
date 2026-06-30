@@ -53,7 +53,7 @@ export default function CompanySwitcher() {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-2.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+        className="flex items-center gap-2.5 rounded-lg border border-white/10 bg-white/[0.04] backdrop-blur-xl px-3 py-2 text-sm font-medium text-slate-200 shadow-[0_0_20px_-10px_rgba(56,189,248,0.25)] transition hover:border-white/15 hover:bg-white/[0.06]"
       >
         {active ? (
           <>
@@ -66,14 +66,14 @@ export default function CompanySwitcher() {
             <span className="hidden sm:block">{active.name}</span>
           </>
         ) : (
-          <span className="text-slate-500">Select company</span>
+          <span className="text-slate-400">Select company</span>
         )}
-        <ChevronDownIcon className="h-4 w-4 text-slate-400" />
+        <ChevronDownIcon className="h-4 w-4 text-slate-500" />
       </button>
 
       {open && (
-        <div className="absolute right-0 z-30 mt-2 w-64 origin-top-right rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg">
-          <p className="px-2.5 pb-1 pt-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
+        <div className="absolute right-0 z-30 mt-2 w-64 origin-top-right rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-1.5 shadow-lg">
+          <p className="px-2.5 pb-1 pt-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
             Switch company
           </p>
           {COMPANY_LIST.map((company) => (
@@ -82,8 +82,8 @@ export default function CompanySwitcher() {
               type="button"
               onClick={() => switchTo(company.id)}
               className={cn(
-                "flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left transition hover:bg-slate-50",
-                active?.id === company.id && "bg-slate-50"
+                "flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left transition hover:bg-white/[0.06]",
+                active?.id === company.id && "bg-white/[0.06]"
               )}
             >
               <span
@@ -93,15 +93,15 @@ export default function CompanySwitcher() {
                 {company.initials}
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-medium text-slate-800">
+                <span className="block truncate text-sm font-medium text-slate-100">
                   {company.name}
                 </span>
-                <span className="block truncate text-xs text-slate-500">
+                <span className="block truncate text-xs text-slate-400">
                   {company.tagline}
                 </span>
               </span>
               {active?.id === company.id && (
-                <CheckIcon className="h-4 w-4 shrink-0 text-indigo-600" />
+                <CheckIcon className="h-4 w-4 shrink-0 text-indigo-400" />
               )}
             </button>
           ))}

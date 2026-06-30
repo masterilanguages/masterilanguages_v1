@@ -26,7 +26,7 @@ export default function FilesPage() {
     {
       key: "name",
       header: "File",
-      render: (file) => <span className="font-medium text-slate-900">{file.name}</span>,
+      render: (file) => <span className="font-medium text-white">{file.name}</span>,
       className: "max-w-[320px] truncate",
     },
     {

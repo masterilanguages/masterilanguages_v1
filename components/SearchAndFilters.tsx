@@ -27,13 +27,13 @@ export default function SearchAndFilters({
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
       <div className="relative flex-1 sm:max-w-xs">
-        <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
         <input
           type="text"
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder={searchPlaceholder}
-          className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          className="w-full rounded-lg border border-white/15 bg-white/[0.04] backdrop-blur-xl py-2 pl-9 pr-3 text-sm text-white placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
         />
       </div>
       {filters.map((filter) => (
@@ -42,10 +42,10 @@ export default function SearchAndFilters({
           value={filterValues[filter.key] ?? "all"}
           onChange={(e) => onFilterChange(filter.key, e.target.value)}
           className={cn(
-            "rounded-lg border border-slate-300 bg-white py-2 pl-3 pr-8 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500",
+            "rounded-lg border border-white/15 bg-white/[0.04] backdrop-blur-xl py-2 pl-3 pr-8 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500",
             (filterValues[filter.key] ?? "all") === "all"
-              ? "text-slate-500"
-              : "text-slate-900"
+              ? "text-slate-400"
+              : "text-white"
           )}
         >
           <option value="all">All {filter.label}</option>

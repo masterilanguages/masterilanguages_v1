@@ -69,17 +69,17 @@ export default function DataTable<T extends { id: string }>({
       {filtered.length === 0 ? (
         <EmptyState title={emptyTitle} description={emptyDescription} />
       ) : (
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-card">
+        <div className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_8px_30px_-12px_rgba(56,189,248,0.3)]">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-200 text-sm">
-              <thead className="bg-slate-50">
+            <table className="min-w-full divide-y divide-white/10 text-sm">
+              <thead className="bg-white/[0.06]">
                 <tr>
                   {columns.map((col) => (
                     <th
                       key={col.key}
                       scope="col"
                       className={cn(
-                        "whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500",
+                        "whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-400",
                         col.className
                       )}
                     >
@@ -89,13 +89,13 @@ export default function DataTable<T extends { id: string }>({
                   {showActions && <th scope="col" className="w-12 px-4 py-3" />}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-white/10">
                 {filtered.map((row) => (
                   <tr key={row.id} className="transition hover:bg-slate-50/75">
                     {columns.map((col) => (
                       <td
                         key={col.key}
-                        className={cn("whitespace-nowrap px-4 py-3 text-slate-700", col.className)}
+                        className={cn("whitespace-nowrap px-4 py-3 text-slate-200", col.className)}
                       >
                         {col.render
                           ? col.render(row)
@@ -114,7 +114,7 @@ export default function DataTable<T extends { id: string }>({
               </tbody>
             </table>
           </div>
-          <div className="border-t border-slate-100 bg-slate-50/60 px-4 py-2.5 text-xs text-slate-500">
+          <div className="border-t border-white/10 bg-slate-50/60 px-4 py-2.5 text-xs text-slate-400">
             Showing {filtered.length} of {rows.length} records
           </div>
         </div>

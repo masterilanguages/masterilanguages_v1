@@ -49,13 +49,13 @@ export default function NewsletterPage() {
       />
 
       {/* Tabs */}
-      <div className="mb-6 flex gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1 w-fit">
+      <div className="mb-6 flex gap-1 rounded-xl border border-white/10 bg-slate-100 p-1 w-fit">
         {(["subscribers", "compose"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
             className={`rounded-lg px-5 py-2 text-sm font-semibold capitalize transition ${
-              tab === t ? "bg-white shadow text-slate-900" : "text-slate-500 hover:text-slate-700"
+              tab === t ? "bg-white/[0.04] backdrop-blur-xl shadow text-white" : "text-slate-400 hover:text-slate-200"
             }`}
           >
             {t === "subscribers" ? `Subscribers (${subscribers.length})` : "Compose & Send"}
@@ -64,20 +64,20 @@ export default function NewsletterPage() {
       </div>
 
       {tab === "subscribers" && (
-        <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-[0_0_20px_-10px_rgba(56,189,248,0.25)]">
           {/* Add email */}
-          <div className="flex gap-3 border-b border-slate-100 p-4">
+          <div className="flex gap-3 border-b border-white/10 p-4">
             <input
               type="email"
               value={newEmail}
               onChange={(e) => setNewEmail(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && addEmail()}
               placeholder="Add email address..."
-              className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="flex-1 rounded-lg border border-white/10 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
             />
             <button
               onClick={addEmail}
-              className="rounded-lg bg-teal-600 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-700"
+              className="rounded-lg bg-teal-600 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-600"
             >
               Add
             </button>
@@ -85,12 +85,12 @@ export default function NewsletterPage() {
 
           {/* List */}
           {subscribers.length === 0 ? (
-            <p className="p-8 text-center text-sm text-slate-400">No subscribers yet.</p>
+            <p className="p-8 text-center text-sm text-slate-500">No subscribers yet.</p>
           ) : (
-            <ul className="divide-y divide-slate-100">
+            <ul className="divide-y divide-white/10">
               {subscribers.map((email) => (
                 <li key={email} className="flex items-center justify-between px-5 py-3">
-                  <span className="text-sm text-slate-800">{email}</span>
+                  <span className="text-sm text-slate-100">{email}</span>
                   <button
                     onClick={() => removeEmail(email)}
                     className="text-xs text-red-400 hover:text-red-600"
@@ -106,25 +106,25 @@ export default function NewsletterPage() {
 
       {tab === "compose" && (
         <div className="space-y-4">
-          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+          <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-6 shadow-[0_0_20px_-10px_rgba(56,189,248,0.25)] space-y-4">
             <div>
-              <label className="mb-1.5 block text-xs font-semibold text-slate-500 uppercase tracking-wide">Subject</label>
+              <label className="mb-1.5 block text-xs font-semibold text-slate-400 uppercase tracking-wide">Subject</label>
               <input
                 type="text"
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
                 placeholder="Your email subject..."
-                className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full rounded-lg border border-white/10 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-semibold text-slate-500 uppercase tracking-wide">Body</label>
+              <label className="mb-1.5 block text-xs font-semibold text-slate-400 uppercase tracking-wide">Body</label>
               <textarea
                 rows={14}
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
                 placeholder="Write your newsletter here..."
-                className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none font-mono"
+                className="w-full rounded-lg border border-white/10 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none font-mono"
               />
             </div>
           </div>
@@ -133,15 +133,15 @@ export default function NewsletterPage() {
             <button
               onClick={handleSend}
               disabled={sending || !subject || !body || subscribers.length === 0}
-              className="rounded-xl bg-teal-600 px-6 py-3 text-sm font-bold text-white hover:bg-teal-700 disabled:opacity-40 transition"
+              className="rounded-xl bg-teal-600 px-6 py-3 text-sm font-bold text-white hover:bg-teal-600 disabled:opacity-40 transition"
             >
               {sending ? "Sending…" : `Send to ${subscribers.length} subscriber${subscribers.length !== 1 ? "s" : ""}`}
             </button>
             {subscribers.length === 0 && (
-              <p className="text-sm text-slate-400">Add subscribers first.</p>
+              <p className="text-sm text-slate-500">Add subscribers first.</p>
             )}
             {result && (
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-slate-300">
                 ✓ Sent: <strong>{result.sent}</strong>
                 {result.failed > 0 && ` · Failed: ${result.failed}`}
               </p>

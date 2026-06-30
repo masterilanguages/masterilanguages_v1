@@ -23,8 +23,8 @@ export default function TasksPage() {
       header: "Task",
       render: (task) => (
         <div>
-          <p className="font-medium text-slate-900">{task.title}</p>
-          <p className="text-xs text-slate-500">{task.related}</p>
+          <p className="font-medium text-white">{task.title}</p>
+          <p className="text-xs text-slate-400">{task.related}</p>
         </div>
       ),
       className: "max-w-[340px] whitespace-normal",

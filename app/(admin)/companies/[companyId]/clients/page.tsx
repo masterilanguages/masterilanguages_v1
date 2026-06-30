@@ -29,7 +29,7 @@ function EditableValue({
       <input
         autoFocus
         type="number"
-        className="w-24 rounded border border-teal-400 px-2 py-0.5 text-sm font-medium text-slate-900 outline-none ring-2 ring-teal-200"
+        className="w-24 rounded border border-teal-400 px-2 py-0.5 text-sm font-medium text-white outline-none ring-2 ring-teal-200"
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
         onBlur={() => {
@@ -49,7 +49,7 @@ function EditableValue({
     <button
       type="button"
       onClick={() => { setDraft(String(value)); setEditing(true); }}
-      className="group flex items-center gap-1 font-medium text-slate-900 hover:text-teal-700"
+      className="group flex items-center gap-1 font-medium text-white hover:text-teal-300"
       title="Click to edit"
     >
       {formatCurrency(value, currency)}
@@ -83,7 +83,7 @@ function LoginAsButton({ email }: { email: string }) {
       type="button"
       onClick={handle}
       disabled={status === "loading"}
-      className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+      className="rounded-md border border-white/10 bg-white/[0.04] backdrop-blur-xl px-2.5 py-1 text-xs font-medium text-slate-200 transition hover:bg-white/[0.06] disabled:opacity-50"
     >
       {status === "loading" ? "…" : status === "error" ? "Failed" : "Login as →"}
     </button>
@@ -104,7 +104,7 @@ function ActivateButton({ name, email }: { name: string; email: string }) {
     if (res.ok) setTimeout(() => setStatus("idle"), 3000);
   };
 
-  if (status === "sent") return <span className="text-xs font-medium text-teal-600">✓ Sent</span>;
+  if (status === "sent") return <span className="text-xs font-medium text-teal-400">✓ Sent</span>;
   if (status === "error") return <span className="text-xs font-medium text-red-500">Failed</span>;
 
   return (
@@ -112,7 +112,7 @@ function ActivateButton({ name, email }: { name: string; email: string }) {
       type="button"
       onClick={send}
       disabled={status === "sending"}
-      className="rounded-md border border-teal-200 bg-teal-50 px-2.5 py-1 text-xs font-medium text-teal-700 transition hover:bg-teal-100 disabled:opacity-50"
+      className="rounded-md border border-teal-200 bg-teal-50 px-2.5 py-1 text-xs font-medium text-teal-300 transition hover:bg-teal-100 disabled:opacity-50"
     >
       {status === "sending" ? "Sending…" : "Send activation"}
     </button>
@@ -133,8 +133,8 @@ export default function ClientsPage() {
       header: company.labels.clients.replace(/s$/, ""),
       render: (client) => (
         <div>
-          <p className="font-medium text-slate-900">{client.name}</p>
-          <p className="text-xs text-slate-500">{client.email}</p>
+          <p className="font-medium text-white">{client.name}</p>
+          <p className="text-xs text-slate-400">{client.email}</p>
         </div>
       ),
     },
@@ -275,10 +275,10 @@ export default function ClientsPage() {
 
       {viewClient && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4" onClick={() => setViewClient(null)}>
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full max-w-sm rounded-2xl bg-white/[0.04] backdrop-blur-xl p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-slate-900">{viewClient.name}</h2>
-              <button type="button" onClick={() => setViewClient(null)} className="text-slate-400 hover:text-slate-600">✕</button>
+              <h2 className="text-lg font-semibold text-white">{viewClient.name}</h2>
+              <button type="button" onClick={() => setViewClient(null)} className="text-slate-500 hover:text-slate-300">✕</button>
             </div>
             <dl className="space-y-3 text-sm">
               {[
@@ -290,8 +290,8 @@ export default function ClientsPage() {
                 ...(company.clientMetaColumns ?? []).map((m) => [m.header, viewClient.meta?.[m.key] ?? "—"]),
               ].map(([label, value]) => (
                 <div key={label} className="flex justify-between gap-4">
-                  <dt className="text-slate-500">{label}</dt>
-                  <dd className="font-medium text-slate-900 text-right">{value}</dd>
+                  <dt className="text-slate-400">{label}</dt>
+                  <dd className="font-medium text-white text-right">{value}</dd>
                 </div>
               ))}
             </dl>

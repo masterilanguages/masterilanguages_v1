@@ -30,7 +30,7 @@ function MasteriCurriculum() {
         {
           key: "unit",
           header: "Unit",
-          render: (u) => <span className="font-medium text-slate-900">{u.unit}</span>,
+          render: (u) => <span className="font-medium text-white">{u.unit}</span>,
         },
         { key: "language", header: "Language" },
         { key: "level", header: "Level" },
@@ -58,7 +58,7 @@ function MasteriVocabulary() {
         {
           key: "word",
           header: "Word",
-          render: (v) => <span className="font-medium text-slate-900">{v.word}</span>,
+          render: (v) => <span className="font-medium text-white">{v.word}</span>,
         },
         { key: "translation", header: "Translation" },
         { key: "language", header: "Language" },
@@ -69,7 +69,7 @@ function MasteriVocabulary() {
           render: (v) => (
             <div className="flex w-36 items-center gap-2">
               <ProgressBar value={v.mastery} className="flex-1" />
-              <span className="w-9 text-right text-xs font-medium text-slate-600">
+              <span className="w-9 text-right text-xs font-medium text-slate-300">
                 {v.mastery}%
               </span>
             </div>
@@ -97,18 +97,18 @@ function MasteriMnemonics() {
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {masteriMnemonics.map((m) => (
-        <div key={m.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-card">
+        <div key={m.id} className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4 shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_8px_30px_-12px_rgba(56,189,248,0.3)]">
           <div className="flex items-start justify-between gap-2">
             <div>
-              <p className="text-sm font-semibold text-slate-900">{m.word}</p>
-              <p className="text-xs text-slate-500">{m.language}</p>
+              <p className="text-sm font-semibold text-white">{m.word}</p>
+              <p className="text-xs text-slate-400">{m.language}</p>
             </div>
             <ActionMenu />
           </div>
           <p className="mt-3 rounded-lg bg-teal-50 px-3 py-2 text-sm italic text-teal-900">
             “{m.mnemonic}”
           </p>
-          <p className="mt-3 text-xs text-slate-400">by {m.createdBy}</p>
+          <p className="mt-3 text-xs text-slate-500">by {m.createdBy}</p>
         </div>
       ))}
     </div>
@@ -126,8 +126,8 @@ function MasteriProgressTable() {
           header: "Student",
           render: (p) => (
             <div>
-              <p className="font-medium text-slate-900">{p.student}</p>
-              <p className="text-xs text-slate-500">
+              <p className="font-medium text-white">{p.student}</p>
+              <p className="text-xs text-slate-400">
                 {p.language} · {p.level}
               </p>
             </div>
@@ -141,7 +141,7 @@ function MasteriProgressTable() {
             return (
               <div className="flex w-44 items-center gap-2">
                 <ProgressBar value={pct} className="flex-1" />
-                <span className="whitespace-nowrap text-xs font-medium text-slate-600">
+                <span className="whitespace-nowrap text-xs font-medium text-slate-300">
                   {p.lessonsDone}/{p.lessonsTotal}
                 </span>
               </div>

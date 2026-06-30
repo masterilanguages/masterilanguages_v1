@@ -36,7 +36,7 @@ export default function FinancesPage() {
     {
       key: "description",
       header: "Description",
-      render: (t) => <span className="font-medium text-slate-900">{t.description}</span>,
+      render: (t) => <span className="font-medium text-white">{t.description}</span>,
       className: "max-w-[320px] whitespace-normal",
     },
     { key: "category", header: "Category" },
@@ -48,7 +48,7 @@ export default function FinancesPage() {
         <span
           className={cn(
             "font-semibold",
-            t.type === "Income" ? "text-emerald-600" : "text-slate-900"
+            t.type === "Income" ? "text-emerald-600" : "text-white"
           )}
         >
           {t.type === "Income" ? "+" : "−"}

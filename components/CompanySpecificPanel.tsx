@@ -18,11 +18,11 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white shadow-card">
-      <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3.5">
-        <h2 className="text-sm font-semibold text-slate-900">{title}</h2>
+    <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_8px_30px_-12px_rgba(56,189,248,0.3)]">
+      <div className="flex items-center justify-between border-b border-white/10 px-5 py-3.5">
+        <h2 className="text-sm font-semibold text-white">{title}</h2>
         {href && (
-          <Link href={href} className="text-xs font-medium text-indigo-600 hover:text-indigo-700">
+          <Link href={href} className="text-xs font-medium text-indigo-400 hover:text-indigo-300">
             {linkLabel ?? "View all"}
           </Link>
         )}
@@ -62,13 +62,13 @@ function MasteriPanels({ company }: { company: Company }) {
             return (
               <div key={p.id}>
                 <div className="mb-1 flex items-center justify-between gap-2">
-                  <p className="truncate text-sm font-medium text-slate-800">
+                  <p className="truncate text-sm font-medium text-slate-100">
                     {p.student}
-                    <span className="ml-2 text-xs font-normal text-slate-500">
+                    <span className="ml-2 text-xs font-normal text-slate-400">
                       {p.language} · {p.level}
                     </span>
                   </p>
-                  <span className="shrink-0 text-xs font-semibold text-slate-600">{pct}%</span>
+                  <span className="shrink-0 text-xs font-semibold text-slate-300">{pct}%</span>
                 </div>
                 <ProgressBar value={pct} />
               </div>
@@ -78,12 +78,12 @@ function MasteriPanels({ company }: { company: Company }) {
       </Panel>
 
       <Panel title="Subscription health" href={`/companies/${company.id}/finances`} linkLabel="Finances">
-        <ul className="divide-y divide-slate-100">
+        <ul className="divide-y divide-white/10">
           {masteriProgress.map((p) => (
             <li key={p.id} className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0">
               <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-slate-800">{p.student}</p>
-                <p className="text-xs text-slate-500">Homework rate {p.homeworkRate}%</p>
+                <p className="truncate text-sm font-medium text-slate-100">{p.student}</p>
+                <p className="text-xs text-slate-400">Homework rate {p.homeworkRate}%</p>
               </div>
               <StatusBadge status={p.subscription} />
             </li>
