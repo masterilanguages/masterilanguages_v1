@@ -12,26 +12,28 @@ import { toast } from "sonner";
 import GameHeader from "@/components/dashboard/GameHeader";
 import QuickAddWordWidget from "@/components/QuickAddWordWidget";
 
+// anchor = exact point on the body the word refers to
+// label  = where the word pill is drawn (offset so pills never overlap each other)
 const bodyParts = [
-  { id: "head", hebrew: "ראש", transliteration: "rosh", meaning: "head", top: "5%", left: "50%" },
-  { id: "hair", hebrew: "שיער", transliteration: "se'ar", meaning: "hair", top: "2%", left: "50%" },
-  { id: "eye", hebrew: "עין", transliteration: "ayin", meaning: "eye", top: "12%", left: "45%" },
-  { id: "eyes", hebrew: "עיניים", transliteration: "einayim", meaning: "eyes", top: "12%", left: "55%" },
-  { id: "ear", hebrew: "אוזן", transliteration: "ozen", meaning: "ear", top: "12%", left: "38%" },
-  { id: "nose", hebrew: "אף", transliteration: "af", meaning: "nose", top: "16%", left: "50%" },
-  { id: "mouth", hebrew: "פה", transliteration: "peh", meaning: "mouth", top: "20%", left: "50%" },
-  { id: "neck", hebrew: "צוואר", transliteration: "tzavar", meaning: "neck", top: "26%", left: "50%" },
-  { id: "shoulder", hebrew: "כתף", transliteration: "katef", meaning: "shoulder", top: "30%", left: "35%" },
-  { id: "arm", hebrew: "יד", transliteration: "yad", meaning: "arm", top: "42%", left: "25%" },
-  { id: "hand", hebrew: "כף יד", transliteration: "kaf yad", meaning: "hand", top: "55%", left: "20%" },
-  { id: "finger", hebrew: "אצבע", transliteration: "etzba", meaning: "finger", top: "60%", left: "18%" },
-  { id: "chest", hebrew: "חזה", transliteration: "chazeh", meaning: "chest", top: "35%", left: "50%" },
-  { id: "heart", hebrew: "לב", transliteration: "lev", meaning: "heart", top: "38%", left: "45%" },
-  { id: "stomach", hebrew: "בטן", transliteration: "beten", meaning: "stomach", top: "48%", left: "50%" },
-  { id: "back", hebrew: "גב", transliteration: "gav", meaning: "back", top: "40%", left: "58%" },
-  { id: "leg", hebrew: "רגל", transliteration: "regel", meaning: "leg", top: "70%", left: "45%" },
-  { id: "knee", hebrew: "ברך", transliteration: "berech", meaning: "knee", top: "75%", left: "45%" },
-  { id: "foot", hebrew: "כף רגל", transliteration: "kaf regel", meaning: "foot", top: "92%", left: "45%" },
+  { id: "hair", hebrew: "שיער", transliteration: "se'ar", meaning: "hair", anchor: { top: "3%", left: "50%" }, label: { top: "2%", left: "82%" } },
+  { id: "head", hebrew: "ראש", transliteration: "rosh", meaning: "head", anchor: { top: "8%", left: "50%" }, label: { top: "7%", left: "16%" } },
+  { id: "eye", hebrew: "עין", transliteration: "ayin", meaning: "eye", anchor: { top: "11%", left: "45%" }, label: { top: "13%", left: "14%" } },
+  { id: "eyes", hebrew: "עיניים", transliteration: "einayim", meaning: "eyes", anchor: { top: "11%", left: "55%" }, label: { top: "13%", left: "86%" } },
+  { id: "ear", hebrew: "אוזן", transliteration: "ozen", meaning: "ear", anchor: { top: "12%", left: "38%" }, label: { top: "19%", left: "10%" } },
+  { id: "nose", hebrew: "אף", transliteration: "af", meaning: "nose", anchor: { top: "14%", left: "50%" }, label: { top: "20%", left: "50%" } },
+  { id: "mouth", hebrew: "פה", transliteration: "peh", meaning: "mouth", anchor: { top: "17%", left: "50%" }, label: { top: "19%", left: "88%" } },
+  { id: "neck", hebrew: "צוואר", transliteration: "tzavar", meaning: "neck", anchor: { top: "22%", left: "50%" }, label: { top: "25%", left: "16%" } },
+  { id: "shoulder", hebrew: "כתף", transliteration: "katef", meaning: "shoulder", anchor: { top: "29%", left: "30%" }, label: { top: "29%", left: "84%" } },
+  { id: "chest", hebrew: "חזה", transliteration: "chazeh", meaning: "chest", anchor: { top: "34%", left: "50%" }, label: { top: "34%", left: "50%" } },
+  { id: "heart", hebrew: "לב", transliteration: "lev", meaning: "heart", anchor: { top: "37%", left: "45%" }, label: { top: "38%", left: "16%" } },
+  { id: "back", hebrew: "גב", transliteration: "gav", meaning: "back", anchor: { top: "39%", left: "60%" }, label: { top: "40%", left: "86%" } },
+  { id: "arm", hebrew: "יד", transliteration: "yad", meaning: "arm", anchor: { top: "44%", left: "20%" }, label: { top: "46%", left: "9%" } },
+  { id: "stomach", hebrew: "בטן", transliteration: "beten", meaning: "stomach", anchor: { top: "48%", left: "50%" }, label: { top: "50%", left: "50%" } },
+  { id: "hand", hebrew: "כף יד", transliteration: "kaf yad", meaning: "hand", anchor: { top: "57%", left: "18%" }, label: { top: "59%", left: "8%" } },
+  { id: "finger", hebrew: "אצבע", transliteration: "etzba", meaning: "finger", anchor: { top: "62%", left: "17%" }, label: { top: "66%", left: "8%" } },
+  { id: "leg", hebrew: "רגל", transliteration: "regel", meaning: "leg", anchor: { top: "75%", left: "44%" }, label: { top: "76%", left: "84%" } },
+  { id: "knee", hebrew: "ברך", transliteration: "berech", meaning: "knee", anchor: { top: "83%", left: "44%" }, label: { top: "84%", left: "84%" } },
+  { id: "foot", hebrew: "כף רגל", transliteration: "kaf regel", meaning: "foot", anchor: { top: "95%", left: "44%" }, label: { top: "94%", left: "84%" } },
 ];
 
 export default function BodyPartsLesson() {
@@ -123,64 +125,100 @@ export default function BodyPartsLesson() {
   const ratedCount = Object.keys(partRatings).length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_#2e1065_0%,_#0f0a2e_45%,_#020617_100%)]">
       <GameHeader profile={userProfile} coins={userCoins?.coins} onBuyCoins={() => {}} />
 
       <div className="max-w-4xl mx-auto px-4 py-6">
         <div className="flex items-center gap-4 mb-6">
-          <Link to="/portal/dashboard" className="text-white/60 hover:text-white">
-            <ArrowLeft className="w-6 h-6" />
+          <Link
+            to="/portal/dashboard"
+            className="flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
-            <h1 className="text-3xl font-bold text-white">🦵 Body Parts</h1>
-            <p className="text-white/60">Click body parts to see Hebrew • Rate 1-5 to save</p>
+            <h1 className="text-3xl font-extrabold bg-gradient-to-r from-cyan-300 via-sky-300 to-fuchsia-300 bg-clip-text text-transparent">
+              Body Parts
+            </h1>
+            <p className="text-white/50 text-sm">Tap a word to reveal the Hebrew • Rate 1–5 to save it</p>
           </div>
         </div>
 
         {/* Progress */}
-        <div className="mb-6">
-          <div className="flex justify-between text-white/60 text-sm mb-2">
+        <div className="mb-6 bg-white/5 border border-white/10 rounded-2xl px-4 py-3 backdrop-blur-sm">
+          <div className="flex justify-between text-white/70 text-sm mb-2 font-medium">
             <span>{ratedCount} of {bodyParts.length} rated</span>
-            {ratedCount === bodyParts.length && (
-              <span className="text-green-400 flex items-center gap-1">
+            {ratedCount === bodyParts.length ? (
+              <span className="text-emerald-400 flex items-center gap-1">
                 <CheckCircle className="w-4 h-4" /> Complete!
               </span>
+            ) : (
+              <span className="text-white/40">{Math.round((ratedCount / bodyParts.length) * 100)}%</span>
             )}
           </div>
-          <div className="bg-white/10 rounded-full h-2 overflow-hidden">
+          <div className="bg-white/10 rounded-full h-2.5 overflow-hidden">
             <motion.div
-              className="h-full bg-gradient-to-r from-cyan-500 to-purple-500"
+              className="h-full rounded-full bg-gradient-to-r from-cyan-400 via-sky-400 to-fuchsia-400 shadow-[0_0_10px_rgba(56,189,248,0.6)]"
               initial={{ width: 0 }}
               animate={{ width: `${(ratedCount / bodyParts.length) * 100}%` }}
+              transition={{ type: "spring", stiffness: 80, damping: 20 }}
             />
           </div>
         </div>
 
         {/* Body Diagram */}
-        <div className="relative w-full max-w-md mx-auto aspect-[1/2] bg-white/5 rounded-3xl border border-white/10 overflow-hidden">
+        <div className="relative w-full max-w-md mx-auto aspect-[1/2] bg-gradient-to-b from-white/[0.06] to-white/[0.02] rounded-[2.5rem] border border-white/10 shadow-[0_0_60px_-15px_rgba(56,189,248,0.35)] overflow-hidden">
+          {/* Ambient glow */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_35%,_rgba(56,189,248,0.18),_transparent_60%)]" />
+
           {/* Body silhouette */}
-          <div className="absolute inset-0 flex items-center justify-center opacity-20">
-            <svg viewBox="0 0 100 200" className="h-full w-auto fill-white">
-              {/* Head */}
-              <circle cx="50" cy="20" r="15" />
-              {/* Neck */}
-              <rect x="45" y="35" width="10" height="10" />
-              {/* Torso */}
-              <ellipse cx="50" cy="70" rx="20" ry="30" />
-              {/* Arms */}
-              <rect x="15" y="45" width="10" height="40" rx="5" />
-              <rect x="75" y="45" width="10" height="40" rx="5" />
-              {/* Hands */}
-              <circle cx="20" cy="90" r="6" />
-              <circle cx="80" cy="90" r="6" />
-              {/* Legs */}
-              <rect x="35" y="100" width="12" height="50" rx="5" />
-              <rect x="53" y="100" width="12" height="50" rx="5" />
-              {/* Feet */}
-              <ellipse cx="41" cy="155" rx="8" ry="5" />
-              <ellipse cx="59" cy="155" rx="8" ry="5" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <svg viewBox="0 0 100 200" className="h-full w-auto">
+              <defs>
+                <linearGradient id="bodyGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#67e8f9" stopOpacity="0.35" />
+                  <stop offset="100%" stopColor="#c084fc" stopOpacity="0.28" />
+                </linearGradient>
+              </defs>
+              <g fill="url(#bodyGrad)" stroke="rgba(255,255,255,0.25)" strokeWidth="0.6">
+                <circle cx="50" cy="16" r="13" />
+                <rect x="46" y="27" width="8" height="9" rx="2" />
+                <path d="M30 38 Q50 28 70 38 Q76 65 68 92 Q50 100 32 92 Q24 65 30 38 Z" />
+                <rect x="14" y="40" width="9" height="42" rx="4.5" transform="rotate(-6 18.5 61)" />
+                <rect x="77" y="40" width="9" height="42" rx="4.5" transform="rotate(6 81.5 61)" />
+                <circle cx="17" cy="86" r="5.5" />
+                <circle cx="83" cy="86" r="5.5" />
+                <rect x="35" y="98" width="13" height="52" rx="6" />
+                <rect x="52" y="98" width="13" height="52" rx="6" />
+                <ellipse cx="41" cy="156" rx="8.5" ry="5" />
+                <ellipse cx="59" cy="156" rx="8.5" ry="5" />
+              </g>
             </svg>
           </div>
+
+          {/* Leader lines + anchor dots */}
+          <svg className="absolute inset-0 w-full h-full z-[5]" viewBox="0 0 100 100" preserveAspectRatio="none">
+            {bodyParts.map((part) => {
+              const isClicked = clickedParts[part.id];
+              const isRated = partRatings[part.id] !== undefined;
+              const color = isClicked ? "#22d3ee" : isRated ? "#34d399" : "rgba(255,255,255,0.35)";
+              const ax = parseFloat(part.anchor.left);
+              const ay = parseFloat(part.anchor.top);
+              const lx = parseFloat(part.label.left);
+              const ly = parseFloat(part.label.top);
+              return (
+                <g key={part.id}>
+                  <line
+                    x1={ax} y1={ay} x2={lx} y2={ly}
+                    stroke={color}
+                    strokeWidth={0.4}
+                    vectorEffect="non-scaling-stroke"
+                  />
+                  <circle cx={ax} cy={ay} r={1.1} fill={color} />
+                </g>
+              );
+            })}
+          </svg>
 
           {/* Clickable body parts */}
           {bodyParts.map((part) => {
@@ -192,18 +230,18 @@ export default function BodyPartsLesson() {
               <div
                 key={part.id}
                 className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10"
-                style={{ top: part.top, left: part.left }}
+                style={{ top: part.label.top, left: part.label.left }}
               >
                 <motion.button
                   onClick={() => handlePartClick(part)}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  className={`relative px-2 py-1 rounded-lg text-xs font-bold transition-all ${
+                  whileHover={{ scale: 1.08 }}
+                  whileTap={{ scale: 0.94 }}
+                  className={`relative px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide border transition-all ${
                     isClicked
-                      ? "bg-cyan-500 text-white shadow-lg shadow-cyan-500/50"
+                      ? "bg-cyan-400 text-slate-900 border-cyan-200 shadow-[0_0_14px_rgba(34,211,238,0.7)]"
                       : isRated
-                        ? "bg-green-500/80 text-white"
-                        : "bg-white/20 text-white hover:bg-white/30"
+                        ? "bg-emerald-500/90 text-white border-emerald-300/60 shadow-[0_0_10px_rgba(52,211,153,0.5)]"
+                        : "bg-white/10 text-white border-white/15 backdrop-blur-sm hover:bg-white/20 hover:border-white/30"
                   }`}
                 >
                   {isClicked ? (
@@ -212,7 +250,7 @@ export default function BodyPartsLesson() {
                     <span className="capitalize">{part.meaning}</span>
                   )}
                   {isRated && !isClicked && (
-                    <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-green-500 text-[10px] flex items-center justify-center">
+                    <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-emerald-400 text-slate-900 text-[10px] font-extrabold flex items-center justify-center ring-2 ring-slate-900/60">
                       {rating}
                     </span>
                   )}
@@ -221,20 +259,20 @@ export default function BodyPartsLesson() {
                 {/* Rating popup */}
                 {isClicked && (
                   <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-slate-800 rounded-xl p-2 shadow-xl border border-white/20 z-20 whitespace-nowrap"
+                    initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-slate-900/95 rounded-xl p-2.5 shadow-2xl border border-cyan-400/30 z-20 whitespace-nowrap backdrop-blur-md"
                   >
-                    <p className="text-white/60 text-[10px] mb-1 text-center">{part.transliteration}</p>
+                    <p className="text-cyan-300/80 text-[10px] mb-1.5 text-center font-medium italic">{part.transliteration}</p>
                     <div className="flex gap-1">
                       {[1, 2, 3, 4, 5].map((num) => (
                         <button
                           key={num}
                           onClick={(e) => { e.stopPropagation(); handleRating(part, num); }}
-                          className={`w-6 h-6 rounded text-xs font-bold transition-all ${
+                          className={`w-6 h-6 rounded-lg text-xs font-bold transition-all ${
                             rating === num
-                              ? num === 5 ? "bg-green-500 text-white" : "bg-cyan-500 text-white"
-                              : "bg-white/20 text-white hover:bg-white/30"
+                              ? num === 5 ? "bg-emerald-400 text-slate-900" : "bg-cyan-400 text-slate-900"
+                              : "bg-white/10 text-white hover:bg-white/20"
                           }`}
                         >
                           {num}
@@ -250,7 +288,7 @@ export default function BodyPartsLesson() {
 
         {/* Instructions */}
         <p className="text-center text-white/40 text-sm mt-4">
-          Tap English words to reveal Hebrew • Rate to save to backpack
+          Tap an English word to reveal its Hebrew translation • Rate it to save to your Backpack
         </p>
       </div>
 

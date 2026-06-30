@@ -1543,16 +1543,14 @@ Return a JSON with a "videos" array. Each video must have:
         <div className="bg-white/10 rounded-2xl border border-white/20 p-4 mb-6">
           <div className="flex flex-wrap items-center gap-3">
 
-            {/* + Add New Content */}
-            {canEdit && (
-              <button
-                onClick={() => { resetForm(); setEditingVideo(null); setMediaType("video"); setShowAddDialog(true); }}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all flex-shrink-0"
-                style={{ background: '#5a6b5a' }}
-              >
-                <Plus className="w-4 h-4" /> Add New Content
-              </button>
-            )}
+            {/* + Add Media — visible to all users */}
+            <button
+              onClick={() => { resetForm(); setEditingVideo(null); setMediaType("video"); setShowAddDialog(true); }}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all flex-shrink-0"
+              style={{ background: '#5a6b5a' }}
+            >
+              <Plus className="w-4 h-4" /> Add Media
+            </button>
 
             {/* Language */}
             <Select value={filterLanguage} onValueChange={setFilterLanguage}>

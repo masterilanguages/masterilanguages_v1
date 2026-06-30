@@ -306,18 +306,19 @@ export default function Journal() {
       const lang = userProfile?.language || 'hebrew';
       const langNameFull = languageNames[lang] || lang;
       const wordList = suggestedVocab.slice(0, 10).map((w: any) => `${w.phonetic || w.word} (${w.translation})`).join(', ');
+      const isHebrew = lang === 'hebrew';
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Create one simple English sentence for each of these ${langNameFull} vocabulary words. The sentence should clearly illustrate the word's meaning. For each, also provide the ${langNameFull} translation of the full sentence.
+        prompt: `Create one simple English sentence for each of these ${langNameFull} vocabulary words. The sentence should clearly illustrate the word's meaning. For each, also provide the ${langNameFull} translation of the full sentence.${isHebrew ? ' Also provide the transliteration (Latin phonetic spelling) of the Hebrew translation.' : ''}
 
 Words: ${wordList}
 
-Return JSON with an array "exercises" where each item has: word (the vocab word in ${langNameFull}), english (the English sentence), answer (the ${langNameFull} translation of the sentence).`,
+Return JSON with an array "exercises" where each item has: word (the vocab word in ${langNameFull}), english (the English sentence), answer (the ${langNameFull} translation of the sentence)${isHebrew ? ', transliteration (Latin phonetic spelling of the Hebrew answer)' : ''}.`,
         response_json_schema: {
           type: 'object',
           properties: {
             exercises: {
               type: 'array',
-              items: { type: 'object', properties: { word: { type: 'string' }, english: { type: 'string' }, answer: { type: 'string' } } }
+              items: { type: 'object', properties: { word: { type: 'string' }, english: { type: 'string' }, answer: { type: 'string' }, transliteration: { type: 'string' } } }
             }
           }
         }
@@ -516,7 +517,7 @@ Return JSON with an array "exercises" where each item has: word (the vocab word 
               value={text}
               onChange={(e) => setText(e.target.value)}
               onClick={handleTextClick}
-              placeholder={`Write about your day using your new words above. Try to include: what you did today, how you felt, something you learned, and a goal for tomorrow. Click a word above to insert it!`}
+              placeholder={`Write about your day in English or your target language. Include: What you did today or want to do today. How you felt. One thing you learned. One goal for tomorrow. Click a word above to insert it!`}
               className="w-full bg-transparent border-none shadow-none focus:outline-none focus:ring-0 resize-none"
               style={{
                 fontFamily: 'Georgia, serif',
@@ -561,7 +562,15 @@ Return JSON with an array "exercises" where each item has: word (the vocab word 
                             </span>
                           )}
                         </div>
-                        <p className="text-sm" style={{ color: '#3d4a2e', fontFamily: 'Georgia, serif' }}>{ex.english}</p>
+                        <div className="flex flex-col gap-0.5 flex-1">
+                          {userProfile?.language === 'hebrew' && ex.transliteration && (
+                            <p className="text-xs italic" style={{ color: '#7a6a9a', fontFamily: 'Georgia, serif' }}>{ex.transliteration}</p>
+                          )}
+                          <p className="text-sm" style={{ color: '#3d4a2e', fontFamily: 'Georgia, serif' }}>{ex.english}</p>
+                          {userProfile?.language === 'hebrew' && ex.answer && (
+                            <p className="text-xs" dir="rtl" style={{ color: '#5a4a2a', fontFamily: 'Georgia, serif' }}>{ex.answer}</p>
+                          )}
+                        </div>
                       </div>
                       <input
                         type="text"
@@ -572,7 +581,7 @@ Return JSON with an array "exercises" where each item has: word (the vocab word 
                         style={{ background: 'rgba(255,255,255,0.7)', border: '1px solid rgba(200,180,140,0.5)', fontFamily: 'Georgia, serif', color: '#2d3a1e' }}
                         dir={isRTLLanguage(userProfile?.language) ? 'rtl' : 'ltr'}
                       />
-                      {ex.revealed ? (
+                      {userProfile?.language !== 'hebrew' && (ex.revealed ? (
                         <p className="text-xs px-2 py-1 rounded-lg" style={{ background: 'rgba(90,160,90,0.1)', color: '#3a7a3a', fontFamily: 'Georgia, serif' }}>
                           ✅ {ex.answer}
                         </p>
@@ -584,7 +593,7 @@ Return JSON with an array "exercises" where each item has: word (the vocab word 
                         >
                           👁 Reveal answer
                         </button>
-                      )}
+                      ))}
                     </div>
                   ))}
                 </div>
