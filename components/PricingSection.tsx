@@ -49,21 +49,6 @@ const STARTER_FEATURES = [
 
 const PLANS: Plan[] = [
   {
-    key: "starter",
-    header: "14 DAYS • STARTER",
-    title: "Starter Package",
-    subtitle: "Try the Masteri method risk-free.",
-    details: "1 Private Coaching Session\n+ Platform Access",
-    features: STARTER_FEATURES,
-    outcome: "Your roadmap to fluency starts here.",
-    price: "$297",
-    priceNote: "One-time payment",
-    button: "Get Started",
-    featured: false,
-    elite: false,
-    badge: null,
-  },
-  {
     key: "foundation",
     header: "4 WEEKS • FOUNDATION",
     title: "Foundation",
