@@ -66,7 +66,7 @@ export default function PreviewShell() {
 
   return (
     <div
-      data-theme={themeForVariant(variant)}
+      data-preview-theme={themeForVariant(variant)}
       className="relative min-h-screen overflow-x-clip text-white"
     >
       {/* Background: CSS aurora fallback + live WebGL + theme wash */}

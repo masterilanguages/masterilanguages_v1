@@ -152,12 +152,12 @@
 
   .glow-border {
     box-shadow:
-      0 0 0 1px rgb(var(--c1) / 0.16),
-      0 8px 30px -12px rgb(var(--c1) / 0.4);
+      0 0 0 1px rgba(56, 189, 248, 0.15),
+      0 8px 30px -12px rgba(56, 189, 248, 0.35);
   }
 
   .text-shine {
-    background: linear-gradient(110deg, #e2e8f0 20%, rgb(var(--c2)) 42%, rgb(var(--c3)) 56%, #e2e8f0 80%);
+    background: linear-gradient(110deg, #e2e8f0 20%, #7dd3fc 40%, #93c5fd 55%, #e2e8f0 80%);
     background-size: 220% 100%;
     -webkit-background-clip: text;
     background-clip: text;
@@ -352,15 +352,27 @@
   --c2: 34 211 238;   /* cyan   */
   --c3: 129 140 248;  /* indigo */
 }
-[data-theme="neon"] {
+[data-preview-theme="neon"] {
   --c1: 34 211 238;   /* cyan    */
   --c2: 255 45 149;   /* magenta */
   --c3: 129 140 248;  /* violet  */
 }
-[data-theme="holo"] {
+[data-preview-theme="holo"] {
   --c1: 56 189 248;   /* sky     */
   --c2: 168 85 247;   /* purple  */
   --c3: 232 121 249;  /* fuchsia */
+}
+
+/* Preview-only: re-tint the shared shine/glow to the active accent.
+   Scoped under [data-preview-theme] so the production site (which never
+   sets that attribute) keeps the original hard-coded colours untouched. */
+[data-preview-theme] .text-shine {
+  background-image: linear-gradient(110deg, #e2e8f0 20%, rgb(var(--c2)) 42%, rgb(var(--c3)) 56%, #e2e8f0 80%);
+}
+[data-preview-theme] .glow-border {
+  box-shadow:
+    0 0 0 1px rgb(var(--c1) / 0.16),
+    0 8px 30px -12px rgb(var(--c1) / 0.4);
 }
 
 .a-text {
