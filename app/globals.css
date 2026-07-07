@@ -97,9 +97,10 @@
     position: relative;
     background-color: #050a1a;
     background-image:
-      radial-gradient(ellipse 80% 60% at 15% -10%, rgba(56, 189, 248, 0.18), transparent 60%),
-      radial-gradient(ellipse 70% 60% at 110% 10%, rgba(99, 102, 241, 0.18), transparent 60%),
-      radial-gradient(ellipse 60% 50% at 50% 120%, rgba(20, 184, 166, 0.12), transparent 60%),
+      radial-gradient(ellipse 80% 60% at 15% -10%, rgba(56, 189, 248, 0.22), transparent 60%),
+      radial-gradient(ellipse 70% 60% at 110% 10%, rgba(99, 102, 241, 0.22), transparent 60%),
+      radial-gradient(ellipse 50% 40% at 80% 55%, rgba(168, 85, 247, 0.08), transparent 65%),
+      radial-gradient(ellipse 60% 50% at 50% 120%, rgba(20, 184, 166, 0.14), transparent 60%),
       linear-gradient(180deg, #050a1a 0%, #0a1330 45%, #0d1838 100%);
   }
 
@@ -110,10 +111,37 @@
     inset: 0;
     pointer-events: none;
     background-image:
-      linear-gradient(rgba(148, 163, 255, 0.05) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(148, 163, 255, 0.05) 1px, transparent 1px);
+      linear-gradient(rgba(148, 163, 255, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(148, 163, 255, 0.06) 1px, transparent 1px);
     background-size: 56px 56px;
     mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black, transparent 70%);
+  }
+
+  /* Slow-drifting aurora glow layered above the mesh — adds living, welcoming
+     movement without distracting from content. */
+  .bg-navy-mesh::after {
+    content: "";
+    position: absolute;
+    inset: -20%;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse 40% 30% at 30% 30%, rgba(45, 212, 191, 0.10), transparent 70%),
+      radial-gradient(ellipse 35% 30% at 70% 60%, rgba(56, 189, 248, 0.10), transparent 70%),
+      radial-gradient(ellipse 30% 25% at 50% 85%, rgba(129, 140, 248, 0.09), transparent 70%);
+    animation: aurora-drift 18s ease-in-out infinite alternate;
+    filter: blur(40px);
+  }
+
+  @keyframes aurora-drift {
+    0% {
+      transform: translate3d(-4%, -2%, 0) scale(1);
+    }
+    50% {
+      transform: translate3d(3%, 2%, 0) scale(1.08);
+    }
+    100% {
+      transform: translate3d(-2%, 4%, 0) scale(1.02);
+    }
   }
 
   .glass-panel {
