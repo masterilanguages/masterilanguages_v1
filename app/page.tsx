@@ -137,8 +137,8 @@ export default function LandingPage() {
               {
                 step: "2",
                 title: "Structure",
-                hook: "Build your personalized fluency system.",
-                body: "Receive a clear roadmap with lessons, speaking drills, vocabulary, and daily accountability.",
+                hook: "A step-by-step system with lessons, speaking, vocabulary, and daily accountability.",
+                body: "",
               },
               {
                 step: "3",
