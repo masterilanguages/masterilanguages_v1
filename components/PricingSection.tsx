@@ -279,7 +279,7 @@ export default function PricingSection() {
           </h2>
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4 items-stretch">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 items-stretch max-w-5xl mx-auto">
           {PLANS.map((plan) => (
             <PlanCard key={plan.key} plan={plan} loading={loading} onCheckout={handleCheckout} />
           ))}
