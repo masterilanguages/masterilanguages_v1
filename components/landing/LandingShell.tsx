@@ -1,11 +1,15 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState } from "react";
-import WebGLAurora from "./WebGLAurora";
 import { Hero, HERO_OPTIONS, themeForVariant, type Variant } from "./HeroSection";
 import PricingCards from "./PricingCards";
 import NewsletterForm from "@/components/NewsletterForm";
-import { Reveal, TiltCard, Marquee, Meteors, Sparkles, PreviewNav, MagneticButton } from "./fx";
+import { Reveal, TiltCard, Marquee, Meteors, Sparkles, LandingNav, MagneticButton } from "./fx";
+
+// Deferred so three.js lands in a lazy chunk. The .bg-navy-mesh CSS gradient
+// underneath is the fallback until the canvas mounts.
+const WebGLAurora = dynamic(() => import("./WebGLAurora"), { ssr: false });
 
 const SCENARIOS = [
   "Real Estate scenarios",
@@ -51,8 +55,19 @@ const METHOD = [
   },
 ];
 
-export default function PreviewShell() {
-  const [variant, setVariant] = useState<Variant>("neon");
+/**
+ * The live landing page. `/` renders the client-approved "core" hero with no
+ * switcher; `/preview` renders the same page with the design switcher exposed
+ * so other hero variants can still be demoed.
+ */
+export default function LandingShell({
+  initialVariant = "core",
+  showSwitcher = false,
+}: {
+  initialVariant?: Variant;
+  showSwitcher?: boolean;
+}) {
+  const [variant, setVariant] = useState<Variant>(initialVariant);
   const [nonce, setNonce] = useState(0);
   const pick = (v: Variant) => {
     setVariant(v);
@@ -66,7 +81,7 @@ export default function PreviewShell() {
 
   return (
     <div
-      data-preview-theme={themeForVariant(variant)}
+      data-landing-theme={themeForVariant(variant)}
       className="relative min-h-screen overflow-x-clip text-white"
     >
       {/* Background: CSS aurora fallback + live WebGL + theme wash */}
@@ -81,9 +96,9 @@ export default function PreviewShell() {
         }}
       />
 
-      <PreviewNav />
+      <LandingNav />
 
-      {/* Hero (design chosen from the switcher) */}
+      {/* Hero */}
       <section className="relative flex min-h-screen flex-col items-center justify-center px-6 py-28">
         <Sparkles count={44} />
         <Meteors count={12} />
@@ -221,22 +236,24 @@ export default function PreviewShell() {
         </a>
       </footer>
 
-      {/* Floating design + theme switcher — remove before shipping */}
-      <div className="glass-panel fixed bottom-5 right-5 z-50 flex max-w-[calc(100vw-2.5rem)] flex-wrap items-center justify-end gap-1 rounded-2xl px-2 py-1.5 text-xs shadow-[0_8px_30px_-12px_rgba(0,0,0,0.7)]">
-        <span className="px-2 text-[11px] uppercase tracking-wider text-slate-400">Diseño</span>
-        {HERO_OPTIONS.map(([v, label]) => (
-          <button key={v} onClick={() => pick(v)} className={btn(variant === v)}>
-            {label}
+      {/* Floating design + theme switcher — /preview only */}
+      {showSwitcher && (
+        <div className="glass-panel fixed bottom-5 right-5 z-50 flex max-w-[calc(100vw-2.5rem)] flex-wrap items-center justify-end gap-1 rounded-2xl px-2 py-1.5 text-xs shadow-[0_8px_30px_-12px_rgba(0,0,0,0.7)]">
+          <span className="px-2 text-[11px] uppercase tracking-wider text-slate-400">Diseño</span>
+          {HERO_OPTIONS.map(([v, label]) => (
+            <button key={v} onClick={() => pick(v)} className={btn(variant === v)}>
+              {label}
+            </button>
+          ))}
+          <button
+            onClick={() => setNonce((n) => n + 1)}
+            className="rounded-full px-2.5 py-1.5 text-slate-300 transition hover:text-white"
+            title="Repetir animación"
+          >
+            ↻
           </button>
-        ))}
-        <button
-          onClick={() => setNonce((n) => n + 1)}
-          className="rounded-full px-2.5 py-1.5 text-slate-300 transition hover:text-white"
-          title="Repetir animación"
-        >
-          ↻
-        </button>
-      </div>
+        </div>
+      )}
     </div>
   );
 }
