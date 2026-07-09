@@ -230,10 +230,7 @@ export default function LandingShell({
 
       {/* Footer */}
       <footer className="relative z-10 border-t border-white/10 py-8 text-center text-xs text-slate-500">
-        © {new Date().getFullYear()} Masteri Languages · All rights reserved ·{" "}
-        <a href="/dashboard" className="transition hover:text-slate-300">
-          Admin
-        </a>
+        © {new Date().getFullYear()} Masteri Languages · All rights reserved
       </footer>
 
       {/* Floating design + theme switcher — /preview only */}
