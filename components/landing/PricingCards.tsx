@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Reveal, TiltCard } from "./fx";
 
 const CORE_FEATURES = [
@@ -68,7 +69,15 @@ const PLANS: Plan[] = [
   },
 ];
 
-function PlanCard({ plan }: { plan: Plan }) {
+function PlanCard({
+  plan,
+  loading,
+  onCheckout,
+}: {
+  plan: Plan;
+  loading: string | null;
+  onCheckout: (key: string) => void;
+}) {
   return (
     <TiltCard
       className={`group relative flex h-full flex-col rounded-2xl border p-7 transition-colors ${
@@ -129,21 +138,39 @@ function PlanCard({ plan }: { plan: Plan }) {
         <p className="mt-1 text-xs text-slate-500">{plan.priceNote}</p>
       </div>
 
-      <a
-        href="/assessment"
-        className={`mt-5 block w-full rounded-xl py-3.5 text-center text-sm font-bold tracking-wide transition ${
+      <button
+        onClick={() => onCheckout(plan.key)}
+        disabled={loading === plan.key}
+        className={`mt-5 w-full rounded-xl py-3.5 text-center text-sm font-bold tracking-wide transition disabled:opacity-60 ${
           plan.featured
             ? "a-grad text-slate-950 hover:brightness-110"
             : "border border-white/15 bg-white/5 text-white hover:border-cyan-400/50 hover:text-cyan-300"
         }`}
       >
-        {plan.button}
-      </a>
+        {loading === plan.key ? "Redirecting…" : plan.button}
+      </button>
     </TiltCard>
   );
 }
 
 export default function PricingCards() {
+  const [loading, setLoading] = useState<string | null>(null);
+
+  const handleCheckout = async (planKey: string) => {
+    setLoading(planKey);
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: planKey }),
+      });
+      const data = await res.json();
+      if (data.url) window.location.href = data.url;
+    } catch {
+      setLoading(null);
+    }
+  };
+
   return (
     <section id="programs" className="relative z-10 border-t border-white/10 px-6 py-28">
       <div className="mx-auto max-w-7xl">
@@ -162,7 +189,7 @@ export default function PricingCards() {
               className={plan.featured ? "lg:-mt-4 lg:mb-4" : ""}
             >
               <div className="h-full [perspective:1200px]">
-                <PlanCard plan={plan} />
+                <PlanCard plan={plan} loading={loading} onCheckout={handleCheckout} />
               </div>
             </Reveal>
           ))}

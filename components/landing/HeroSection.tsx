@@ -1,10 +1,14 @@
 "use client";
 
 import { motion } from "framer-motion";
+import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { MagneticButton } from "./fx";
-import NeonGrid from "./NeonGrid";
-import ParticleCore from "./ParticleCore";
+
+// three.js is ~170 kB; keep it out of the initial bundle. Both draw onto a
+// canvas from an effect, so deferring them changes nothing that is painted.
+const NeonGrid = dynamic(() => import("./NeonGrid"), { ssr: false });
+const ParticleCore = dynamic(() => import("./ParticleCore"), { ssr: false });
 
 export type Variant = "centered" | "editorial" | "hud" | "holo" | "neon" | "core";
 
@@ -408,7 +412,7 @@ function CoreHero() {
           {...fade(0.75)}
           className="mt-10 flex flex-wrap items-center justify-center gap-4 lg:justify-start"
         >
-          <a href="#method" className="magic-border group rounded-xl">
+          <a href="/assessment" className="magic-border group rounded-xl">
             <span className="relative block rounded-xl bg-slate-950/90 px-8 py-4 text-base font-bold text-white transition group-hover:bg-slate-900">
               Start Learning →
             </span>

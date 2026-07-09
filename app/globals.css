@@ -352,24 +352,24 @@
   --c2: 34 211 238;   /* cyan   */
   --c3: 129 140 248;  /* indigo */
 }
-[data-preview-theme="neon"] {
+[data-landing-theme="neon"] {
   --c1: 34 211 238;   /* cyan    */
   --c2: 255 45 149;   /* magenta */
   --c3: 129 140 248;  /* violet  */
 }
-[data-preview-theme="holo"] {
+[data-landing-theme="holo"] {
   --c1: 56 189 248;   /* sky     */
   --c2: 168 85 247;   /* purple  */
   --c3: 232 121 249;  /* fuchsia */
 }
 
-/* Preview-only: re-tint the shared shine/glow to the active accent.
-   Scoped under [data-preview-theme] so the production site (which never
-   sets that attribute) keeps the original hard-coded colours untouched. */
-[data-preview-theme] .text-shine {
+/* Re-tint the shared shine/glow to the active accent. Scoped under
+   [data-landing-theme] so the admin panel (which never sets that attribute)
+   keeps the original hard-coded colours untouched. */
+[data-landing-theme] .text-shine {
   background-image: linear-gradient(110deg, #e2e8f0 20%, rgb(var(--c2)) 42%, rgb(var(--c3)) 56%, #e2e8f0 80%);
 }
-[data-preview-theme] .glow-border {
+[data-landing-theme] .glow-border {
   box-shadow:
     0 0 0 1px rgb(var(--c1) / 0.16),
     0 8px 30px -12px rgb(var(--c1) / 0.4);

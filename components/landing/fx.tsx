@@ -317,9 +317,9 @@ export function Sparkles({ count = 40 }: { count?: number }) {
 }
 
 /* ------------------------------------------------------------------ */
-/* PreviewNav — sticky header that condenses on scroll                 */
+/* LandingNav — sticky header that condenses on scroll                 */
 /* ------------------------------------------------------------------ */
-export function PreviewNav() {
+export function LandingNav() {
   const { scrollY } = useScroll();
   const [scrolled, setScrolled] = useState(false);
   useMotionValueEvent(scrollY, "change", (v) => setScrolled(v > 40));
@@ -345,7 +345,7 @@ export function PreviewNav() {
         </span>
         <div className="flex items-center gap-3">
           <a
-            href="#programs"
+            href="https://masteri.backpacksystems.com/login?from=%2F"
             className="hidden rounded-xl border border-white/15 px-5 py-2.5 text-sm font-semibold text-slate-200 transition hover:border-cyan-400/60 hover:text-cyan-300 sm:block"
           >
             Student Login
