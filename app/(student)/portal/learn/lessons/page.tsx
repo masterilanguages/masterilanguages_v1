@@ -2,46 +2,18 @@
 
 import React from "react";
 import Link from "next/link";
-import { ChevronRight, Palette, User, Calendar, CalendarDays, Image as ImageIcon, MessageSquare, ClipboardCheck, Hash } from "lucide-react";
+import { ChevronRight, Calendar, CalendarDays, Image as ImageIcon, MessageSquare } from "lucide-react";
 
 // Static catalog of the ported Slice C lessons. Each entry maps to a real
 // route under /portal/learn/lessons/*. The lesson content itself is faithful to
 // the Base44 source pages (BodyPartsLesson, ColorsLesson, etc.).
 const lessons = [
   {
-    href: "/portal/learn/lessons/colors",
-    emoji: "🎨",
-    icon: Palette,
-    title: "Learn Colors",
-    description: "Tap colors to reveal Hebrew, rate them, then play the color game.",
-  },
-  {
-    href: "/portal/learn/lessons/colors-test",
-    emoji: "✅",
-    icon: ClipboardCheck,
-    title: "Colors Test",
-    description: "Quiz yourself on the Hebrew color words you've learned.",
-  },
-  {
-    href: "/portal/learn/lessons/body-parts",
-    emoji: "🦵",
-    icon: User,
-    title: "Body Parts",
-    description: "Click body parts to see Hebrew and rate how well you know them.",
-  },
-  {
     href: "/portal/learn/lessons/days-lesson",
     emoji: "📅",
     icon: Calendar,
     title: "Days of the Week",
     description: "Learn the Hebrew days of the week and rate them 1-5.",
-  },
-  {
-    href: "/portal/learn/lessons/days",
-    emoji: "🗂️",
-    icon: Hash,
-    title: "Days Program",
-    description: "Your day-by-day program with subsections and progress.",
   },
   {
     href: "/portal/learn/lessons/months",

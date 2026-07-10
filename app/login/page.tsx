@@ -15,7 +15,7 @@ function LoginForm() {
   const [forgotLoading, setForgotLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const from = searchParams.get("from") ?? "/portal/dashboard";
+  const from = searchParams.get("from") ?? "/portal/schedule";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

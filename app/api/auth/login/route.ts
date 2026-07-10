@@ -19,7 +19,7 @@ export async function POST(request: Request) {
   }
 
   const role = isAdmin ? "admin" : "student";
-  const redirectTo = isAdmin ? "/dashboard" : "/portal/dashboard";
+  const redirectTo = isAdmin ? "/dashboard" : "/portal/schedule";
 
   const response = NextResponse.json({ ok: true, redirectTo });
   response.cookies.set(SESSION_COOKIE, role, {

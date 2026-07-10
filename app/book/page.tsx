@@ -10,8 +10,8 @@ const TIME_SLOTS = [
 ];
 
 const LANGUAGES = [
-  "Hebrew", "Spanish", "French", "Arabic", "Italian",
-  "Portuguese", "German", "Mandarin", "Other",
+  "Hebrew", "Spanish", "French", "Italian",
+  "Portuguese", "Other",
 ];
 
 export default function BookPage() {

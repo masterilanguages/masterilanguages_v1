@@ -6,7 +6,7 @@ import { useAuth } from "@/lib/AuthContext";
 import LanguageSwitcher from "./LanguageSwitcher";
 
 const NAV = [
-  { href: "/portal/dashboard",      label: "Dashboard", emoji: "🏠" },
+  { href: "/portal/schedule",       label: "Schedule",  emoji: "📅" },
   { href: "/portal/learn",          label: "Learn",     emoji: "🎬" },
   { href: "/portal/learn/lessons",  label: "Lessons",   emoji: "📖" },
   { href: "/portal/learn/songs",    label: "Songs",     emoji: "🎵" },
@@ -44,7 +44,7 @@ export default function StudentSidebar({
       >
         {/* Logo */}
         <div className="flex h-16 shrink-0 items-center border-b border-slate-800 px-5">
-          <Link href="/portal/dashboard" onClick={onClose} className="flex items-center gap-2.5">
+          <Link href="/portal/schedule" onClick={onClose} className="flex items-center gap-2.5">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-500 text-sm font-bold text-white">
               M
             </span>

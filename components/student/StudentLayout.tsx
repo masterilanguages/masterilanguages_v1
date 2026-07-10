@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, type ReactNode } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/AuthContext";
 import StudentSidebar from "./StudentSidebar";
 import StudentTopbar from "./StudentTopbar";
@@ -9,18 +9,17 @@ import StudentTopbar from "./StudentTopbar";
 export default function StudentLayout({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { isAuthenticated, isLoadingAuth } = useAuth();
-  const router = useRouter();
   const pathname = usePathname();
 
   // Gate the whole student portal: once the initial Supabase auth check resolves,
-  // an unauthenticated visitor is bounced to /login (carrying where they came
-  // from). This also prevents the "empty pages" flash — without a session every
-  // RLS-protected query returns nothing.
+  // an unauthenticated visitor is bounced to the Backpack-hosted login (carrying
+  // where they came from). This also prevents the "empty pages" flash — without a
+  // session every RLS-protected query returns nothing.
   useEffect(() => {
     if (!isLoadingAuth && !isAuthenticated) {
-      router.replace(`/login?from=${encodeURIComponent(pathname || "/portal/dashboard")}`);
+      window.location.href = `https://masteri.backpacksystems.com/login?from=${encodeURIComponent(pathname || "/portal/schedule")}`;
     }
-  }, [isLoadingAuth, isAuthenticated, pathname, router]);
+  }, [isLoadingAuth, isAuthenticated, pathname]);
 
   if (isLoadingAuth || !isAuthenticated) {
     return (
