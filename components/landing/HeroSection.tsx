@@ -405,8 +405,7 @@ function CoreHero() {
           {...fade(0.5)}
           className="mx-auto mt-8 max-w-md text-lg font-medium text-slate-300 lg:mx-0"
         >
-          Masteri turns your life, goals, and real conversations into personalized language
-          lessons using mnemonics, memory hooks, and guided speaking practice.
+          Personalized lessons built from your life — with memory hooks that make the words stick.
         </motion.p>
 
         <motion.div
