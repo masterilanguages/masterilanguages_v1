@@ -3,10 +3,28 @@
 import { useState } from "react";
 import { Reveal, TiltCard } from "./fx";
 
-const CORE_FEATURES = [
+const FOUNDATION_FEATURES = [
+  "Personal language profile",
   "Vocabulary and speaking drills",
+  "Personalized memory hooks",
+  "Access to Backpack: your memory map and review plan",
+];
+
+const KICKSTART_FEATURES = [
+  "Personal language profile",
+  "Custom “about me” text in your target language",
+  "Personalized memory hooks and speaking drills",
+  "Access to Backpack: practice texts, review plan, and memory map",
   "Accountability and coaching support",
-  "Access to the Masteri Mnemonics System",
+];
+
+const FLUENCY_FEATURES = [
+  "Personal language profile",
+  "Custom curriculum built around your goals",
+  "Personalized mnemonic system",
+  "Conversation drills and pronunciation support",
+  "Access to Backpack: memory map, practice texts, and review schedule",
+  "High-accountability coaching support",
 ];
 
 type Plan = {
@@ -29,10 +47,10 @@ const PLANS: Plan[] = [
     key: "foundation",
     header: "4 WEEKS • FOUNDATION",
     title: "Foundation",
-    subtitle: "Build the habit and learn the Masteri system.",
-    details: "Group Coaching\n1 Session/Week + Daily Practice",
-    features: CORE_FEATURES,
-    outcome: "Build the habit. Master the system.",
+    subtitle: "Build your language profile, learn the Masteri memory system, and start creating language you can actually remember.",
+    details: "Group Coaching\n1 Session/Week + Guided Daily Practice",
+    features: FOUNDATION_FEATURES,
+    outcome: "Build the habit. Create your first memorable foundation.",
     price: "$995",
     priceNote: "One-time payment",
     button: "Get Started",
@@ -43,10 +61,10 @@ const PLANS: Plan[] = [
     key: "kickstart",
     header: "4 WEEKS • MOST POPULAR",
     title: "Kickstart",
-    subtitle: "The fastest way to start speaking with confidence.",
-    details: "Private 1:1 Coaching\n3 Sessions/Week + Daily Practice",
-    features: CORE_FEATURES,
-    outcome: "Speak confidently in everyday situations.",
+    subtitle: "The fastest way to start speaking with personalized mnemonics, private coaching, and daily practice.",
+    details: "Private 1:1 Coaching\n3 Sessions/Week + Guided Daily Practice",
+    features: KICKSTART_FEATURES,
+    outcome: "Speak confidently using language built around your life.",
     price: "$1,995",
     priceNote: "One-time payment",
     button: "Apply Now",
@@ -57,10 +75,10 @@ const PLANS: Plan[] = [
     key: "fluency",
     header: "8 WEEKS • PREMIUM",
     title: "Fluency Accelerator",
-    subtitle: "Maximum support for accelerated fluency.",
-    details: "Private 1:1 Coaching\n4 Sessions/Week + Daily Practice",
-    features: CORE_FEATURES,
-    outcome: "Think and speak naturally in conversation.",
+    subtitle: "A fully guided, personalized path for deeper support, stronger retention, and faster speaking progress.",
+    details: "Private 1:1 Coaching\n4 Sessions/Week + Guided Daily Practice",
+    features: FLUENCY_FEATURES,
+    outcome: "Think, remember, and speak naturally in real conversations.",
     price: "$3,795",
     priceNote: "One-time payment",
     button: "Apply Now",
@@ -177,7 +195,7 @@ export default function PricingCards() {
         <Reveal className="mb-14 text-center">
           <p className="a-text mb-3 text-xs font-semibold uppercase tracking-[0.25em]">Programs</p>
           <h2 className="font-display text-3xl font-extrabold tracking-tight text-white sm:text-5xl">
-            Choose Your Program
+            Choose Your Masteri Path
           </h2>
         </Reveal>
 

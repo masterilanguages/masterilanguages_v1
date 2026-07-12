@@ -225,8 +225,13 @@ export default function AssessmentPage() {
           <Link href="/login" className="mb-8 inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-300">
             ← Back to Login
           </Link>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-teal-400">Account Activation</p>
-          <h1 className="text-3xl font-extrabold text-white">Activate your account.</h1>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-teal-400">Language Profile</p>
+          <h1 className="text-3xl font-extrabold text-white">Create your language profile.</h1>
+          <p className="mt-3 text-sm leading-relaxed text-slate-400">
+            Answer a few questions so we can understand your goals, your story, and the
+            conversations you want to have. We&apos;ll use this to build your first personalized
+            lessons.
+          </p>
           <form onSubmit={handleContactSubmit} className="mt-8 space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <input
@@ -288,9 +293,10 @@ export default function AssessmentPage() {
         <div className="mx-auto max-w-2xl">
           <div className="mb-8 text-center">
             <p className="text-4xl">✓</p>
-            <h1 className="mt-3 text-2xl font-extrabold">Assessment Complete</h1>
+            <h1 className="mt-3 text-2xl font-extrabold">Your Language Profile Is Ready</h1>
             <p className="mt-2 text-slate-400">
-              Based on your responses, we&apos;ve created your personalized fluency recommendation.
+              Based on your story and goals, we&apos;ve matched you with the Masteri path built for
+              the conversations you want to have.
             </p>
           </div>
 

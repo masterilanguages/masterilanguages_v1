@@ -47,9 +47,10 @@ export default function BookPage() {
 
         <div className="mb-8">
           <span className="text-xs font-semibold uppercase tracking-widest text-teal-400">Free · 30 Minutes</span>
-          <h1 className="mt-2 text-3xl font-extrabold tracking-tight">Book Your Strategy Call</h1>
+          <h1 className="mt-2 text-3xl font-extrabold tracking-tight">Book Your Masteri Strategy Call</h1>
           <p className="mt-2 text-slate-400">
-            Tell us a bit about yourself and pick a time.
+            Tell us about your language goals and we&apos;ll help you decide whether Masteri is the
+            right path for you.
           </p>
         </div>
 
@@ -129,7 +130,7 @@ export default function BookPage() {
                 rows={3}
                 value={form.notes}
                 onChange={(e) => set("notes", e.target.value)}
-                placeholder="Your level, goals, past experience..."
+                placeholder="Your level, goals, target language, and the kinds of conversations you want to have..."
                 className="w-full rounded-xl bg-slate-800 px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
               />
             </div>

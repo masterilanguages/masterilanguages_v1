@@ -12,46 +12,51 @@ import { Reveal, TiltCard, Marquee, Meteors, Sparkles, LandingNav, MagneticButto
 const WebGLAurora = dynamic(() => import("./WebGLAurora"), { ssr: false });
 
 const SCENARIOS = [
-  "Real Estate scenarios",
-  "Life Insurance scenarios",
-  "Sales conversations",
-  "Business vocabulary",
-  "Personalized coaching",
-  "English for Event Specialists",
+  "Personal introduction",
+  "Work conversations",
+  "Career vocabulary",
+  "Memory hooks",
+  "Personalized practice texts",
+  "Speaking prompts",
+  "Daily routine",
+  "Travel goals",
+  "Real conversation drills",
+  "Guided review",
 ];
 
 const WHO = [
-  "You want to understand native speakers when they talk.",
+  "You forget words after learning them once.",
   "You want to speak without freezing.",
-  "You want to connect to a culture through its language.",
-  "You've tried apps before but didn't stay consistent.",
-  "You need structure, accountability, and someone guiding you.",
+  "You want lessons built around your actual life.",
+  "You learn better through stories, images, sound, and association.",
+  "You want structure, accountability, and guided speaking practice.",
+  "You want to connect to people through real conversation, not textbook scripts.",
 ];
 
 const METHOD = [
   {
     step: "1",
-    title: "Assess",
-    hook: "Discover your level, goals, and learning style.",
-    body: "We evaluate where you are today and identify the fastest path to fluency.",
+    title: "Personalize",
+    hook: "Tell us who you are, what you do, what you care about, and which conversations you want to have.",
+    body: "Your language profile becomes the foundation for your curriculum.",
   },
   {
     step: "2",
-    title: "Structure",
-    hook: "A step-by-step system with lessons, speaking, vocabulary, and daily accountability.",
-    body: "",
+    title: "Encode",
+    hook: "We turn new words and phrases into memory hooks: images, stories, sounds, and personal references.",
+    body: "Instead of memorizing random lists, you attach language to things your brain already understands.",
   },
   {
     step: "3",
-    title: "Practice",
-    hook: "Speak consistently with expert coaching.",
-    body: "Build confidence through real conversations, immediate feedback, and guided repetition.",
+    title: "Speak",
+    hook: "Practice with guided prompts, personalized texts, and real conversation drills.",
+    body: "You learn to use the language in sentences that sound like you.",
   },
   {
     step: "4",
     title: "Retain",
-    hook: "Remember more and progress faster.",
-    body: "Masteri's mnemonic system helps vocabulary stick through stories, visual associations, and active recall.",
+    hook: "Your memory map, review schedule, and practice materials — organized and always ready.",
+    body: "The goal is not just to learn words. The goal is to have them available when you need them.",
   },
 ];
 
@@ -115,10 +120,11 @@ export default function LandingShell({
         <div className="mx-auto max-w-5xl">
           <Reveal>
             <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
-              Learn the Language You Need for Your Career
+              Learn the Language Your Brain Will Actually Keep
             </h2>
             <p className="mt-4 max-w-2xl text-lg text-slate-400">
-              No boring textbook lessons. No random apps. No memorizing words you&apos;ll never use.
+              No random vocabulary lists. No generic textbook chapters. Your lessons are built from
+              your story, your goals, your routines, and the conversations you actually want to have.
             </p>
           </Reveal>
         </div>
@@ -132,7 +138,7 @@ export default function LandingShell({
         <div className="mx-auto max-w-3xl">
           <Reveal>
             <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
-              Built for People Who Want to Speak
+              Built for People Who Want Language to Stick
             </h2>
             <p className="mt-3 text-slate-400">Masteri is for you if:</p>
           </Reveal>
@@ -159,9 +165,12 @@ export default function LandingShell({
               The Masteri Method
             </p>
             <h2 className="font-display text-3xl font-extrabold tracking-tight sm:text-5xl">
-              A proven system that combines coaching, accountability, and memory science to help you
-              speak confidently faster.
+              Personalized mnemonics for real conversation.
             </h2>
+            <p className="mt-4 text-lg text-slate-400">
+              Masteri combines memory science, personal curriculum, and guided speaking practice so
+              you can remember what to say and use it when it matters.
+            </p>
           </Reveal>
 
           <div className="grid gap-6 [perspective:1200px] sm:grid-cols-2 lg:grid-cols-4">
@@ -190,10 +199,11 @@ export default function LandingShell({
       <section className="relative z-10 border-t border-white/10 px-6 py-28 text-center">
         <Reveal>
           <h2 className="font-display text-3xl font-extrabold tracking-tight sm:text-5xl">
-            Start Speaking With Confidence
+            Build Your First Memory Map
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-lg text-slate-400">
-            Apply now and we&apos;ll see if Masteri is the right fit for you.
+            Apply now and we&apos;ll help you create your first personalized language profile,
+            practice text, and memory-based speaking plan.
           </p>
         </Reveal>
         <Reveal delay={0.1}>
@@ -215,10 +225,12 @@ export default function LandingShell({
       <section className="relative z-10 border-t border-white/10 px-6 py-20">
         <Reveal className="mx-auto max-w-xl text-center">
           <div className="glass-panel glow-border rounded-3xl p-8 sm:p-10">
-            <h2 className="font-display text-2xl font-bold text-white">Get the Free Fluency Toolkit</h2>
+            <h2 className="font-display text-2xl font-bold text-white">
+              Get the Free Memory-Based Fluency Toolkit
+            </h2>
             <p className="mt-3 text-base leading-relaxed text-slate-400">
-              Learn the vocabulary, memory, and speaking techniques our students use to accelerate
-              fluency.
+              Learn the vocabulary, mnemonic, and speaking techniques Masteri students use to
+              remember more and speak with confidence.
             </p>
             <div className="mt-6">
               <NewsletterForm />

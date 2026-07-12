@@ -48,16 +48,16 @@ function Ctas({ align = "center" }: { align?: "center" | "start" }) {
       }`}
     >
       <MagneticButton
-        href="#method"
+        href="/assessment"
         className="a-grad glow-cyan inline-block rounded-xl px-8 py-4 text-base font-bold text-slate-950 transition hover:brightness-110"
       >
-        Start Learning →
+        Create My Language Profile →
       </MagneticButton>
       <a
         href="#method"
         className="rounded-xl border border-white/20 px-8 py-4 text-base font-semibold text-white backdrop-blur transition hover:border-cyan-400/50 hover:bg-white/5"
       >
-        See How It Works
+        See the Method
       </a>
     </motion.div>
   );
@@ -393,19 +393,20 @@ function CoreHero() {
           {...fade(0.05)}
           className="mb-6 inline-flex rounded-full border border-white/15 bg-white/5 px-4 py-1.5 font-mono text-[11px] uppercase tracking-[0.3em] a-text"
         >
-          // NEURAL FLUENCY CORE
+          // PERSONALIZED MEMORY-BASED FLUENCY
         </motion.p>
 
-        <h1 className="font-display text-6xl font-black leading-[0.95] tracking-tight sm:text-7xl">
-          <span className="block">This Is Not</span>
-          <span className="block holo-text">Another App</span>
+        <h1 className="font-display text-5xl font-black leading-[0.98] tracking-tight sm:text-6xl lg:text-7xl">
+          <span className="block">Remember the Words</span>
+          <span className="block holo-text">You Actually Need to Say</span>
         </h1>
 
         <motion.p
           {...fade(0.5)}
           className="mx-auto mt-8 max-w-md text-lg font-medium text-slate-300 lg:mx-0"
         >
-          Know what to practice, when to practice, how to remember it, and when to use it.
+          Masteri turns your life, goals, and real conversations into personalized language
+          lessons using mnemonics, memory hooks, and guided speaking practice.
         </motion.p>
 
         <motion.div
@@ -414,14 +415,14 @@ function CoreHero() {
         >
           <a href="/assessment" className="magic-border group rounded-xl">
             <span className="relative block rounded-xl bg-slate-950/90 px-8 py-4 text-base font-bold text-white transition group-hover:bg-slate-900">
-              Start Learning →
+              Create My Language Profile →
             </span>
           </a>
           <a
             href="#method"
             className="rounded-xl border border-white/20 px-8 py-4 text-base font-semibold text-white transition hover:border-cyan-400/50 hover:bg-white/5"
           >
-            See How It Works
+            See the Method
           </a>
         </motion.div>
       </div>
