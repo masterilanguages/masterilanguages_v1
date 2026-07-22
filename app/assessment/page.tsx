@@ -226,11 +226,10 @@ export default function AssessmentPage() {
             ← Back to Login
           </Link>
           <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-teal-400">Language Profile</p>
-          <h1 className="text-3xl font-extrabold text-white">Create your language profile.</h1>
+          <h1 className="text-3xl font-extrabold text-white">Let&apos;s build your language journey.</h1>
           <p className="mt-3 text-sm leading-relaxed text-slate-400">
-            Answer a few questions so we can understand your goals, your story, and the
-            conversations you want to have. We&apos;ll use this to build your first personalized
-            lessons.
+            Answer a few quick questions so we can personalize your lessons, conversations,
+            stories, and vocabulary around your interests.
           </p>
           <form onSubmit={handleContactSubmit} className="mt-8 space-y-4">
             <div className="grid grid-cols-2 gap-3">
