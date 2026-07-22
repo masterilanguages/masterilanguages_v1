@@ -316,11 +316,13 @@ export default function AssessmentPage() {
   if (step === totalSteps + 1) {
     const reasons = program.reasons(answers as Answers);
     return (
-      <div className="min-h-screen bg-slate-950 px-4 py-16 text-white">
-        <div className="mx-auto max-w-2xl">
+      <div className="bg-navy-mesh min-h-screen px-4 py-16 text-white">
+        <div className="relative z-10 mx-auto max-w-2xl">
           <div className="mb-8 text-center">
-            <p className="text-4xl">✓</p>
-            <h1 className="mt-3 text-2xl font-extrabold">Your Language Profile Is Ready</h1>
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-400 to-cyan-400 text-2xl text-slate-950 shadow-[0_0_24px_-4px_rgba(45,212,191,0.7)]">
+              ✓
+            </div>
+            <h1 className="mt-4 text-2xl font-extrabold">Your Language Profile Is Ready</h1>
             <p className="mt-2 text-slate-400">
               Based on your story and goals, we&apos;ve matched you with the Masteri path built for
               the conversations you want to have.
@@ -328,8 +330,8 @@ export default function AssessmentPage() {
           </div>
 
           {/* Result card */}
-          <div className="rounded-2xl border border-teal-600 bg-slate-900 p-8">
-            <p className="mb-1 text-xs font-bold uppercase tracking-widest text-teal-400">Your Recommended Program</p>
+          <div className="glass-panel glow-border rounded-3xl p-8">
+            <p className="mb-1 text-xs font-bold uppercase tracking-widest text-teal-300">Your Recommended Program</p>
             <h2 className="text-3xl font-extrabold text-white">{recommendation}</h2>
             <p className="mt-2 text-slate-400">{program.description}</p>
 
@@ -340,7 +342,7 @@ export default function AssessmentPage() {
               <ul className="space-y-3">
                 {reasons.map((r, i) => (
                   <li key={i} className="flex items-start gap-3">
-                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-teal-500 text-xs font-bold text-white">
+                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-teal-400 to-cyan-400 text-xs font-bold text-slate-950">
                       ✓
                     </span>
                     <span className="text-sm text-slate-300">{r}</span>
@@ -353,7 +355,7 @@ export default function AssessmentPage() {
           {/* Summary */}
           <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
             {Object.entries(answers).map(([k, v]) => (
-              <div key={k} className="rounded-xl bg-slate-900 p-3">
+              <div key={k} className="glass-panel rounded-xl p-3">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 capitalize">{k}</p>
                 <p className="mt-0.5 text-sm font-semibold text-white">{v}</p>
               </div>
@@ -361,7 +363,7 @@ export default function AssessmentPage() {
           </div>
 
           {/* Final CTA */}
-          <div className="mt-10 rounded-2xl bg-teal-600/10 border border-teal-600/30 p-8 text-center">
+          <div className="mt-10 rounded-3xl border border-cyan-400/25 bg-gradient-to-b from-cyan-400/[0.08] to-transparent p-8 text-center">
             <h3 className="text-xl font-extrabold text-white">Ready to Start?</h3>
             <p className="mt-2 text-slate-400 text-sm">
               Choose your program and enroll — your login credentials will be sent once your spot is confirmed.
@@ -369,13 +371,13 @@ export default function AssessmentPage() {
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
               <a
                 href={`/#programs`}
-                className="inline-block rounded-xl bg-teal-500 px-8 py-4 text-sm font-bold text-white transition hover:bg-teal-400"
+                className="inline-block rounded-xl bg-gradient-to-r from-teal-500 to-cyan-400 px-8 py-4 text-sm font-bold text-slate-950 shadow-[0_0_30px_-6px_rgba(45,212,191,0.6)] transition hover:brightness-110"
               >
                 Choose Your Program →
               </a>
               <a
                 href="/book"
-                className="inline-block rounded-xl border border-slate-600 px-8 py-4 text-sm font-bold text-slate-200 transition hover:border-slate-400 hover:text-white"
+                className="inline-block rounded-xl border border-white/15 px-8 py-4 text-sm font-bold text-slate-200 transition hover:border-cyan-400/50 hover:text-white"
               >
                 Book Free Consultation
               </a>
@@ -388,61 +390,67 @@ export default function AssessmentPage() {
 
   // ── Questions ────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-slate-950 px-4 py-16 text-white">
-      <div className="mx-auto max-w-lg">
+    <div className="bg-navy-mesh flex min-h-screen items-center justify-center px-4 py-16 text-white">
+      <div className="relative z-10 mx-auto w-full max-w-lg">
         {/* Back */}
         <button
           onClick={handleBack}
-          className="mb-8 flex items-center gap-2 text-sm text-slate-500 hover:text-slate-300"
+          className="mb-6 flex items-center gap-2 text-sm text-slate-400 transition hover:text-slate-200"
         >
           ← Back
         </button>
 
-        {/* Progress */}
-        <div className="mb-2 flex items-center justify-between text-xs text-slate-500">
-          <span>Step {step} of {totalSteps}</span>
-          <span>{progress}%</span>
-        </div>
-        <div className="mb-8 h-1.5 w-full overflow-hidden rounded-full bg-slate-800">
-          <div
-            className="h-full rounded-full bg-teal-500 transition-all duration-300"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
+        <div className="glass-panel glow-border rounded-3xl p-7 sm:p-9">
+          {/* Progress */}
+          <div className="mb-2 flex items-center justify-between text-xs font-semibold text-slate-400">
+            <span>Step {step} of {totalSteps}</span>
+            <span className="text-teal-300">{progress}%</span>
+          </div>
+          <div className="mb-8 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-teal-500 to-cyan-400 shadow-[0_0_12px_-2px_rgba(45,212,191,0.8)] transition-all duration-300"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
 
-        {/* Question */}
-        <h2 className="text-2xl font-extrabold tracking-tight">{currentStep.title}</h2>
+          {/* Question */}
+          <h2 className="text-2xl font-extrabold tracking-tight text-white">{currentStep.title}</h2>
 
-        {/* Options */}
-        <div className="mt-6 grid grid-cols-2 gap-2">
-          {currentStep.options.map((option) => (
-            <button
-              key={option}
-              onClick={() => handleSelect(option)}
-              className={`rounded-xl border px-4 py-3 text-left text-sm font-semibold transition ${
-                selected === option
-                  ? "border-teal-500 bg-teal-500/10 text-teal-400"
-                  : "border-slate-700 bg-slate-900 text-slate-200 hover:border-slate-500"
-              }`}
-            >
-              <span className={`mr-2 inline-flex h-4 w-4 items-center justify-center rounded-full border text-xs ${
-                selected === option ? "border-teal-500 bg-teal-500 text-white" : "border-slate-600"
-              }`}>
-                {selected === option ? "✓" : ""}
-              </span>
-              {option}
-            </button>
-          ))}
+          {/* Options */}
+          <div className="mt-6 grid grid-cols-2 gap-2.5">
+            {currentStep.options.map((option) => (
+              <button
+                key={option}
+                onClick={() => handleSelect(option)}
+                className={`flex items-center gap-2.5 rounded-xl border px-4 py-3.5 text-left text-sm font-semibold transition ${
+                  selected === option
+                    ? "border-cyan-400/60 bg-cyan-400/10 text-white shadow-[0_0_20px_-6px_rgba(45,212,191,0.7)]"
+                    : "border-white/10 bg-white/5 text-slate-200 hover:border-cyan-400/40 hover:bg-white/[0.07]"
+                }`}
+              >
+                <span
+                  className={`inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full border text-[10px] font-bold ${
+                    selected === option
+                      ? "border-transparent bg-gradient-to-br from-teal-400 to-cyan-400 text-slate-950"
+                      : "border-white/25"
+                  }`}
+                >
+                  {selected === option ? "✓" : ""}
+                </span>
+                {option}
+              </button>
+            ))}
+          </div>
+
+          {/* Continue */}
+          <button
+            onClick={handleContinue}
+            disabled={!selected}
+            className="mt-8 w-full rounded-xl bg-gradient-to-r from-teal-500 to-cyan-400 py-4 text-sm font-bold text-slate-950 shadow-[0_0_30px_-6px_rgba(45,212,191,0.6)] transition hover:brightness-110 disabled:opacity-30 disabled:shadow-none"
+          >
+            {step === totalSteps ? "See My Results" : "Continue →"}
+          </button>
         </div>
-
-        {/* Continue */}
-        <button
-          onClick={handleContinue}
-          disabled={!selected}
-          className="mt-8 w-full rounded-xl bg-teal-500 py-4 text-sm font-bold text-white transition hover:bg-teal-400 disabled:opacity-30"
-        >
-          {step === totalSteps ? "See My Results" : "Continue →"}
-        </button>
       </div>
     </div>
   );
