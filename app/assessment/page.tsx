@@ -219,66 +219,94 @@ export default function AssessmentPage() {
 
   // ── Contact gate ────────────────────────────────────────────────────────────
   if (step === 0) {
+    const inputCls =
+      "w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3.5 text-sm text-white placeholder-slate-500 backdrop-blur transition focus:border-cyan-400/60 focus:bg-white/[0.07] focus:outline-none focus:ring-2 focus:ring-cyan-400/20";
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4 py-16">
-        <div className="w-full max-w-md">
-          <Link href="/login" className="mb-8 inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-300">
+      <div className="bg-navy-mesh flex min-h-screen items-center justify-center px-4 py-16">
+        <div className="relative z-10 w-full max-w-lg">
+          <Link href="/login" className="mb-6 inline-flex items-center gap-2 text-sm text-slate-400 transition hover:text-slate-200">
             ← Back to Login
           </Link>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-teal-400">Language Profile</p>
-          <h1 className="text-3xl font-extrabold text-white">Let&apos;s build your language journey.</h1>
-          <p className="mt-3 text-sm leading-relaxed text-slate-400">
-            Answer a few quick questions so we can personalize your lessons, conversations,
-            stories, and vocabulary around your interests.
-          </p>
-          <form onSubmit={handleContactSubmit} className="mt-8 space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <input
-                type="text"
-                required
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                placeholder="First name"
-                className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-white placeholder-slate-600 focus:border-teal-500 focus:outline-none"
-              />
-              <input
-                type="text"
-                required
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                placeholder="Last name"
-                className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-white placeholder-slate-600 focus:border-teal-500 focus:outline-none"
-              />
-            </div>
-            <input
-              type="tel"
-              required
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="Phone number"
-              className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-white placeholder-slate-600 focus:border-teal-500 focus:outline-none"
-            />
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email address"
-              className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-white placeholder-slate-600 focus:border-teal-500 focus:outline-none"
-            />
-            <button
-              type="submit"
-              className="w-full rounded-xl bg-teal-500 py-4 text-sm font-bold text-white transition hover:bg-teal-400"
-            >
-              Continue →
-            </button>
-            <p className="text-center text-sm text-slate-500">
-              Already enrolled to a program?{" "}
-              <Link href="/login" className="text-teal-400 hover:text-teal-300 font-medium">
-                Sign in to your student portal →
-              </Link>
+
+          <div className="glass-panel glow-border rounded-3xl p-7 sm:p-9">
+            {/* Reassurance chip */}
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-widest text-teal-300">
+              <span className="h-1.5 w-1.5 rounded-full bg-teal-400 shadow-[0_0_8px_2px_rgba(45,212,191,0.7)]" />
+              Language Profile · ~2 minutes
+            </span>
+
+            <h1 className="mt-5 text-3xl font-extrabold leading-tight text-white">
+              Let&apos;s build your language journey.
+            </h1>
+            <p className="mt-3 text-sm leading-relaxed text-slate-400">
+              Answer a few quick questions so we can personalize your lessons, conversations,
+              stories, and vocabulary around your interests.
             </p>
-          </form>
+
+            <form onSubmit={handleContactSubmit} className="mt-7 space-y-3.5">
+              <div className="grid grid-cols-2 gap-3">
+                <input
+                  type="text"
+                  required
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  placeholder="First name"
+                  className={inputCls}
+                />
+                <input
+                  type="text"
+                  required
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  placeholder="Last name"
+                  className={inputCls}
+                />
+              </div>
+              <input
+                type="tel"
+                required
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="Phone number"
+                className={inputCls}
+              />
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Email address"
+                className={inputCls}
+              />
+              <button
+                type="submit"
+                className="w-full rounded-xl bg-gradient-to-r from-teal-500 to-cyan-400 py-4 text-sm font-bold text-slate-950 shadow-[0_0_30px_-6px_rgba(45,212,191,0.6)] transition hover:brightness-110"
+              >
+                Start My Profile →
+              </button>
+            </form>
+
+            {/* Value cues to reduce friction */}
+            <div className="mt-6 grid grid-cols-1 gap-2.5 border-t border-white/10 pt-6 sm:grid-cols-3">
+              {[
+                { icon: "🎯", label: "Built around your goals" },
+                { icon: "🧠", label: "Personalized memory hooks" },
+                { icon: "🗣️", label: "Real conversation practice" },
+              ].map((v) => (
+                <div key={v.label} className="flex items-center gap-2 text-xs text-slate-400">
+                  <span className="text-base">{v.icon}</span>
+                  {v.label}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <p className="mt-5 text-center text-sm text-slate-500">
+            Already enrolled to a program?{" "}
+            <Link href="/login" className="font-medium text-teal-400 hover:text-teal-300">
+              Sign in to your student portal →
+            </Link>
+          </p>
         </div>
       </div>
     );
