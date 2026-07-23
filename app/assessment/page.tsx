@@ -364,22 +364,25 @@ export default function AssessmentPage() {
 
           {/* Final CTA */}
           <div className="mt-10 rounded-3xl border border-cyan-400/25 bg-gradient-to-b from-cyan-400/[0.08] to-transparent p-8 text-center">
-            <h3 className="text-xl font-extrabold text-white">Ready to Start?</h3>
+            <h3 className="text-xl font-extrabold text-white">Let&apos;s Build Your Plan</h3>
             <p className="mt-2 text-slate-400 text-sm">
-              Choose your program and enroll — your login credentials will be sent once your spot is confirmed.
+              Book a free strategy call and we&apos;ll turn this into a personalized path built
+              around your goals.
             </p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
               <a
-                href={`/#programs`}
+                href="/book"
                 className="inline-block rounded-xl bg-gradient-to-r from-teal-500 to-cyan-400 px-8 py-4 text-sm font-bold text-slate-950 shadow-[0_0_30px_-6px_rgba(45,212,191,0.6)] transition hover:brightness-110"
               >
-                Choose Your Program →
+                Book My Free Call →
               </a>
               <a
-                href="/book"
-                className="inline-block rounded-xl border border-white/15 px-8 py-4 text-sm font-bold text-slate-200 transition hover:border-cyan-400/50 hover:text-white"
+                href="https://wa.me/13059007863?text=Hi%20Masteri%2C%20I%27d%20like%20to%20book%20a%20call%20about%20your%20programs."
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#25D366] px-8 py-4 text-sm font-bold text-slate-950 transition hover:brightness-110"
               >
-                Book Free Consultation
+                WhatsApp Us
               </a>
             </div>
           </div>

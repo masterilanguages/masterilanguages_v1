@@ -363,10 +363,10 @@ export function LandingNav() {
             <span className="hidden sm:inline">WhatsApp</span>
           </a>
           <a
-            href="/assessment"
+            href="/book"
             className="a-grad glow-cyan rounded-full px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:brightness-110"
           >
-            Get Started
+            Book a Call
           </a>
         </div>
       </div>

@@ -551,6 +551,20 @@ export default function DemoSection() {
                         ))}
                       </div>
                     </div>
+
+                    {/* Booking nudge — turn the wow into a call */}
+                    <div className="mt-8 flex flex-col items-center gap-3 rounded-2xl border border-cyan-400/25 bg-gradient-to-b from-cyan-400/[0.08] to-transparent p-6 text-center sm:flex-row sm:justify-between sm:text-left">
+                      <p className="text-sm text-slate-300">
+                        This is a taste. On a free call we&apos;ll build your{" "}
+                        <span className="font-semibold text-white">full personalized plan</span>.
+                      </p>
+                      <a
+                        href="/book"
+                        className="shrink-0 rounded-xl bg-gradient-to-r from-teal-500 to-cyan-400 px-6 py-3 text-sm font-bold text-slate-950 shadow-[0_0_24px_-6px_rgba(45,212,191,0.6)] transition hover:brightness-110"
+                      >
+                        Book My Free Call →
+                      </a>
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>

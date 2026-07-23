@@ -48,10 +48,10 @@ function Ctas({ align = "center" }: { align?: "center" | "start" }) {
       }`}
     >
       <MagneticButton
-        href="/assessment"
+        href="/book"
         className="a-grad glow-cyan inline-block rounded-xl px-8 py-4 text-base font-bold text-slate-950 transition hover:brightness-110"
       >
-        Create My Language Profile →
+        Book Your Free Call →
       </MagneticButton>
       <a
         href="#method"
@@ -296,9 +296,9 @@ function HoloHero() {
         {...fade(0.75)}
         className="relative mt-10 flex flex-wrap items-center justify-center gap-4"
       >
-        <a href="#method" className="magic-border group rounded-xl">
+        <a href="/book" className="magic-border group rounded-xl">
           <span className="relative block rounded-xl bg-slate-950/90 px-8 py-4 text-base font-bold text-white transition group-hover:bg-slate-900">
-            Start Learning →
+            Book Your Free Call →
           </span>
         </a>
         <a
@@ -365,10 +365,10 @@ function NeonGridHero() {
           className="mt-10 flex flex-wrap items-center justify-center gap-4"
         >
           <MagneticButton
-            href="#method"
+            href="/book"
             className="neon-btn inline-block rounded-full border border-cyan-400/70 bg-cyan-400/10 px-8 py-4 text-base font-bold uppercase tracking-wide text-cyan-100 transition hover:bg-cyan-400/20"
           >
-            Start Learning →
+            Book Your Free Call →
           </MagneticButton>
           <a
             href="#method"
@@ -412,9 +412,9 @@ function CoreHero() {
           {...fade(0.75)}
           className="mt-10 flex flex-wrap items-center justify-center gap-4 lg:justify-start"
         >
-          <a href="/assessment" className="magic-border group rounded-xl">
+          <a href="/book" className="magic-border group rounded-xl">
             <span className="relative block rounded-xl bg-slate-950/90 px-8 py-4 text-base font-bold text-white transition group-hover:bg-slate-900">
-              Create My Language Profile →
+              Book Your Free Call →
             </span>
           </a>
           <a
