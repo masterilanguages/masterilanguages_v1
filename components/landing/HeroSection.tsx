@@ -393,7 +393,7 @@ function CoreHero() {
           {...fade(0.05)}
           className="mb-6 inline-flex rounded-full border border-white/15 bg-white/5 px-4 py-1.5 font-mono text-[11px] uppercase tracking-[0.3em] a-text"
         >
-          // PERSONALIZED MEMORY-BASED FLUENCY
+          // MNEMONICS · SMART FLASHCARDS · REAL FLUENCY
         </motion.p>
 
         <h1 className="font-display text-5xl font-black leading-[0.98] tracking-tight sm:text-6xl lg:text-7xl">
@@ -405,7 +405,8 @@ function CoreHero() {
           {...fade(0.5)}
           className="mx-auto mt-8 max-w-md text-lg font-medium text-slate-300 lg:mx-0"
         >
-          Personalized lessons built from your life — with memory hooks that make the words stick.
+          Personalized mnemonics and smart flashcards that turn your life into words your brain
+          actually keeps.
         </motion.p>
 
         <motion.div

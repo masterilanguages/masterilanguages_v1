@@ -12,16 +12,16 @@ import { Reveal, TiltCard, Marquee, Meteors, Sparkles, LandingNav, MagneticButto
 const WebGLAurora = dynamic(() => import("./WebGLAurora"), { ssr: false });
 
 const SCENARIOS = [
-  "Personal introduction",
-  "Work conversations",
-  "Career vocabulary",
+  "Personalized mnemonics",
+  "Smart flashcards",
+  "Spaced repetition",
+  "Active recall",
   "Memory hooks",
   "Personalized practice texts",
+  "Work conversations",
+  "Career vocabulary",
   "Speaking prompts",
-  "Daily routine",
-  "Travel goals",
   "Real conversation drills",
-  "Guided review",
 ];
 
 const WHO = [
@@ -43,7 +43,7 @@ const METHOD = [
   {
     step: "2",
     title: "Encode",
-    hook: "We turn new words and phrases into memory hooks: images, stories, sounds, and personal references.",
+    hook: "Every word becomes a personalized mnemonic — an image, story, or sound your brain can't forget.",
     body: "Instead of memorizing random lists, you attach language to things your brain already understands.",
   },
   {
@@ -55,8 +55,8 @@ const METHOD = [
   {
     step: "4",
     title: "Retain",
-    hook: "Your memory map, review schedule, and practice materials — organized and always ready.",
-    body: "The goal is not just to learn words. The goal is to have them available when you need them.",
+    hook: "Smart flashcards with spaced repetition resurface each word right before you'd forget it.",
+    body: "Active recall locks language into long-term memory — so it's there when you need to say it.",
   },
 ];
 
@@ -123,8 +123,9 @@ export default function LandingShell({
               Learn the Language Your Brain Will Actually Keep
             </h2>
             <p className="mt-4 max-w-2xl text-lg text-slate-400">
-              No random vocabulary lists. No generic textbook chapters. Your lessons are built from
-              your story, your goals, your routines, and the conversations you actually want to have.
+              No dull flashcard decks. No random vocabulary lists. Every word comes with a
+              personalized mnemonic and a smart flashcard, built from your story, your goals, and the
+              conversations you actually want to have.
             </p>
           </Reveal>
         </div>
