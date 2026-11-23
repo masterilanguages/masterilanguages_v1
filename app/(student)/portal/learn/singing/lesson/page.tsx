@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import MicRecorder from "@/components/singing/MicRecorder";
 import SegmentCard from "@/components/singing/SegmentCard";
+import { HebrewWithNikud } from "@/components/hebrew/HebrewNikud";
 import { toast } from "sonner";
 
 const PHASES = {
@@ -526,7 +527,13 @@ export default function SingingLesson() {
                         style={{ color: "#92400e" }}
                         dir="rtl"
                       >
-                        {activeSegment.hebrew_line}
+                        <HebrewWithNikud
+                          text={activeSegment.hebrew_line}
+                          transliteration={activeSegment.transliteration}
+                          phoneticsView={showTranslit}
+                          variant="amber"
+                          className="text-2xl font-bold"
+                        />
                       </p>
                       {showTranslit && (
                         <p className="text-stone-500 text-sm italic">

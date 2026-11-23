@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Reveal } from "./fx";
+import { HebrewTranslitLine } from "@/components/hebrew/HebrewListenButton";
+import { HebrewWithNikud } from "@/components/hebrew/HebrewNikud";
 
 /* ────────────────────────────────────────────────────────────────────────────
  * Front-end-only demo: templates per language turn the visitor's answers into
@@ -57,7 +59,7 @@ function buildLines(lang: LangKey, a: Answers): Line[] {
       return [
         {
           target: `קוראים לי ${a.name}.`,
-          translit: `Kor'im li ${a.name}.`,
+          translit: `Korim li ${a.name}.`,
           english: `My name is ${a.name}.`,
           rtl: true,
         },
@@ -135,7 +137,7 @@ function buildLines(lang: LangKey, a: Answers): Line[] {
 
 const VOCAB: Record<LangKey, { word: string; meaning: string }[]> = {
   hebrew: [
-    { word: "קוראים לי (kor'im li)", meaning: "my name is" },
+    { word: "קוראים לי (korim li)", meaning: "my name is" },
     { word: "אני (ani)", meaning: "I / I am" },
     { word: "עובד (oved)", meaning: "work" },
     { word: "אוהב (ohev)", meaning: "love" },
@@ -486,10 +488,26 @@ export default function DemoSection() {
                               line.rtl ? "text-right" : ""
                             }`}
                           >
-                            {line.target}
+                            {line.rtl && line.translit ? (
+                              <HebrewWithNikud
+                                text={line.target}
+                                transliteration={line.translit}
+                                phoneticsView
+                                variant="dark"
+                                className="text-lg font-semibold text-white"
+                              />
+                            ) : (
+                              line.target
+                            )}
                           </p>
                           {line.translit && (
-                            <p className="mt-0.5 text-sm italic text-cyan-300/80">{line.translit}</p>
+                            <p className="mt-0.5 text-sm italic text-cyan-300/80">
+                              {line.rtl ? (
+                                <HebrewTranslitLine hebrew={line.target} transliteration={line.translit} variant="dark" />
+                              ) : (
+                                line.translit
+                              )}
+                            </p>
                           )}
                           <p className="mt-0.5 text-sm text-slate-400">{line.english}</p>
                         </motion.div>

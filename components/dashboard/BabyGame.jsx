@@ -2,7 +2,9 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Droplets, Cookie, Moon, Bath, Gamepad2, Heart, Tv, Volume2, Sparkles, Check, X, Backpack, Star, Loader2, Plus, CheckCircle, Wand2 } from "lucide-react";
+import { Droplets, Cookie, Moon, Bath, Gamepad2, Heart, Tv, Sparkles, Check, X, Backpack, Star, Loader2, Plus, CheckCircle, Wand2 } from "lucide-react";
+import { HebrewTranslitLine } from "@/components/hebrew/HebrewListenButton";
+import { HebrewWithNikud } from "@/components/hebrew/HebrewNikud";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -264,12 +266,6 @@ const [imageApproved, setImageApproved] = useState(false);
       setWrongChoices([]);
     }
   }, [gamePhase, wordRatings]);
-
-  const playAudio = (text) => {
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'he-IL';
-    speechSynthesis.speak(utterance);
-  };
 
   const handleChoiceClick = async (choice) => {
     if (choice.hebrew === currentWord.hebrew) {
@@ -696,8 +692,18 @@ const [imageApproved, setImageApproved] = useState(false);
         {currentWord && !generatedSentences && !loadingSentences && (
           <div className="text-center mb-6">
             <div className="bg-white/10 rounded-2xl p-6 mb-4">
-              <p className="text-4xl font-bold text-cyan-400 mb-2" dir="rtl">{currentWord.hebrew}</p>
-              <p className="text-xl text-white/80">{currentWord.transliteration}</p>
+              <p className="text-4xl font-bold text-cyan-400 mb-2 flex items-center justify-center gap-2" dir="rtl">
+                <HebrewWithNikud
+                  text={currentWord.hebrew}
+                  transliteration={currentWord.transliteration}
+                  phoneticsView
+                  variant="dark"
+                  className="text-4xl font-bold text-cyan-400"
+                />
+              </p>
+              <p className="text-xl text-white/80">
+                <HebrewTranslitLine hebrew={currentWord.hebrew} transliteration={currentWord.transliteration} variant="dark" />
+              </p>
               <button
                 onClick={() => setShowTranslation(!showTranslation)}
                 className="text-white/40 text-sm mt-2"

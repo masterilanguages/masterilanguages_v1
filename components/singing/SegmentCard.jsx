@@ -3,6 +3,8 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Check, Play } from "lucide-react";
+import { HebrewTranslitLine } from "@/components/hebrew/HebrewListenButton";
+import { HebrewWithNikud } from "@/components/hebrew/HebrewNikud";
 
 export default function SegmentCard({ segment, isActive, isCompleted, showHebrew, showTranslit, phase, onClick }) {
   const phaseLabel = {
@@ -39,10 +41,24 @@ export default function SegmentCard({ segment, isActive, isCompleted, showHebrew
           </div>
           <p className="text-stone-700 font-medium text-sm leading-snug">{segment.english_line}</p>
           {(showHebrew || isCompleted) && segment.hebrew_line && (
-            <p className="text-amber-800 font-bold text-base mt-1 leading-snug" dir="rtl">{segment.hebrew_line}</p>
+            <p className="text-amber-800 font-bold text-base mt-1 leading-snug" dir="rtl">
+              <HebrewWithNikud
+                text={segment.hebrew_line}
+                transliteration={segment.transliteration}
+                phoneticsView={showTranslit || isCompleted}
+                variant="amber"
+                className="text-amber-800 font-bold text-base"
+              />
+            </p>
           )}
           {(showTranslit || isCompleted) && segment.transliteration && (
-            <p className="text-stone-500 text-xs mt-0.5 italic">{segment.transliteration}</p>
+            <p className="text-stone-500 text-xs mt-0.5 italic">
+              <HebrewTranslitLine
+                hebrew={segment.hebrew_line}
+                transliteration={segment.transliteration}
+                variant="amber"
+              />
+            </p>
           )}
         </div>
         <div className="flex-shrink-0">

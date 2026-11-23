@@ -4,6 +4,9 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Plus } from "lucide-react";
 import VideoTranscriptWord from "../video/VideoTranscriptWord";
+import HebrewListenButton from "@/components/hebrew/HebrewListenButton";
+import { HebrewWithNikud } from "@/components/hebrew/HebrewNikud";
+import { shownTransliteration } from "@/lib/hebrew/romanize";
 
 export default function KaraokeTranscript({ 
   lines, 
@@ -118,8 +121,10 @@ export default function KaraokeTranscript({
             )}
             
             {/* Transliteration */}
-            <div className="transliteration mb-0.5" style={{ direction: 'ltr', textAlign: 'left', unicodeBidi: 'bidi-override' }}>
-              {line.transliteration.split(/(\s+)/).map((part, i) => 
+            <div className="transliteration mb-0.5 flex items-start gap-1" style={{ direction: 'ltr', textAlign: 'left', unicodeBidi: 'bidi-override' }}>
+              <HebrewListenButton text={line.hebrew} variant="dark" />
+              <span>
+              {shownTransliteration(line.hebrew, line.transliteration).split(/(\s+)/).map((part, i) => 
                 /\S/.test(part) ? (
                   <VideoTranscriptWord
                     key={i}
@@ -133,6 +138,7 @@ export default function KaraokeTranscript({
                   />
                 ) : part
               )}
+              </span>
             </div>
             
             {/* English */}
@@ -154,21 +160,15 @@ export default function KaraokeTranscript({
             </div>
             
             {/* Hebrew */}
-            <div className="hebrew" style={{ direction: 'ltr', textAlign: 'left', unicodeBidi: 'bidi-override' }}>
-              {line.hebrew.split(/(\s+)/).map((part, i) => 
-                /\S/.test(part) ? (
-                  <VideoTranscriptWord
-                    key={i}
-                    word={part}
-                    hebrew={line.hebrew}
-                    transliteration={line.transliteration}
-                    english={line.english}
-                    onEdit={(newWord) => updateWord(line.id, 'hebrew', i, newWord)}
-                    onAddToBackpack={onAddToBackpack}
-                    className="text-cyan-400 text-xl font-bold leading-tight"
-                  />
-                ) : part
-              )}
+            <div className="hebrew" dir="rtl">
+              <HebrewWithNikud
+                text={line.hebrew}
+                transliteration={line.transliteration}
+                phoneticsView
+                showButton={false}
+                variant="dark"
+                className="text-cyan-400 text-xl font-bold leading-tight"
+              />
             </div>
           </div>
         );
