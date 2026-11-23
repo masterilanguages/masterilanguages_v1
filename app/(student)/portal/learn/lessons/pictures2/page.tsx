@@ -118,7 +118,8 @@ export default function PicturesLesson2() {
           transliteration: updatedCard.transliteration,
           meaning: updatedCard.meaning,
           hint: updatedCard.hint,
-          mnemonic: updatedCard.mnemonic
+          mnemonic: updatedCard.mnemonic,
+          image_url: updatedCard.image,
         });
       }
     },

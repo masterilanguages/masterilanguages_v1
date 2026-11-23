@@ -321,13 +321,37 @@ const Core = {
   },
 
   // GenerateImage(args) -> { url } (callers read result.url).
+  // Goes through /api/mnemonic-image so retries, prompt caching, current models,
+  // and the Backpack generate-image fallback share one error message.
   async GenerateImage(args) {
-    const { data, error } = await supabase.functions.invoke('generate-image', {
-      body: args,
-    });
-    if (error) throw error;
-    // Normalize so callers always get { url }.
-    return { url: data?.url };
+    const prompt = String((args && (args.prompt || args.text)) || "").replace(/\s+/g, " ").trim();
+    const cacheKey = prompt;
+    if (cacheKey && !args?.bypassCache && imagePromptCache.has(cacheKey)) {
+      return { url: imagePromptCache.get(cacheKey), cached: true };
+    }
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData?.session?.access_token;
+    let response;
+    try {
+      response = await fetch("/api/mnemonic-image", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(args || {}),
+      });
+    } catch {
+      throw new Error("Could not reach the mnemonic image service. Check your connection and try again.");
+    }
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok || !body?.url) {
+      const error = new Error(body?.error || `Mnemonic image failed (${response.status})`);
+      error.code = body?.code;
+      throw error;
+    }
+    if (cacheKey) imagePromptCache.set(cacheKey, body.url);
+    return { url: body.url, cached: !!body.cached, source: body.source };
   },
 
   // UploadFile({ file }) -> { file_url } (callers destructure { file_url } / read .file_url).
@@ -373,6 +397,9 @@ const Core = {
     return data;
   },
 };
+
+// Same prompt → same hosted image for this page session.
+const imagePromptCache = new Map();
 
 const integrations = { Core };
 

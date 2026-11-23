@@ -13,6 +13,8 @@ import GameHeader from "@/components/dashboard/GameHeader";
 import QuickAddWordWidget from "@/components/QuickAddWordWidget";
 import TranslatorWidget from "@/components/TranslatorWidget";
 import { Input } from "@/components/ui/input";
+import { mnemonicImagePrompt } from "@/lib/imageStyle";
+import { mnemonicImageErrorMessage } from "@/lib/mnemonicImageError";
 
 const colors = [
   { hebrew: "אָדוֹם", transliteration: "adom", meaning: "red", color: "#EF4444" },
@@ -148,17 +150,15 @@ export default function ColorsLesson() {
     setGeneratingImage(true);
     try {
       const result = await base44.integrations.Core.GenerateImage({
-        prompt: `A colorful, memorable mnemonic illustration: ${mnemonicText}.
-        For learning the Hebrew word for "${color.meaning}" (${color.transliteration}).
-        Cartoon style, vibrant colors, fun and memorable.
-        IMPORTANT: Do NOT include any text, words, letters, or writing in the image. Pure illustration only.`
+        prompt: mnemonicImagePrompt(`A scene for the Hebrew color "${color.transliteration}" meaning "${color.meaning}": ${mnemonicText}`)
       });
+      if (!result?.url) throw new Error("Image provider returned no URL");
       setMnemonicImages((prev: any) => ({ ...prev, [color.meaning]: result.url }));
       toast.success("Mnemonic image created!");
       setMnemonicOpen(null);
       setMnemonicText("");
     } catch (e) {
-      toast.error("Failed to generate image");
+      toast.error(mnemonicImageErrorMessage(e));
     }
     setGeneratingImage(false);
   };
