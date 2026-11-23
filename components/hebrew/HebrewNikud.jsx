@@ -87,18 +87,23 @@ export function HebrewWithNikud({
   const source = String(text || "");
   const [shown, setShown] = useState(() => (phoneticsView ? stripNikud(source) : source));
   const [loading, setLoading] = useState(false);
+  const [missing, setMissing] = useState(false);
 
   useEffect(() => {
     if (!phoneticsView || !on) {
       setShown(phoneticsView ? stripNikud(source) : source);
       setLoading(false);
+      setMissing(false);
       return undefined;
     }
     let cancel = false;
     setLoading(true);
-    vocalizeHebrew(source, transliteration).then((pointed) => {
+    setMissing(false);
+    vocalizeHebrew(source, transliteration).then((result) => {
       if (cancel) return;
+      const pointed = result?.text || stripNikud(source);
       setShown(pointed);
+      setMissing(result?.status !== "pointed");
       setLoading(false);
     });
     return () => {
@@ -112,6 +117,11 @@ export function HebrewWithNikud({
     <span className="inline-flex flex-wrap items-center justify-center gap-1.5" dir={dir}>
       <span className={className} dir={dir}>{shown}</span>
       {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin opacity-60" /> : null}
+      {missing ? (
+        <span dir="ltr" className="text-[10px] font-semibold text-amber-300" title="Nikud could not be added">
+          no nikud
+        </span>
+      ) : null}
       {phoneticsView && showButton ? <NikudButton variant={variant} /> : null}
     </span>
   );
