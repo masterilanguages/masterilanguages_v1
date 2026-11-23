@@ -9,6 +9,9 @@ import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { languageLabel, usesNikud, isRTLLanguage, isRTLText, nativeScriptInstruction } from "@/lib/language";
+import HebrewListenButton from "@/components/hebrew/HebrewListenButton";
+import { HebrewWithNikud } from "@/components/hebrew/HebrewNikud";
+import { shownTransliteration } from "@/lib/hebrew/romanize";
 
 export default function TranslatorWidget() {
   const queryClient = useQueryClient();
@@ -190,15 +193,39 @@ Return JSON with:
               {translation && translation.result && (
                 <div className="bg-white/10 border border-white/20 rounded-xl p-3 space-y-2">
                   <p className="text-white/50 text-[10px] uppercase mb-0.5">{translation.original}</p>
-                  <p className="text-cyan-300 text-xl font-bold" dir={(isRTLLanguage(targetLanguage) || isRTLText(translation.result.hebrew)) ? "rtl" : "ltr"}>{translation.result.hebrew}</p>
+                  <p className="text-cyan-300 text-xl font-bold flex items-center gap-2" dir={(isRTLLanguage(targetLanguage) || isRTLText(translation.result.hebrew)) ? "rtl" : "ltr"}>
+                    <HebrewWithNikud
+                      text={translation.result.hebrew}
+                      transliteration={translation.result.transliteration}
+                      phoneticsView={targetLanguage === "hebrew"}
+                      variant="dark"
+                      className="text-cyan-300 text-xl font-bold flex-1"
+                    />
+                    <HebrewListenButton text={translation.result.hebrew} variant="dark" />
+                  </p>
+                  {translation.result.transliteration && (
+                    <p className="text-amber-200/90 text-sm italic">
+                      {shownTransliteration(translation.result.hebrew, translation.result.transliteration)}
+                    </p>
+                  )}
                   <p className="text-white/70 text-sm">{translation.original}</p>
                   <p className="text-white font-semibold text-base">{translation.result.english}</p>
 
                   {translation.result.example_sentence_hebrew && (
                     <div className="mt-2 pt-2 border-t border-white/10 space-y-1">
                       <p className="text-white/40 text-[10px] uppercase">Example</p>
-                      <p className="text-emerald-300 text-sm" dir={(isRTLLanguage(targetLanguage) || isRTLText(translation.result.example_sentence_hebrew)) ? "rtl" : "ltr"}>{translation.result.example_sentence_hebrew}</p>
-                      <p className="text-white/60 text-xs">{translation.result.example_sentence_transliteration}</p>
+                      <p className="text-emerald-300 text-sm flex items-center gap-2" dir={(isRTLLanguage(targetLanguage) || isRTLText(translation.result.example_sentence_hebrew)) ? "rtl" : "ltr"}>
+                        <HebrewWithNikud
+                          text={translation.result.example_sentence_hebrew}
+                          transliteration={translation.result.example_sentence_transliteration}
+                          phoneticsView={targetLanguage === "hebrew"}
+                          showButton={false}
+                          variant="dark"
+                          className="text-emerald-300 text-sm flex-1"
+                        />
+                        <HebrewListenButton text={translation.result.example_sentence_hebrew} variant="dark" />
+                      </p>
+                      <p className="text-white/60 text-xs">{shownTransliteration(translation.result.example_sentence_hebrew, translation.result.example_sentence_transliteration)}</p>
                       <p className="text-white/50 text-xs italic">"{translation.result.example_sentence_english}"</p>
                     </div>
                   )}

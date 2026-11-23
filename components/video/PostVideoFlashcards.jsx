@@ -8,6 +8,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2, Pause, RefreshCw, Check } from "lucide-react";
 import { languageLabel, isRTLText } from "@/lib/language";
+import { HebrewTranslitLine } from "@/components/hebrew/HebrewListenButton";
+import { HebrewWithNikud } from "@/components/hebrew/HebrewNikud";
 
 const RATINGS = [
   { value: 1, label: "1", color: "#ef4444" },
@@ -454,10 +456,18 @@ Return JSON only:
                 {/* Phonetic + Hebrew: revealed on flip, hidden if Hebrew toggle OFF */}
                 {flipped && !showHebrew && (
                   <>
-                    <p className="text-cyan-500 font-bold text-xl">{currentWord.phonetic}</p>
+                    <p className="text-cyan-500 font-bold text-xl">
+                      <HebrewTranslitLine hebrew={currentWord.word} transliteration={currentWord.phonetic} variant="light" />
+                    </p>
                     {currentWord.word && (
                       <p className="text-cyan-700 font-bold text-lg" dir={isRTLText(currentWord.word) ? "rtl" : "ltr"} style={{ fontFamily: 'serif' }}>
-                        {currentWord.word}
+                        <HebrewWithNikud
+                          text={currentWord.word}
+                          transliteration={currentWord.phonetic}
+                          phoneticsView={isHebrew}
+                          variant="light"
+                          className="text-cyan-700 font-bold text-lg"
+                        />
                       </p>
                     )}
                   </>

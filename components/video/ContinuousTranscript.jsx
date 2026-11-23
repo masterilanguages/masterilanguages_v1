@@ -5,6 +5,9 @@ import { base44 } from "@/api/base44Client";
 import { Play, Pause, Loader2, Check, X, Plus, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { languageLabel, isRTLLanguage } from "@/lib/language";
+import HebrewListenButton from "@/components/hebrew/HebrewListenButton";
+import { HebrewWithNikud } from "@/components/hebrew/HebrewNikud";
+import { shownTransliteration } from "@/lib/hebrew/romanize";
 
 export default function ContinuousTranscript({
   transcript: transcriptProp,
@@ -499,7 +502,8 @@ ${missing.map((s, i) => `${i + 1}. Transliteration: "${s.transliteration}" | Eng
                   <>
                    {!hideTranslit && segment.transliteration && (
                      <p className="text-white text-base font-medium leading-tight text-center break-words">
-                       {renderWords(segIdx, 'transliteration', segment.transliteration, 'text-white text-base font-medium')}
+                       <HebrewListenButton text={segment.hebrew} variant="dark" className="mr-1 align-middle" />
+                       {renderWords(segIdx, 'transliteration', shownTransliteration(segment.hebrew, segment.transliteration), 'text-white text-base font-medium')}
                        {canEdit && (
                          <button
                            onClick={(e) => { e.stopPropagation(); startEditSegment(segIdx); }}
@@ -513,7 +517,15 @@ ${missing.map((s, i) => `${i + 1}. Transliteration: "${s.transliteration}" | Eng
                    )}
                    {!hideHebrew && segment.hebrew && (
                      <p className="text-cyan-300 text-base font-medium leading-tight text-center break-words" dir={isRTL ? "rtl" : "ltr"}>
-                       {renderWords(segIdx, 'hebrew', segment.hebrew, 'text-cyan-300 text-base font-medium')}
+                       {isRTL ? (
+                         <HebrewWithNikud
+                           text={segment.hebrew}
+                           transliteration={segment.transliteration}
+                           phoneticsView={!hideTranslit}
+                           variant="dark"
+                           className="text-cyan-300 text-base font-medium"
+                         />
+                       ) : renderWords(segIdx, 'hebrew', segment.hebrew, 'text-cyan-300 text-base font-medium')}
                      </p>
                    )}
                    {!hideEnglish && segment.english && (

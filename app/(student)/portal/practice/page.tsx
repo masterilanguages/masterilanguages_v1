@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mic, Play, Pause, RotateCcw, SkipForward, ChevronLeft, Music } from "lucide-react";
 import { Link, createPageUrl } from "@/lib/router-compat";
+import { HebrewWithNikud } from "@/components/hebrew/HebrewNikud";
 
 // Segment timings — these reference timestamps in the actual song audio
 const DEFAULT_SEGMENTS = [
@@ -437,7 +438,13 @@ export default function SpeakingSession() {
                   dir="rtl"
                   style={{ fontFamily: "serif" }}
                 >
-                  {currentSeg.hebrew}
+                  <HebrewWithNikud
+                    text={currentSeg.hebrew}
+                    transliteration={currentSeg.translit}
+                    phoneticsView
+                    variant="dark"
+                    className="text-indigo-300 text-xl font-bold leading-relaxed"
+                  />
                 </p>
                 <p className="text-white/50 text-sm italic mt-1">{currentSeg.translit}</p>
               </motion.div>

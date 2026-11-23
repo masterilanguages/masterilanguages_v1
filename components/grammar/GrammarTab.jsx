@@ -3,6 +3,9 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react";
+import HebrewListenButton from "@/components/hebrew/HebrewListenButton";
+import { HebrewWithNikud, NikudButton } from "@/components/hebrew/HebrewNikud";
+import { shownTransliteration } from "@/lib/hebrew/romanize";
 
 const VERBS = [
   {
@@ -323,6 +326,9 @@ function VerbCard({ verb }) {
 
             {/* Conjugation Table */}
             <div className="p-4 space-y-2">
+              <div className="flex justify-end">
+                <NikudButton variant="light" />
+              </div>
               {rows.map((row, idx) => (
                 <div
                   key={idx}
@@ -330,11 +336,19 @@ function VerbCard({ verb }) {
                   style={{ background: idx % 2 === 0 ? '#ffffff60' : '#f5f0e840', border: '1px solid #e8e4d850' }}
                 >
                   <span className="text-sm font-medium w-20 flex-shrink-0" style={{ color: '#6b7c5a' }}>{row.subject}</span>
-                  <span className="text-base font-semibold flex-1 text-center" style={{ color: '#3d4a2e' }}>
-                    <EditableCell value={row.transliteration} onChange={v => updateRow(idx, "transliteration", v)} />
+                  <span className="text-base font-semibold flex-1 text-center inline-flex items-center justify-center gap-1" style={{ color: '#3d4a2e' }}>
+                    <EditableCell value={shownTransliteration(row.hebrew, row.transliteration)} onChange={v => updateRow(idx, "transliteration", v)} />
+                    <HebrewListenButton text={row.hebrew} variant="light" />
                   </span>
                   <span className="text-xl font-bold text-right flex-shrink-0" style={{ color: '#5a6b3a', direction: 'rtl', minWidth: 80 }}>
-                    <EditableCell value={row.hebrew} onChange={v => updateRow(idx, "hebrew", v)} />
+                    <HebrewWithNikud
+                      text={row.hebrew}
+                      transliteration={row.transliteration}
+                      phoneticsView
+                      showButton={false}
+                      variant="light"
+                      className="text-xl font-bold"
+                    />
                   </span>
                 </div>
               ))}

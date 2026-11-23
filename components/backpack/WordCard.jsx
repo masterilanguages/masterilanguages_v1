@@ -6,6 +6,9 @@ import { Loader2, RefreshCw, Plus, Check, X, Pencil } from "lucide-react";
 import EditableWord from "@/components/learning/EditableWord";
 import { toast } from "sonner";
 import { isRTLLanguage, isRTLText, languageLabel, needsTransliteration } from "@/lib/language";
+import HebrewListenButton from "@/components/hebrew/HebrewListenButton";
+import { HebrewWithNikud } from "@/components/hebrew/HebrewNikud";
+import { shownTransliteration } from "@/lib/hebrew/romanize";
 import { mnemonicImagePrompt } from "@/lib/imageStyle";
 
 function SentenceWords({ words, onAddToBackpack, showHebrew = true, showTransliteration = true, lang = 'hebrew' }) {
@@ -279,26 +282,37 @@ export default function WordCard({
       <div className="p-3 flex-1 flex flex-col gap-0.5 cursor-pointer select-none" onClick={() => setRevealed(r => !r)}>
         {showHebrew && (
           <p className="text-cyan-600 font-bold text-base text-center" dir={nativeWordRTL ? "rtl" : "ltr"}>
-            <EditableWord
-              text={word.word}
-              language={nativeWordRTL ? "he" : "en"}
-              editable={isContentEditable(word)}
-              onSave={(v) => updateWordMutation.mutate({ id: word.id, data: { word: v } })}
-              className="text-cyan-600 font-bold text-base"
-              onClick={(e) => e.stopPropagation()}
-            />
+            {showTransliteration && needsTransliteration(lang) ? (
+              <HebrewWithNikud
+                text={word.word}
+                transliteration={word.phonetic}
+                phoneticsView
+                variant="light"
+                className="text-cyan-600 font-bold text-base"
+              />
+            ) : (
+              <EditableWord
+                text={word.word}
+                language={nativeWordRTL ? "he" : "en"}
+                editable={isContentEditable(word)}
+                onSave={(v) => updateWordMutation.mutate({ id: word.id, data: { word: v } })}
+                className="text-cyan-600 font-bold text-base"
+                onClick={(e) => e.stopPropagation()}
+              />
+            )}
           </p>
         )}
 
         {showTransliteration && (
-          <p className="text-stone-500 text-sm text-center">
+          <p className="text-stone-500 text-sm text-center inline-flex w-full items-center justify-center gap-1">
             <EditableWord
-              text={word.phonetic || word.word}
+              text={shownTransliteration(word.word, word.phonetic || word.word)}
               editable={isContentEditable(word)}
               onSave={(v) => updateWordMutation.mutate({ id: word.id, data: { phonetic: v } })}
               className="text-stone-500 text-sm"
               onClick={(e) => e.stopPropagation()}
             />
+            <HebrewListenButton text={word.word} variant="light" />
           </p>
         )}
 

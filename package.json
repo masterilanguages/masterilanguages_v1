@@ -6,7 +6,8 @@
     "dev": "next dev -p 3102",
     "build": "next build",
     "start": "next start -p 3102",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "node --experimental-detect-module --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test lib/hebrew/romanize.test.mjs lib/hebrew/nikud.test.mjs"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^17.0.0",

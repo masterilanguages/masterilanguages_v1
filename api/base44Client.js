@@ -1,6 +1,7 @@
 "use client";
 
 import { supabase } from './supabaseClient';
+import { prepareHebrewLlmArgs, polishHebrewPayload } from '@/lib/hebrew/romanize';
 
 /**
  * Base44 -> Supabase compatibility shim.
@@ -312,12 +313,22 @@ const auth = {
 // ---------------------------------------------------------------------------
 const Core = {
   // InvokeLLM(args) -> the LLM JSON payload (callers read props directly).
+  // Hebrew transliteration prompts are upgraded to the Backpack quality model
+  // (claude-opus-5-5) and the shared Israeli romanization rules. If that model
+  // is rejected, retry once on the function's default model — same fallback
+  // backpack-saas uses in lib/saveWordDeps.ts.
   async InvokeLLM(args) {
-    const { data, error } = await supabase.functions.invoke('invoke-llm', {
-      body: args,
-    });
+    const body = prepareHebrewLlmArgs(args);
+    const call = (payload) => supabase.functions.invoke('invoke-llm', { body: payload });
+    let { data, error } = await call(body);
+    const addedModel = body.model && body.model !== args?.model;
+    if (error && addedModel) {
+      const retry = await call({ ...body, model: undefined });
+      data = retry.data;
+      error = retry.error;
+    }
     if (error) throw error;
-    return data;
+    return polishHebrewPayload(data);
   },
 
   // GenerateImage(args) -> { url } (callers read result.url).

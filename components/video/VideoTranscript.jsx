@@ -13,6 +13,9 @@ import ClickableWord from "../learning/ClickableWord";
 import UniversalEditableWord from "../learning/UniversalEditableWord";
 import EditableSentence from "../learning/EditableSentence";
 import VideoTranscriptWord from "./VideoTranscriptWord";
+import HebrewListenButton from "@/components/hebrew/HebrewListenButton";
+import { HebrewWithNikud } from "@/components/hebrew/HebrewNikud";
+import { shownTransliteration } from "@/lib/hebrew/romanize";
 import { languageLabel, isRTLLanguage, usesNikud } from "@/lib/language";
 
 // Normalize the various language codes this Video entity stores ("he"/"iw" for
@@ -869,7 +872,8 @@ Provide:
                           <>
                             {transliteration && (
                               <div style={{ direction: 'ltr', textAlign: 'left', unicodeBidi: 'bidi-override' }} className="flex items-start gap-1 flex-wrap">
-                                {transliteration.split(/(\s+)/).map((part, i, arr) => {
+                                <HebrewListenButton text={hebrew} variant="dark" />
+                                {shownTransliteration(hebrew, transliteration).split(/(\s+)/).map((part, i, arr) => {
                                   const isLastWord = i === arr.length - 1 || (i === arr.length - 2 && /^\s+$/.test(arr[arr.length - 1]));
                                   return /\S/.test(part) ? (
                                     <span key={i} className="inline-flex items-center gap-1">
@@ -921,24 +925,14 @@ Provide:
                               </div>
                             )}
                             {hebrew && (
-                              <div style={{ direction: 'ltr', textAlign: 'left', unicodeBidi: 'bidi-override' }}>
-                                {hebrew.split(/(\s+)/).map((part, i) => 
-                                  /\S/.test(part) ? (
-                                    <VideoTranscriptWord
-                                      key={i}
-                                      word={part}
-                                      hebrew={hebrew}
-                                      transliteration={transliteration}
-                                      english={english}
-                                      onEdit={(newWord) => {
-                                        const newText = hebrew.split(/(\s+)/).map((p, idx) => idx === i ? newWord : p).join('');
-                                        updateTranscriptLine(blockIdx, 'hebrew', newText);
-                                      }}
-                                      onAddToBackpack={addSentenceToBackpack}
-                                      className="text-cyan-400 text-sm font-bold leading-tight"
-                                    />
-                                  ) : part
-                                )}
+                              <div dir="rtl" className="text-left">
+                                <HebrewWithNikud
+                                  text={hebrew}
+                                  transliteration={transliteration}
+                                  phoneticsView={isRtl}
+                                  variant="dark"
+                                  className="text-cyan-400 text-sm font-bold leading-tight"
+                                />
                               </div>
                             )}
                           </>
