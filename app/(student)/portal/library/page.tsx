@@ -25,6 +25,15 @@ import SessionFlashcardsSection from "@/components/backpack/SessionFlashcardsSec
 import PasteWordsList from "@/components/backpack/PasteWordsList";
 import { languageLabel, usesNikud, nativeScriptInstruction, isRTLText } from "@/lib/language";
 import { mnemonicImagePrompt } from "@/lib/imageStyle";
+import { mnemonicImageErrorMessage } from "@/lib/mnemonicImageError";
+import {
+  mnemonicSaveFields,
+  resolveMnemonicLemma,
+  sceneForBaseWord,
+  soundMnemonicPrompt,
+  wordNeedsMnemonic,
+} from "@/lib/mnemonicLemma";
+import { generateVerifiedExampleSentence } from "@/lib/mnemonicSentence";
 
 // Simple English singularizer for common plural patterns
 function toSingular(word: any) {
@@ -95,6 +104,10 @@ export default function Backpack() {
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestingMnemonic, setSuggestingMnemonic] = useState<any>(null); // wordId currently suggesting
   const [mnemonicQueue, setMnemonicQueue] = useState<Set<any>>(new Set()); // all wordIds queued for generation
+  const [imageErrors, setImageErrors] = useState<Record<string, string>>({});
+  const [sentenceErrors, setSentenceErrors] = useState<Record<string, string>>({});
+  const failedImageIds = React.useRef<Set<any>>(new Set());
+  const inFlightImageIds = React.useRef<Set<any>>(new Set());
   const [showPhonetics, setShowPhonetics] = useState(false); // global toggle for all cards
   const [cardSentences, setCardSentences] = useState<any>({});
   const [generatingSentence, setGeneratingSentence] = useState<any>({});
@@ -331,18 +344,25 @@ export default function Backpack() {
     setGeneratingMnemonic(true);
     try {
       const lang = userProfile?.language || 'hebrew';
+      const basis = await resolveMnemonicLemma({
+        word: word.word,
+        phonetic: word.phonetic,
+        translation: word.translation,
+        language: lang,
+      }, (args: any) => base44.integrations.Core.InvokeLLM(args));
       const result = await base44.integrations.Core.GenerateImage({
-        prompt: mnemonicImagePrompt(`A scene to help learn the ${languageLabel(lang)} word "${word.phonetic}" meaning "${word.translation}": ${mnemonicDescription}`)
+        prompt: mnemonicImagePrompt(sceneForBaseWord(mnemonicDescription, basis, word.word))
       });
+      if (!result?.url) throw new Error("Image provider returned no URL");
       await updateWordMutation.mutateAsync({
         id: word.id,
-        data: { image_url: result.url }
+        data: mnemonicSaveFields(basis, mnemonicDescription, result.url)
       });
       toast.success("Picture saved!");
       setPictureWordId(null);
       setMnemonicDescription("");
     } catch (e) {
-      toast.error("Failed to generate picture");
+      toast.error(mnemonicImageErrorMessage(e));
     }
     setGeneratingMnemonic(false);
   };
@@ -353,32 +373,27 @@ export default function Backpack() {
   const suggestMnemonicRef = React.useRef<any>(null);
 
   const suggestMnemonicForWord = async (word: any) => {
+    if (inFlightImageIds.current.has(word.id)) return;
+    inFlightImageIds.current.add(word.id);
+    failedImageIds.current.delete(word.id);
+    setImageErrors((prev) => {
+      if (!prev[word.id]) return prev;
+      const next = { ...prev };
+      delete next[word.id];
+      return next;
+    });
     setSuggestingMnemonic(word.id);
     try {
-      const rawWord = word.phonetic || word.word;
-      // Strip Hebrew infinitive "l" prefix for verbs (e.g. "lahavot" → "havot", "lehorot" → "horot").
-      // Hebrew only — never chop the first letter of Latin words ("luna" → "una", "love" → "ove").
       const mnemonicLang = word.language || userProfile?.language || 'hebrew';
-      const targetWord = mnemonicLang === 'hebrew' && (word.is_verb || word.phonetic?.startsWith('l')) && /^l/i.test(rawWord) ? rawWord.slice(1) : rawWord;
-      const meaning = word.translation || '';
+      const basis = await resolveMnemonicLemma({
+        word: word.word,
+        phonetic: word.phonetic,
+        translation: word.translation,
+        language: mnemonicLang,
+      }, (args: any) => base44.integrations.Core.InvokeLLM(args));
 
       const concept = await base44.integrations.Core.InvokeLLM({
-        prompt: `You create sound-based visual mnemonics for language learning.
-
-Target word: "${targetWord}" (meaning: "${meaning}")
-
-STEP 1 — SOUND MATCH: Find a real, common English noun whose spelling/pronunciation sounds like "${targetWord}" or its first 1-2 syllables. Think of words that rhyme or start the same way. Examples: "ask" → "Ask-him" → "eskimo", "shalom" → "shallow", "kelev" → "collar". The noun must be a physical, concrete, everyday object or creature. IMPORTANT: Do NOT use colors (like ivory, red, blue, gold, etc.) as the sound anchor — use objects or animals only.
-
-STEP 2 — SCENE: Place that physical noun object in a funny visual scene that ALSO shows the meaning "${meaning}". The object itself (not speech bubbles, not labels) should remind you of the sound. The MEANING "${meaning}" must be the BIG, obvious visual focus of the scene; the sound-anchor object is only a supporting prop inside it. Keep the scene MODERN, timeless and child-friendly — NEVER use historical/period or violent settings (no medieval, knights, soldiers, armor, battlefield, war, ancient, Victorian). If the sound-anchor would normally be historical or military (e.g. "armor"), reimagine it as a cute, modern, harmless cartoon version. NEVER write art-style or realism words (like "medieval", "realistic", "photograph", "oil painting", "cinematic", "render", "3D") inside the description — describe only WHAT happens, not how it is drawn.
-
-CRITICAL: Do NOT name any character, creature, animal, or person in the scene with the sound-anchor word, the target word, or any variant. They are just generic characters performing the action.
-
-STEP 3 — The image must show the OBJECT doing something related to the meaning. NO speech bubbles, NO text, NO characters speaking or calling out. PURE VISUAL ACTION ONLY — no mouths open to speak, no gesturing as if calling out.
-
-Return JSON:
-- sound_anchor: the English noun that sounds like "${targetWord}" (e.g. "eskimo" for "askeem")
-- explanation: one punchy sentence like "An ESKIMO (askeem=agree) shaking hands in the snow"
-- image_prompt: a vivid description of the SCENE and ACTION only, where the meaning "${meaning}" is the clear centerpiece and the sound_anchor object is just a small prop. Modern/timeless setting. NO era/period words, NO art-style or realism words, no talking, no speech, no text, no naming any creatures.`,
+        prompt: soundMnemonicPrompt(basis, languageLabel(mnemonicLang)),
         response_json_schema: {
           type: 'object',
           properties: {
@@ -392,8 +407,10 @@ Return JSON:
       const imageResult = await base44.integrations.Core.GenerateImage({
         prompt: mnemonicImagePrompt(concept.image_prompt)
       });
+      if (!imageResult?.url) throw new Error("Image provider returned no URL");
 
-      setMnemonicExplanations((prev: any) => ({ ...prev, [word.id]: concept.explanation }));
+      const savedMnemonic = mnemonicSaveFields(basis, concept.explanation, imageResult.url);
+      setMnemonicExplanations((prev: any) => ({ ...prev, [word.id]: savedMnemonic.mnemonic_explanation }));
 
       // For approved or shared cards, create a personal copy instead of modifying the original
       if (word.approved || word._shared) {
@@ -403,7 +420,7 @@ Return JSON:
           (w.phonetic || w.word).toLowerCase() === (word.phonetic || word.word).toLowerCase()
         );
         if (existingCopy) {
-          await updateWordMutation.mutateAsync({ id: existingCopy.id, data: { image_url: imageResult.url } });
+          await updateWordMutation.mutateAsync({ id: existingCopy.id, data: savedMnemonic });
         } else {
           await createWordMutation.mutateAsync({
             word: word.word,
@@ -413,22 +430,25 @@ Return JSON:
             language: word.language || userProfile?.language || 'hebrew',
             times_practiced: word.times_practiced || 0,
             mastered: word.mastered || false,
-            image_url: imageResult.url,
-            mnemonic_explanation: concept.explanation,
+            ...savedMnemonic,
           });
         }
       } else {
         await updateWordMutation.mutateAsync({
           id: word.id,
-          data: { image_url: imageResult.url, mnemonic_explanation: concept.explanation }
+          data: savedMnemonic,
         });
       }
 
       toast.success('Mnemonic image created! 🎨');
       setPictureWordId(null);
     } catch (e) {
-      toast.error('Failed to generate mnemonic');
+      failedImageIds.current.add(word.id);
+      const message = mnemonicImageErrorMessage(e);
+      setImageErrors((prev) => ({ ...prev, [word.id]: message }));
+      toast.error(message);
     }
+    inFlightImageIds.current.delete(word.id);
     setSuggestingMnemonic(null);
   };
 
@@ -449,7 +469,7 @@ Return JSON:
   // Auto-generate images for all words missing them — sequential queue
   useEffect(() => {
     const wordsNeedingImages = langFilteredRatings.filter(
-      w => !w.image_url && w.id && !w.id.startsWith('session_') && !queuedWordIds.current.has(w.id)
+      w => wordNeedsMnemonic(w) && !queuedWordIds.current.has(w.id) && !failedImageIds.current.has(w.id) && !inFlightImageIds.current.has(w.id)
     );
     if (wordsNeedingImages.length === 0) return;
 
@@ -466,7 +486,7 @@ Return JSON:
       while (!cancelled) {
         // Always look up from the latest word list for next queued word without an image
         const nextWord = allWordsRef.current.find(
-          w => !w.image_url && w.id && !w.id.startsWith('session_') && queuedWordIds.current.has(w.id)
+          w => wordNeedsMnemonic(w) && queuedWordIds.current.has(w.id) && !inFlightImageIds.current.has(w.id)
         );
         if (!nextWord) break;
         queuedWordIds.current.delete(nextWord.id); // remove before processing to avoid re-pick
@@ -478,7 +498,7 @@ Return JSON:
     };
     runQueue();
     return () => { cancelled = true; isRunningQueue.current = false; };
-  }, [langFilteredRatings.map(w => w.id + (w.image_url ? '1' : '0')).join(',')]); // eslint-disable-line
+  }, [langFilteredRatings.map(w => w.id + (wordNeedsMnemonic(w) ? 'need' : 'ok')).join(',')]); // eslint-disable-line
 
   // Populate allWords flashcard once wordRatings loads
   useEffect(() => {
@@ -691,9 +711,16 @@ Return JSON:
     setGeneratingImage(true);
     setLastImagePrompt(prompt);
     try {
+      const basis = await resolveMnemonicLemma({
+        word: activeNewWord.hebrew || activeNewWord.word,
+        phonetic: activeNewWord.word,
+        translation: activeNewWord.meaning,
+        language: userProfile?.language || 'hebrew',
+      }, (args: any) => base44.integrations.Core.InvokeLLM(args));
       const result = await base44.integrations.Core.GenerateImage({
-        prompt: mnemonicImagePrompt(`A scene to help remember the word "${activeNewWord.word}" meaning "${activeNewWord.meaning}": ${prompt}`)
+        prompt: mnemonicImagePrompt(sceneForBaseWord(prompt, basis, activeNewWord.word))
       });
+      if (!result?.url) throw new Error("Image provider returned no URL");
       setNewWordImage(result.url);
 
       const savedWord = (wordRatings as any[]).find(w => w.phonetic?.toLowerCase() === activeNewWord.word.toLowerCase());
@@ -705,7 +732,7 @@ Return JSON:
       }
       toast.success("Image saved!");
     } catch (e) {
-      toast.error("Failed to generate image");
+      toast.error(mnemonicImageErrorMessage(e));
     }
     setGeneratingImage(false);
   };
@@ -742,53 +769,73 @@ Return JSON:
   };
 
   const generateCardSentence = async (word: any) => {
-    // NOTE: Generated example sentences are intentionally kept session-only in
-    // `cardSentences` (keyed by word.id) rather than persisted to the Word entity.
-    // Persisting is unsafe here: session/flashcard cards use synthetic ids
-    // (e.g. "session_N") that aren't real DB rows, and the schema must not change.
-    // They simply regenerate on reload — no crash, no data written.
+    // Shown only after the native-speaker check. Image generation is a separate
+    // effect, so the two run together. Synthetic session ids are not written.
+    const saved = Array.isArray(word.saved_sentences)
+      ? word.saved_sentences.find((s: any) => s?.mnemonic_card && s?.verified && s?.hebrew && s?.transliteration && s?.english)
+      : null;
+    if (saved) {
+      setCardSentences((prev: any) => ({
+        ...prev,
+        [word.id]: {
+          hebrew_sentence: saved.hebrew,
+          transliteration: saved.transliteration,
+          english: saved.english,
+          words: saved.words || [],
+          verified: true,
+        },
+      }));
+      return;
+    }
     setGeneratingSentence((prev: any) => ({ ...prev, [word.id]: true }));
+    setSentenceErrors((prev) => {
+      if (!prev[word.id]) return prev;
+      const next = { ...prev };
+      delete next[word.id];
+      return next;
+    });
     setCardSentences((prev: any) => { const next = { ...prev }; delete next[word.id]; return next; });
     try {
       const lang = word.language || userProfile?.language || 'hebrew';
-      const label = languageLabel(lang);
-      const nikud = usesNikud(lang);
-      // Native-script form of the word, if the stored word.word differs from its transliteration.
-      const hebrewScript = word.word && word.word !== word.phonetic ? word.word : null;
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are an expert ${label} linguist and language teacher creating example sentences for learners.
-
-TARGET WORD: ${hebrewScript ? `${label}: "${hebrewScript}"` : ''} Transliteration: "${word.phonetic || word.word}" | English meaning: "${word.translation}"
-
-TASK: Write ONE grammatically perfect, natural modern ${label} sentence that clearly demonstrates the meaning of "${word.translation}".
-
-STRICT RULES:
-1. The sentence MUST contain the word ${hebrewScript || word.phonetic} (or its correctly conjugated/declined form)
-2. The ${label} sentence and the English translation MUST convey the EXACT same meaning — no creative liberties
-3. Use correct ${nikud ? 'nikud-less Hebrew script (standard modern written Hebrew)' : `${label} native spelling (including any accents or diacritics)`}
-4. 4–7 words only
-5. The English translation must be a direct, accurate translation of the ${label} — not a paraphrase
-6. Each word in the "words" array must map 1-to-1 to the actual ${label} words in the sentence in order
-7. Do NOT invent words or use placeholder meanings — every ${label} word must have its real translation
-
-Return JSON with:
-- hebrew_sentence: the full sentence in ${label} native script
-- transliteration: the full sentence in Latin letters (natural pronunciation)
-- english: the direct English translation of the ${label} sentence
-- words: array (one per ${label} word, in order) of { hebrew: the word in ${label} native script, word: its transliteration, meaning: its English meaning }`,
-        response_json_schema: {
-          type: 'object',
-          properties: {
-            hebrew_sentence: { type: 'string' },
-            transliteration: { type: 'string' },
-            english: { type: 'string' },
-            words: { type: 'array', items: { type: 'object', properties: { hebrew: { type: 'string' }, word: { type: 'string' }, meaning: { type: 'string' } } } }
-          }
-        }
-      });
+      let lemma: any = null;
+      try {
+        lemma = await resolveMnemonicLemma({
+          word: word.word,
+          phonetic: word.phonetic,
+          translation: word.translation,
+          language: lang,
+        }, (args: any) => base44.integrations.Core.InvokeLLM(args));
+      } catch {
+        lemma = null;
+      }
+      const result = await generateVerifiedExampleSentence({
+        word: word.word,
+        phonetic: word.phonetic,
+        translation: word.translation,
+        language: lang,
+        lemma: lemma?.lemma,
+        lemmaPhonetic: lemma?.lemmaPhonetic,
+        lemmaMeaning: lemma?.lemmaMeaning,
+      }, (args: any) => base44.integrations.Core.InvokeLLM(args));
       setCardSentences((prev: any) => ({ ...prev, [word.id]: result }));
+      const realId = word.id && !String(word.id).startsWith('session_');
+      if (realId) {
+        const prior = Array.isArray(word.saved_sentences) ? word.saved_sentences.filter((s: any) => !s?.mnemonic_card) : [];
+        base44.entities.Word.update(word.id, {
+          saved_sentences: [...prior, {
+            mnemonic_card: true,
+            verified: true,
+            hebrew: result.hebrew_sentence,
+            transliteration: result.transliteration,
+            english: result.english,
+            words: result.words,
+          }],
+        }).catch((error: unknown) => console.error('save example sentence failed', error));
+      }
     } catch (e) {
-      toast.error('Failed to generate sentence');
+      const message = mnemonicImageErrorMessage(e);
+      setSentenceErrors((prev) => ({ ...prev, [word.id]: message }));
+      toast.error(message);
     }
     setGeneratingSentence((prev: any) => ({ ...prev, [word.id]: false }));
   };
@@ -1042,6 +1089,8 @@ Return JSON with: translation (English, 1-4 words), phonetic (clean Latin transl
                   fetchingTranslation={fetchingTranslation}
                   suggestingMnemonic={suggestingMnemonic}
                   mnemonicQueue={mnemonicQueue}
+                  imageError={imageErrors[`session_${singleCardIndex}`] || ""}
+                  sentenceError={sentenceErrors[`session_${singleCardIndex}`] || ""}
                   isAdmin={isAdmin}
                   updateWordMutation={updateWordMutation}
                   handleRateWord={handleRateWord}
@@ -1078,6 +1127,8 @@ Return JSON with: translation (English, 1-4 words), phonetic (clean Latin transl
                   fetchingTranslation={fetchingTranslation}
                   suggestingMnemonic={suggestingMnemonic}
                   mnemonicQueue={mnemonicQueue}
+                  imageError={imageErrors[word?.id] || ""}
+                  sentenceError={sentenceErrors[word?.id] || ""}
                   isAdmin={isAdmin}
                   updateWordMutation={updateWordMutation}
                   handleRateWord={handleRateWord}
@@ -1117,6 +1168,8 @@ Return JSON with: translation (English, 1-4 words), phonetic (clean Latin transl
                   fetchingTranslation={fetchingTranslation}
                   suggestingMnemonic={suggestingMnemonic}
                   mnemonicQueue={mnemonicQueue}
+                  imageError={imageErrors[word?.id] || ""}
+                  sentenceError={sentenceErrors[word?.id] || ""}
                   isAdmin={isAdmin}
                   updateWordMutation={updateWordMutation}
                   handleRateWord={handleRateWord}
@@ -1149,6 +1202,8 @@ Return JSON with: translation (English, 1-4 words), phonetic (clean Latin transl
                   fetchingTranslation={fetchingTranslation}
                   suggestingMnemonic={suggestingMnemonic}
                   mnemonicQueue={mnemonicQueue}
+                  imageError={imageErrors[word?.id] || ""}
+                  sentenceError={sentenceErrors[word?.id] || ""}
                   isAdmin={isAdmin}
                   updateWordMutation={updateWordMutation}
                   handleRateWord={handleRateWord}

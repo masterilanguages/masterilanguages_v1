@@ -13,6 +13,8 @@ import { toast } from "sonner";
 import ClickableWord from "@/components/learning/ClickableWord";
 import EditableWord from "@/components/learning/EditableWord";
 import { createPageUrl } from "@/lib/router-compat";
+import { mnemonicImagePrompt } from "@/lib/imageStyle";
+import { mnemonicImageErrorMessage } from "@/lib/mnemonicImageError";
 
 // 100 basic Hebrew words organized by category (needs)
 const wordBank = [
@@ -434,10 +436,9 @@ const [imageApproved, setImageApproved] = useState(false);
         setLastImagePrompt(prompt);
         try {
           const result = await base44.integrations.Core.GenerateImage({
-            prompt: `A colorful, memorable mnemonic illustration: ${prompt}.
-            For learning Hebrew word "${currentWord.transliteration}" meaning "${currentWord.meaning}".
-            Cartoon style, vibrant colors, educational, fun and memorable.`
+            prompt: mnemonicImagePrompt(`A scene for the base Hebrew word "${currentWord.transliteration}" meaning "${currentWord.meaning}": ${prompt}`)
           });
+          if (!result?.url) throw new Error("Image provider returned no URL");
           setGeneratedMnemonicImage(result.url);
 
       // Save image to the word
@@ -450,7 +451,7 @@ const [imageApproved, setImageApproved] = useState(false);
       }
       toast.success("Image saved!");
     } catch (e) {
-      toast.error("Failed to generate image");
+      toast.error(mnemonicImageErrorMessage(e));
     }
     setGeneratingImage(false);
   };
@@ -584,10 +585,9 @@ const [imageApproved, setImageApproved] = useState(false);
     setLastNewWordImagePrompt(prompt);
     try {
       const result = await base44.integrations.Core.GenerateImage({
-        prompt: `A colorful, memorable mnemonic illustration: ${prompt}.
-        For learning the word "${activeNewWord.word}" meaning "${activeNewWord.meaning}".
-        Cartoon style, vibrant colors, educational, fun and memorable.`
+        prompt: mnemonicImagePrompt(`A scene for the base word "${activeNewWord.word}" meaning "${activeNewWord.meaning}": ${prompt}`)
       });
+      if (!result?.url) throw new Error("Image provider returned no URL");
       setNewWordImage(result.url);
 
       // Save image to the word
@@ -600,7 +600,7 @@ const [imageApproved, setImageApproved] = useState(false);
       }
       toast.success("Image saved!");
     } catch (e) {
-      toast.error("Failed to generate image");
+      toast.error(mnemonicImageErrorMessage(e));
     }
     setGeneratingNewWordImage(false);
   };

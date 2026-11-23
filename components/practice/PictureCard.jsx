@@ -1,12 +1,16 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import ClickableWord from "@/components/learning/ClickableWord";
 import EditableWord from "@/components/learning/EditableWord";
 import DeletablePictureBox from "@/components/learning/DeletablePictureBox";
+import { mnemonicImagePrompt } from "@/lib/imageStyle";
+import { mnemonicImageErrorMessage } from "@/lib/mnemonicImageError";
+import { resolveMnemonicLemma, sceneForBaseWord } from "@/lib/mnemonicLemma";
 
 export default function PictureCard({
   card,
@@ -21,6 +25,40 @@ export default function PictureCard({
   canEdit = true
 }) {
   const [showAnswer, setShowAnswer] = useState(true);
+  const [imageUrl, setImageUrl] = useState(card.image);
+  const [generating, setGenerating] = useState(false);
+  const [imageError, setImageError] = useState("");
+
+  useEffect(() => {
+    setImageUrl(card.image);
+    setImageError("");
+  }, [card.image, card.hebrewWord]);
+
+  const regenerate = async () => {
+    setGenerating(true);
+    setImageError("");
+    try {
+      const { base44 } = await import("@/api/base44Client");
+      const basis = await resolveMnemonicLemma({
+        word: card.hebrewWord,
+        phonetic: card.transliteration,
+        translation: card.meaning,
+        language: "hebrew",
+      }, (args) => base44.integrations.Core.InvokeLLM(args));
+      const result = await base44.integrations.Core.GenerateImage({
+        prompt: mnemonicImagePrompt(sceneForBaseWord(card.mnemonic || card.hint, basis, card.hebrewWord)),
+      });
+      if (!result?.url) throw new Error("Image provider returned no URL");
+      setImageUrl(result.url);
+      onUpdateWord?.({ ...card, image: result.url });
+      toast.success("Mnemonic image generated");
+    } catch (error) {
+      const message = mnemonicImageErrorMessage(error);
+      setImageError(message);
+      toast.error(message);
+    }
+    setGenerating(false);
+  };
 
   const handleNext = () => {
     setShowAnswer(false);
@@ -40,10 +78,17 @@ export default function PictureCard({
     >
       <div className="relative">
         <img
-          src={card.image}
+          src={imageUrl}
           alt="Mnemonic illustration"
           className="w-full h-64 object-cover"
+          onError={() => setImageError("This mnemonic image failed to load.")}
         />
+        {(generating || imageError) && (
+          <div className="absolute inset-0 bg-black/45 flex flex-col items-center justify-center px-4 text-center gap-2">
+            {generating ? <Loader2 className="w-6 h-6 text-white animate-spin" /> : null}
+            {imageError && !generating ? <p className="text-white text-xs">{imageError}</p> : null}
+          </div>
+        )}
         <div className="absolute top-3 right-3 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
           {currentIndex + 1}
         </div>
@@ -52,8 +97,9 @@ export default function PictureCard({
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                // TODO: Trigger mnemonic image regeneration
+                regenerate();
               }}
+              disabled={generating}
               className="w-8 h-8 rounded-lg bg-black/40 hover:bg-black/60 flex items-center justify-center backdrop-blur-md transition-all"
             >
               <span className="text-lg">🎨</span>

@@ -9,6 +9,9 @@ import { Loader2, MessageSquare, Image, Sparkles, Volume2, BookOpen, Check, Wand
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import { languageLabel, isRTLText, nativeScriptInstruction, usesNikud } from "@/lib/language";
+import { mnemonicImagePrompt } from "@/lib/imageStyle";
+import { mnemonicImageErrorMessage } from "@/lib/mnemonicImageError";
+import { resolveMnemonicLemma, sceneForBaseWord } from "@/lib/mnemonicLemma";
 
 export default function ClickableWord({
   word, // target-language native word (Hebrew by default)
@@ -121,15 +124,20 @@ export default function ClickableWord({
   const generateMnemonicImage = async (prompt) => {
     setGeneratingCustom(true);
     try {
+      const basis = await resolveMnemonicLemma({
+        word,
+        phonetic: transliteration,
+        translation,
+        language: lang,
+      }, (args) => base44.integrations.Core.InvokeLLM(args));
       const result = await base44.integrations.Core.GenerateImage({
-        prompt: `A colorful, memorable mnemonic illustration: ${prompt}.
-        For learning ${languageLabel(lang)} word "${transliteration}" meaning "${translation}".
-        Cartoon style, vibrant colors, educational, fun and memorable.`
+        prompt: mnemonicImagePrompt(sceneForBaseWord(prompt, basis, word))
       });
+      if (!result?.url) throw new Error("Image provider returned no URL");
       setGeneratedImage(result.url);
       toast.success("Mnemonic image generated!");
     } catch (e) {
-      toast.error("Failed to generate image");
+      toast.error(mnemonicImageErrorMessage(e));
     }
     setGeneratingCustom(false);
   };

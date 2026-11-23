@@ -7,6 +7,8 @@ import EditableWord from "@/components/learning/EditableWord";
 import { toast } from "sonner";
 import { isRTLLanguage, isRTLText, languageLabel, needsTransliteration } from "@/lib/language";
 import { mnemonicImagePrompt } from "@/lib/imageStyle";
+import { mnemonicImageErrorMessage } from "@/lib/mnemonicImageError";
+import { lemmaFromWord, lemmaLabel, mnemonicSaveFields, resolveMnemonicLemma, sceneForBaseWord, stripLemmaMarker } from "@/lib/mnemonicLemma";
 
 function SentenceWords({ words, onAddToBackpack, showHebrew = true, showTransliteration = true, lang = 'hebrew' }) {
   // Native-script line direction follows the actual generated text (RTL for Hebrew/Arabic, LTR for Latin).
@@ -104,12 +106,15 @@ export default function WordCard({
   handleAddWordFromSentence,
   generateCardSentence,
   sessionTitleMap = {},
+  imageError = "",
+  sentenceError = "",
 }) {
   const [revealed, setRevealed] = useState(false);
   const [regeneratingImage, setRegeneratingImage] = useState(false);
   const [imgFailed, setImgFailed] = useState(false);
   const [showCustomMnemonic, setShowCustomMnemonic] = useState(false);
   const [customDesc, setCustomDesc] = useState("");
+  const [localImageError, setLocalImageError] = useState("");
   const inputRef = useRef(null);
 
   const isGeneratingImage = suggestingMnemonic === word.id || mnemonicQueue.has(word.id);
@@ -120,6 +125,11 @@ export default function WordCard({
   // Target language for this card (drives native-script direction + transliteration/script toggles).
   // Prefer an explicit language prop (e.g. passed from a session view), then the word's own language, then Hebrew.
   const lang = language || word.language || 'hebrew';
+  const explanationRaw = (mnemonicExplanations && mnemonicExplanations[word.id]) || word.mnemonic_explanation;
+  const basis = lemmaFromWord(word, explanationRaw);
+  const baseLine = lemmaLabel(basis, word.word, word.phonetic);
+  const explanationText = stripLemmaMarker(explanationRaw);
+  const shownImageError = localImageError || imageError;
   // Render the native word RTL only for RTL languages / actual RTL text — Latin renders LTR.
   const nativeWordRTL = isRTLLanguage(lang) || isRTLText(word.word);
 
@@ -129,14 +139,25 @@ export default function WordCard({
 
   const regenerateImageFromDescription = async (description) => {
     setRegeneratingImage(true);
+    setLocalImageError("");
     try {
       const { base44 } = await import("@/api/base44Client");
+      const basis = await resolveMnemonicLemma({
+        word: word.word,
+        phonetic: word.phonetic,
+        translation: word.translation,
+        language: lang,
+      }, (args) => base44.integrations.Core.InvokeLLM(args));
       const result = await base44.integrations.Core.GenerateImage({
-        prompt: mnemonicImagePrompt(description)
+        prompt: mnemonicImagePrompt(sceneForBaseWord(description, basis, word.word))
       });
-      updateWordMutation.mutate({ id: word.id, data: { image_url: result.url } });
+      if (!result?.url) throw new Error("Image provider returned no URL");
+      updateWordMutation.mutate({ id: word.id, data: mnemonicSaveFields(basis, description, result.url) });
+      setImgFailed(false);
     } catch (e) {
-      console.error("Failed to regenerate image", e);
+      const message = mnemonicImageErrorMessage(e);
+      setLocalImageError(message);
+      toast.error(message);
     }
     setRegeneratingImage(false);
   };
@@ -148,9 +169,16 @@ export default function WordCard({
     setShowCustomMnemonic(false);
     try {
       const { base44 } = await import("@/api/base44Client");
+      const basis = await resolveMnemonicLemma({
+        word: word.word,
+        phonetic: word.phonetic,
+        translation: word.translation,
+        language: lang,
+      }, (args) => base44.integrations.Core.InvokeLLM(args));
       const result = await base44.integrations.Core.GenerateImage({
-        prompt: mnemonicImagePrompt(description)
+        prompt: mnemonicImagePrompt(sceneForBaseWord(description, basis, word.word))
       });
+      if (!result?.url) throw new Error("Image provider returned no URL");
       // For approved or shared cards, create a personal copy instead of editing the
       // original (a non-owner edit would otherwise silently no-op).
       if (word.approved || word._shared) {
@@ -162,23 +190,23 @@ export default function WordCard({
           language: word.language || lang,
           times_practiced: word.times_practiced || 0,
           mastered: word.mastered || false,
-          image_url: result.url,
-          mnemonic_explanation: description,
+          ...mnemonicSaveFields(basis, description, result.url),
         });
         toast.success("Saved to your personal cards");
       } else {
-        await updateWordMutation.mutateAsync({ id: word.id, data: { image_url: result.url, mnemonic_explanation: description } });
+        await updateWordMutation.mutateAsync({ id: word.id, data: mnemonicSaveFields(basis, description, result.url) });
         toast.success("Mnemonic saved!");
       }
       // Refresh the caption immediately so it doesn't stay stale.
       if (setMnemonicExplanations) {
-        setMnemonicExplanations(prev => ({ ...prev, [word.id]: description }));
+        setMnemonicExplanations(prev => ({ ...prev, [word.id]: mnemonicSaveFields(basis, description, result.url).mnemonic_explanation }));
       }
       setCustomDesc("");
       setImgFailed(false);
     } catch (e) {
-      console.error("Failed to generate custom mnemonic", e);
-      toast.error("Failed to generate mnemonic");
+      const message = mnemonicImageErrorMessage(e);
+      setLocalImageError(message);
+      toast.error(message);
     }
     setRegeneratingImage(false);
   };
@@ -262,6 +290,9 @@ export default function WordCard({
               <>
                 <p className="text-cyan-600 font-bold text-xl" dir={nativeWordRTL ? "rtl" : "ltr"}>{word.word}</p>
                 <p className="text-stone-500 text-sm">{word.phonetic}</p>
+                {shownImageError && (
+                  <p className="text-[10px] text-red-600 leading-snug">{shownImageError}</p>
+                )}
                 <button
                   onClick={(e) => { e.stopPropagation(); setImgFailed(false); suggestMnemonicForWord(word); }}
                   className="text-[9px] text-purple-400 underline mt-1"
@@ -302,6 +333,10 @@ export default function WordCard({
           </p>
         )}
 
+        {baseLine && (
+          <p className="text-[10px] text-amber-800 text-center">Base: {baseLine}</p>
+        )}
+
         {showingEnglish && (
           <p className="text-stone-700 font-semibold text-base text-center">
             <EditableWord
@@ -316,10 +351,10 @@ export default function WordCard({
       </div>
 
       {/* Mnemonic explanation below image */}
-      {(mnemonicExplanations[word.id] || word.mnemonic_explanation) && (
+      {explanationText && (
         <div className="px-3 py-1.5 bg-purple-50 border-t border-purple-100">
           <p className="text-[10px] text-purple-600 italic text-center leading-snug">
-            💡 {mnemonicExplanations[word.id] || word.mnemonic_explanation}
+            💡 {explanationText}
           </p>
         </div>
       )}
@@ -388,6 +423,8 @@ export default function WordCard({
                 </button>
               </div>
             </>
+          ) : sentenceError ? (
+            <p className="text-[10px] text-red-600 text-center leading-snug">{sentenceError}</p>
           ) : null}
         </div>
       </div>
